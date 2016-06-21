@@ -12,6 +12,9 @@ class OptimizeTask(FireTaskBase):
 
    _fw_name = 'OptimizeTask'
    mongo = MongoClient('localhost', 27017)
+   db = mongo.TurboWorks
+   collection = db.ABC_collection
+
 
 
    def run_task(self, fw_spec):

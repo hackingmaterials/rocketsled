@@ -1,7 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="492a26f4-bdb9-4444-ae86-20ef1e86a462" name="Default" comment="" />
+    <list default="true" id="492a26f4-bdb9-4444-ae86-20ef1e86a462" name="Default" comment="">
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/TurboWorks.iml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/modules.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/vcs.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/.idea/Project - 1 - Custom FireTask with Arbitrary Optimization.iml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/.idea/misc.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/.idea/modules.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/.idea/workspace.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/ABC_task.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/OptimizeTask_Explanation copy.rtf" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/OptimizeTask_Explanation.rtfd/TXT.rtf" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/graphic.paint" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/graphic.png" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-17-41-09-036963/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-17-41-35-594535/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-17-42-12-398652/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-17-47-59-367145/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-17-48-48-280864/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-17-49-47-373770/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-17-53-31-257339/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-18-01-23-315525/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-18-02-22-906467/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-18-06-44-671086/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-18-08-16-929956/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-18-09-23-964320/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-18-09-38-366424/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-18-11-24-771076/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-18-40-51-713362/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-18-41-27-304126/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-19-01-05-126179/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-20-03-33-347718/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-20-08-39-794829/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-21-30-53-438976/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-22-16-53-870837/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-22-17-08-114981/FW.json" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/optimize_task.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/test_code.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/test_numpy.py" afterPath="" />
+    </list>
     <ignored path="TurboWorks.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -20,40 +61,7 @@
     <favorites_list name="TurboWorks" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
-      <file leaf-file-name="ABC_task.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/ABC_task.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="330">
-              <caret line="22" column="29" selection-start-line="22" selection-start-column="29" selection-end-line="22" selection-end-column="29" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="test_code.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/test_code.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="345">
-              <caret line="23" column="31" selection-start-line="23" selection-start-column="31" selection-end-line="23" selection-end-column="31" />
-              <folding>
-                <element signature="e#0#50#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="optimize_task.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/optimize_task.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="401">
-              <caret line="37" column="39" selection-start-line="37" selection-start-column="39" selection-end-line="37" selection-end-column="39" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <leaf />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -62,6 +70,7 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/test_code.py" />
+        <option value="$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/optimize_task.py" />
       </list>
     </option>
   </component>
@@ -117,10 +126,6 @@
               <option name="myItemId" value="TurboWorks" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="1 - Custom FireTask with Arbitrary Optimization" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
           </PATH>
         </subPane>
       </pane>
@@ -131,7 +136,7 @@
   <component name="PropertiesComponent">
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
     <property name="settings.editor.splitter.proportion" value="0.2" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/turboworks" />
   </component>
   <component name="RunManager" selected="Python.test_code">
     <configuration default="false" name="test_code" type="PythonConfigurationType" factoryName="Python" temporary="true">
@@ -309,12 +314,12 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="248" y="85" width="1520" height="932" extended-state="0" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32908458" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32908458" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32908458" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -340,26 +345,24 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/ABC_task.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
-          <caret line="22" column="29" selection-start-line="22" selection-start-column="29" selection-end-line="22" selection-end-column="29" />
+        <state relative-caret-position="405">
+          <caret line="27" column="23" selection-start-line="27" selection-start-column="23" selection-end-line="27" selection-end-column="56" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/optimize_task.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="105">
+          <caret line="16" column="0" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/test_code.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="23" column="31" selection-start-line="23" selection-start-column="31" selection-end-line="23" selection-end-column="31" />
-          <folding>
-            <element signature="e#0#50#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/1 - Custom FireTask with Arbitrary Optimization/optimize_task.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="401">
-          <caret line="37" column="39" selection-start-line="37" selection-start-column="39" selection-end-line="37" selection-end-column="39" />
+        <state relative-caret-position="240">
+          <caret line="16" column="12" selection-start-line="16" selection-start-column="12" selection-end-line="16" selection-end-column="21" />
           <folding />
         </state>
       </provider>
