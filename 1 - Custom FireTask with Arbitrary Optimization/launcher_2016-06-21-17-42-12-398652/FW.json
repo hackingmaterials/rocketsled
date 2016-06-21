@@ -1,0 +1,60 @@
+{
+    "name": "Unnamed FW", 
+    "launches": [
+        {
+            "fworker": {
+                "category": "", 
+                "query": "{}", 
+                "name": "Automatically generated Worker", 
+                "env": {}
+            }, 
+            "trackers": [], 
+            "ip": "127.0.0.1", 
+            "fw_id": 1, 
+            "state": "RUNNING", 
+            "host": "175.193.128.198.in-addr.dhcp.lbnl.us", 
+            "launch_dir": "/Users/alexdunn/Desktop/Project - 1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-17-42-12-398652", 
+            "action": null, 
+            "launch_id": 1, 
+            "state_history": [
+                {
+                    "updated_on": "2016-06-21T17:42:12.427566", 
+                    "state": "RUNNING", 
+                    "created_on": "2016-06-21T17:42:12.427548"
+                }
+            ]
+        }
+    ], 
+    "fw_id": 1, 
+    "state": "RUNNING", 
+    "created_on": "2016-06-21T17:42:12.322325", 
+    "updated_on": "2016-06-21T17:42:12.430487", 
+    "spec": {
+        "_tasks": [
+            {
+                "_fw_name": "{{ABC_task.ABCtask}}"
+            }
+        ], 
+        "B_input": [
+            6.9, 
+            4.4, 
+            12.1, 
+            39.2, 
+            12.1
+        ], 
+        "C_input": [
+            1.0, 
+            6.9, 
+            3.9, 
+            51.0, 
+            21.7
+        ], 
+        "A_input": [
+            1.4, 
+            5.4, 
+            9.8, 
+            12.2, 
+            90.1
+        ]
+    }
+}

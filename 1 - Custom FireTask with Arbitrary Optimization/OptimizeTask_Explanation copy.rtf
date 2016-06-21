@@ -1,0 +1,187 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+{\fonttbl\f0\fnil\fcharset0 Menlo-Bold;\f1\fswiss\fcharset0 Arial-Black;\f2\fnil\fcharset0 Menlo-Italic;
+\f3\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue128;\red128\green128\blue128;\red0\green128\blue0;
+\red0\green0\blue178;\red148\green85\blue141;\red0\green0\blue255;\red102\green0\blue153;\red127\green127\blue127;
+}
+\margl1440\margr1440\vieww19920\viewh16420\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\b\fs24 \cf2 \
+
+\f1\fs36 \cf0 optimize_task.py
+\f0\fs24 \cf2 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f2\i\b0 \cf3 #This FireTask will eventually optimize black box algorithms\uc0\u8232 #Right now it prints a fake optimization for ABCTask\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\i0\b \cf2 \
+import 
+\f3\b0 \cf0 sys\uc0\u8232 sys.path.append(
+\f0\b \cf4 '/Users/alexdunn/Desktop/Project - 1 - Custom Firetask with Arbitrary Optimization'
+\f3\b0 \cf0 )\uc0\u8232 
+\f0\b \cf2 from 
+\f3\b0 \cf0 fireworks.utilities.fw_utilities 
+\f0\b \cf2 import 
+\f3\b0 \cf0 explicit_serialize\uc0\u8232 
+\f0\b \cf2 from 
+\f3\b0 \cf0 fireworks.core.firework 
+\f0\b \cf2 import 
+\f3\b0 \cf0 FireTaskBase, FWAction\uc0\u8232 \u8232 @\cf5 explicit_serialize\uc0\u8232 
+\f0\b \cf2 class 
+\f3\b0 \cf0 OptimizeTask(FireTaskBase):\uc0\u8232 \u8232    _fw_name = 
+\f0\b \cf4 'OptimizeTask'\uc0\u8232 \u8232    \cf2 def 
+\f3\b0 \cf0 run_task(\cf6 self\cf0 , fw_spec):\uc0\u8232 \u8232 
+\f2\i \cf3 #Gather inputs and result of previous Firetask\uc0\u8232        
+\f3\i0 \cf0 A_input = fw_spec[
+\f0\b \cf4 'A_input'
+\f3\b0 \cf0 ]\uc0\u8232        B_input = fw_spec[
+\f0\b \cf4 'B_input'
+\f3\b0 \cf0 ]\uc0\u8232        C_input = fw_spec[
+\f0\b \cf4 'C_input'
+\f3\b0 \cf0 ]\uc0\u8232        D_output = fw_spec[
+\f0\b \cf4 'D_output'
+\f3\b0 \cf0 ]\uc0\u8232 \u8232        
+\f0\b \cf2 print \cf4 'Your optimization algorithm is running using the inputs: \cf2 \\n\cf4 '
+\f3\b0 \cf0 , A_input, 
+\f0\b \cf4 '\cf2 \\n\cf4 '
+\f3\b0 \cf0 , B_input, 
+\f0\b \cf4 '\cf2 \\n\cf4 '
+\f3\b0 \cf0 , C_input\uc0\u8232        
+\f0\b \cf2 print \cf4 'and using the outputs: \cf2 \\n\cf4 '
+\f3\b0 \cf0 , D_output\uc0\u8232 \u8232 
+\f2\i \cf3 #Optimization algorithm which maps A,B, and C inputs and a D_output to updated (optimized) inputs\uc0\u8232 #Right now its just a random assignment\u8232        
+\f3\i0 \cf0 A_updated = [\cf7 100.0\cf0 , \cf7 100.0\cf0 , \cf7 100.0\cf0 , \cf7 100.0\cf0 , \cf7 100.0\cf0 ]\uc0\u8232        B_updated = [\cf7 100.0\cf0 , \cf7 100.0\cf0 , \cf7 100.0\cf0 , \cf7 100.0\cf0 , \cf7 100.0\cf0 ]\uc0\u8232        C_updated = [\cf7 0.001\cf0 , \cf7 0.001\cf0 , \cf7 0.001\cf0 , \cf7 0.001\cf0 , \cf7 0.001\cf0 ]\uc0\u8232 \u8232 \u8232 
+\f2\i \cf3 #Print updated spec and modify the current spec\uc0\u8232        
+\f0\i0\b \cf2 print \cf4 'OptimizeTask ran correctly'\uc0\u8232        \cf2 print \cf4 'The optimal inputs for the next iteration are: \cf2 \\n\cf4 '
+\f3\b0 \cf0 , A_updated, 
+\f0\b \cf4 '\cf2 \\n\cf4 '
+\f3\b0 \cf0 , B_updated, 
+\f0\b \cf4 '\cf2 \\n\cf4 '
+\f3\b0 \cf0 , C_updated\uc0\u8232        
+\f0\b \cf2 return 
+\f3\b0 \cf0 FWAction(\cf8 update_spec\cf0 =\{
+\f0\b \cf4 "A_updated"
+\f3\b0 \cf0 : A_updated, 
+\f0\b \cf4 "B_updated"
+\f3\b0 \cf0 : B_updated, 
+\f0\b \cf4 'C_updated'
+\f3\b0 \cf0 : C_updated\})\uc0\u8232 \u8232 
+\f2\i \cf3 #To take updated information, we just get A_input as 'A_updated', etc.\uc0\u8232 #In the future, if you don't want to store the data in a spec, OptimizeTask would take data from the DB or something\
+\
+
+\f1\i0\b\fs36 \cf0 ABC_task.py
+\f2\i\b0\fs24 \cf3 \
+\
+#This FireTask is a function A*B/C=D\uc0\u8232 #It executes this command, saves the output in the DB, and updates the same spec\u8232 \u8232 
+\f0\i0\b \cf2 import 
+\f3\b0 \cf0 sys\uc0\u8232 sys.path.append(
+\f0\b \cf4 '/Users/alexdunn/Desktop/'
+\f3\b0 \cf0 )\uc0\u8232 
+\f0\b \cf2 from 
+\f3\b0 \cf0 fireworks.utilities.fw_utilities 
+\f0\b \cf2 import 
+\f3\b0 \cf0 explicit_serialize\uc0\u8232 
+\f0\b \cf2 from 
+\f3\b0 \cf0 fireworks.core.firework 
+\f0\b \cf2 import 
+\f3\b0 \cf0 FireTaskBase, FWAction\uc0\u8232 
+\f0\b \cf2 import 
+\f3\b0 \cf0 numpy 
+\f0\b \cf2 as 
+\f3\b0 \cf0 np\uc0\u8232 \u8232 @\cf5 explicit_serialize\uc0\u8232 \u8232 
+\f0\b \cf2 class 
+\f3\b0 \cf0 ABCtask(FireTaskBase):\uc0\u8232    _fw_name = 
+\f0\b \cf4 "ABCTask"\uc0\u8232 \u8232    \cf2 def 
+\f3\b0 \cf0 run_task(\cf6 self\cf0 , fw_spec):\uc0\u8232 \u8232 
+\f2\i \cf3 #Gather inputs from spec\uc0\u8232        
+\f3\i0 \cf0 A_input = fw_spec[
+\f0\b \cf4 'A_input'
+\f3\b0 \cf0 ]\uc0\u8232        B_input = fw_spec[
+\f0\b \cf4 'B_input'
+\f3\b0 \cf0 ]\uc0\u8232        C_input = fw_spec[
+\f0\b \cf4 'C_input'
+\f3\b0 \cf0 ]\uc0\u8232 \u8232 \u8232 
+\f2\i \cf3 #Run black box objective algorithm (A*B/C = D)\uc0\u8232        
+\f3\i0 \cf0 D_output = np.divide(np.multiply(A_input, B_input), C_input)\uc0\u8232        
+\f0\b \cf2 print
+\f3\b0 \cf0 (
+\f0\b \cf4 "ABCTask ran correctly. Your D_output is: "
+\f3\b0 \cf0 , D_output)\uc0\u8232 \u8232 
+\f2\i \cf3 #Update spec with result, AND store data in DB\uc0\u8232        
+\f0\i0\b \cf2 return 
+\f3\b0 \cf0 FWAction(\cf8 stored_data\cf0 =\{
+\f0\b \cf4 'D_output'
+\f3\b0 \cf0 :D_output\}, \cf8 update_spec\cf0 =\{
+\f0\b \cf4 "D_output"
+\f3\b0 \cf0 :D_output\})\uc0\u8232 \
+
+\f1\b\fs36 test_code.py
+\f3\b0\fs24 \
+\
+
+\f0\b \cf2 from 
+\f3\b0 \cf0 fireworks 
+\f0\b \cf2 import 
+\f3\b0 \cf0 Firework, FWorker, LaunchPad\uc0\u8232 
+\f0\b \cf2 from 
+\f3\b0 \cf0 fireworks.core.rocket_launcher 
+\f0\b \cf2 import 
+\f3\b0 \cf0 rapidfire\uc0\u8232 
+\f0\b \cf2 from 
+\f3\b0 \cf0 fireworks.core.rocket_launcher 
+\f0\b \cf2 import 
+\f3\b0 \cf0 launch_rocket\uc0\u8232 
+\f0\b \cf2 from 
+\f3\b0 \cf0 optimize_task 
+\f0\b \cf2 import 
+\f3\b0 \cf0 OptimizeTask\uc0\u8232 
+\f0\b \cf2 from 
+\f3\b0 \cf0 ABC_task 
+\f0\b \cf2 import 
+\f3\b0 \cf0 ABCtask\uc0\u8232 \u8232 
+\f2\i \cf3 #Set up the launchpad\uc0\u8232 
+\f3\i0 \cf0 launchpad = LaunchPad()\uc0\u8232 launchpad.reset(
+\f0\b \cf4 ''
+\f3\b0 \cf0 , \cf8 require_password\cf0 =\cf2 False\cf0 )\uc0\u8232 \u8232 \u8232 
+\f2\i \cf3 #Sample data, 5 complete data points\uc0\u8232 
+\f3\i0 \cf0 A = [\cf7 1.4\cf0 , \cf7 5.4\cf0 , \cf7 9.8\cf0 , \cf7 12.2\cf0 , \cf7 90.1\cf0 ]\uc0\u8232 B = [\cf7 6.9\cf0 , \cf7 4.4\cf0 , \cf7 12.1\cf0 , \cf7 39.2\cf0 , \cf7 12.1\cf0 ]\uc0\u8232 C = [\cf7 1.0\cf0 , \cf7 6.9\cf0 , \cf7 3.9\cf0 , \cf7 51.0\cf0 , \cf7 21.7\cf0 ]\uc0\u8232 \u8232 
+\f2\i \cf3 #Assign FireTasks\uc0\u8232 
+\f3\i0 \cf0 firetask1 = ABCtask()\uc0\u8232 firetask2 = OptimizeTask()\u8232 \u8232 
+\f2\i \cf3 #Execute FireWork\uc0\u8232 
+\f3\i0 \cf0 firework1 = Firework([firetask1,firetask2], \cf8 spec\cf0 =\{
+\f0\b \cf4 "A_input"
+\f3\b0 \cf0 :A, 
+\f0\b \cf4 "B_input"
+\f3\b0 \cf0 :B, 
+\f0\b \cf4 "C_input"
+\f3\b0 \cf0 :C\})\uc0\u8232 launchpad.add_wf(firework1)\u8232 rapidfire(launchpad, FWorker())\u8232 \
+\
+
+\f1\b\fs36 output to console
+\f3\b0\fs24 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf9 2016-06-21 12:01:05,037 INFO Performing db tune-up\
+2016-06-21 12:01:05,048 INFO LaunchPad was RESET.\
+2016-06-21 12:01:05,094 INFO Added a workflow. id_map: \{-1: 1\}\
+2016-06-21 12:01:05,127 INFO Created new dir /Users/alexdunn/Desktop/Project - 1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-19-01-05-126179\
+2016-06-21 12:01:05,127 INFO Launching Rocket\
+2016-06-21 12:01:05,167 INFO RUNNING fw_id: 1 in directory: /Users/alexdunn/Desktop/Project - 1 - Custom FireTask with Arbitrary Optimization/launcher_2016-06-21-19-01-05-126179\cf0 \
+\cf9 2016-06-21 12:01:05,169 INFO Task started: \{\{ABC_task.ABCtask\}\}.\cf0 \
+('ABCTask ran correctly. Your D_output is: ', array([  9.66      ,   3.44347826,  30.40512821,   9.3772549 ,  50.24009217]))\
+\cf9 2016-06-21 12:01:05,272 INFO Task completed: \{\{ABC_task.ABCtask\}\} \
+2016-06-21 12:01:05,272 INFO Task started: \{\{optimize_task.OptimizeTask\}\}.\cf0 \
+Your optimization algorithm is running using the inputs: \
+[1.4, 5.4, 9.8, 12.2, 90.1] \
+[6.9, 4.4, 12.1, 39.2, 12.1] \
+[1.0, 6.9, 3.9, 51.0, 21.7]\
+and using the outputs: \
+[  9.66         3.44347826  30.40512821   9.3772549   50.24009217]\
+OptimizeTask ran correctly\
+The optimal inputs for the next iteration are: \
+[100.0, 100.0, 100.0, 100.0, 100.0] \
+[100.0, 100.0, 100.0, 100.0, 100.0] \
+[0.001, 0.001, 0.001, 0.001, 0.001]\
+\cf9 2016-06-21 12:01:05,273 INFO Task completed: \{\{optimize_task.OptimizeTask\}\} \
+2016-06-21 12:01:05,518 INFO Rocket finished}
