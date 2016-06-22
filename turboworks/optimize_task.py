@@ -16,7 +16,6 @@ class OptimizeTask(FireTaskBase):
    collection = db.ABC_collection
 
 
-
    def run_task(self, fw_spec):
 
 #Gather inputs and result of previous Firetask
@@ -33,6 +32,13 @@ class OptimizeTask(FireTaskBase):
        A_updated = [100.0, 100.0, 100.0, 100.0, 100.0]
        B_updated = [100.0, 100.0, 100.0, 100.0, 100.0]
        C_updated = [0.001, 0.001, 0.001, 0.001, 0.001]
+
+       raw_input = {"A_raw":A_input,"B_raw":B_input,"C_raw":C_input}
+       updated_input = {"A_updated":A_updated,"B_updated":B_updated,"C_updated":C_updated}
+
+
+#Convert to dictionary for input into DB
+
 
 
 #Print updated spec and modify the current spec
