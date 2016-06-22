@@ -1,6 +1,4 @@
 # TurboWorks
 Machine Learning Interface for FireWorks workflows
 
-Alex Dunn
-Dr. Anubhav Jain
-Dr. Saurabh Bajaj
+To learn more about FireWorks, see the [official documentation] (https://pythonhosted.org/FireWorks/)
