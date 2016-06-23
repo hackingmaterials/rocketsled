@@ -1,6 +1,7 @@
 from fireworks import Firework, FWorker, LaunchPad
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks.core.rocket_launcher import launch_rocket
+from clean_DB import nuke_collection
 from optimize_task import OptimizeTask
 from ABC_task import ABCtask
 
@@ -22,3 +23,8 @@ wf1 = [firetask1, firetask2]
 firework1 = Firework(wf1, spec={"A_input":A, "B_input":B, "C_input":C})
 launchpad.add_wf(firework1)
 rapidfire(launchpad, FWorker())
+
+
+#Entire set of workflows has been executed.
+#Now we clean the database
+nuke_collection()
