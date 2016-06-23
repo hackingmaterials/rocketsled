@@ -1,2 +1,17 @@
-#This file will specify the workflow eventually, and will replace a lot of the code in test_code
+#This file specifies the workflow
 
+from optimize_task import OptimizeTask
+from ABC_task import ABCtask
+from fireworks import Firework, Workflow
+
+def workflow_creator(A_input,B_input,C_input):
+    # Assign FireTasks
+    firetask1 = ABCtask()
+    firetask2 = OptimizeTask()
+    # Execute FireWork
+    fw = [firetask1, firetask2]
+    firework1 = Firework(fw, spec={"A_input": A_input, "B_input": B_input,
+                                   "C_input": C_input})
+    wf = Workflow([firework1])
+
+    return wf
