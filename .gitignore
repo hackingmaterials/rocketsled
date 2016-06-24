@@ -44,3 +44,7 @@ nosetests.xml
 
 # Pycharm
 .idea/*
+
+# Launcher stuff
+*/launcher*
+launcher*
