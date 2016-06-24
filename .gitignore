@@ -44,6 +44,7 @@ nosetests.xml
 
 # Pycharm
 .idea/*
+turboworks/.idea/*
 
 # Launcher stuff
 */launcher*
