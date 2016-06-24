@@ -45,9 +45,9 @@ class OptimizeTask(FireTaskBase):
 
 #Convert optmized inputs to dictionary for storage in DB
 #these inputs have type = 'optimized'
-       updated_input = {"type":"optimized","A_input":A_updated,"B_input":B_updated,
-                        "C_input":C_updated}
-       collection.insert_one(updated_input)
+       # updated_input = {"type":"optimized","A_input":A_updated,"B_input":B_updated,
+       #                  "C_input":C_updated}
+       # collection.insert_one(updated_input)
        print "\nOptimizeTask ran and determined the updated inputs should be"
        print "  A:", A_updated, "\n  B:", B_updated, "\n  C:", C_updated, "\n"
 
