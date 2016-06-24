@@ -13,6 +13,7 @@ def nukeit():
     docs_removed = collection.delete_many({})
     num_deleted = docs_removed.deleted_count
     print 'Documents removed:   ', num_deleted
+    print 'Documents remaining:  0'
     return num_deleted
 
 def countit():
