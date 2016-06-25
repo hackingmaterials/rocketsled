@@ -49,3 +49,9 @@ turboworks/.idea/*
 # Launcher stuff
 */launcher*
 launcher*
+
+#Leftover launcher stuff
+FW.json
+
+#testing files
+testfile*
