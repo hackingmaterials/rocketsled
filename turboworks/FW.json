@@ -1,0 +1,45 @@
+{
+    "name": "Unnamed FW", 
+    "launches": [
+        {
+            "fworker": {
+                "category": "", 
+                "query": "{}", 
+                "name": "Automatically generated Worker", 
+                "env": {}
+            }, 
+            "trackers": [], 
+            "ip": "127.0.0.1", 
+            "fw_id": 1, 
+            "state": "RUNNING", 
+            "host": "83.194.128.198.in-addr.dhcp.lbnl.us", 
+            "launch_dir": "/Users/alexdunn/GitHub/TurboWorks/turboworks", 
+            "action": null, 
+            "launch_id": 1, 
+            "state_history": [
+                {
+                    "updated_on": "2016-06-24T23:33:20.963449", 
+                    "state": "RUNNING", 
+                    "created_on": "2016-06-24T23:33:20.963435"
+                }
+            ]
+        }
+    ], 
+    "fw_id": 1, 
+    "state": "RUNNING", 
+    "created_on": "2016-06-24T23:33:20.806450", 
+    "updated_on": "2016-06-24T23:33:20.965333", 
+    "spec": {
+        "_tasks": [
+            {
+                "_fw_name": "{{ABC_task.ABCtask}}"
+            }, 
+            {
+                "_fw_name": "{{optimize_task.OptimizeTask}}"
+            }
+        ], 
+        "B_input": 42.8, 
+        "C_input": 12.3, 
+        "A_input": 44.3
+    }
+}
