@@ -4,7 +4,7 @@ from fireworks import Firework, Workflow
 
 # This file specifies the workflow
 
-def workflow_creator(A_input, B_input, C_input):
+def workflow_creator(input_dict):
 
 	# Assign FireTasks
 	firetask1 = ABCtask()
@@ -13,7 +13,6 @@ def workflow_creator(A_input, B_input, C_input):
 
 	# Execute FireWork
 	fw = [firetask1, firetask2]
-	firework1 = Firework(fw, spec={"A_input": A_input, "B_input": B_input,
-								   "C_input": C_input})
+	firework1 = Firework(fw, spec=input_dict)
 	wf = Workflow([firework1])
 	return wf

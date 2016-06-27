@@ -26,7 +26,6 @@ class ABCtask(FireTaskBase):
 		# Run black box objective algorithm (A*B/C = D)
 		D_output = A_input*B_input/C_input
 		D_write = {'D_output':D_output}
-		print("ABCTask ran correctly. Your D_output is: ", D_output)
 
 		# Modify changes in spec only
 		return FWAction(update_spec=D_write)

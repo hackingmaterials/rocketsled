@@ -17,10 +17,10 @@ C = 12.3
 opt_num = 5
 
 #Create a workflow and run it
-wf = workflow_creator(A,B,C)
+wf = workflow_creator({'A_input':A,'B_input':B,'C_input':C})
 launchpad.add_wf(wf)
-rapidfire(launchpad, FWorker(), nlaunches=opt_num)
-# launch_rocket(launchpad)
+# rapidfire(launchpad, FWorker(), nlaunches=opt_num)
+launch_rocket(launchpad)
 
 #Ask the DB to do stuff if we want to
 manage_DB.countit()
