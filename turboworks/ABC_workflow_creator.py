@@ -9,7 +9,7 @@ def workflow_creator(A_input, B_input, C_input):
 	# Assign FireTasks
 	firetask1 = ABCtask()
 	# firetask2 = OptimizeTask()
-	firetask2 = OptimizeTask('ABC_workflow_creator')
+	firetask2 = OptimizeTask(func='ABC_workflow_creator.workflow_creator')
 
 	# Execute FireWork
 	fw = [firetask1, firetask2]

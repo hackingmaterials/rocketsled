@@ -12,20 +12,29 @@ import numpy as np
 class OptimizeTask(FireTaskBase):
 
 	#PROBLEM AREA: check test_code.py and whats being imported to see whats happening
-	def __init__(self, wf_module_name):
-		print '\n \n \n--------------------------------------'
-		print 'WHATS BEING IMPORTED:', wf_module_name
-		print '-------------------------------------'
-		wf = importlib.import_module(wf_module_name)
+	# def __init__(self, wf_module_name):
+	# 	print '\n \n \n--------------------------------------'
+	# 	print 'WHATS BEING IMPORTED:', wf_module_name
+	# 	print '-------------------------------------'
+	# 	wf = importlib.import_module(wf_module_name)
+	_fw_name = 'OptimizeTask'
+	required_params = ["func"]
+	optional_params = ['args','kwargs']
+
 
 	def run_task(self, fw_spec):
 		"""
 		:param fw_spec: (dict)
 		:return: FWAction object which creates new wf object
 		"""
+		# Import only a function named as a module only in the working dir
+		toks = self["func"].rsplit(".", 1)
+		if len(toks) == 2:
+			modname, funcname = toks
+			mod = __import__(modname, globals(), locals(), [str(funcname)], 0)
+			self.workflow_creator= getattr(mod, funcname)
 
 		# Make sure we are in correct DB
-		_fw_name = 'OptimizeTask'
 		mongo = MongoClient('localhost', 27017)
 		db = mongo.TurboWorks
 		collection = db.ABC_collection
@@ -65,5 +74,5 @@ class OptimizeTask(FireTaskBase):
 		print "  A:", A_updated, "\n  B:", B_updated, "\n  C:", C_updated, "\n"
 
 		# Initialize new workflow
-		return FWAction(additions=self.wf.workflow_creator(A_updated, B_updated, C_updated))
+		return FWAction(additions=self.workflow_creator(A_updated, B_updated, C_updated))
 		# return FWAction(additions=ABC_workflow_creator.workflow_creator(A_updated,B_updated,C_updated))

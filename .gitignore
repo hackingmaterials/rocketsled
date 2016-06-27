@@ -54,4 +54,5 @@ launcher*
 FW.json
 
 #testing files
-testfile*
+*/testing_dir
+testing_dir*
