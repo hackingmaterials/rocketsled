@@ -24,4 +24,4 @@ launch_rocket(launchpad)
 
 #Ask the DB to do stuff if we want to
 manage_DB.countit()
-# manage_DB.nukeit()
+manage_DB.nukeit()
