@@ -56,3 +56,6 @@ FW.json
 #testing files
 */testing_dir
 testing_dir*
+
+#python interpreted files
+.pyc
