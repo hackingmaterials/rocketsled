@@ -3,7 +3,6 @@ from fireworks.core.firework import FireTaskBase, FWAction
 from pymongo import MongoClient
 import numpy as np
 import pprint
-import copy
 
 # This FireTask will eventually optimize black box algorithms
 # Right now it prints a fake optimization for ABCTask
@@ -17,10 +16,13 @@ class OptimizeTask(FireTaskBase):
 
 	def run_task(self, fw_spec):
 		"""
-		:param fw_spec: (dict)
-		:return: FWAction object which creates new wf object
+		This method gets called when the FireTask is run. It can take in a
+        Firework spec, perform some task using that data, and then return an
+        output in the form of a FWAction.
+		:param fw_spec: (dict) specifying the firework data, and the data the firetask will use
+		:return: FWAction: object which creates new wf object based on updated params and specified workflow creator
 		"""
-		# Import only a function named as a module only in the working dir
+		# Import only a function named as a module only in the working dir (taken from PyTask)
 		toks = self["func"].rsplit(".", 1)
 		if len(toks) == 2:
 			modname, funcname = toks
@@ -30,9 +32,9 @@ class OptimizeTask(FireTaskBase):
 		# Make sure we are in correct DB
 		mongo = MongoClient('localhost', 27017)
 		db = mongo.TurboWorks
-		collection = db.ABC_collection
+		collection = db.TurboWorks_collection
 
-		# Store spec data in DB
+		# Store all spec data in DB
 		collection.insert_one(fw_spec)
 
 		# Read all DB data
@@ -52,19 +54,19 @@ class OptimizeTask(FireTaskBase):
 					else:
 						original_dict[key] = [document[key]]
 
-		print '\nOptimize task will be running using the following data:'
-		pprint.pprint(original_dict)
+		# Verify the data is correct
+		# print ('\nOptimize task will be running using the following data:')
+		# pprint.pprint(original_dict)
 
 		# Fake optimization algorithm
-		# Determines the updated values to guess
 		updated_dict = {}
 		sums = []
 		for key in original_dict:
 			if 'input' in key:
 				sums = sums + original_dict[key]
 				updated_dict[key] = np.multiply(0.25*np.random.rand()+0.875,np.mean(sums))
-		print '\nOptimize task ran to completion.\nThe following inputs are the optimal next inputs:'
-		pprint.pprint(updated_dict)
+		# print ('\nOptimize task ran to completion.\nThe following inputs are the optimal next inputs:')
+		# pprint.pprint(updated_dict)
 
 		# Initialize new workflow
 		return FWAction(additions=self.workflow_creator(updated_dict))

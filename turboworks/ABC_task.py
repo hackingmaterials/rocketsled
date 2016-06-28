@@ -2,8 +2,7 @@ from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase, FWAction
 import sys
 import numpy as np
-# This FireTask is a function A*B/C=D
-# It executes this command, checks the parameter range (crude) and saves to TurboworksDB
+# Executes black box tast A*B/C=D
 
 @explicit_serialize
 class ABCtask(FireTaskBase):
@@ -12,7 +11,7 @@ class ABCtask(FireTaskBase):
 	def run_task(self, fw_spec):
 		"""
 		:param fw_spec: (dict)
-		:return: FWAction object which saves all output to spec
+		:return: FWAction: object which saves all output to spec
 		"""
 		# Gather inputs from spec
 		A_input = fw_spec['A_input']
