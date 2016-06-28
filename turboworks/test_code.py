@@ -27,6 +27,4 @@ rapidfire(launchpad, FWorker(), nlaunches=run_num)
 count_it()
 query_it()
 nuke_it()
-x = 25
-y=200
-#test comment
+
