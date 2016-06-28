@@ -1,10 +1,18 @@
 from optimize_task import OptimizeTask
 from ABC_task import ABCtask
 from fireworks import Firework, Workflow
+"""
+This file specifies a function that creates a workflow to:
+			1. Execute black box function ABCtask
+			2. Optimize this function's input parameters
+"""
 
-# This file specifies the workflow
 
 def workflow_creator(input_dict):
+	"""
+	:param input_dict: dictionary input
+	:return: wf: a workflow object describing the above workflow using params entered in input_dict
+	"""
 
 	# Assign FireTasks
 	firetask1 = ABCtask()
