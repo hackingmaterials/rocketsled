@@ -66,21 +66,10 @@ class OptimizeTask(FireTaskBase):
 			opt_dim_history.append(self.subdim)
 		opt_dimensions = opt_dim_history[-1]
 
-		# print('\n \n ------------------TOTAL INPUT----------------')
-		# print (opt_inputs)
-		# print('---------------TOTAL DIMENSION HISTORY -------------')
-		# print (opt_dim_history)
-		# print('------------------CHOSEN DIMENSIONS-------------')
-		# print(opt_dimensions)
-		# print ('-------------------TOTAL OUTPUT-----------------')
-		# print (opt_outputs, "\n \n")
-
 		# Optimization Algorithm
 		new_input = gp_minimize(opt_inputs,opt_outputs,opt_dimensions,
 									maxiter=2, n_start=1)
 		updated_input = [float(entry) for entry in new_input]
-
-		# print('-------------IMPROVED INPUT---------------\n', updated_input)
 
 		# Create dictionary which will be output to the workflow creator
 		input_keys = []

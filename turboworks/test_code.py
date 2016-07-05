@@ -17,7 +17,7 @@ B_dimensions = (1.0,100.0)
 C_dimensions = (1.0,100.0)
 
 #How many times to automatically run the optimization iteration
-run_num = 2
+run_num = 200
 
 #Create a workflow and run it
 wf = workflow_creator({'A_input':A,'B_input':B,'C_input':C,
@@ -29,5 +29,5 @@ rapidfire(launchpad, FWorker(), nlaunches=run_num)
 #Ask the DB to do stuff if we want to
 count_it()
 # query_it()
-nuke_it()
+# nuke_it()
 
