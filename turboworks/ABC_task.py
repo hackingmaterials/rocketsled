@@ -19,8 +19,8 @@ class ABCtask(FireTaskBase):
 		C_input = fw_spec['C_input']
 
 		# Check to make sure params in range, this will need to be replaced with some exception system
-		if np.amax([A_input,B_input,C_input]) > 100.00 or np.amin([A_input,B_input,C_input]) < 1:
-			sys.exit("One or more parameters is out of range \n A,B, and C must be within 1-100")
+		# if np.amax([A_input,B_input,C_input]) > 100.00 or np.amin([A_input,B_input,C_input]) < 1:
+		# 	sys.exit("One or more parameters is out of range \n A,B, and C must be within 1-100")
 
 		# Run black box objective algorithm (A*B/C = D)
 		D_output = A_input*B_input/C_input

@@ -1,11 +1,13 @@
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase, FWAction
 from pymongo import MongoClient
-import numpy as np
-import pprint
+from skopt.gp_opt import gp_minimize
+from collections import OrderedDict
+from pprint import pprint
 
-# This FireTask will eventually optimize black box algorithms
-# Right now it prints a fake optimization for ABCTask
+"""
+This FireTask optimizes inputs for black box functions.
+"""
 
 @explicit_serialize
 class OptimizeTask(FireTaskBase):
@@ -35,39 +37,67 @@ class OptimizeTask(FireTaskBase):
 		collection = db.TurboWorks_collection
 
 		# Store all spec data in DB
-		collection.insert_one(fw_spec)
+		collection.insert_one(OrderedDict(fw_spec))
 
-		# Read all DB data
-		keys=[]
-		vals=[]
-		original_dict={}
+		# Define our optimization variables by reading from DB
+		opt_inputs = []
+		opt_outputs = []
+		opt_dim_history = []
+		opt_dimensions = []
+		keys = []
+		meta_fw_keys = ['_fw_name', 'func', '_tasks', '_id', '_fw_env', 'api']
 		cursor = collection.find()
-		meta_fw_keys = ['_fw_name', 'func', '_tasks', '_id', '_fw_env']
+
 		for document in cursor:
-			temp_keys = document.keys()
-			for key in temp_keys:
+			self.sublist = []
+			self.subdim = []
+			for key in sorted(document):
+				# print(key)
 				if key not in meta_fw_keys:
 					if key not in keys:
 						keys.append(key)
-					if key in original_dict:
-						original_dict[key] = original_dict[key] + [document[key]]
-					else:
-						original_dict[key] = [document[key]]
+					if '_input' in key:
+						self.sublist.append(document[key])
+					if '_dimensions' in key:
+						self.subdim.append(tuple(document[key]))
+					if '_output' in key:
+						opt_outputs.append(document[key])
+			opt_inputs.append(self.sublist)
+			opt_dim_history.append(self.subdim)
+		opt_dimensions = opt_dim_history[-1]
 
-		# Verify the data is correct
-		# print ('\nOptimize task will be running using the following data:')
-		# pprint.pprint(original_dict)
+		# print('\n \n ------------------TOTAL INPUT----------------')
+		# print (opt_inputs)
+		# print('---------------TOTAL DIMENSION HISTORY -------------')
+		# print (opt_dim_history)
+		# print('------------------CHOSEN DIMENSIONS-------------')
+		# print(opt_dimensions)
+		# print ('-------------------TOTAL OUTPUT-----------------')
+		# print (opt_outputs, "\n \n")
 
-		# Fake optimization algorithm
-		updated_dict = {}
-		sums = []
-		for key in original_dict:
-			if 'input' in key:
-				sums = sums + original_dict[key]
-				updated_dict[key] = np.multiply(0.25*np.random.rand()+0.875,np.mean(sums))
-		# print ('\nOptimize task ran to completion.\nThe following inputs are the optimal next inputs:')
-		# pprint.pprint(updated_dict)
+		# Optimization Algorithm
+		new_input = gp_minimize(opt_inputs,opt_outputs,opt_dimensions,
+									maxiter=2, n_start=1)
+		updated_input = [float(entry) for entry in new_input]
+
+		# print('-------------IMPROVED INPUT---------------\n', updated_input)
+
+		# Create dictionary which will be output to the workflow creator
+		input_keys = []
+		dim_keys = []
+		for key in keys:
+			if "_input" in key:
+				input_keys.append(key)
+			if "_dimension" in key and key not in dim_keys:
+				dim_keys.append(key)
+		input_keys.sort()
+		updated_dictionary = dict(zip(input_keys,updated_input))
+		current_dimensions = dict(zip(dim_keys,opt_dimensions))
+		total_dict = current_dimensions.copy()
+		total_dict.update(updated_dictionary)
+
+		pprint(updated_dictionary)
 
 		# Initialize new workflow
-		return FWAction(additions=self.workflow_creator(updated_dict))
+		return FWAction(additions=self.workflow_creator(total_dict))
 

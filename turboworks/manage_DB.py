@@ -14,8 +14,8 @@ def nuke_it():
     """
     docs_removed = collection.delete_many({})
     num_deleted = docs_removed.deleted_count
-    print 'Documents removed:         ', num_deleted
-    print 'Documents remaining:        0'
+    print ('Documents removed:         ', num_deleted)
+    print ('Documents remaining:        0')
     return num_deleted
 
 def count_it():
@@ -23,7 +23,7 @@ def count_it():
 	counts documents in the TurboWorks DB collection (TurboWorks_collection)
 	"""
     cursor = collection.find()
-    print '\nNumber of documents:       ', cursor.count()
+    print ('\nNumber of documents:       ', cursor.count())
     return cursor.count()
 
 def query_it(querydict=None):
@@ -33,7 +33,7 @@ def query_it(querydict=None):
 	if querydict is None:
 		querydict={}
 	cursor = collection.find(querydict)
-	print 'Documents matching:        ', cursor.count()
-	print 'Documents:'
+	print ('Documents matching:        ', cursor.count())
+	print ('Documents:')
 	for document in cursor:
 		pprint(document)

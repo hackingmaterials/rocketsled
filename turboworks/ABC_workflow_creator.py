@@ -7,7 +7,6 @@ This file specifies a function that creates a workflow to:
 			2. Optimize this function's input parameters
 """
 
-
 def workflow_creator(input_dict):
 	"""
 	:param input_dict: dictionary input
