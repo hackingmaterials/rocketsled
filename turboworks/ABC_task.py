@@ -1,8 +1,9 @@
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase, FWAction
-import sys
-import numpy as np
-# Executes black box tast A*B/C=D
+
+"""
+Executes black box function A*B/C
+"""
 
 @explicit_serialize
 class ABCtask(FireTaskBase):
@@ -10,22 +11,20 @@ class ABCtask(FireTaskBase):
 
 	def run_task(self, fw_spec):
 		"""
-		:param fw_spec: (dict)
-		:return: FWAction: object which saves all output to spec
+		Executes A*B/C
+
+		:param fw_spec: (dict) defines A (float), B (float), and C (float)
+		:return: FWAction: object which saves D (float) to the spec
 		"""
 		# Gather inputs from spec
 		A_input = fw_spec['A_input']
 		B_input = fw_spec['B_input']
 		C_input = fw_spec['C_input']
 
-		# Check to make sure params in range, this will need to be replaced with some exception system
-		# if np.amax([A_input,B_input,C_input]) > 100.00 or np.amin([A_input,B_input,C_input]) < 1:
-		# 	sys.exit("One or more parameters is out of range \n A,B, and C must be within 1-100")
-
 		# Run black box objective algorithm (A*B/C = D)
 		D_output = A_input*B_input/C_input
 		D_write = {'D_output':D_output}
 
-		# Modify changes in spec only
+		# Modify changes in spec
 		return FWAction(update_spec=D_write)
 
