@@ -20,6 +20,7 @@ This file locally defines high level GP functions which interact with the defaul
 
 """
 
+
 def _acquisition(X, model, y_opt=None, method="LCB", xi=0.01, kappa=1.96):
 	"""
 	A wrapper around the acquisition function that is called by fmin_l_bfgs_b.
@@ -137,26 +138,24 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
 	space = Space(dimensions)
 
 	# Default GP
-
-
-# -----MODIFIED------
+	# modified - Alex Dunn 7/3/2016
 
 	if base_estimator is None:
 		base_estimator = GaussianProcessRegressor(
-            kernel=(ConstantKernel(1.0, (0.01, 1000.0)) *
-                    Matern(length_scale=np.ones(space.transformed_n_dims),
-                           length_scale_bounds=[(0.01, 100)] * space.transformed_n_dims,
-                           nu=2.5)),
-            normalize_y=True, alpha=10e-6, random_state=random_state)
+			kernel=(ConstantKernel(1.0, (0.01, 1000.0)) *
+					Matern(length_scale=np.ones(space.transformed_n_dims),
+						   length_scale_bounds=[(0.01, 100)] * space.transformed_n_dims,
+						   nu=2.5)),
+			normalize_y=True, alpha=10e-6, random_state=random_state)
 
-# First points
+	# First points
 	Xi = my_input
 	yi = my_output
 	if np.ndim(yi) != 1:
 		raise ValueError(
 			"The function to be optimized should return a scalar")
 
-# Bayesian optimization loop
+	# Bayesian optimization loop
 	models = []
 	gp = clone(base_estimator)
 
@@ -170,7 +169,7 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
 		X = space.transform(space.rvs(n_samples=n_points,
 									  random_state=rng))
 		values = _gaussian_acquisition(
-			X=X, model=gp,  y_opt=np.min(yi), method=acq,
+			X=X, model=gp, y_opt=np.min(yi), method=acq,
 			xi=xi, kappa=kappa)
 		next_x = X[np.argmin(values)]
 
@@ -194,75 +193,3 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
 
 	next_x = space.inverse_transform(next_x.reshape((1, -1)))[0]
 	return next_x
-
-
-
-# -----ORIGINAL------
-#     if base_estimator is None:
-#         base_estimator = GaussianProcessRegressor(
-#             kernel=(ConstantKernel(1.0, (0.01, 1000.0)) *
-#                     Matern(length_scale=np.ones(space.transformed_n_dims),
-#                            length_scale_bounds=[(0.01, 100)] * space.transformed_n_dims,
-#                            nu=2.5)),
-#             normalize_y=True, alpha=10e-6, random_state=random_state)
-
-# First points
-# Xi = space.rvs(n_samples=n_start, random_state=rng)
-# yi = [func(x) for x in Xi]
-# if np.ndim(yi) != 1:
-#     raise ValueError(
-#         "The function to be optimized should return a scalar")
-
-# Bayesian optimization loop
-# models = []
-#
-# for i in range(maxiter - n_start):
-#     gp = clone(base_estimator)
-#
-#     with warnings.catch_warnings():
-#         warnings.simplefilter("ignore")
-#         gp.fit(space.transform(Xi), yi)
-#
-#     models.append(gp)
-#
-#     if search == "sampling":
-#         X = space.transform(space.rvs(n_samples=n_points,
-#                                       random_state=rng))
-#         values = _gaussian_acquisition(
-#             X=X, model=gp,  y_opt=np.min(yi), method=acq,
-#             xi=xi, kappa=kappa)
-#         next_x = X[np.argmin(values)]
-#
-#     elif search == "lbfgs":
-#         best = np.inf
-#
-#         for j in range(n_restarts_optimizer):
-#             x0 = space.transform(space.rvs(n_samples=1,
-#                                            random_state=rng))[0]
-#
-#             with warnings.catch_warnings():
-#                 warnings.simplefilter("ignore")
-#                 x, a, _ = fmin_l_bfgs_b(
-#                     _acquisition, x0,
-#                     args=(gp, np.min(yi), acq, xi, kappa),
-#                     bounds=space.transformed_bounds,
-#                     approx_grad=True, maxiter=10)
-#
-#             if a < best:
-#                 next_x, best = x, a
-#
-#     next_x = space.inverse_transform(next_x.reshape((1, -1)))[0]
-#     next_y = func(next_x)
-#     Xi = np.vstack((Xi, next_x))
-#     yi.append(next_y)
-
-# Pack results
-# res = OptimizeResult()
-# best = np.argmin(yi)
-# res.x = Xi[best]
-# res.fun = yi[best]
-# res.func_vals = np.array(yi)
-# res.x_iters = Xi
-# res.models = models
-
-# return res

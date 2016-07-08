@@ -1,7 +1,8 @@
 from random import uniform, randint
 import numpy as np
 
-def dummy_minimize (dimensions):
+
+def dummy_minimize(dimensions):
 	"""
 	This function returns random new inputs based on the dimensions of the search space.
 	It works with float and integer types.
@@ -10,12 +11,12 @@ def dummy_minimize (dimensions):
 	:return: new_input (list): randomly chosen next parameters in the search space
 	"""
 
-	new_input=[]
+	new_input = []
 	for i, (lower, upper) in enumerate(dimensions):
 		if type(upper) == np.int64 or type(upper) == int:
 			new_param = randint(lower, upper)
 			new_input.append(new_param)
-		elif type(upper) == np.float64 or type(upper)== float:
+		elif type(upper) == np.float64 or type(upper) == float:
 			new_param = uniform(lower, upper)
 			new_input.append(new_param)
 	return new_input

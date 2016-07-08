@@ -17,7 +17,8 @@ A_dimensions = (1.0, 100.0)
 B_dimensions = (1.0, 100.0)
 C_dimensions = (1, 100)
 
-# How many times to run the algorithm
+# How many times to run the workflow + optimization loop
+# 1-5 usually takes <10s, 100 takes 5min, 1000+ will take an hour+
 run_num = 200
 
 # Define the initial input
@@ -43,7 +44,7 @@ dummy_average = get_avg('D_output')
 dummy_total = get_param('D_output')
 nuke_it()
 
-# Compare the two optimizations
+# Compare the two optimizations grpahically
 print('GP average: ', gp_average, '\n GP best:    ', gp_best)
 print('Dummy average: ', dummy_average, '\n Dummy best: ', dummy_best)
 iterations = list(range(run_num))

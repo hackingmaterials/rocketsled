@@ -13,30 +13,17 @@ To learn more about FireWorks, see the [official documentation] (https://pythonh
 
 ### File list:
 - __init__.py
-- test_code.py
 
-> primary executable code file (for testing purposes)
+- test_code.py: primary executable code file (for testing purposes)
 
-- ABC_task.py
+- ABC_task.py: arbitrary black box task (future template, and for testing purposes)
 
-> arbitrary black box task (future template, and for testing purposes)
+- ABC_workflow_creator.py: workflow creator (future template, and for testing purposes)
 
-- ABC_workflow_creator.py
+- dummy_opt.py: random optimization algorithm
 
-> workflow creator (future template, and for testing purposes)
+- gp_opt.py: modified skopt file
 
-- dummy_opt.py
+- manage_DB.py: mongoDB utility function collection
 
-> random optimization algorithm
-
-- gp_opt.py
-
-> modified skopt file
-
-- manage_DB.py
-
-> mongoDB utility function collection
-
-- optimize_task.py
-
-> linking and processing from FireWorks to optimization algorithms
+- optimize_task.py: linking and processing from FireWorks to optimization algorithms

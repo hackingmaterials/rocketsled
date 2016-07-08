@@ -2,10 +2,10 @@ from pymongo import MongoClient
 from pprint import pprint
 import numpy as np
 
-
 """
 This file contains utility functions for managing the TurboWorks database.
 """
+
 mongo = MongoClient('localhost', 27017)
 db = mongo.TurboWorks
 collection = db.TurboWorks_collection

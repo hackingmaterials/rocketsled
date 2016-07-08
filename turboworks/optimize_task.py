@@ -12,18 +12,17 @@ This FireTask optimizes float, integer, or mixed float/integer inputs for black 
 
 
 @explicit_serialize
-
 class OptimizeTask(FireTaskBase):
 	_fw_name = 'OptimizeTask'
 	required_params = ["func", "opt_method", "min_or_max"]
 
 	def run_task(self, fw_spec):
 		"""
-			This method runs an optimization framework with Fireworks as a FireTask. The algorithms are designed to
-			minimize the result by returning an optimal next input. To maximize a result, just make all result data
-			negative.
+		This method runs an optimization framework with Fireworks as a FireTask. The algorithms are designed to
+		minimize the result by returning an optimal next input. To maximize a result, just make all result data
+		negative.
 
-			This software uses a modification of the Scikit-Optimize package. Python 3.x is supported.
+		This software uses a modification of the Scikit-Optimize package. Python 3.x is supported.
 
         :param fw_spec: (dict) specifying the firework data, and the data the firetask will use. The parameters should
 		be numerical in the form of:
@@ -89,9 +88,9 @@ class OptimizeTask(FireTaskBase):
 			opt_dim_history.append(self.subdim)
 		opt_dimensions = opt_dim_history[-1]
 
-		if self["min_or_max"]=="max":
-			opt_outputs= [-entry for entry in opt_outputs]
-		elif self["min_or_max"]!="min":
+		if self["min_or_max"] == "max":
+			opt_outputs = [-entry for entry in opt_outputs]
+		elif self["min_or_max"] != "min":
 			print("TurboWorks: No optima type specified. Defaulting to minimum.")
 
 		# Optimization Algorithm
@@ -104,11 +103,11 @@ class OptimizeTask(FireTaskBase):
 			print("A valid kwarg is required for the method parameter. Try 'skopt_gp' or 'dummy'.")
 			print("Using the most recent inputs as the optimized input.")
 
-		updated_input=[]
+		updated_input = []
 		for entry in new_input:
-			if type(entry) == np.int64 or type(entry)==int:
+			if type(entry) == np.int64 or type(entry) == int:
 				updated_input.append(int(entry))
-			elif type(entry) == np.float64 or type(entry)==float:
+			elif type(entry) == np.float64 or type(entry) == float:
 				updated_input.append(float(entry))
 
 		# Create updated dictionary which will be output to the workflow creator
