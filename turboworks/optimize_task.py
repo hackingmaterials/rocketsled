@@ -1,16 +1,18 @@
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase, FWAction
 from pymongo import MongoClient
-from skopt.gp_opt import gp_minimize
+from gp_opt import gp_minimize
 from dummy_opt import dummy_minimize
 import numpy as np
 from collections import OrderedDict
-from pprint import pprint
 
 """
-This FireTask optimizes inputs for black box functions.
+This FireTask optimizes float, integer, or mixed float/integer inputs for black box functions.
 """
+
+
 @explicit_serialize
+
 class OptimizeTask(FireTaskBase):
 	_fw_name = 'OptimizeTask'
 	required_params = ["func", "opt_method", "min_or_max"]
@@ -41,8 +43,9 @@ class OptimizeTask(FireTaskBase):
 			example: opt_method = "skopt_gp"
 
 		:param min_or_max: decides whether to minimize or maximize the function
-			"min" minimizes the function
-			"max" maximizes the function
+			"min": minimizes the function
+			"max": maximizes the function
+			example: min_or_max= "max"
 
 		:return: FWAction: object which creates new wf object based on updated params and specified workflow creator
 		"""
@@ -93,19 +96,22 @@ class OptimizeTask(FireTaskBase):
 
 		# Optimization Algorithm
 		if self["opt_method"] == 'skopt_gp':
-			new_input = gp_minimize(opt_inputs, opt_outputs, opt_dimensions, kappa=3.0)
+			new_input = gp_minimize(opt_inputs, opt_outputs, opt_dimensions)
 		elif self["opt_method"] == 'dummy':
-			new_input = dummy_minimize(opt_inputs, opt_outputs, opt_dimensions)
+			new_input = dummy_minimize(opt_dimensions)
+		else:
+			new_input = opt_inputs[-1]
+			print("A valid kwarg is required for the method parameter. Try 'skopt_gp' or 'dummy'.")
+			print("Using the most recent inputs as the optimized input.")
+
 		updated_input=[]
 		for entry in new_input:
 			if type(entry) == np.int64 or type(entry)==int:
 				updated_input.append(int(entry))
 			elif type(entry) == np.float64 or type(entry)==float:
 				updated_input.append(float(entry))
-		# print(type(new_input[0]))
-		# updated_input = [float(entry) for entry in new_input]
 
-		# Create dictionary which will be output to the workflow creator
+		# Create updated dictionary which will be output to the workflow creator
 		input_keys = []
 		dim_keys = []
 		for key in keys:
@@ -118,9 +124,6 @@ class OptimizeTask(FireTaskBase):
 		current_dimensions = dict(zip(dim_keys, opt_dimensions))
 		total_dict = current_dimensions.copy()
 		total_dict.update(updated_dictionary)
-
-		print("In OptimizeTask")
-		pprint(updated_dictionary)
 
 		# Initialize new workflow
 		return FWAction(additions=self.workflow_creator(total_dict, self["opt_method"]))

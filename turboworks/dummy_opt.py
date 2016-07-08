@@ -1,24 +1,21 @@
 from random import uniform, randint
 import numpy as np
 
-def dummy_minimize (my_input, my_output, dimensions):
-	if not np.isscalar(my_output[0]):
-		raise ValueError(
-			"The function to be optimized should return a scalar")
-	if np.isscalar(my_input[0]):
-		raise ValueError(
-			"The function to be optimized should have a list of parameterized inputs")
-	new_input=[]
+def dummy_minimize (dimensions):
+	"""
+	This function returns random new inputs based on the dimensions of the search space.
+	It works with float and integer types.
 
-	for i, entry in enumerate(my_input[0]):
-		if type(entry) == np.int64 or type(entry) == int:
-			lower = dimensions[i][0]
-			upper = dimensions[i][1]
+	:param dimensions (list of 2-tuples): defines the dimensions of each parameter
+	:return: new_input (list): randomly chosen next parameters in the search space
+	"""
+
+	new_input=[]
+	for i, (lower, upper) in enumerate(dimensions):
+		if type(upper) == np.int64 or type(upper) == int:
 			new_param = randint(lower, upper)
 			new_input.append(new_param)
-		elif type(entry) == np.float64 or type(entry)== float:
-			lower = dimensions[i][0]
-			upper = dimensions[i][1]
+		elif type(upper) == np.float64 or type(upper)== float:
 			new_param = uniform(lower, upper)
 			new_input.append(new_param)
 	return new_input

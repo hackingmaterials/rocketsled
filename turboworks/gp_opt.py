@@ -9,9 +9,16 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern, ConstantKernel
 from sklearn.utils import check_random_state
 
-from .acquisition import _gaussian_acquisition
-from .space import Space
+from skopt.acquisition import _gaussian_acquisition
+from skopt.space import Space
 
+"""
+This file is a modified Skopt file. Find the developer edition, default version of Skopt at
+https://github.com/scikit-optimize/scikit-optimize
+
+This file locally defines high level GP functions which interact with the default Skopt installation.
+
+"""
 
 def _acquisition(X, model, y_opt=None, method="LCB", xi=0.01, kappa=1.96):
 	"""
