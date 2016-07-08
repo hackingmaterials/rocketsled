@@ -1,4 +1,4 @@
-from random import uniform
+from random import uniform, randint
 import numpy as np
 
 def dummy_minimize (my_input, my_output, dimensions):
@@ -9,13 +9,16 @@ def dummy_minimize (my_input, my_output, dimensions):
 		raise ValueError(
 			"The function to be optimized should have a list of parameterized inputs")
 	new_input=[]
-	num_params = len(my_input[0])
 
-	print (num_params)
-	for i in range(num_params):
-		lower = dimensions[i][0]
-		upper = dimensions[i][1]
-		rand_in_range = uniform(lower, upper)
-		new_input.append(rand_in_range)
-
+	for i, entry in enumerate(my_input[0]):
+		if type(entry) == np.int64 or type(entry) == int:
+			lower = dimensions[i][0]
+			upper = dimensions[i][1]
+			new_param = randint(lower, upper)
+			new_input.append(new_param)
+		elif type(entry) == np.float64 or type(entry)== float:
+			lower = dimensions[i][0]
+			upper = dimensions[i][1]
+			new_param = uniform(lower, upper)
+			new_input.append(new_param)
 	return new_input

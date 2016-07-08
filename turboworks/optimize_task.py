@@ -3,6 +3,7 @@ from fireworks.core.firework import FireTaskBase, FWAction
 from pymongo import MongoClient
 from skopt.gp_opt import gp_minimize
 from dummy_opt import dummy_minimize
+import numpy as np
 from collections import OrderedDict
 from pprint import pprint
 
@@ -92,11 +93,17 @@ class OptimizeTask(FireTaskBase):
 
 		# Optimization Algorithm
 		if self["opt_method"] == 'skopt_gp':
-			new_input = gp_minimize(opt_inputs, opt_outputs, opt_dimensions)
+			new_input = gp_minimize(opt_inputs, opt_outputs, opt_dimensions, kappa=3.0)
 		elif self["opt_method"] == 'dummy':
 			new_input = dummy_minimize(opt_inputs, opt_outputs, opt_dimensions)
-		# if type
-		updated_input = [float(entry) for entry in new_input]
+		updated_input=[]
+		for entry in new_input:
+			if type(entry) == np.int64 or type(entry)==int:
+				updated_input.append(int(entry))
+			elif type(entry) == np.float64 or type(entry)==float:
+				updated_input.append(float(entry))
+		# print(type(new_input[0]))
+		# updated_input = [float(entry) for entry in new_input]
 
 		# Create dictionary which will be output to the workflow creator
 		input_keys = []
