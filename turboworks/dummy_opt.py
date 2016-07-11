@@ -2,6 +2,9 @@ from random import uniform, randint
 import numpy as np
 
 
+# TODO: fix indentation (mixed tabs and spaces - use spaces). Configure Pycharm so tab automatically maps to spaces
+# TODO: install Pylint on Pycharm so you get warnings about these things
+
 def dummy_minimize(dimensions):
 	"""
 	This function returns random new inputs based on the dimensions of the search space.

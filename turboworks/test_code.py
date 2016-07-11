@@ -1,13 +1,15 @@
 from ABC_workflow_creator import workflow_creator
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import FWorker, LaunchPad
-from fireworks.core.rocket_launcher import launch_rocket
+from fireworks.core.rocket_launcher import launch_rocket  # TODO: clean up unused imports
 from manage_DB import count_it, nuke_it, query_it, get_optima, get_avg, get_param
 import matplotlib.pyplot as plt
 
+# TODO: ALWAYS add if __name__ == "__main__" wrapper to exe code
+
 # Set up the launchpad
 launchpad = LaunchPad()
-launchpad.reset('', require_password=False)
+launchpad.reset('', require_password=False)  # TODO: this is dangerous. Don't just leave code like this around. A careless user could run your code to test it out and find that they nuked their entire FireWorks database!
 
 # Sample data
 A = 45.1

@@ -8,6 +8,10 @@ This file specifies a function that creates a workflow to:
     2. Optimize this function's input parameters
 """
 
+# TODO: fix indentation (mixed tabs and spaces - use spaces). Configure Pycharm so tab automatically maps to spaces
+# TODO: install Pylint on Pycharm so you get warnings about these things
+
+# TODO: needs better documentation. e.g. what does input_dict look like?
 
 def workflow_creator(input_dict, opt_method):
 	"""

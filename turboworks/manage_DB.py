@@ -5,7 +5,11 @@ import numpy as np
 """
 This file contains utility functions for managing the TurboWorks database.
 """
+# TODO: fix indentation (mixed tabs and spaces - use spaces). Configure Pycharm so tab automatically maps to spaces
+# TODO: install Pylint on Pycharm so you get warnings about these things
 
+
+# TODO: make this into a class. parameters like hostname, port, dbname, and collection should be initialization parameters into the constructor. The functions should become instance methods.
 mongo = MongoClient('localhost', 27017)
 db = mongo.TurboWorks
 collection = db.TurboWorks_collection

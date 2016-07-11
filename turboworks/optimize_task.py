@@ -10,6 +10,12 @@ from collections import OrderedDict
 This FireTask optimizes float, integer, or mixed float/integer inputs for black box functions.
 """
 
+# TODO: fix indentation (mixed tabs and spaces - use spaces). Configure Pycharm so tab automatically maps to spaces
+# TODO: install Pylint on Pycharm so you get warnings about these things
+
+# TODO: rename to SKOptimizeTask
+# TODO: don't put dummy minimize in here. Put the dummy minimize in a new task, e.g. DummyOptimizeTask. The WFcreator will pick the correct optimize task based on whether the user wants dummy or real
+# TODO: don't use the _input or _dimension or _output type form to identify parameters. Specify a specific key where the inputs and dimensions etc. should go. This will avoid unintended consequences and is stylistically neater.
 
 @explicit_serialize
 class OptimizeTask(FireTaskBase):

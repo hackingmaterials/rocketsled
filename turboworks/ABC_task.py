@@ -5,6 +5,7 @@ from fireworks.core.firework import FireTaskBase, FWAction
 Executes black box function A*B/C
 """
 
+# TODO: reorganize everything relating to "ABC" into a new package. i.e., the core code should be separated from the user code
 
 @explicit_serialize
 class ABCtask(FireTaskBase):

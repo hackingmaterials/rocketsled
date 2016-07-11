@@ -20,6 +20,8 @@ This file locally defines high level GP functions which interact with the defaul
 
 """
 
+# TODO: why is this needed? You should not be overriding skopt
+
 
 def _acquisition(X, model, y_opt=None, method="LCB", xi=0.01, kappa=1.96):
 	"""
