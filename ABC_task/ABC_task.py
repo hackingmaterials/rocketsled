@@ -17,13 +17,13 @@ class ABCtask(FireTaskBase):
         :return: FWAction: object which saves D (float) to the spec
         """
         # Gather inputs from spec
-        A_input = fw_spec['A_input']
-        B_input = fw_spec['B_input']
-        C_input = fw_spec['C_input']
+        A_input = fw_spec['input']['A']
+        B_input = fw_spec['input']['B']
+        C_input = fw_spec['input']['C']
 
         # Run black box objective algorithm (A*B/C = D)
         D_output = A_input * B_input / C_input
-        D_write = {'D_output': D_output}
+        D_write = {'output': {'D':D_output}}
 
         # Modify changes in spec
         return FWAction(update_spec=D_write)

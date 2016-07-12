@@ -13,21 +13,22 @@ launchpad = LaunchPad()
 manageDB = ManageDB()
 
 # Sample data
-A = 45.1
-B = 22.3
-C = 67.0
-A_dimensions = (1.0, 100.0)
-B_dimensions = (1.0, 100.0)
-C_dimensions = (1, 100)
-
-# How many times to run the workflow + optimization loop
-run_num = 1
+A = 4.1
+B = 3.3
+C = 85.3
+input1 = {"A":A, "B":B, "C":C}
+dimensions = {"A_range":(1.0,100.0),"B_range":(1.0,100.0), "C_range":(1.0,100.0)}
 
 # Define the initial input
-input_dict = {'A_input': A, 'B_input': B, 'C_input': C,
-			  'A_dimensions': A_dimensions, 'B_dimensions': B_dimensions, 'C_dimensions': C_dimensions}
+input_dict = {'input':input1, 'dimensions':dimensions}
 
-def test_opt_best_vs_iter():
+
+
+# How many times to run the workflow + optimization loop
+run_num = 50
+
+
+def best_graph():
     """
     only for dev. graph generation and benchmarking:
         plot the best result vs the iteration, comparing GP vs random
@@ -35,41 +36,42 @@ def test_opt_best_vs_iter():
 
     # Run run_num iterations using Skopt Gaussian Processes
     gp_best = []
-    launchpad.reset('2016-07-11')
+    launchpad.reset('2016-07-12')
     wf = workflow_creator(input_dict, 'skopt_gp')
     launchpad.add_wf(wf)
     for i in range(run_num):
         launch_rocket(launchpad)
-        gp_best.append(manageDB.get_optima('D_output', min_or_max='max'))
+        gp_best.append(manageDB.get_optima('D', min_or_max='max')[0])
     manageDB.nuke_it()
 
     # Run run_num iterations using a dummy optimizer (returns random)
     dummy_best = []
-    launchpad.reset('2016-07-11')
+    launchpad.reset('2016-07-12')
     wf = workflow_creator(input_dict, 'dummy')
     launchpad.add_wf(wf)
     for i in range(run_num):
         launch_rocket(launchpad)
-        dummy_best.append(manageDB.get_optima('D_output', min_or_max='max'))
+        dummy_best.append(manageDB.get_optima('D', min_or_max='max')[0])
     manageDB.nuke_it()
 
     iterations = list(range(run_num))
     plt.plot(iterations,gp_best,'g', iterations, dummy_best,'r')
     plt.show()
 
-def test_opt_every_point():
+def scatter_graph():
     """
     only for dev. graph generation and benchmarking:
         plot the score of each iteration, scatter style
     """
 
     # Run run_num iterations using Skopt Gaussian Processes
+    launchpad.reset('', require_password=False)
     wf = workflow_creator(input_dict, 'skopt_gp')
     launchpad.add_wf(wf)
     rapidfire(launchpad, FWorker(), nlaunches=run_num, sleep_time=0)
-    gp_best = manageDB.get_optima('D_output', min_or_max='max')
-    gp_average = manageDB.get_avg('D_output')
-    gp_total = manageDB.get_param('D_output')
+    gp_best = manageDB.get_optima('D', min_or_max='max')[0]
+    gp_average = manageDB.get_avg('D')
+    gp_total = manageDB.get_param('D')
     manageDB.nuke_it()
 
     # Run run_num iterations using a dummy optimizer (returns random)
@@ -77,9 +79,9 @@ def test_opt_every_point():
     wf = workflow_creator(input_dict, 'dummy')
     launchpad.add_wf(wf)
     rapidfire(launchpad, FWorker(), nlaunches=run_num, sleep_time=0)
-    dummy_best = manageDB.get_optima('D_output', min_or_max='max')
-    dummy_average = manageDB.get_avg('D_output')
-    dummy_total = manageDB.get_param('D_output')
+    dummy_best = manageDB.get_optima('D', min_or_max='max')[0]
+    dummy_average = manageDB.get_avg('D')
+    dummy_total = manageDB.get_param('D')
     manageDB.nuke_it()
 
     # Compare the two optimizations graphically
@@ -89,5 +91,16 @@ def test_opt_every_point():
     plt.plot(iterations, gp_total, 'g.', iterations, dummy_total, 'r.')
     plt.show()
 
+def testing_for_errors():
+    """
+    only for dev. bugfixing
+    """
+    launchpad.reset('', require_password=False)
+    wf = workflow_creator(input_dict,'skopt_gp')
+    launchpad.add_wf(wf)
+    rapidfire(launchpad, FWorker(), nlaunches=run_num, sleep_time=0)
+    gp_max = manageDB.get_optima('D','max')
+    print(gp_max)
+
 if __name__=="__main__":
-    test_opt_every_point()
+    testing_for_errors()

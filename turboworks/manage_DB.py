@@ -13,6 +13,7 @@ class ManageDB():
         self.mongo = MongoClient(hostname, portnum)
         self.db = getattr(self.mongo,dbname)
         self.collection = getattr(self.db,collection)
+        self.collection_string = collection
 
     def nuke_it(self):
         """
@@ -45,64 +46,22 @@ class ManageDB():
         for document in cursor:
             pprint(document)
 
-    def get_optima(self, output_var, min_or_max='min'):
-        """
-        :param output_var: a string representing the variable you want the optimum for
-        :param min_or_max: 'min' finds minimum (default), 'max' finds maximum
-        :return: maximum/minimum value
-        """
-        min = None
-        max = None
-        optima_params = {}
-        cursor = self.collection.find()
-        for document in cursor:
-            for key in document:
-                if key == output_var:
-                    if min_or_max == 'min':
-                        if min != None:
-                            if document[key] < min:
-                                min = document[key]
-                                optima_params = document
-                        elif min == None:
-                            min = document[key]
-                            optima_params = document
-                        else:
-                            print('Manage_DB: Incorrect datatype')
-                    elif min_or_max == 'max':
-                        if max != None:
-                            if document[key] >= max:
-                                max = document[key]
-                                optima_params = document
-                        elif max == None:
-                            max = document[key]
-                            optima_params = document
-                        else:
-                            print('Manage_DB: Incorrect datatype')
-                    else:
-                        print("Invalid option for min_or_max \nUsing minimum")
-                        self.get_optima(output_var)
-
-        if min_or_max == 'max':
-            return max
-        elif min_or_max == 'min':
-            return min
-        else:
-            print("Invalid option for min_or_max \nUsing minimum")
-            self.get_optima(output_var)
-
     def get_avg(self, var):
         """
         :param var (string): the variable to be averaged
             example: get_avg("some_output")
         :return: average (int or float): the average of all the var in database
         """
-
         total_list = []
         cursor = self.collection.find()
         for document in cursor:
-            for key in document:
-                if key == var:
-                    total_list.append(document[key])
+            if var in document['input']:
+                total_list.append(document['input'][var])
+            elif var in document['output']:
+                total_list.append(document['output'][var])
+            else:
+                raise KeyError("The key {} was not found anywhere "
+                               "in the {} collection".format(var, self.collection_string))
         average = 0
         if type(total_list[0]) == np.int64 or type(total_list[0]) == int:
             average = int(sum(total_list) / len(total_list))
@@ -118,7 +77,73 @@ class ManageDB():
         total_list = []
         cursor = self.collection.find()
         for document in cursor:
-            for key in document:
-                if key == var:
-                    total_list.append(document[key])
+            if var in document['input']:
+                total_list.append(document['input'][var])
+            elif var in document['output']:
+                total_list.append(document['output'][var])
+            else:
+                raise KeyError("The key {} was not found anywhere "
+                               "in the {} collection".format(var, self.collection_string))
         return total_list
+
+    def get_optima(self, var, min_or_max='min'):
+        """
+        :param output_var: a string representing the variable you want the optimum for
+        :param min_or_max: 'min' finds minimum (default), 'max' finds maximum
+        :return: maximum/minimum value
+        """
+        min = None
+        max = None
+        optima_params = {}
+        cursor = self.collection.find()
+        for document in cursor:
+            if var in document['input']:
+                if min_or_max == 'min':
+                    if min != None:
+                        if document['input'][var] < min:
+                            min = document['input'][var]
+                            optima_params = document['input']
+                    elif min == None:
+                        min = document['input'][var]
+                        optima_params = document['input']
+                elif min_or_max == 'max':
+                    if max != None:
+                        if document['input'][var] >= max:
+                            max = document['input'][var]
+                            optima_params = document['input']
+                    elif max == None:
+                        max = document['input'][var]
+                        optima_params = document['input']
+                else:
+                    print("Invalid option for min_or_max \nUsing minimum")
+                    self.get_optima(var)
+            elif var in document['output']:
+                if min_or_max == 'min':
+                    if min != None:
+                        if document['output'][var] < min:
+                            min = document['output'][var]
+                            optima_params = document['input']
+                    elif min == None:
+                        min = document['output'][var]
+                        optima_params = document['input']
+                elif min_or_max == 'max':
+                    if max != None:
+                        if document['output'][var] >= max:
+                            max = document['output'][var]
+                            optima_params = document['input']
+                    elif max == None:
+                        max = document['output'][var]
+                        optima_params = document['input']
+                else:
+                    print("Invalid option for min_or_max \nUsing minimum")
+                    self.get_optima(var)
+            else:
+                raise KeyError("The key {} was not found anywhere "
+                               "in the {} collection".format(var, self.collection_string))
+        if min_or_max == 'max':
+            return (max, optima_params)
+        elif min_or_max == 'min':
+            return (min, optima_params)
+        else:
+            print("Invalid option for min_or_max \nUsing minimum")
+            self.get_optima(var)
