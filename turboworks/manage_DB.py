@@ -174,9 +174,7 @@ class ManageDB():
         :param dbname: (str) database name (creates it if nonexistent)
         :param collection: (str) collection name (creates it if nonexistent)
         """
-        self.warehouse=[]
         cursor = self.collection.find()
-
         backup_mongo = MongoClient(hostname, portnum)
         backup_db = getattr(backup_mongo, dbname)
         backup_collection = getattr(backup_db, collection)
@@ -185,5 +183,4 @@ class ManageDB():
         print("Beginning storage.")
         for document in cursor:
             backup_collection.insert_one(document)
-
         print("Ended storage in DB {}".format(backup_collection_string))

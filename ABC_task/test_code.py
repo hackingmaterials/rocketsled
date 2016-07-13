@@ -6,7 +6,7 @@ from turboworks.manage_DB import ManageDB
 import matplotlib.pyplot as plt
 
 """
-This is the top level script for this turboworks example.
+This is the top level script for this turboworks example, and is used primarily for debugging/tuning.
 """
 
 launchpad = LaunchPad()
@@ -23,11 +23,14 @@ dimensions = {"A_range":(1.0,100.0),"B_range":(1.0,100.0), "C_range":(1.0,100.0)
 input_dict = {'input':input1, 'dimensions':dimensions}
 
 # How many times to run the workflow + optimization loop
-run_num = 5
+run_num = 10
 
 # Or dynamically call till within a max_val
 max_val = 10000
 tolerance = .95
+
+#
+launchpad.reset('', require_password=False)
 
 def best_graph():
     """
@@ -37,17 +40,16 @@ def best_graph():
 
     # Run run_num iterations using Skopt Gaussian Processes
     gp_best = []
-    launchpad.reset('2016-07-12')
     wf = workflow_creator(input_dict, 'skopt_gp')
     launchpad.add_wf(wf)
     for i in range(run_num):
         launch_rocket(launchpad)
         gp_best.append(manageDB.get_optima('D', min_or_max='max')[0])
     manageDB.nuke_it()
+    launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
 
     # Run run_num iterations using a dummy optimizer (returns random)
     dummy_best = []
-    launchpad.reset('2016-07-12')
     wf = workflow_creator(input_dict, 'dummy')
     launchpad.add_wf(wf)
     for i in range(run_num):
@@ -56,6 +58,8 @@ def best_graph():
     manageDB.nuke_it()
 
     iterations = list(range(run_num))
+    print("GP best:", gp_best[-1])
+    print("Dummy best: ", dummy_best[-1])
     plt.plot(iterations,gp_best,'g', iterations, dummy_best,'r')
     plt.show()
 
@@ -66,7 +70,6 @@ def scatter_graph():
     """
 
     # Run run_num iterations using Skopt Gaussian Processes
-    launchpad.reset('', require_password=False)
     wf = workflow_creator(input_dict, 'skopt_gp')
     launchpad.add_wf(wf)
     rapidfire(launchpad, FWorker(), nlaunches=run_num, sleep_time=0)
@@ -76,7 +79,7 @@ def scatter_graph():
     manageDB.nuke_it()
 
     # Run run_num iterations using a dummy optimizer (returns random)
-    launchpad.reset('', require_password=False)
+    launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
     wf = workflow_creator(input_dict, 'dummy')
     launchpad.add_wf(wf)
     rapidfire(launchpad, FWorker(), nlaunches=run_num, sleep_time=0)
@@ -92,30 +95,17 @@ def scatter_graph():
     plt.plot(iterations, gp_total, 'g.', iterations, dummy_total, 'r.')
     plt.show()
 
-def testing_for_errors():
-    """
-    only for dev. bugfixing
-    """
-    launchpad.reset('', require_password=False)
-    wf = workflow_creator(input_dict,'skopt_gp')
-    launchpad.add_wf(wf)
-    rapidfire(launchpad, FWorker(), nlaunches=run_num, sleep_time=0)
-    gp_max = manageDB.get_optima('D','max')
-    manageDB.store_it()
-    print(gp_max)
-
-
-
 def converge_to():
     """
     only for dev. graph generation and benchmarking:
         plot the best result vs the iteration, comparing GP vs random
     """
+    # Note: this can take a long time to run, you want to run this outside of Fireworks
+    # to get any meaningful graph in your lifetime
 
     # Run some number of iterations until dummy iteration has converged
     gp_best = []
     gp_iter = 0
-    launchpad.reset('2016-07-12')
     wf = workflow_creator(input_dict, 'skopt_gp')
     launchpad.add_wf(wf)
 
@@ -131,12 +121,11 @@ def converge_to():
     manageDB.nuke_it()
 
     # Run some number of iterations until dummy iteration has converged
+    launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
     dummy_best = []
-    dummy_iter =0
-    launchpad.reset('2016-07-12')
+    dummy_iter = 0
     wf = workflow_creator(input_dict, 'dummy')
     launchpad.add_wf(wf)
-
     dummy_iter = dummy_iter + 1
     launch_rocket(launchpad)
     dummy_best.append(manageDB.get_optima('D', min_or_max='max')[0])
@@ -154,6 +143,16 @@ def converge_to():
     plt.plot(list(range(gp_iter)), gp_best, 'g', list(range(dummy_iter)), dummy_best, 'r')
     plt.show()
 
+def testing_for_errors():
+    """
+    only for dev. bugfixing
+    """
+    wf = workflow_creator(input_dict,'skopt_gp')
+    launchpad.add_wf(wf)
+    rapidfire(launchpad, FWorker(), nlaunches=run_num, sleep_time=0)
+    gp_max = manageDB.get_optima('D','max')
+    launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
+    print (gp_max)
 
 if __name__=="__main__":
-    converge_to()
+    best_graph()

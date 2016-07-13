@@ -57,6 +57,14 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
         Function to minimize. Should take a array of parameters and
         return the function values.
 
+        [modified] - now should take my_input and my_output of the form:
+        my_input = [[run 1 params], [run 2 params], [run 3 params]...]
+        my_output = [ run 1 output, run 2 output, run 3 output...]
+
+        example:
+        my_input = [[12.3, 992.2, 4], [14.4, 876.4, 5]]
+        my_output = [0.0045, 0.0067]
+
     * `dimensions` [list, shape=(n_dims,)]:
         List of search space dimensions.
         Each search dimension can be defined either as
