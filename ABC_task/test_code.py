@@ -13,20 +13,21 @@ launchpad = LaunchPad()
 manageDB = ManageDB()
 
 # Sample data
-A = 4.1
-B = 3.3
-C = 85.3
+A = 50.0
+B = 50.0
+C = 50.0
 input1 = {"A":A, "B":B, "C":C}
 dimensions = {"A_range":(1.0,100.0),"B_range":(1.0,100.0), "C_range":(1.0,100.0)}
 
 # Define the initial input
 input_dict = {'input':input1, 'dimensions':dimensions}
 
-
-
 # How many times to run the workflow + optimization loop
-run_num = 50
+run_num = 5
 
+# Or dynamically call till within a max_val
+max_val = 10000
+tolerance = .95
 
 def best_graph():
     """
@@ -100,7 +101,59 @@ def testing_for_errors():
     launchpad.add_wf(wf)
     rapidfire(launchpad, FWorker(), nlaunches=run_num, sleep_time=0)
     gp_max = manageDB.get_optima('D','max')
+    manageDB.store_it()
     print(gp_max)
 
+
+
+def converge_to():
+    """
+    only for dev. graph generation and benchmarking:
+        plot the best result vs the iteration, comparing GP vs random
+    """
+
+    # Run some number of iterations until dummy iteration has converged
+    gp_best = []
+    gp_iter = 0
+    launchpad.reset('2016-07-12')
+    wf = workflow_creator(input_dict, 'skopt_gp')
+    launchpad.add_wf(wf)
+
+    gp_iter = gp_iter + 1
+    launch_rocket(launchpad)
+    gp_best.append(manageDB.get_optima('D', min_or_max='max')[0])
+
+    while (gp_best[-1]<=tolerance*max_val):
+        gp_iter = gp_iter+1
+        launch_rocket(launchpad)
+        gp_best.append(manageDB.get_optima('D', min_or_max='max')[0])
+
+    manageDB.nuke_it()
+
+    # Run some number of iterations until dummy iteration has converged
+    dummy_best = []
+    dummy_iter =0
+    launchpad.reset('2016-07-12')
+    wf = workflow_creator(input_dict, 'dummy')
+    launchpad.add_wf(wf)
+
+    dummy_iter = dummy_iter + 1
+    launch_rocket(launchpad)
+    dummy_best.append(manageDB.get_optima('D', min_or_max='max')[0])
+
+    while (dummy_best[-1] <= tolerance * max_val):
+        dummy_iter = dummy_iter + 1
+        launch_rocket(launchpad)
+        dummy_best.append(manageDB.get_optima('D', min_or_max='max')[0])
+
+    manageDB.nuke_it()
+
+    print("GP iterations:", gp_iter)
+    print("Dummy iterations:", dummy_iter)
+
+    plt.plot(list(range(gp_iter)), gp_best, 'g', list(range(dummy_iter)), dummy_best, 'r')
+    plt.show()
+
+
 if __name__=="__main__":
-    testing_for_errors()
+    converge_to()

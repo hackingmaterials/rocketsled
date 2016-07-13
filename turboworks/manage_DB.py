@@ -3,13 +3,29 @@ from pprint import pprint
 import numpy as np
 
 """
-This file contains utility functions for managing the TurboWorks database.
+This file contains utility functions for managing the TurboWorks database. Here is a summary of each method:
+
+    __init__  : allows class to be instantiated with custom MongoDB params (ie, store the DB somewhere besides default
+    nuke_it   : deletes the entire collection
+    count_it  : counts how many documents are in the collection
+    query_it  : queries the DB based on typical pymongo syntax
+    get_avg   : get the mean of a parameter
+    get_param : get all values of the specified param/output
+    get_optima: get the maximum/minimum value of a specified param/output
+    store_it  : stores the entire collection in a backup collection
 """
 
 class ManageDB():
 
     def __init__(self, hostname='localhost', portnum=27017, dbname='TurboWorks',
                  collection='TurboWorks_collection'):
+        """
+        Allows configuration of the TurboWorks DB
+        :param hostname: (str) host name of the MongoDB
+        :param portnum: (str) port number of the DB
+        :param dbname: (str) database name (creates it if nonexistent)
+        :param collection: (str) collection name (creates it if nonexistent)
+        """
         self.mongo = MongoClient(hostname, portnum)
         self.db = getattr(self.mongo,dbname)
         self.collection = getattr(self.db,collection)
@@ -147,3 +163,27 @@ class ManageDB():
         else:
             print("Invalid option for min_or_max \nUsing minimum")
             self.get_optima(var)
+
+
+    def store_it(self, hostname='localhost', portnum=27017, dbname='TW_backup',
+                 collection='TW_backup'):
+        """
+        Transfers all data from the TurboWorks DB to another DB
+        :param hostname: (str) host name of the MongoDB
+        :param portnum: (str) port number of the DB
+        :param dbname: (str) database name (creates it if nonexistent)
+        :param collection: (str) collection name (creates it if nonexistent)
+        """
+        self.warehouse=[]
+        cursor = self.collection.find()
+
+        backup_mongo = MongoClient(hostname, portnum)
+        backup_db = getattr(backup_mongo, dbname)
+        backup_collection = getattr(backup_db, collection)
+        backup_collection_string = collection
+
+        print("Beginning storage.")
+        for document in cursor:
+            backup_collection.insert_one(document)
+
+        print("Ended storage in DB {}".format(backup_collection_string))
