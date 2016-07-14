@@ -12,7 +12,7 @@ class BraninTask(FireTaskBase):
 
     def run_task(self, fw_spec):
         """
-        Executes A*B/C
+        Executes the Branin-Hoo function
 
         :param fw_spec: (dict) defines A (float), B (float), and C (float)
         :return: FWAction: object which saves D (float) to the spec
