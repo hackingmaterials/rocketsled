@@ -1,4 +1,4 @@
-from ABC_workflow_creator import workflow_creator
+from Branin_workflow_creator import workflow_creator
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import FWorker, LaunchPad
 from fireworks.core.rocket_launcher import launch_rocket
@@ -13,23 +13,19 @@ launchpad = LaunchPad()
 manageDB = ManageDB()
 
 # Sample data
-A = 50.0
-B = 50.0
-C = 50.0
-input1 = {"A":A, "B":B, "C":C}
-dimensions = {"A_range":(1.0,100.0),"B_range":(1.0,100.0), "C_range":(1.0,100.0)}
+input1 = {"x1":1.3, "x2":2.9}
+dimensions = {"x1_dim":(-5.0,10.0),"x2_dim":(0.0,15.0)}
 
 # Define the initial input
 input_dict = {'input':input1, 'dimensions':dimensions}
 
 # How many times to run the workflow + optimization loop
-run_num = 2
+run_num = 30
 
-# Or dynamically call till within a max_val
-max_val = 10000
-tolerance = .95
+# Or dynamically call till within a min_val
+min_val = 0.397887
+tolerance = 1.05
 
-#
 launchpad.reset('', require_password=False)
 
 def best_graph():
@@ -44,7 +40,7 @@ def best_graph():
     launchpad.add_wf(wf)
     for i in range(run_num):
         launch_rocket(launchpad)
-        gp_best.append(manageDB.get_optima('D', min_or_max='max')[0])
+        gp_best.append(manageDB.get_optima('f', min_or_max='min')[0])
     manageDB.nuke_it()
     launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
 
@@ -54,7 +50,7 @@ def best_graph():
     launchpad.add_wf(wf)
     for i in range(run_num):
         launch_rocket(launchpad)
-        dummy_best.append(manageDB.get_optima('D', min_or_max='max')[0])
+        dummy_best.append(manageDB.get_optima('f', min_or_max='min')[0])
     manageDB.nuke_it()
 
     iterations = list(range(run_num))
@@ -73,9 +69,9 @@ def scatter_graph():
     wf = workflow_creator(input_dict, 'skopt_gp')
     launchpad.add_wf(wf)
     rapidfire(launchpad, FWorker(), nlaunches=run_num, sleep_time=0)
-    gp_best = manageDB.get_optima('D', min_or_max='max')[0]
-    gp_average = manageDB.get_avg('D')
-    gp_total = manageDB.get_param('D')
+    gp_best = manageDB.get_optima('f', min_or_max='min')[0]
+    gp_average = manageDB.get_avg('f')
+    gp_total = manageDB.get_param('f')
     manageDB.nuke_it()
 
     # Run run_num iterations using a dummy optimizer (returns random)
@@ -83,9 +79,9 @@ def scatter_graph():
     wf = workflow_creator(input_dict, 'dummy')
     launchpad.add_wf(wf)
     rapidfire(launchpad, FWorker(), nlaunches=run_num, sleep_time=0)
-    dummy_best = manageDB.get_optima('D', min_or_max='max')[0]
-    dummy_average = manageDB.get_avg('D')
-    dummy_total = manageDB.get_param('D')
+    dummy_best = manageDB.get_optima('f', min_or_max='min')[0]
+    dummy_average = manageDB.get_avg('f')
+    dummy_total = manageDB.get_param('f')
     manageDB.nuke_it()
 
     # Compare the two optimizations graphically
@@ -111,12 +107,12 @@ def converge_to():
 
     gp_iter = gp_iter + 1
     launch_rocket(launchpad)
-    gp_best.append(manageDB.get_optima('D', min_or_max='max')[0])
+    gp_best.append(manageDB.get_optima('f', min_or_max='min')[0])
 
-    while (gp_best[-1]<=tolerance*max_val):
+    while (gp_best[-1]>=tolerance*min_val):
         gp_iter = gp_iter+1
         launch_rocket(launchpad)
-        gp_best.append(manageDB.get_optima('D', min_or_max='max')[0])
+        gp_best.append(manageDB.get_optima('f', min_or_max='min')[0])
 
     manageDB.nuke_it()
 
@@ -128,12 +124,12 @@ def converge_to():
     launchpad.add_wf(wf)
     dummy_iter = dummy_iter + 1
     launch_rocket(launchpad)
-    dummy_best.append(manageDB.get_optima('D', min_or_max='max')[0])
+    dummy_best.append(manageDB.get_optima('f', min_or_max='min')[0])
 
-    while (dummy_best[-1] <= tolerance * max_val):
+    while (dummy_best[-1] >= tolerance * min_val):
         dummy_iter = dummy_iter + 1
         launch_rocket(launchpad)
-        dummy_best.append(manageDB.get_optima('D', min_or_max='max')[0])
+        dummy_best.append(manageDB.get_optima('f', min_or_max='min')[0])
 
     manageDB.nuke_it()
 
@@ -150,7 +146,7 @@ def testing_for_errors():
     wf = workflow_creator(input_dict,'skopt_gp')
     launchpad.add_wf(wf)
     rapidfire(launchpad, FWorker(), nlaunches=run_num, sleep_time=0)
-    gp_max = manageDB.get_optima('D','max')
+    gp_max = manageDB.get_optima('f','min')
     launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
     print (gp_max)
 

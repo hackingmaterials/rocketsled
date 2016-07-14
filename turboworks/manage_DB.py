@@ -183,4 +183,5 @@ class ManageDB():
         print("Beginning storage.")
         for document in cursor:
             backup_collection.insert_one(document)
+
         print("Ended storage in DB {}".format(backup_collection_string))
