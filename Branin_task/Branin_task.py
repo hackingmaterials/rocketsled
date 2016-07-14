@@ -14,8 +14,8 @@ class BraninTask(FireTaskBase):
         """
         Executes the Branin-Hoo function
 
-        :param fw_spec: (dict) defines A (float), B (float), and C (float)
-        :return: FWAction: object which saves D (float) to the spec
+        :param fw_spec: (dict) defines x1 and x2
+        :return: FWAction: object which saves f(x1,x2) to the spec
         """
         # Gather inputs from spec
         x1 = fw_spec['input']['x1']
