@@ -182,7 +182,7 @@ class DummyOptimizeTask(FireTaskBase):
         current_dimensions = dict(zip(dim_keys, opt_dimensions))
         updated_dictionary["dimensions"] = current_dimensions
 
-        from pprint import pprint
-        pprint(updated_dictionary)
+        # from pprint import pprint
+        # pprint(updated_dictionary)
 
         return FWAction(additions=self.workflow_creator(updated_dictionary, 'dummy'))

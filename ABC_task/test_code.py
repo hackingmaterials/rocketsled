@@ -23,7 +23,7 @@ dimensions = {"A_range":(1.0,100.0),"B_range":(1.0,100.0), "C_range":(1.0,100.0)
 input_dict = {'input':input1, 'dimensions':dimensions}
 
 # How many times to run the workflow + optimization loop
-run_num = 2
+run_num = 50
 
 # Or dynamically call till within a max_val
 max_val = 10000
