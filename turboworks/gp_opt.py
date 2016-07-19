@@ -202,4 +202,10 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
                 next_x, best = x, a
 
     next_x = space.inverse_transform(next_x.reshape((1, -1)))[0]
+
+    #add checking for repeated integer calculations
+    if list(next_x) in my_input:
+        next_x = gp_minimize(my_input, my_output, dimensions, base_estimator=base_estimator, acq=acq, xi=xi,
+                    kappa=kappa, search=search, maxiter=maxiter, n_points=n_points,
+                    n_start=n_start, n_restarts_optimizer=n_restarts_optimizer, random_state=random_state)
     return next_x

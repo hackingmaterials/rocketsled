@@ -13,11 +13,11 @@ launchpad = LaunchPad()
 manageDB = ManageDB()
 
 # Sample data
-A = 50.0
-B = 50.0
-C = 50.0
+A = 50
+B = 50
+C = 50
 input1 = {"A":A, "B":B, "C":C}
-dimensions = {"A_range":(1.0,100.0),"B_range":(1.0,100.0), "C_range":(1.0,100.0)}
+dimensions = {"A_range":(1,100),"B_range":(1,100), "C_range":(1,100)}
 
 # Define the initial input
 input_dict = {'input':input1, 'dimensions':dimensions}
