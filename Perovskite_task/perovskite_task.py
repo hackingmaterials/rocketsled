@@ -290,7 +290,9 @@ def categorical_optimization_scatter(iterations=100,guess=("Li","V","O3"), fitne
     plt.plot(list(range(iterations)), [-1 * i for i in my_output], 'g.')
     plt.show()
 
-def categorical_optimization_line(iterations=100,guess=("Li","V","O3"), fitness_evaluator=eval_fitness_complex):
+def categorical_optimization_line_and_timing(iterations=100,guess=("Li","V","O3"), fitness_evaluator=eval_fitness_complex):
+    import timeit
+
     my_input = []
     my_output = []
     dimensions = [name_index, name_index, anion_names]
@@ -299,15 +301,23 @@ def categorical_optimization_line(iterations=100,guess=("Li","V","O3"), fitness_
     candidates = []
     candidate_count_at_iteration=[]
     candidate_iteration = []
+    times = []
 
     # optimizing search
     for i in range(iterations):
+        start_time = timeit.default_timer()
+
         q = name_to_data(guess)[0]
         score = -1 * fitness_evaluator(q['gap_dir'], q['gap_ind'], q['heat_of_formation'],
                                        q['vb_dir'], q['cb_dir'], q['vb_ind'], q['cb_ind'])
         my_input.append(list(guess))
         my_output.append(score)
+
+        start_time = timeit.default_timer()
         guess = gp_minimize(my_input, my_output, dimensions)
+        elapsed = timeit.default_timer() - start_time
+        times.append(elapsed)
+
         print "CALCULATION:", i+1, " WITH SCORE:", -1 * score
 
         #Search for entry in GOOD_CANDS_LS
@@ -319,44 +329,26 @@ def categorical_optimization_line(iterations=100,guess=("Li","V","O3"), fitness_
             candidate_iteration.append(i)
 
     print "candidates", candidate_count_at_iteration
+
+    # Plotting
     import matplotlib.pyplot as plt
-    line = plt.plot(candidate_iteration, candidate_count_at_iteration)
-    plt.setp(line, linewidth=3, color='b')
-    plt.show()
+    candplot = plt.figure(1)
+    candline = plt.plot(candidate_iteration, candidate_count_at_iteration)
+    plt.setp(candline, linewidth=3, color='g')
+    plt.xlabel("Iterations")
+    plt.ylabel("Candidates Found")
+    plt.title("Candidates vs Iterations")
 
-def categorical_optimization_timing(iterations=100,guess=("Li","V","O3"), fitness_evaluator=eval_fitness_complex):
-    my_input = []
-    my_output = []
-    dimensions = [name_index, name_index, anion_names]
-
-    candidate_count = 0
-    candidates = []
-    times = []
-
-    import timeit
-
-    # optimizing search
-    for i in range(iterations):
-        start_time = timeit.default_timer()
-
-        q = name_to_data(guess)[0]
-        score = -1 * fitness_evaluator(q['gap_dir'], q['gap_ind'], q['heat_of_formation'],
-                                       q['vb_dir'], q['cb_dir'], q['vb_ind'], q['cb_ind'])
-        my_input.append(list(guess))
-        my_output.append(score)
-        guess = gp_minimize(my_input, my_output, dimensions)
-        print "CALCULATION:", i + 1, " WITH SCORE:", -1 * score
-
-        elapsed = timeit.default_timer() - start_time
-        times.append(elapsed)
-
-    import matplotlib.pyplot as plt
-    line = plt.plot(list(range(iterations)), times)
-    plt.setp(line, linewidth=3, color='b')
+    timeplot = plt.figure(2)
+    timeline = plt.plot(list(range(iterations)), times)
+    plt.setp(timeline, linewidth=3, color='b')
+    plt.xlabel("Individual Iteration")
+    plt.ylabel("Time needed to execute GP")
+    plt.title("Computational Overhead of Optimization Algorithm")
     plt.show()
 
 
 # EXECUTABLE
 if __name__ =="__main__":
-    categorical_optimization_timing(iterations=100)
+    categorical_optimization_line_and_timing(iterations=50)
 
