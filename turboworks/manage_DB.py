@@ -37,7 +37,10 @@ class ManageDB():
         """
         docs_removed = self.collection.delete_many({})
         num_deleted = docs_removed.deleted_count
-        print('Documents removed:         ', num_deleted)
+        try:
+            print 'Documents removed:         ', num_deleted
+        except:
+            print('Documents removed:         ', num_deleted)
         print('Documents remaining:        0')
         return num_deleted
 

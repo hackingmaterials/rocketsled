@@ -58,6 +58,11 @@ class SKOptimizeTask(FireTaskBase):
         meta_fw_keys = ['_fw_name', 'func', '_tasks', '_id', '_fw_env']
         cursor = collection.find()
 
+        try:
+            basestring
+        except NameError:  # Python3 compatibility
+            basestring = str
+
         for document in cursor:
             self.sublist = []
             self.subdim = []
@@ -76,7 +81,7 @@ class SKOptimizeTask(FireTaskBase):
             for key in document['output']:
                 if (type(document['output'][key]) == int or type(document['output'][key]) == float or type(
                         document['output'][key]) == np.int64 or type(document['output'][key]) == np.float64):
-                        opt_outputs.append(document['output'][key])
+                        opt_outputs.append(document['output'][key] or isinstance(document['output'][key],basestring))
                 else:
                     raise ValueError("The optimization algorithm must take in a single output. Supported data types"
                                      "are numpy int64, numpy float64, Python int and Python float")
@@ -91,12 +96,15 @@ class SKOptimizeTask(FireTaskBase):
 
         new_input = gp_minimize(opt_inputs, opt_outputs, opt_dimensions)
 
+
         updated_input = []
         for entry in new_input:
             if type(entry) == np.int64 or type(entry) == int:
                 updated_input.append(int(entry))
             elif type(entry) == np.float64 or type(entry) == float:
                 updated_input.append(float(entry))
+            elif isinstance(entry,basestring) or isinstance(entry,np.unicode_) or isinstance(entry,unicode):
+                updated_input.append(str(entry))
 
         # Create updated dictionary which will be output to the workflow creator
         dim_keys.sort()
@@ -104,9 +112,6 @@ class SKOptimizeTask(FireTaskBase):
         updated_dictionary = {"input": dict(zip(input_keys, updated_input))}
         current_dimensions = dict(zip(dim_keys, opt_dimensions))
         updated_dictionary["dimensions"] = current_dimensions
-
-        # from pprint import pprint
-        # pprint(updated_dictionary)
 
         # Initialize new workflow
         return FWAction(additions=self.workflow_creator(updated_dictionary, 'skopt_gp'))
@@ -153,6 +158,11 @@ class DummyOptimizeTask(FireTaskBase):
         meta_fw_keys = ['_fw_name', 'func', '_tasks', '_id', '_fw_env']
         cursor = collection.find()
 
+        try:
+            basestring
+        except NameError:  # Python3 compatibility
+            basestring = str
+
         for document in cursor:
             self.subdim = []
             for key in sorted(document['dimensions']):
@@ -175,14 +185,13 @@ class DummyOptimizeTask(FireTaskBase):
                 updated_input.append(int(entry))
             elif type(entry) == np.float64 or type(entry) == float:
                 updated_input.append(float(entry))
+            elif isinstance(entry, basestring) or isinstance(entry,np.unicode_) or isinstance(entry,unicode):
+                updated_input.append(str(entry))
 
         dim_keys.sort()
         input_keys.sort()
         updated_dictionary = {"input": dict(zip(input_keys, updated_input))}
         current_dimensions = dict(zip(dim_keys, opt_dimensions))
         updated_dictionary["dimensions"] = current_dimensions
-
-        # from pprint import pprint
-        # pprint(updated_dictionary)
 
         return FWAction(additions=self.workflow_creator(updated_dictionary, 'dummy'))

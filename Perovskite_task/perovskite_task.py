@@ -225,7 +225,7 @@ def name_to_data(strings):
 
 
 # OPTIMIZATION EFFECT GRAPHERS
-def integer_optimization_scatter(iterations=100, guess=(33,1,3), fitness_evaluator = eval_fitness_complex):
+def integer_optimization_scatter(iterations=100, guess=(3, 23, 0), fitness_evaluator = eval_fitness_complex):
     dimensions = [(0, 51), (0, 51), (0, 6)]
     my_output = []
     my_input = []
@@ -348,7 +348,8 @@ def categorical_optimization_line_and_timing(iterations=100,guess=("Li","V","O3"
     plt.show()
 
 
+
 # EXECUTABLE
 if __name__ =="__main__":
-    categorical_optimization_line_and_timing(iterations=50)
+    categorical_optimization_line_and_timing(iterations=300, guess=["Pb","Mo","N3"])
 
