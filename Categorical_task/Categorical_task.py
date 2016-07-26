@@ -33,7 +33,7 @@ class CategoricalTask(FireTaskBase):
         bev_dim = ["milk", "water", "coffee", "hot chocolate", "orange juice"]
         if f=='cookies':
             if b=='milk':
-                output = 100
+                output = 85
             elif b=='hot chocolate':
                 output = 75
             elif b=='water':
@@ -59,15 +59,11 @@ class CategoricalTask(FireTaskBase):
                 output = 40
             else:
                 output = 20
-        else:
-            raise ValueError("The category of food you entered was "
-                             "not in the search dimensions")
-        if b not in bev_dim:
-            raise ValueError("The category of beverage you entered was "
-                             "not in the search dimensions")
+        if b=="beer":
+            output+=20
+        if b=="milk":
+            output+=15
 
         write2spec = {'output': {'f':output}}
-
-        print f,b,output
         # Modify changes in spec
         return FWAction(update_spec=write2spec)

@@ -21,21 +21,20 @@ def dummy_minimize(dimensions):
     new_input = []
 
     for dimset in dimensions:
-        if isinstance(dimset,tuple):
-            upper = dimset[1]
-            lower = dimset[0]
-            if type(upper) == np.int64 or type(upper) == int:
-                new_param = randint(lower, upper)
-                new_input.append(new_param)
-            elif type(upper) == np.float64 or type(upper) == float:
-                new_param = uniform(lower, upper)
-                new_input.append(new_param)
-            elif isinstance(upper, basestring) or isinstance(upper, unicode) or isinstance(upper,np.unicode_):
-                domain_size = len(dimset)-1
-                new_param = randint(0,domain_size)
-                new_input.append(dimset[new_param])
-            else:
-                raise TypeError("The type {} is not supported by dummy opt as a categorical or "
-                                "numerical type".format(type(upper)))
+        upper = dimset[1]
+        lower = dimset[0]
+        if type(upper) == np.int64 or type(upper) == int:
+            new_param = randint(lower, upper)
+            new_input.append(new_param)
+        elif type(upper) == np.float64 or type(upper) == float:
+            new_param = uniform(lower, upper)
+            new_input.append(new_param)
+        elif isinstance(upper, basestring) or isinstance(upper, unicode) or isinstance(upper,np.unicode_):
+            domain_size = len(dimset)-1
+            new_param = randint(0,domain_size)
+            new_input.append(dimset[new_param])
+        else:
+            raise TypeError("The type {} is not supported by dummy opt as a categorical or "
+                            "numerical type".format(type(upper)))
 
     return new_input

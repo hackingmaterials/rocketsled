@@ -246,7 +246,7 @@ def integer_optimization_scatter(iterations=100, guess=(3, 23, 0), fitness_evalu
     for entry in my_input:
         mod_entry = (main2atomic[entry[0]], main2atomic[entry[1]], entry[2])
         print "SEARCHING TO SEE IF ENTRY", mod_entry, "IN GOOD_CANDS_LS"
-        if mod_entry in GOOD_CANDS_LS:
+        if mod_entry in GOOD_CANDS_LS and mod_entry not in candidates:
             candidate_count += 1
             candidates.append(mod_entry)
 
@@ -279,7 +279,7 @@ def categorical_optimization_scatter(iterations=100,guess=("Li","V","O3"), fitne
     print "SEARCHING TO SEE IF ENTRIES IN GOOD_CANDS_LS"
     for entry in my_input:
         mod_entry = (name2atomic[entry[0]], name2atomic[entry[1]], anion_name2index[entry[2]])
-        if mod_entry in GOOD_CANDS_LS:
+        if mod_entry in GOOD_CANDS_LS and mod_entry not in candidates:
             candidate_count += 1
             candidates.append(mod_entry)
 
@@ -322,7 +322,7 @@ def categorical_optimization_line_and_timing(iterations=100,guess=("Li","V","O3"
 
         #Search for entry in GOOD_CANDS_LS
         mod_entry = (name2atomic[my_input[-1][0]], name2atomic[my_input[-1][1]], anion_name2index[my_input[-1][2]])
-        if mod_entry in GOOD_CANDS_LS:
+        if mod_entry in GOOD_CANDS_LS and mod_entry not in candidates:
             candidate_count += 1
             candidates.append(mod_entry)
             candidate_count_at_iteration.append(candidate_count)

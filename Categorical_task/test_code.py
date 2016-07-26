@@ -13,16 +13,20 @@ launchpad = LaunchPad()
 manageDB = ManageDB()
 
 # Sample data
-my_input = {"food":'strawberries', "beverage":'water'}
-food_dim = ["cookies", "strawberries", "pasta", "steak", "burger", "oreos"]
-bev_dim = ["milk","water","coffee","hot chocolate", "orange juice"]
+my_input = {"food":'steak2', "beverage":'beer1'}
+food_dim = ["cookies", "strawberries", "pasta", "steak", "burger", "oreos",
+            "cookies1", "strawberries1", "pasta1", "steak1", "burger1", "oreos1",
+            "cookies2", "strawberries2", "pasta2", "steak2", "burger2", "oreos2"]
+bev_dim = ["milk","water","coffee","hot chocolate", "orange juice","beer",
+           "milk1", "water1", "coffee1", "hot chocolate1", "orange juice1", "beer1",
+           "milk2", "water2", "coffee2", "hot chocolate2", "orange juice2", "beer2",]
 dimensions = {"food_dim":food_dim,"bev_dim":bev_dim}
 
 # Define the initial input
 input_dict = {'input':my_input, 'dimensions':dimensions}
 
 # How many times to run the workflow + optimization loop
-run_num = 15
+run_num = 100
 
 # Or dynamically call till within a min_val
 min_val = 0.397887
@@ -71,7 +75,7 @@ def scatter_graph():
     wf = workflow_creator(input_dict, 'skopt_gp')
     launchpad.add_wf(wf)
     rapidfire(launchpad, FWorker(), nlaunches=run_num, sleep_time=0)
-    gp_best = manageDB.get_optima('f', min_or_max='min')[0]
+    gp_best = manageDB.get_optima('f', min_or_max='max')[0]
     gp_average = manageDB.get_avg('f')
     gp_total = manageDB.get_param('f')
     manageDB.nuke_it()
@@ -81,7 +85,7 @@ def scatter_graph():
     wf = workflow_creator(input_dict, 'dummy')
     launchpad.add_wf(wf)
     rapidfire(launchpad, FWorker(), nlaunches=run_num, sleep_time=0)
-    dummy_best = manageDB.get_optima('f', min_or_max='min')[0]
+    dummy_best = manageDB.get_optima('f', min_or_max='max')[0]
     dummy_average = manageDB.get_avg('f')
     dummy_total = manageDB.get_param('f')
     manageDB.nuke_it()
@@ -90,7 +94,7 @@ def scatter_graph():
     print('GP average: ', gp_average, '\n GP best:    ', gp_best)
     print('Dummy average: ', dummy_average, '\n Dummy best: ', dummy_best)
     iterations = list(range(run_num))
-    plt.plot(iterations, gp_total, 'g.', iterations, dummy_total, 'r.')
+    plt.plot(iterations, gp_total, 'go', iterations, dummy_total, 'ro')
     plt.show()
 
 def converge_to():
@@ -153,4 +157,4 @@ def testing_for_errors():
     print (gp_max)
 
 if __name__=="__main__":
-    best_graph()
+    scatter_graph()
