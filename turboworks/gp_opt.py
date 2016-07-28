@@ -229,7 +229,6 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
                     replace = str(next_x[i])
                     next_x[i] = replace
 
-
     # Duplicate discrete entry checking
     def calculate_discrete_space(dimensions):
         total_dimspace = []
@@ -283,4 +282,4 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
 
             # print untested_combos
 
-    return next_x
+    return list(next_x)
