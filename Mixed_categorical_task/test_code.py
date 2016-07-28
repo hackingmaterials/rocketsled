@@ -21,7 +21,7 @@ dimensions = {"x1_dim": (1,5), "x2_dim": (1.0,10.0), "color_dim":color_dim}
 input_dict = {'input':my_input, 'dimensions':dimensions}
 
 # How many times to run the workflow + optimization loop
-run_num = 50
+run_num = 10
 
 # Or dynamically call till within a min_val
 min_val = 0.397887
@@ -152,4 +152,4 @@ def testing_for_errors():
     print (gp_max)
 
 if __name__=="__main__":
-    scatter_graph()
+    best_graph()

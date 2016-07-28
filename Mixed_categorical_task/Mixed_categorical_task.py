@@ -29,13 +29,13 @@ class MixedCategoricalTask(FireTaskBase):
         y1 = x1*x2**2
 
         if color=='red':
-            y1 = y1*2
+            y1 = y1 + 100
         elif color=='blue':
-            y1 = 1.5*y1
+            y1 = y1 + 50
         elif color =="green":
-            y1 = 0.5*y1
+            y1 = y1 - 20
         else:
-            y1 = 0.3*y1
+            y1 = y1 - 100
 
         output = y1
 

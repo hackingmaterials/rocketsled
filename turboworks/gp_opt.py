@@ -228,6 +228,7 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
 
 
     # TODO: add checking for repeated discrete calculations
-
+    # Duplicate discrete entry checking
+    
 
     return next_x
