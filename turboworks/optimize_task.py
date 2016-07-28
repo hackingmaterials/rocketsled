@@ -10,8 +10,6 @@ from collections import OrderedDict
 This FireTask optimizes float, integer, mixed float/integer, or pure categorical inputs for black box functions.
 """
 
-# TODO: fix 'integer to string' issue and allow for mixed categorical inputs
-
 @explicit_serialize
 class SKOptimizeTask(FireTaskBase):
     _fw_name = 'SKOptimizeTask'
@@ -83,7 +81,8 @@ class SKOptimizeTask(FireTaskBase):
             for key in document['output']:
                 if (type(document['output'][key]) == int or type(document['output'][key]) == float or type(
                         document['output'][key]) == np.int64 or type(document['output'][key]) == np.float64):
-                        opt_outputs.append(document['output'][key] or isinstance(document['output'][key],basestring))
+
+                        opt_outputs.append(document['output'][key])
                 else:
                     raise ValueError("The optimization algorithm must take in a single output. Supported data types"
                                      "are numpy int64, numpy float64, Python int and Python float")
@@ -97,7 +96,6 @@ class SKOptimizeTask(FireTaskBase):
             print("TurboWorks: No optima type specified. Defaulting to minimum.")
 
         new_input = gp_minimize(opt_inputs, opt_outputs, opt_dimensions)
-
 
         updated_input = []
         for entry in new_input:
@@ -122,7 +120,8 @@ class SKOptimizeTask(FireTaskBase):
 @explicit_serialize
 class DummyOptimizeTask(FireTaskBase):
     """
-        This method runs a dummy (random sampling) optimization.
+        This method runs a dummy (random sampling) optimization. It works with float, integer, and categorical
+        inputs, as well as mixed of those three.
 
         This software uses a modification of the Scikit-Optimize package. Python 3.x is supported.
 

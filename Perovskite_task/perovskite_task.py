@@ -506,6 +506,7 @@ def mendeleev_mixed_optimization_line_and_timing(iterations=100, guess=("Li", "V
             candidate_iteration.append(i)
 
     print candidate_count, "candidates were found at iterations", candidate_iteration
+    print "These candidates are: ", candidates
 
     # Plotting
     import matplotlib.pyplot as plt
@@ -528,4 +529,4 @@ def mendeleev_mixed_optimization_line_and_timing(iterations=100, guess=("Li", "V
 
 # EXECUTABLE
 if __name__ =="__main__":
-    mendeleev_mixed_optimization_line_and_timing(iterations=500)
+    mendeleev_mixed_optimization_line_and_timing(iterations=10)
