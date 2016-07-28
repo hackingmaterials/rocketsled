@@ -13,9 +13,9 @@ launchpad = LaunchPad()
 manageDB = ManageDB()
 
 # Sample data
-my_input = {"x1": 3, "x2": 2.2, "color": "green"}
+my_input = {"x1": 3, "x2": 2, "color": "green"}
 color_dim = ["red","green","blue","orange"]
-dimensions = {"x1_dim": (1,5), "x2_dim": (1.0,10.0), "color_dim":color_dim}
+dimensions = {"x1_dim": (1,5), "x2_dim": (1,10), "color_dim":color_dim}
 
 # Define the initial input
 input_dict = {'input':my_input, 'dimensions':dimensions}

@@ -29,8 +29,6 @@ class CategoricalTask(FireTaskBase):
         # Run black box objective algorithm Branin-Hoo function
 
         output = 0
-
-        bev_dim = ["milk", "water", "coffee", "hot chocolate", "orange juice"]
         if f=='cookies':
             if b=='milk':
                 output = 85

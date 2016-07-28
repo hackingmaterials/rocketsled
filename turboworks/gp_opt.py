@@ -1,3 +1,14 @@
+"""
+This file is a modified Skopt file. Find the developer edition, default version of Skopt at
+https://github.com/scikit-optimize/scikit-optimize
+
+This file locally defines high level GP functions which interact with the default Skopt installation.
+
+"""
+
+# TODO: why is this needed? You should not be overriding skopt - Anubhav
+# TODO: make this call gp function with maxiter set to 1, using a function which returns the output?
+
 import numpy as np
 import warnings
 
@@ -12,16 +23,11 @@ from sklearn.utils import check_random_state
 from skopt.acquisition import _gaussian_acquisition
 from skopt.space import Space
 
-"""
-This file is a modified Skopt file. Find the developer edition, default version of Skopt at
-https://github.com/scikit-optimize/scikit-optimize
-
-This file locally defines high level GP functions which interact with the default Skopt installation.
-
-"""
-
-# TODO: why is this needed? You should not be overriding skopt - Anubhav
-# TODO: make this call gp function with maxiter set to 1, using a function which returns the output?
+from dummy_opt import dummy_minimize
+import os
+import pickle
+import itertools
+from random import randint
 
 
 def _acquisition(X, model, y_opt=None, method="LCB", xi=0.01, kappa=1.96):
@@ -206,8 +212,6 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
 
 
     # Check to make sure mixed categories and numbers aren't error converted to strings
-    # for i in range(len(next_x)):
-
     if type(next_x)!=list:
         new_x = list(next_x)
         next_x = new_x
@@ -226,9 +230,57 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
                     next_x[i] = replace
 
 
-
-    # TODO: add checking for repeated discrete calculations
     # Duplicate discrete entry checking
-    
+    def calculate_discrete_space(dimensions):
+        total_dimspace = []
+        for dimension in dimensions:
+            if type(dimension[0]) == int or type(dimension[0]) == np.int64:
+                # Then the dimension is of the form (lower, upper)
+                lower = dimension[0]
+                upper = dimension[1]
+                dimspace = list(range(lower, upper + 1))
+            elif type(dimension[0]) == float or type(dimension[0]) == np.float64:
+                # The chance of a random sample of identical float is nil
+                raise ValueError("The dimension is a float. The dimension space is infinite.")
+            else:  # The dimension is a discrete finite string list
+                dimspace = dimension
+            total_dimspace.append(dimspace)
+        return list(itertools.product(*total_dimspace))
+
+    if next_x in my_input:
+        # Cheap solution is to randomly sample again.
+        next_x = dummy_minimize(dimensions)
+
+        # Expensive solution is to randomly sample from remaining data
+        if next_x in my_input: #still there
+
+            untested_combos = []
+            filename = "untested_combinations.pickle"
+
+            if os.path.isfile(filename):
+                with open(filename, 'rb') as f:
+                    untested_combos = pickle.load(f)
+                for entry in my_input:
+                    if tuple(entry) in untested_combos:
+                        untested_combos.remove(tuple(entry))
+            else:
+                untested_combos = calculate_discrete_space(dimensions)
+                for entry in my_input:
+                    if tuple(entry) in untested_combos:
+                        untested_combos.remove(tuple(entry))
+
+            with open(filename, 'wb') as f:
+                pickle.dump(untested_combos, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+            if not untested_combos: #if untested combos is empty
+                # TODO: figure out a better way of ending the program once the search space has been explored
+                os.remove(filename)
+                raise ValueError ("The entire search space has been explored.")
+            else:
+                size_untested_combos = len(untested_combos)
+                seed2 = randint(0,size_untested_combos-1)
+                next_x = untested_combos[seed2]
+
+            # print untested_combos
 
     return next_x

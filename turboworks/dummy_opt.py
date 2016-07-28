@@ -37,4 +37,5 @@ def dummy_minimize(dimensions):
             raise TypeError("The type {} is not supported by dummy opt as a categorical or "
                             "numerical type".format(type(upper)))
 
+
     return new_input
