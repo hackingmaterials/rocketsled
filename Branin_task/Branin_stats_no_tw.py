@@ -58,13 +58,29 @@ def iteration_bar_graph(runs):
 
     N=1
     ind = np.arange(N)  # the x locations for the groups
-    width = 0.35       # the width of the bars
-    fig, ax = plt.subplots()
-    rectsgp = ax.bar(ind, gp_mean, width, color='g', yerr=gp_std)
-    rectsdum = ax.bar(ind + width, dummy_mean, width, color='r', yerr=dummy_std)
+    width = 0.4       # the width of the bars
+    # rectsgp = plt.bar(ind, gp_mean, width, color='g', yerr=gp_std)
+    # rectsdum = plt.bar(ind + width, dummy_mean, width, color='r', yerr=dummy_std)
+    x = [0, 0.6]
+    y = (gp_mean, dummy_mean)
+    e = (gp_std, dummy_std)
+    barlist = plt.bar(x,y,width,yerr=e, alpha=0.5,error_kw=dict(ecolor='gray', lw=2, capsize=5, capthick=2))
+    barlist[0].set_color('g')
+    barlist[1].set_color('r')
+    plt.margins(0.05)
+    plt.plot(list(range(2)), [0,0], color='black')
+
 
     print "Dummy:", dummy_mean, "+-", dummy_std
     print "GP mean:", gp_mean, "+-", gp_std
+    plt.show()
+
+def testbar():
+    y = [3, 10, 7, 5, 3, 4.5, 6, 8.1]
+    N = len(y)
+    x = range(N)
+    width = 1 / 1.5
+    plt.bar(x, y, width, color="blue")
     plt.show()
 
 def learning_trends(runs, iterations):
@@ -99,11 +115,14 @@ def learning_trends(runs, iterations):
     # pprint(gsl)
 
     for i in range(runs):
-        plt.plot(list(range(iterations)), dsl[i],'r.', alpha=0.2)
-        plt.plot(list(range(iterations)),gsl[i],'g.', alpha=0.2)
+        plt.plot(list(range(iterations)), dsl[i],'ro', alpha=0.2)
+        plt.plot(list(range(iterations)),gsl[i],'go', alpha=0.2)
+    plt.ylim([0,20])
+    plt.margins(0.01)
     plt.show()
 
 
 if __name__ == '__main__':
-    # iteration_bar_graph(100)
-    learning_trends(30,30)
+    iteration_bar_graph(3)
+    # testbar()
+    # learning_trends(40,100)

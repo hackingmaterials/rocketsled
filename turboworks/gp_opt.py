@@ -20,7 +20,8 @@ This file locally defines high level GP functions which interact with the defaul
 
 """
 
-# TODO: why is this needed? You should not be overriding skopt
+# TODO: why is this needed? You should not be overriding skopt - Anubhav
+# TODO: make this call gp function with maxiter set to 1, using a function which returns the output?
 
 
 def _acquisition(X, model, y_opt=None, method="LCB", xi=0.01, kappa=1.96):
@@ -203,15 +204,30 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
 
     next_x = space.inverse_transform(next_x.reshape((1, -1)))[0]
 
-    #add checking for repeated discrete calculations
-    # TODO: make this work
-    # TODO: myabe this should be handled in the top level script?
 
-    # print "gp_opt ran and got", next_x
-    # for item in my_input:
-    #     if list(next_x)==list(item):
-    #         next_x = gp_minimize(my_input,my_output,dimensions,random_state=None)
-    #         break
+    # Check to make sure mixed categories and numbers aren't error converted to strings
+    # for i in range(len(next_x)):
+
+    if type(next_x)!=list:
+        new_x = list(next_x)
+        next_x = new_x
+
+        for i in range(len(next_x)):
+            dim_type = type(dimensions[i][0])
+            if dim_type!=type(next_x[i]):
+                if dim_type== int or dim_type == np.int64:
+                    replace = int(next_x[i])
+                    next_x[i] = replace
+                elif dim_type == float or dim_type == np.float64:
+                    replace = float(next_x[i])
+                    next_x[i] = replace
+                else:
+                    replace = str(next_x[i])
+                    next_x[i] = replace
+
+
+
+    # TODO: add checking for repeated discrete calculations
 
 
     return next_x

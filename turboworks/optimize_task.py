@@ -7,8 +7,10 @@ import numpy as np
 from collections import OrderedDict
 
 """
-This FireTask optimizes float, integer, or mixed float/integer inputs for black box functions.
+This FireTask optimizes float, integer, mixed float/integer, or pure categorical inputs for black box functions.
 """
+
+# TODO: fix 'integer to string' issue and allow for mixed categorical inputs
 
 @explicit_serialize
 class SKOptimizeTask(FireTaskBase):
