@@ -33,7 +33,8 @@ mendeleev_index = [1,67,72,2,68,73,78,3,7,11,43,46,49,52,55,58,61,64,69,74,79,84
                    85,90,5,9,13,45,48,51,54,57,60,63,66,71,76,81,86]
 anion_index = list(range(7))
 anion_names = ['O3','O2N','ON2','N3','O2F','OFN','O2S']
-anion_mendeleev_rank = [] # rank based on mendeleev number
+anion_mendeleev = [261, 256, 251, 246, 267, 262, 262]
+anion_mendeleev_rank = [3,2,1,0,6,5,4] # rank based on mendeleev number
 
 
 
@@ -47,6 +48,8 @@ name2main = dict(zip(name_index,main_index))
 anion_name2index = dict(zip(anion_names,anion_index))
 anion_index2name = dict(zip(anion_index,anion_names))
 name2mendeleev = dict(zip(name_index,mendeleev_index))
+anion_mendeleev_rank2name = dict(zip(anion_mendeleev_rank, anion_names))
+anion_name2mendeleev_rank = dict(zip(anion_names, anion_mendeleev_rank))
 
 mendeleev_rank2name = dict(zip(main_index,sorted(name2mendeleev, key=name2mendeleev.get)))
 name2mendeleev_rank = dict(zip(sorted(name2mendeleev, key=name2mendeleev.get), main_index))
@@ -238,7 +241,7 @@ def name_to_data(strings):
 def mendeleev_rank_to_data(tuple):
     A = mendeleev_rank2name[tuple[0]]
     B = mendeleev_rank2name[tuple[1]]
-    X = anion_index2name[tuple[2]]
+    X = anion_mendeleev_rank2name[tuple[2]]
     doc = unc.find({"A": A, "B": B, "anion": X})
     data_doc = {}
     for document in doc:
@@ -400,9 +403,10 @@ def categorical_optimization_line_and_timing(iterations=100,guess=("Li","V","O3"
     plt.show()
 
 def mendeleev_integer_optimization_line_and_timing(iterations=100, guess=("Li","V","O3"),
-                                                   fitness_evaluator=eval_fitness_complex):
+                                                   fitness_evaluator=eval_fitness_complex, runs=1):
     import timeit
-    guess = (name2mendeleev_rank[guess[0]],name2mendeleev_rank[guess[1]], anion_name2index[guess[2]])
+
+    guess = (name2mendeleev_rank[guess[0]],name2mendeleev_rank[guess[1]], anion_name2mendeleev_rank[guess[2]])
     dimensions = [(0, 51), (0, 51), (0, 6)]
     my_output = []
     my_input = []
@@ -431,7 +435,8 @@ def mendeleev_integer_optimization_line_and_timing(iterations=100, guess=("Li","
         print "CALCULATION:", i + 1, " WITH SCORE:", -1 * score
 
         # Search for entry in GOOD_CANDS_LS
-        transform_entry = (mendeleev_rank2name[my_input[-1][0]], mendeleev_rank2name[my_input[-1][1]], anion_index2name[my_input[-1][2]])
+        transform_entry = (mendeleev_rank2name[my_input[-1][0]], mendeleev_rank2name[my_input[-1][1]],
+                           anion_mendeleev_rank2name[my_input[-1][2]])
         mod_entry = (name2atomic[transform_entry[0]], name2atomic[transform_entry[1]], anion_name2index[transform_entry[2]])
         if mod_entry in GOOD_CANDS_LS and mod_entry not in candidates:
             candidate_count += 1
@@ -439,7 +444,8 @@ def mendeleev_integer_optimization_line_and_timing(iterations=100, guess=("Li","
             candidate_count_at_iteration.append(candidate_count)
             candidate_iteration.append(i)
 
-    print "candidates", candidate_count
+        print "candidates", candidate_count
+        print "These candidates are: ", candidates
 
     # Plotting
     import matplotlib.pyplot as plt
@@ -530,4 +536,5 @@ def mendeleev_mixed_optimization_line_and_timing(iterations=100, guess=("Li", "V
 
 # EXECUTABLE
 if __name__ =="__main__":
-    mendeleev_mixed_optimization_line_and_timing(iterations=10)
+    mendeleev_integer_optimization_line_and_timing(iterations=1000, guess = ['Os','Os','O3'])
+    mendeleev_mixed_optimization_line_and_timing(iterations=500,guess = ['Os','Os','O3'])

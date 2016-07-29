@@ -123,6 +123,6 @@ def learning_trends(runs, iterations):
 
 
 if __name__ == '__main__':
-    iteration_bar_graph(3)
+    iteration_bar_graph(50)
     # testbar()
     # learning_trends(40,100)
