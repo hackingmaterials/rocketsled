@@ -5,7 +5,7 @@
 Proof of mixed optimization ability for skopt on arbitrary bb fun
 """
 
-dim = [(1,5),(5,10),["red","orange","green","blue","turquoise"]]
+dim = [(1,3),(5,7),["red","orange","green","blue","turquoise"]]
 my_input = [[1, 6, "blue"]]
 my_output = [1]
 

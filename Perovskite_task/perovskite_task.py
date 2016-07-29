@@ -33,6 +33,7 @@ mendeleev_index = [1,67,72,2,68,73,78,3,7,11,43,46,49,52,55,58,61,64,69,74,79,84
                    85,90,5,9,13,45,48,51,54,57,60,63,66,71,76,81,86]
 anion_index = list(range(7))
 anion_names = ['O3','O2N','ON2','N3','O2F','OFN','O2S']
+anion_mendeleev_rank = [] # rank based on mendeleev number
 
 
 

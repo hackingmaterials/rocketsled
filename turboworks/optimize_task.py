@@ -95,7 +95,7 @@ class SKOptimizeTask(FireTaskBase):
         elif self["min_or_max"] != "min":
             print("TurboWorks: No optima type specified. Defaulting to minimum.")
 
-        new_input = gp_minimize(opt_inputs, opt_outputs, opt_dimensions)
+        new_input = gp_minimize(opt_inputs, opt_outputs, opt_dimensions, acq='EI')
 
         updated_input = []
         for entry in new_input:

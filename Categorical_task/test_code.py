@@ -20,7 +20,7 @@ food_dim = ["cookies", "strawberries", "pasta", "steak", "burger", "oreos",
 bev_dim = ["milk","water","coffee","hot chocolate", "orange juice","beer",
            "milk1", "water1", "coffee1", "hot chocolate1", "orange juice1", "beer1",
            "milk2", "water2", "coffee2", "hot chocolate2", "orange juice2", "beer2",]
-food_dim = ["cookies", "strawberries", "pasta", "steak", "burger", "oreos"]
+# food_dim = ["cookies", "strawberries", "pasta", "steak", "burger", "oreos"]
 # bev_dim = ["milk","water","coffee","hot chocolate", "orange juice","beer"]
 dimensions = {"food_dim":food_dim,"bev_dim":bev_dim}
 
@@ -28,7 +28,7 @@ dimensions = {"food_dim":food_dim,"bev_dim":bev_dim}
 input_dict = {'input':my_input, 'dimensions':dimensions}
 
 # How many times to run the workflow + optimization loop
-run_num = 30
+run_num = 10
 
 # Or dynamically call till within a min_val
 min_val = 0.397887
