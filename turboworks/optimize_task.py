@@ -7,7 +7,7 @@ import numpy as np
 from collections import OrderedDict
 
 """
-This FireTask optimizes float, integer, mixed float/integer, or pure categorical inputs for black box functions.
+This FireTask optimizes float, integer, categorical, or mixed float/categorical/integer inputs for black box functions.
 """
 
 @explicit_serialize
@@ -196,3 +196,28 @@ class DummyOptimizeTask(FireTaskBase):
         updated_dictionary["dimensions"] = current_dimensions
 
         return FWAction(additions=self.workflow_creator(updated_dictionary, 'dummy'))
+
+
+@explicit_serialize
+class COMBOptomizeTask(FireTaskBase):
+    """
+        This method runs a the Tsudalab COMBO optimization task in a similar fashion to the SKOptimize task.
+
+        :param fw_spec: (dict) specifying the firework data, and the data the firetask will use. The parameters should
+        be numerical. The exact layout of this should be defined in the workflow creator.
+
+        :param func: fully defined name of workflow creator function
+            example: func="wf_creator.my_wf_creator_file"
+
+        :return: FWAction: object which creates new wf object based on updated params and specified workflow creator
+        """
+    _fw_name = 'COMBOptimizeTask'
+    required_params = ["func"]
+
+    def run_task(self, fw_spec):
+        # Import only a function named as a module only in the working dir (taken from PyTask)
+        toks = self["func"].rsplit(".", 1)
+        if len(toks) == 2:
+            modname, funcname = toks
+            mod = __import__(modname, globals(), locals(), [str(funcname)], 0)
+            self.workflow_creator = getattr(mod, funcname)
