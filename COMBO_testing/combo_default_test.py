@@ -1,10 +1,9 @@
 import numpy as np
-import cPickle as pickle
-import scipy
-import combo
+# import cPickle as pickle
+# import scipy
 import os
 import urllib
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import combo
 
 
@@ -33,9 +32,9 @@ def load_data():
 # ( It is of course unknown in practice. )
 X, t = load_data()
 
+
 # Normalize the mean and standard deviation along the each column of X to 0 and 1, respectively
 X = combo.misc.centering(X)
-
 
 # Declare the class for calling the simulator.
 # In this tutorial, we simply refer to the value of t.
@@ -52,32 +51,42 @@ class simulator:
 # Design of policy
 
 # Declaring the policy by
+
 policy = combo.search.discrete.policy(test_X=X)
+
 # test_X is the set of candidates which is represented by numpy.array.
 # Each row vector represents the feature vector of the corresponding candidate
 
 # set the seed parameter
-policy.set_seed( 0 )
+
+# policy.set_seed( 0 )
 
 # If you want to perform the initial random search before starting the Bayesian optimization,
 # the random sampling is performed by
 
 res = policy.random_search(max_num_probes=20, simulator=simulator())
+
+print "best_fx"
+print res.export_sequence_best_fx()[0]
+
+print "best_actions"
+print res.export_sequence_best_fx()[1]
+
 # Input:
 # max_num_probes: number of random search
 # simulator = simulator
-# output: combo.search.discreate.results (class)
+# output: combo.search.discrete.results (class)
 
 
 # single query Bayesian search
 # The single query version of COMBO is performed by
-res = policy.bayes_search(max_num_probes=80, simulator=simulator(), score='TS',
-                                                  interval=20, num_rand_basis=5000)
+# res = policy.bayes_search(max_num_probes=80, simulator=simulator(), score='TS',
+#                                                   interval=20, num_rand_basis=5000)
 
 # Input
 # max_num_probes: number of searching by Bayesian optimization
 # simulator: the class of simulator which is defined above
-# score: the type of aquision funciton. TS, EI and PI are available
+# score: the type of acquisition function. TS, EI and PI are available
 # interval: the timing for learning the hyper parameter.
 #               In this case, the hyper parameter is learned at each 20 steps
 #               If you set the negative value to interval, the hyper parameter learning is not performed

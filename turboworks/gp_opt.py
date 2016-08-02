@@ -26,8 +26,8 @@ from skopt.space import Space
 from dummy_opt import dummy_minimize
 import os
 import pickle
-import itertools
 from random import randint
+from discrete_spacify import calculate_discrete_space
 
 
 def _acquisition(X, model, y_opt=None, method="LCB", xi=0.01, kappa=1.96):
@@ -233,21 +233,6 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
 
 
     # Duplicate discrete entry checking
-    def calculate_discrete_space(dimensions):
-        total_dimspace = []
-        for dimension in dimensions:
-            if type(dimension[0]) == int or type(dimension[0]) == np.int64:
-                # Then the dimension is of the form (lower, upper)
-                lower = dimension[0]
-                upper = dimension[1]
-                dimspace = list(range(lower, upper + 1))
-            elif type(dimension[0]) == float or type(dimension[0]) == np.float64:
-                # The chance of a random sample of identical float is nil
-                raise ValueError("The dimension is a float. The dimension space is infinite.")
-            else:  # The dimension is a discrete finite string list
-                dimspace = dimension
-            total_dimspace.append(dimspace)
-        return list(itertools.product(*total_dimspace))
 
     if next_x in my_input:
         # Cheap solution is to randomly sample again.
