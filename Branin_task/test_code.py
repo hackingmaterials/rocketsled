@@ -20,7 +20,7 @@ dimensions = {"x1_dim":(-5.0,10.0),"x2_dim":(0.0,15.0)}
 input_dict = {'input':input1, 'dimensions':dimensions}
 
 # How many times to run the workflow + optimization loop
-run_num = 30
+run_num = 3
 
 # Or dynamically call till within a min_val
 min_val = 0.397887

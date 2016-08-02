@@ -28,7 +28,7 @@ dimensions = {"food_dim":food_dim,"bev_dim":bev_dim}
 input_dict = {'input':my_input, 'dimensions':dimensions}
 
 # How many times to run the workflow + optimization loop
-run_num = 10
+run_num = 5
 
 # Or dynamically call till within a min_val
 min_val = 0.397887

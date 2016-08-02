@@ -13,6 +13,9 @@ calculate_discrete_space will return all possible combinations of these dimensio
 
 In duplicate checking for discrete spaces, the generated list will be narrowed down until no entries remain.
 
+WARNING: Very large discrete spaces will memory hog this process. Typically a space of about 1,000 entries takes
+0.005s to compute, but larger spaces can take much longer.
+
 """
 
 def calculate_discrete_space(dimensions):

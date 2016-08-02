@@ -59,18 +59,19 @@ policy = combo.search.discrete.policy(test_X=X)
 
 # set the seed parameter
 
-# policy.set_seed( 0 )
+policy.set_seed( 0 )
 
 # If you want to perform the initial random search before starting the Bayesian optimization,
 # the random sampling is performed by
 
-res = policy.random_search(max_num_probes=20, simulator=simulator())
+res = policy.random_search(max_num_probes=5, simulator=simulator())
 
 print "best_fx"
 print res.export_sequence_best_fx()[0]
 
 print "best_actions"
 print res.export_sequence_best_fx()[1]
+
 
 # Input:
 # max_num_probes: number of random search
