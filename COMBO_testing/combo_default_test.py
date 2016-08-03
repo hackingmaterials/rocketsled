@@ -66,12 +66,6 @@ policy.set_seed( 0 )
 
 res = policy.random_search(max_num_probes=5, simulator=simulator())
 
-print "best_fx"
-print res.export_sequence_best_fx()[0]
-
-print "best_actions"
-print res.export_sequence_best_fx()[1]
-
 
 # Input:
 # max_num_probes: number of random search
@@ -81,8 +75,14 @@ print res.export_sequence_best_fx()[1]
 
 # single query Bayesian search
 # The single query version of COMBO is performed by
-# res = policy.bayes_search(max_num_probes=80, simulator=simulator(), score='TS',
-#                                                   interval=20, num_rand_basis=5000)
+res = policy.bayes_search(max_num_probes=20, simulator=simulator(), score='TS',
+                                                  interval=20, num_rand_basis=5000)
+
+print "best_fx"
+print res.export_sequence_best_fx()[0]
+
+print "best_actions"
+print res.export_sequence_best_fx()[1]
 
 # Input
 # max_num_probes: number of searching by Bayesian optimization
