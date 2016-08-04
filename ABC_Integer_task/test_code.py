@@ -7,15 +7,16 @@ import matplotlib.pyplot as plt
 
 """
 This is the top level script for this turboworks example, and is used primarily for debugging/tuning.
+This particular script is used for comparing the effectivness of Skopt and Combo.
 """
 
 launchpad = LaunchPad()
 manageDB = ManageDB()
 
 # Sample data
-A = 50
-B = 50
-C = 50
+A = 33
+B = 5
+C = 84
 input1 = {"A":A, "B":B, "C":C}
 dimensions = {"A_range":(1,100),"B_range":(1,100), "C_range":(1,100)}
 
@@ -23,7 +24,7 @@ dimensions = {"A_range":(1,100),"B_range":(1,100), "C_range":(1,100)}
 input_dict = {'input':input1, 'dimensions':dimensions}
 
 # How many times to run the workflow + optimization loop
-run_num = 5
+run_num = 20
 
 # Or dynamically call till within a max_val
 max_val = 10000
@@ -56,11 +57,22 @@ def best_graph():
         launch_rocket(launchpad)
         dummy_best.append(manageDB.get_optima('D', min_or_max='max')[0])
     manageDB.nuke_it()
+    launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
+
+    # Run run_num iterations using COMBO optimization
+    combo_best = []
+    wf = workflow_creator(input_dict, 'combo_gp')
+    launchpad.add_wf(wf)
+    for i in range(run_num):
+        launch_rocket(launchpad)
+        combo_best.append(manageDB.get_optima('D', min_or_max='max')[0])
+    manageDB.nuke_it()
 
     iterations = list(range(run_num))
     print("GP best:", gp_best[-1])
     print("Dummy best: ", dummy_best[-1])
-    plt.plot(iterations,gp_best,'g', iterations, dummy_best,'r')
+    print("Combo best:", combo_best[-1])
+    plt.plot(iterations,gp_best,'g', iterations, dummy_best,'r', iterations, combo_best,'b')
     plt.show()
 
 def scatter_graph():
@@ -155,4 +167,4 @@ def testing_for_errors():
     print (gp_max)
 
 if __name__=="__main__":
-    testing_for_errors()
+    best_graph()

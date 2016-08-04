@@ -310,10 +310,7 @@ class COMBOptomizeTask(FireTaskBase):
 
         actions = policy.bayes_search(max_num_probes=1, num_search_each_probe=1,
                                       simulator=None, score='EI', interval=0, num_rand_basis=0)
-
-        new_input = get_input_from_actions(actions, X)
-
-        print new_input
+        new_input = list(get_input_from_actions(actions, X))
 
         # Conversion to Native Types
         updated_input = []

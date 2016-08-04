@@ -2,6 +2,12 @@ from pymongo import MongoClient
 from pprint import pprint
 from turboworks.gp_opt import gp_minimize
 import math
+import numpy as np
+import combo
+from turboworks.discrete_spacify import calculate_discrete_space
+from turboworks.dummy_opt import dummy_minimize
+import matplotlib.pyplot as plt
+import datetime
 
 connection = MongoClient()
 unc = connection.unc.data_raw
@@ -276,6 +282,21 @@ def mendeleev_mixed_to_data(mixed_tuple):
                     'gap_dir': gap_dir, 'gap_ind': gap_ind, 'heat_of_formation': heat_of_formation}
     return [all_the_data, document]
 
+def get_input_from_actions(actions, X):
+    output = []
+    if len(actions) == 1:
+        output = X[actions[0]]
+    else:
+        for action in actions:
+            output.append(X[action])
+    return output
+
+def get_actions_from_input(input_list, X):
+    actions = []
+    for input_vector in input_list:
+        actions.append(X.index(tuple(input_vector)))
+    return actions
+
 
 
 # OPTIMIZATION EFFECT GRAPHERS
@@ -403,7 +424,7 @@ def categorical_optimization_line_and_timing(iterations=100,guess=("Li","V","O3"
     plt.show()
 
 def mendeleev_integer_optimization_line_and_timing(iterations=100, guess=("Li","V","O3"),
-                                                   fitness_evaluator=eval_fitness_complex, runs=1):
+                                                   fitness_evaluator=eval_fitness_complex, plots="off"):
     import timeit
 
     guess = (name2mendeleev_rank[guess[0]],name2mendeleev_rank[guess[1]], anion_name2mendeleev_rank[guess[2]])
@@ -448,21 +469,22 @@ def mendeleev_integer_optimization_line_and_timing(iterations=100, guess=("Li","
     print "These candidates are: ", candidates
 
     # Plotting
-    import matplotlib.pyplot as plt
-    candplot = plt.figure(1)
-    candline = plt.plot(candidate_iteration, candidate_count_at_iteration)
-    plt.setp(candline, linewidth=3, color='g')
-    plt.xlabel("Iterations")
-    plt.ylabel("Candidates Found")
-    plt.title("Candidates vs Iterations")
+    if plots == "on":
+        candplot = plt.figure(1)
+        candline = plt.plot(candidate_iteration, candidate_count_at_iteration)
+        plt.setp(candline, linewidth=3, color='g')
+        plt.xlabel("Iterations")
+        plt.ylabel("Candidates Found")
+        plt.title("Candidates vs Iterations")
 
-    timeplot = plt.figure(2)
-    timeline = plt.plot(list(range(iterations)), times)
-    plt.setp(timeline, linewidth=3, color='b')
-    plt.xlabel("Individual Iteration")
-    plt.ylabel("Time needed to execute GP")
-    plt.title("Computational Overhead of Optimization Algorithm")
-    plt.show()
+        timeplot = plt.figure(2)
+        timeline = plt.plot(list(range(iterations)), times)
+        plt.setp(timeline, linewidth=3, color='b')
+        plt.xlabel("Individual Iteration")
+        plt.ylabel("Time needed to execute GP")
+        plt.title("Computational Overhead of Optimization Algorithm")
+        plt.show()
+    return candidate_iteration, candidate_count_at_iteration, list(range(iterations)), times
 
 def mendeleev_mixed_optimization_line_and_timing(iterations=100, guess=("Li", "V", "O3"),
                                                        fitness_evaluator=eval_fitness_complex):
@@ -516,7 +538,6 @@ def mendeleev_mixed_optimization_line_and_timing(iterations=100, guess=("Li", "V
     print "These candidates are: ", candidates
 
     # Plotting
-    import matplotlib.pyplot as plt
 
     candplot = plt.figure(1)
     candline = plt.plot(candidate_iteration, candidate_count_at_iteration)
@@ -533,9 +554,211 @@ def mendeleev_mixed_optimization_line_and_timing(iterations=100, guess=("Li", "V
     plt.title("Computational Overhead of Optimization Algorithm")
     plt.show()
 
+def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=("Li", "V", "O3"),
+                                                         fitness_evaluator=eval_fitness_complex, plots="off"):
+    import timeit
+
+    guess = (name2mendeleev_rank[guess[0]],name2mendeleev_rank[guess[1]], anion_name2mendeleev_rank[guess[2]])
+    dimensions = [(0, 51), (0, 51), (0, 6)]
+    my_output = []
+    my_input = []
+
+    candidate_count = 0
+    candidates = []
+    candidate_count_at_iteration = []
+    candidate_iteration = []
+    times = []
+
+    X = calculate_discrete_space(dimensions)
+
+    # optimizing search
+    for i in range(iterations):
+        start_time = timeit.default_timer()
+
+        q = mendeleev_rank_to_data(guess)[0]
+        score = fitness_evaluator(q['gap_dir'], q['gap_ind'], q['heat_of_formation'],
+                                       q['vb_dir'], q['cb_dir'], q['vb_ind'], q['cb_ind'])
+        my_input.append(list(guess))
+        my_output.append(score)
+
+        start_time = timeit.default_timer()
+
+        prev_actions = get_actions_from_input(my_input, X)
+        policy = combo.search.discrete.policy(test_X=np.asarray(X))
+        policy.write(prev_actions, np.asarray(my_output))
+        actions = policy.bayes_search(max_num_probes=1, num_search_each_probe=1,
+                                      simulator=None, score='EI', interval=0, num_rand_basis=0)
+        guess = list(get_input_from_actions(actions, X))
+
+        elapsed = timeit.default_timer() - start_time
+        times.append(elapsed)
+
+        print "CALCULATION:", i + 1, " WITH SCORE:", score
+
+        # Search for entry in GOOD_CANDS_LS
+        transform_entry = (mendeleev_rank2name[my_input[-1][0]], mendeleev_rank2name[my_input[-1][1]],
+                           anion_mendeleev_rank2name[my_input[-1][2]])
+        mod_entry = (name2atomic[transform_entry[0]], name2atomic[transform_entry[1]], anion_name2index[transform_entry[2]])
+        if mod_entry in GOOD_CANDS_LS and mod_entry not in candidates:
+            candidate_count += 1
+            candidates.append(mod_entry)
+            candidate_count_at_iteration.append(candidate_count)
+            candidate_iteration.append(i)
+
+    print "candidates", candidate_count
+    print "These candidates are: ", candidates
+
+    # Plotting
+    if plots =="on":
+        candplot = plt.figure(1)
+        candline = plt.plot(candidate_iteration, candidate_count_at_iteration)
+        plt.setp(candline, linewidth=3, color='g')
+        plt.xlabel("Iterations")
+        plt.ylabel("Candidates Found")
+        plt.title("Candidates vs Iterations")
+
+        timeplot = plt.figure(2)
+        timeline = plt.plot(list(range(iterations)), times)
+        plt.setp(timeline, linewidth=3, color='b')
+        plt.xlabel("Individual Iteration")
+        plt.ylabel("Time needed to execute GP")
+        plt.title("Computational Overhead of Optimization Algorithm")
+        plt.show()
+
+    return candidate_iteration, candidate_count_at_iteration, list(range(iterations)), times
+
+def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_guessing="random"):
+    '''Run parameters'''
+
+    combo_cands = []
+    skopt_cands = []
+    combo_iters = []
+    skopt_iters = []
+    combo_times = []
+    skopt_times = []
+    iterations = []
+
+    '''Running computations'''
+    for i in range(run_num):
+        if initial_guessing=="random":
+            initial_guess = dummy_minimize([name_index, name_index, anion_names])
+        else:
+            initial_guess = initial_guessing
+
+        skopt_cand_iter, skopt_cand_count_at_iter, iterations, skopt_time = \
+            mendeleev_integer_optimization_line_and_timing( guess=initial_guess, iterations=iter_num)
+        combo_cand_iter, combo_cand_count_at_iter, iterations, combo_time = \
+            mendeleev_integer_optimization_combo_line_and_timing(guess=initial_guess, iterations=iter_num)
+
+        skopt_times.append(skopt_time)
+        combo_times.append(combo_time)
+
+        skopt_cands.append(skopt_cand_count_at_iter)
+        combo_cands.append(combo_cand_count_at_iter)
+
+        skopt_iters.append(skopt_cand_iter)
+        combo_iters.append(combo_cand_iter)
+
+    print "finished optimizing runs"
+
+    '''Data Reformatting'''
+
+
+    def get_time_stats(gp_times):
+        avg_times = []
+        for i in range(len(gp_times[0])):
+            temp = []
+            for time_arr in gp_times:
+                temp.append(time_arr[i])
+            avg_times.append(np.asarray(temp).mean())
+        return avg_times
+
+
+    def get_cand_stats(cands, iters):
+        max_cand = 0
+        for cand in cands:
+            if cand[-1] > max_cand:
+                max_cand = cand[-1]
+
+        avg_iterations_at_candidate = []
+        std_iterations_at_candidate = []
+        for i in range(max_cand - 1):
+            temp = []
+            for iter_set in iters:
+                try:
+                    temp.append(iter_set[i])
+                except:
+                    pass
+            avg_iterations_at_candidate.append(np.asarray(temp).mean())
+            std_iterations_at_candidate.append(np.asarray(temp).std())
+
+        return avg_iterations_at_candidate, std_iterations_at_candidate, list(range(max_cand + 1)).pop(0)
+
+
+    combo_times = get_time_stats(combo_times)
+    skopt_times = get_time_stats(skopt_times)
+
+    skopt_iters, skopt_iters_std, skopt_cands = get_cand_stats(skopt_cands, skopt_iters)
+    combo_iters, combo_iters_std, combo_cands = get_cand_stats(combo_cands, combo_iters)
+
+
+    '''Save Results'''
+    text_file = open('results.txt', 'w')
+    text_file.write("\n TIME OF RUN: {} \n".format(datetime.datetime.now().time().isoformat()))
+    text_file.write("skopt iterations: {} \n".format(skopt_iters))
+    text_file.write("skopt std dev iterations: {} \n".format(skopt_iters_std))
+    text_file.write("skopt candidate list: {} \n".format(skopt_cands))
+    text_file.write("combo iterations: {} \n".format(combo_iters))
+    text_file.write("combo std dev iterations: {} \n".format(combo_iters_std))
+    text_file.write("combo candidate list: {} \n".format(combo_cands))
+
+    '''Plotting'''
+    candplot = plt.figure(1)
+    skopterr = plt.errorbar(skopt_iters, skopt_cands, xerr=skopt_iters_std, fmt='og', ecolor='black',
+                            capthick=2, capsize=3, elinewidth=2)
+    skoptline = plt.plot(skopt_iters, skopt_cands, 'g')
+
+    comboerr = plt.errorbar(combo_iters, combo_cands, xerr=combo_iters_std, fmt='ob', ecolor='black',
+                            capthick=2, capsize=3, elinewidth=2)
+
+    comboline = plt.plot(combo_iters, combo_cands, 'b')
+
+    rand_iters = []
+    if combo_iters[-1] > skopt_iters[-1]:
+        rand_iters = combo_iters
+    else:
+        rand_iters = skopt_iters
+
+    plt.setp(skoptline, linewidth=3, color='g')
+    plt.setp(comboline, linewidth=3, color='b')
+    plt.setp(randline, linewidth=3, color='black')
+    plt.xlabel("Iterations")
+    plt.ylabel("Candidates Found")
+    plt.title("Candidates vs Iterations")
+
+    timeplot = plt.figure(2)
+    skopt_timeline = plt.plot(iterations, skopt_times)
+    combo_timeline = plt.plot(iterations, combo_times)
+    plt.setp(skopt_timeline, linewidth=3, color='g')
+    plt.setp(combo_timeline, linewidth=3, color='b')
+    plt.xlabel("Individual Iteration")
+    plt.ylabel("Time needed to execute GP")
+    plt.title("Computational Overhead of Optimization Algorithm")
+    plt.show()
 
 # EXECUTABLE
 if __name__ =="__main__":
-    mendeleev_integer_optimization_line_and_timing(iterations=1000, guess = ['Os','Os','O3'])
-    # mendeleev_mixed_optimization_line_and_timing(iterations=500,guess = ['Os','Os','O3'])
-    # categorical_optimization_line_and_timing(iterations=500,guess=['Os','Os','O3'])
+    # mendeleev_integer_optimization_combo_line_and_timing(iterations=1000, guess = ['Os','Os','O3'])
+
+    mendeleev_integer_statistical_comparisons(initial_guessing=("Li", "V", "O3"))
+
+
+
+
+
+
+
+
+
+
+
