@@ -14,7 +14,7 @@
 
 import numpy as np
 import datetime
-
+import matplotlib.pyplot as plt
 
 def get_cand_stats(cands, iters):
     max_cand = 0
@@ -42,10 +42,14 @@ def get_cand_stats(cands, iters):
     return avg_iterations_at_candidate, std_iterations_at_candidate, all_cands
 
 
-skopt_cands = [[1,2,3],[1,2,3,4,5,6],[1,2,3]]
-skopt_iters = [[23, 333, 500], [12, 355, 485, 605,700,912], [99, 294, 540]]
-combo_cands = [[1,2,3,4],[1,2,3,4,5,6,7],[1,2,3,4,5,6,7]]
-combo_iters = [[66, 126, 355], [98, 123, 345, 567, 677, 723, 923], [140, 195, 299, 399, 455, 788, 977]]
+# skopt_cands = [[1,2,3],[1,2,3,4,5,6],[1,2,3]]
+# skopt_iters = [[23, 333, 500], [12, 355, 485, 605,700,912], [99, 294, 540]]
+# combo_cands = [[1,2,3,4],[1,2,3,4,5,6,7],[1,2,3,4,5,6,7]]
+# combo_iters = [[66, 126, 355], [98, 123, 345, 567, 677, 723, 923], [140, 195, 299, 399, 455, 788, 977]]
+skopt_cands = np.asarray([[1], [1], [1]])
+skopt_iters = np.asarray([[0], [0], [0]])
+combo_cands = np.asarray([[1], [1], [1]])
+combo_iters = np.asarray([[0], [0], [0]])
 
 skopt_iters, skopt_iters_std, skopt_cands = get_cand_stats(skopt_cands, skopt_iters)
 combo_iters, combo_iters_std, combo_cands = get_cand_stats(combo_cands, combo_iters)
@@ -54,6 +58,9 @@ print "skopt iterations:", skopt_iters
 print "skopt iteration std.:", skopt_iters_std
 print "skopt candidates:", skopt_cands
 
+print"combo iterations:", combo_iters
+print "combo iteration std.:", combo_iters_std
+print "combo candidates:", combo_cands
 
 '''Save Results'''
 text_file = open('results.txt', 'w')
@@ -65,8 +72,7 @@ text_file.write("combo iterations: {} \n".format(combo_iters))
 text_file.write("combo std dev iterations: {} \n".format(combo_iters_std))
 text_file.write("combo candidate list: {} \n".format(combo_cands))
 
-import matplotlib.pyplot as plt
-
+'''Plotting'''
 candplot = plt.figure(1)
 skopterr = plt.errorbar(skopt_iters, skopt_cands, xerr=skopt_iters_std, fmt='og', ecolor='black',
                         capthick=2, capsize=3, elinewidth=2)
@@ -77,7 +83,7 @@ comboerr = plt.errorbar(combo_iters, combo_cands, xerr=combo_iters_std, fmt='ob'
 
 comboline = plt.plot(combo_iters, combo_cands, 'b')
 
-rand_iters=[]
+rand_iters = []
 if combo_iters[-1] > skopt_iters[-1]:
     rand_iters = combo_iters
 else:

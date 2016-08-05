@@ -661,9 +661,15 @@ def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_gue
 
     print "finished optimizing runs"
 
+    '''Save Results'''
+    text_file = open('results_raw.txt', 'w')
+    text_file.write("\n TIME OF RUN: {} \n".format(datetime.datetime.now().time().isoformat()))
+    text_file.write("skopt raw iterations: {} \n".format(skopt_iters))
+    text_file.write("skopt raw candidate list: {} \n".format(skopt_cands))
+    text_file.write("combo raw iterations: {} \n".format(combo_iters))
+    text_file.write("combo raw candidate list: {} \n".format(combo_cands))
+
     '''Data Reformatting'''
-
-
     def get_time_stats(gp_times):
         avg_times = []
         for i in range(len(gp_times[0])):
@@ -673,7 +679,6 @@ def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_gue
             avg_times.append(np.asarray(temp).mean())
         return avg_times
 
-
     def get_cand_stats(cands, iters):
         max_cand = 0
         for cand in cands:
@@ -682,7 +687,7 @@ def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_gue
 
         avg_iterations_at_candidate = []
         std_iterations_at_candidate = []
-        for i in range(max_cand - 1):
+        for i in range(max_cand):
             temp = []
             for iter_set in iters:
                 try:
@@ -692,18 +697,23 @@ def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_gue
             avg_iterations_at_candidate.append(np.asarray(temp).mean())
             std_iterations_at_candidate.append(np.asarray(temp).std())
 
-        return avg_iterations_at_candidate, std_iterations_at_candidate, list(range(max_cand + 1)).pop(0)
+        zero = [0]
+        avg_iterations_at_candidate = zero + avg_iterations_at_candidate
+        std_iterations_at_candidate = zero + std_iterations_at_candidate
+
+        all_cands = list(range(max_cand + 1))
+        return avg_iterations_at_candidate, std_iterations_at_candidate, all_cands
 
 
     combo_times = get_time_stats(combo_times)
     skopt_times = get_time_stats(skopt_times)
 
+
     skopt_iters, skopt_iters_std, skopt_cands = get_cand_stats(skopt_cands, skopt_iters)
     combo_iters, combo_iters_std, combo_cands = get_cand_stats(combo_cands, combo_iters)
 
-
     '''Save Results'''
-    text_file = open('results.txt', 'w')
+    text_file = open('results_processed.txt', 'w')
     text_file.write("\n TIME OF RUN: {} \n".format(datetime.datetime.now().time().isoformat()))
     text_file.write("skopt iterations: {} \n".format(skopt_iters))
     text_file.write("skopt std dev iterations: {} \n".format(skopt_iters_std))
@@ -728,7 +738,7 @@ def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_gue
         rand_iters = combo_iters
     else:
         rand_iters = skopt_iters
-
+    randline = plt.plot(rand_iters, [i/946.4 for i in rand_iters])
     plt.setp(skoptline, linewidth=3, color='g')
     plt.setp(comboline, linewidth=3, color='b')
     plt.setp(randline, linewidth=3, color='black')
@@ -750,7 +760,8 @@ def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_gue
 if __name__ =="__main__":
     # mendeleev_integer_optimization_combo_line_and_timing(iterations=1000, guess = ['Os','Os','O3'])
 
-    mendeleev_integer_statistical_comparisons(initial_guessing=("Li", "V", "O3"))
+    # informed comparison
+    mendeleev_integer_statistical_comparisons(iter_num=500, run_num= 20, initial_guessing="random")
 
 
 
