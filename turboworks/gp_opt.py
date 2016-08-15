@@ -210,9 +210,6 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
 
     next_x = space.inverse_transform(next_x.reshape((1, -1)))[0]
 
-
-    #TODO: make it so the pickle file can be deleted or something
-
     # Check to make sure mixed categories and numbers aren't error converted to strings
     if type(next_x)!=list:
         new_x = list(next_x)
@@ -240,6 +237,7 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
 
         # Expensive solution is to randomly sample from remaining data
         if next_x in my_input: #still there
+            X = calculate_discrete_space(dimensions)
 
             untested_combos = []
             filename = "untested_combinations.pickle"
@@ -268,6 +266,6 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
                 seed2 = randint(0,size_untested_combos-1)
                 next_x = untested_combos[seed2]
 
-            # print untested_combos
+
 
     return list(next_x)

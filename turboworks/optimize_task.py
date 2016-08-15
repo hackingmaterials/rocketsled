@@ -5,10 +5,8 @@ from turboworks.gp_opt import gp_minimize
 from turboworks.dummy_opt import dummy_minimize
 import numpy as np
 from collections import OrderedDict
-import warnings
 import combo
-from turboworks.discrete_spacify import calculate_discrete_space
-from random import randint
+from turboworks.discrete_spacify import calculate_discrete_space, duplicate_check
 from contextlib import contextmanager
 import sys, os
 
@@ -324,22 +322,7 @@ class COMBOptomizeTask(FireTaskBase):
             new_input = list(get_input_from_actions(actions, X))
 
         # Duplicate protection (this is not dependend on Python native types, numpy comparison is fine)
-        warnings.simplefilter('always', UserWarning)
-        if new_input in opt_inputs:
-            remaining_inputs = X
-            for element in opt_inputs:
-
-                while element in remaining_inputs:
-                    remaining_inputs.remove(element)
-                while tuple(element) in remaining_inputs:
-                    remaining_inputs.remove(tuple(element))
-
-            if len(remaining_inputs) == 0:
-                warnings.warn('All search combinations in the space have been exhausted. '
-                              'Repeating calculation based on COMBO optimization.')
-            else:
-                index = randint(0, len(remaining_inputs) - 1)
-                new_input = list(remaining_inputs[index])
+        new_input = duplicate_check(new_input, opt_inputs, X)
 
         # Conversion to Native Types
         updated_input = []
