@@ -1,14 +1,3 @@
-"""
-This file is a modified Skopt file. Find the developer edition, default version of Skopt at
-https://github.com/scikit-optimize/scikit-optimize
-
-This file locally defines high level GP functions which interact with the default Skopt installation.
-
-"""
-
-# TODO: why is this needed? You should not be overriding skopt - Anubhav
-# TODO: make this call gp function with maxiter set to 1, using a function which returns the output?
-
 import numpy as np
 import warnings
 
@@ -20,11 +9,8 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern, ConstantKernel
 from sklearn.utils import check_random_state
 
-from skopt.acquisition import _gaussian_acquisition
-from skopt.space import Space
-
-from dummy_opt import dummy_minimize
-from discrete_spacify import calculate_discrete_space, duplicate_check
+from .acquisition import _gaussian_acquisition
+from .space import Space
 
 
 def _acquisition(X, model, y_opt=None, method="LCB", xi=0.01, kappa=1.96):
@@ -37,7 +23,7 @@ def _acquisition(X, model, y_opt=None, method="LCB", xi=0.01, kappa=1.96):
     return _gaussian_acquisition(X, model, y_opt, method, xi, kappa)
 
 
-def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB", xi=0.01,
+def gp_minimize(func, dimensions, base_estimator=None, acq="LCB", xi=0.01,
                 kappa=1.96, search="sampling", maxiter=1000, n_points=500,
                 n_start=10, n_restarts_optimizer=5, random_state=None):
     """Bayesian optimization using Gaussian Processes.
@@ -60,14 +46,6 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
     * `func` [callable]:
         Function to minimize. Should take a array of parameters and
         return the function values.
-
-        [modified] - now should take my_input and my_output of the form:
-        my_input = [[run 1 params], [run 2 params], [run 3 params]...]
-        my_output = [ run 1 output, run 2 output, run 3 output...]
-
-        example:
-        my_input = [[12.3, 992.2, 4], [14.4, 876.4, 5]]
-        my_output = [0.0045, 0.0067]
 
     * `dimensions` [list, shape=(n_dims,)]:
         List of search space dimensions.
@@ -144,6 +122,7 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
         - `x_iters` [array]: location of function evaluation for each
            iteration.
         - `func_vals` [array]: function value for each iteration.
+        - `space` [Space]: the optimisation space.
 
         For more details related to the OptimizeResult object, refer
         http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.OptimizeResult.html
@@ -152,8 +131,6 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
     space = Space(dimensions)
 
     # Default GP
-    # modified - Alex Dunn 7/3/2016
-
     if base_estimator is None:
         base_estimator = GaussianProcessRegressor(
             kernel=(ConstantKernel(1.0, (0.01, 1000.0)) *
@@ -163,76 +140,63 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
             normalize_y=True, alpha=10e-6, random_state=random_state)
 
     # First points
-    Xi = my_input
-    yi = my_output
+    Xi = space.rvs(n_samples=n_start, random_state=rng)
+    yi = [func(x) for x in Xi]
     if np.ndim(yi) != 1:
         raise ValueError(
             "The function to be optimized should return a scalar")
 
     # Bayesian optimization loop
     models = []
-    gp = clone(base_estimator)
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        gp.fit(space.transform(Xi), yi)
+    for i in range(maxiter - n_start):
+        gp = clone(base_estimator)
 
-    models.append(gp)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            gp.fit(space.transform(Xi), yi)
 
-    if search == "sampling":
-        X = space.transform(space.rvs(n_samples=n_points,
-                                      random_state=rng))
-        values = _gaussian_acquisition(
-            X=X, model=gp, y_opt=np.min(yi), method=acq,
-            xi=xi, kappa=kappa)
-        next_x = X[np.argmin(values)]
+        models.append(gp)
 
-    elif search == "lbfgs":
-        best = np.inf
+        if search == "sampling":
+            X = space.transform(space.rvs(n_samples=n_points,
+                                          random_state=rng))
+            values = _gaussian_acquisition(
+                X=X, model=gp,  y_opt=np.min(yi), method=acq,
+                xi=xi, kappa=kappa)
+            next_x = X[np.argmin(values)]
 
-        for j in range(n_restarts_optimizer):
-            x0 = space.transform(space.rvs(n_samples=1,
-                                           random_state=rng))[0]
+        elif search == "lbfgs":
+            best = np.inf
 
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                x, a, _ = fmin_l_bfgs_b(
-                    _acquisition, x0,
-                    args=(gp, np.min(yi), acq, xi, kappa),
-                    bounds=space.transformed_bounds,
-                    approx_grad=True, maxiter=10)
+            for j in range(n_restarts_optimizer):
+                x0 = space.transform(space.rvs(n_samples=1,
+                                               random_state=rng))[0]
 
-            if a < best:
-                next_x, best = x, a
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    x, a, _ = fmin_l_bfgs_b(
+                        _acquisition, x0,
+                        args=(gp, np.min(yi), acq, xi, kappa),
+                        bounds=space.transformed_bounds,
+                        approx_grad=True, maxiter=10)
 
-    next_x = space.inverse_transform(next_x.reshape((1, -1)))[0]
+                if a < best:
+                    next_x, best = x, a
 
-    # Check to make sure mixed categories and numbers aren't error converted to strings
-    if type(next_x)!=list:
-        new_x = list(next_x)
-        next_x = new_x
+        next_x = space.inverse_transform(next_x.reshape((1, -1)))[0]
+        next_y = func(next_x)
+        Xi = np.vstack((Xi, next_x))
+        yi.append(next_y)
 
-        for i in range(len(next_x)):
-            dim_type = type(dimensions[i][0])
-            if dim_type!=type(next_x[i]):
-                if dim_type== int or dim_type == np.int64:
-                    replace = int(next_x[i])
-                    next_x[i] = replace
-                elif dim_type == float or dim_type == np.float64:
-                    replace = float(next_x[i])
-                    next_x[i] = replace
-                else:
-                    replace = str(next_x[i])
-                    next_x[i] = replace
+    # Pack results
+    res = OptimizeResult()
+    best = np.argmin(yi)
+    res.x = Xi[best]
+    res.fun = yi[best]
+    res.func_vals = np.array(yi)
+    res.x_iters = Xi
+    res.models = models
+    res.space = space
 
-    # Duplicate discrete entry checking
-    if next_x in my_input:
-        # Cheap solution is to randomly sample again.
-        next_x = dummy_minimize(dimensions)
-        # Expensive solution is to randomly sample from remaining data
-        if next_x in my_input:
-            # still there
-            X = calculate_discrete_space(dimensions)
-            next_x = duplicate_check(next_x, my_input, X)
-
-    return list(next_x)
+    return res

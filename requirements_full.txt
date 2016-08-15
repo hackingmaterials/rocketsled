@@ -1,0 +1,8 @@
+numpy
+scipy
+matplotlib
+fireworks
+sklearn
+cython
+git+git://github.com/scikit-optimize/scikit-optimize.git
+git+git://github.com/tsudalab/combo.git
