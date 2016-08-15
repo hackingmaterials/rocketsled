@@ -7,14 +7,14 @@ TurboWorks is a flexible machine-learning framework for maximizing throughput on
 If you have a complex task to execute, and you would like to use statistical machine learning techniques to reduce the number of expensive calculations needed
 to run your task, TurboWorks is for you. 
 ####What can it do?
-TurboWorks functions as a *black box optimizer and task manager*; it requires no knowledge of a function in order to optimize it, and TurboWorks *retains the workflow
-management abilties* of FireWorks (provenance, dynamic workflows, duplicate detection and correction, error handling).   
+TurboWorks functions as a **black box optimizer and task manager**; it requires no knowledge of a function in order to optimize it, and TurboWorks **retains the workflow
+management abilties** of FireWorks (provenance, dynamic workflows, duplicate detection and correction, error handling).   
 TurboWorks is implemented as a modular atomic task in a FireWorks workflow, a series of complex tasks; it can run multiple optimizations for a single task, or it can execute
 only once in an entire workflow.  
 ####What kind of machine learning does it use?
-TurboWorks includes a general purpose *Gaussian process* algorithm (Skopt) which can handle categorical, continuous, discrete integer, and mixed data type optimization tasks.  
+TurboWorks includes a general purpose **Gaussian process** algorithm (Skopt) which can handle categorical, continuous, discrete integer, and mixed data type optimization tasks.  
 TurboWorks also includes a specialized integer-specific Gaussian process library (COMBO) meant to reduce the computational time needed for optimizations on large data sets.  
-In addition to these two default optimization algorithms, *the API includes the ability to add user made optimization algorithms* (see 'Adding your own Algorithms' for more).
+In addition to these two default optimization algorithms, **the API includes the ability to add user made optimization algorithms** (see 'Adding your own Algorithms' for more).
 
 ####Where can I learn more?
 To learn more about FireWorks, see the [official documentation] (https://pythonhosted.org/FireWorks/)  
@@ -46,6 +46,7 @@ cd scikit-optimize
 python  setup.py install
 ```
 
+**OR**  
 To install using the latest versions of COMBO and Skopt, run:
 ```
 git clone https://github.com/ardunn/TurboWorks
@@ -58,14 +59,22 @@ Since both suites are under ongoing development, they may not work as intended w
 
 
 ## Get up and running
-Have a complex workflow you need to execute? [Read more about how to use FireWorks.] (https://pythonhosted.org/FireWorks/)
 
+####Get familiar with FireWorks
+Have a complex scientific workflow you need to execute? Don't know about FireWorks? [Read more about how to use FireWorks.] (https://pythonhosted.org/FireWorks/)
 **TurboWorks is implemented as a single [FireTask] (https://pythonhosted.org/FireWorks/guide_to_writing_firetasks.html) in Fireworks**  
-It will be executed as part of a FireWork, which is part of a workflow.  
+It will be executed as part of a FireWork, which is part of a workflow.    
 
-Have a mongod instance running [via MongoDB, read more about MongoDB here](https://docs.mongodb.com/getting-started/shell/)
+####Get familiar with MongoDB
+Don't know about MongoDB? [read about and download MongoDB here] (https://docs.mongodb.com/getting-started/shell/)
+Once you have a MongoDB database set up, start the `mongod` process by typing `mongod` into a terminal, or, if your database is stored somewhere 
+besides the default db location, use `mongod --dbpath path/to/my/database/data`
+
+####Running a basic example
+1. Navigate to your `TurboWorks` directory.
+2. Go to `examples/Tutorial_integer_example`
 
 *coming soon*
 
-### Implementing your own Optimization Algorithms
+## Implementing your own Optimization Algorithms
 *coming soon*
