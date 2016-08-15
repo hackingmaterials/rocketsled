@@ -233,6 +233,6 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
         if next_x in my_input:
             # still there
             X = calculate_discrete_space(dimensions)
-            next_x = duplicate_check(next_x, my_input, X)
+            next_x = duplicate_check(next_x, my_input, X, 'Skopt')
 
     return list(next_x)

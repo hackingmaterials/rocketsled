@@ -322,7 +322,7 @@ class COMBOptomizeTask(FireTaskBase):
             new_input = list(get_input_from_actions(actions, X))
 
         # Duplicate protection (this is not dependend on Python native types, numpy comparison is fine)
-        new_input = duplicate_check(new_input, opt_inputs, X)
+        new_input = duplicate_check(new_input, opt_inputs, X, 'COMBO')
 
         # Conversion to Native Types
         updated_input = []

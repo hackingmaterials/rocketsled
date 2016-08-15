@@ -7,19 +7,19 @@ TurboWorks is a flexible machine-learning framework for maximizing throughput on
 If you have a complex task to execute, and you would like to use statistical machine learning techniques to reduce the number of expensive calculations needed
 to run your task, TurboWorks is for you. 
 ####What can it do?
-TurboWorks functions as a black box optimizer and task manager; it requires no knowledge of a function in order to optimize it, and TurboWorks retains the workflow
-management abilties of FireWorks (provenance, dynamic workflows, duplicate detection and correction, error handling). 
+TurboWorks functions as a *black box optimizer and task manager*; it requires no knowledge of a function in order to optimize it, and TurboWorks *retains the workflow
+management abilties* of FireWorks (provenance, dynamic workflows, duplicate detection and correction, error handling).   
 TurboWorks is implemented as a modular atomic task in a FireWorks workflow, a series of complex tasks; it can run multiple optimizations for a single task, or it can execute
-only once in an entire workflow.
+only once in an entire workflow.  
 ####What kind of machine learning does it use?
-TurboWorks includes a general purpose gaussian process algorithm (Skopt) which can handle categorical, continuous, discrete integer, and mixed data type optimization tasks.
-TurboWorks also includes a specialized integer-specific gaussian process library (COMBO) meant to reduce the computational time needed for optimizations on large data sets. 
-In addition to these two default optimization algorithms, the API includes the ability to add user made optimization algorithms (see 'Adding your own Algorithms' for more).  
+TurboWorks includes a general purpose *Gaussian process* algorithm (Skopt) which can handle categorical, continuous, discrete integer, and mixed data type optimization tasks.  
+TurboWorks also includes a specialized integer-specific Gaussian process library (COMBO) meant to reduce the computational time needed for optimizations on large data sets.  
+In addition to these two default optimization algorithms, *the API includes the ability to add user made optimization algorithms* (see 'Adding your own Algorithms' for more).
 
 ####Where can I learn more?
 To learn more about FireWorks, see the [official documentation] (https://pythonhosted.org/FireWorks/)  
-To learn more about the general default optimization algorithm, Skopt, see the [official GitHub Repo] (https://github.com/scikit-optimize/scikit-optimize)
-To learn more about the specialized integer optimization algorithm, 
+To learn more about the general default optimization algorithm, Skopt, see the [official GitHub Repo] (https://github.com/scikit-optimize/scikit-optimize)  
+To learn more about the specialized integer optimization algorithm, see the [official GitHub Repo] (https://github.com/tsudalab/combo)
 
 ## Software Requirements:
 - Python 2 or 3

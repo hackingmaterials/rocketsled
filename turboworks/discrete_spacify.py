@@ -46,7 +46,7 @@ def calculate_discrete_space(dimensions):
         return list(itertools.product(*total_dimspace))
 
 
-def duplicate_check(new_input, opt_inputs, X):
+def duplicate_check(new_input, opt_inputs, X, optimizer):
     """
     This is a utility function for checking duplicates and returning new discrete entries until the search space is
     exhausted.
@@ -67,7 +67,7 @@ def duplicate_check(new_input, opt_inputs, X):
 
         if len(remaining_inputs) == 0:
             warnings.warn('All search combinations in the space have been exhausted. '
-                          'Repeating calculation based on COMBO optimization.')
+                          'Repeating calculation based on {} optimization.'.format(optimizer))
             return new_input
         else:
             index = randint(0, len(remaining_inputs) - 1)

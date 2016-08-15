@@ -69,10 +69,10 @@ def best_graph():
     manageDB.nuke_it()
 
     iterations = list(range(run_num))
-    # print("GP best:", gp_best[-1])
-    # print("Dummy best: ", dummy_best[-1])
-    # print("Combo best:", combo_best[-1])
-    # plt.plot(iterations,gp_best,'g', iterations, dummy_best,'r', iterations, combo_best,'b')
+    print("GP best:", gp_best[-1])
+    print("Dummy best: ", dummy_best[-1])
+    print("Combo best:", combo_best[-1])
+    plt.plot(iterations,gp_best,'g', iterations, dummy_best,'r', iterations, combo_best,'b')
     plt.plot(iterations, combo_best,'b')
     plt.show()
 
