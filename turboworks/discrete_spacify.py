@@ -20,6 +20,7 @@ WARNING: Very large discrete spaces will memory hog this process. Typically a sp
 
 def calculate_discrete_space(dimensions):
     total_dimspace = []
+
     for dimension in dimensions:
         if type(dimension[0]) == int or type(dimension[0]) == np.int64:
             # Then the dimension is of the form (lower, upper)
@@ -32,4 +33,8 @@ def calculate_discrete_space(dimensions):
         else:  # The dimension is a discrete finite string list
             dimspace = dimension
         total_dimspace.append(dimspace)
-    return list(itertools.product(*total_dimspace))
+
+    if len(dimensions)==1:
+        return [[x] for x in total_dimspace[0]]
+    else:
+        return list(itertools.product(*total_dimspace))

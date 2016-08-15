@@ -14,17 +14,17 @@ launchpad = LaunchPad()
 manageDB = ManageDB()
 
 # Sample data
-A = 33
-B = 5
-C = 84
+A = 1
+B = 2
+C = 1
 input1 = {"A":A, "B":B, "C":C}
-dimensions = {"A_range":(1,100),"B_range":(1,100), "C_range":(1,100)}
+dimensions = {"A_range":(1,2),"B_range":(1,2), "C_range":(1,2)}
 
 # Define the initial input
 input_dict = {'input':input1, 'dimensions':dimensions}
 
 # How many times to run the workflow + optimization loop
-run_num = 20
+run_num = 10
 
 # Or dynamically call till within a max_val
 max_val = 10000
@@ -39,25 +39,25 @@ def best_graph():
         plot the best result vs the iteration, comparing GP vs random
     """
 
-    # Run run_num iterations using Skopt Gaussian Processes
-    gp_best = []
-    wf = workflow_creator(input_dict, 'skopt_gp')
-    launchpad.add_wf(wf)
-    for i in range(run_num):
-        launch_rocket(launchpad)
-        gp_best.append(manageDB.get_optima('D', min_or_max='max')[0])
-    manageDB.nuke_it()
-    launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
-
-    # Run run_num iterations using a dummy optimizer (returns random)
-    dummy_best = []
-    wf = workflow_creator(input_dict, 'dummy')
-    launchpad.add_wf(wf)
-    for i in range(run_num):
-        launch_rocket(launchpad)
-        dummy_best.append(manageDB.get_optima('D', min_or_max='max')[0])
-    manageDB.nuke_it()
-    launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
+    # # Run run_num iterations using Skopt Gaussian Processes
+    # gp_best = []
+    # wf = workflow_creator(input_dict, 'skopt_gp')
+    # launchpad.add_wf(wf)
+    # for i in range(run_num):
+    #     launch_rocket(launchpad)
+    #     gp_best.append(manageDB.get_optima('D', min_or_max='max')[0])
+    # manageDB.nuke_it()
+    # launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
+    #
+    # # Run run_num iterations using a dummy optimizer (returns random)
+    # dummy_best = []
+    # wf = workflow_creator(input_dict, 'dummy')
+    # launchpad.add_wf(wf)
+    # for i in range(run_num):
+    #     launch_rocket(launchpad)
+    #     dummy_best.append(manageDB.get_optima('D', min_or_max='max')[0])
+    # manageDB.nuke_it()
+    # launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
 
     # Run run_num iterations using COMBO optimization
     combo_best = []
@@ -69,10 +69,11 @@ def best_graph():
     manageDB.nuke_it()
 
     iterations = list(range(run_num))
-    print("GP best:", gp_best[-1])
-    print("Dummy best: ", dummy_best[-1])
-    print("Combo best:", combo_best[-1])
-    plt.plot(iterations,gp_best,'g', iterations, dummy_best,'r', iterations, combo_best,'b')
+    # print("GP best:", gp_best[-1])
+    # print("Dummy best: ", dummy_best[-1])
+    # print("Combo best:", combo_best[-1])
+    # plt.plot(iterations,gp_best,'g', iterations, dummy_best,'r', iterations, combo_best,'b')
+    plt.plot(iterations, combo_best,'b')
     plt.show()
 
 def scatter_graph():

@@ -5,12 +5,12 @@ from turboworks.gp_opt import gp_minimize
 from turboworks.dummy_opt import dummy_minimize
 import numpy as np
 from collections import OrderedDict
-
-
-"""For combo:"""
+import warnings
 import combo
 from turboworks.discrete_spacify import calculate_discrete_space
-
+from random import randint
+from contextlib import contextmanager
+import sys, os
 
 
 """
@@ -208,8 +208,8 @@ class DummyOptimizeTask(FireTaskBase):
 @explicit_serialize
 class COMBOptomizeTask(FireTaskBase):
     """
-        This method runs a the Tsudalab COMBO optimization task in a similar fashion to the SKOptimize task. COMBO only
-        takes integer input.
+        This class runs a the Tsudalab COMBO optimization task in a similar fashion to the SKOptimize task. COMBO only
+        takes integer input. Duplicate checking is enabled by default.
 
         :param fw_spec: (dict) specifying the firework data, and the data the firetask will use. The parameters should
         be numerical. The exact layout of this should be defined in the workflow creator.
@@ -277,7 +277,7 @@ class COMBOptomizeTask(FireTaskBase):
 
         opt_dimensions = opt_dim_history[-1]
 
-        # Optimization Algorithm
+        # Optimization Algorithm (with console spam suppressed temporarily)
         '''COMBO's default is maximum, so this is reversed from other optimization task classes.'''
 
         if self["min_or_max"] == "min":
@@ -303,14 +303,43 @@ class COMBOptomizeTask(FireTaskBase):
                 actions.append(X.index(tuple(input_vector)))
             return actions
 
-        prev_actions = get_actions_from_input(opt_inputs,X)
+        @contextmanager
+        def suppress_stdout():
+            with open(os.devnull, "w") as devnull:
+                old_stdout = sys.stdout
+                sys.stdout = devnull
+                try:
+                    yield
+                finally:
+                    sys.stdout = old_stdout
 
-        policy = combo.search.discrete.policy(test_X=np.asarray(X))
-        policy.write(prev_actions, np.asarray(opt_outputs))
+        with suppress_stdout():
+            prev_actions = get_actions_from_input(opt_inputs,X)
 
-        actions = policy.bayes_search(max_num_probes=1, num_search_each_probe=1,
-                                      simulator=None, score='EI', interval=0, num_rand_basis=0)
-        new_input = list(get_input_from_actions(actions, X))
+            policy = combo.search.discrete.policy(test_X=np.asarray(X))
+            policy.write(prev_actions, np.asarray(opt_outputs))
+
+            actions = policy.bayes_search(max_num_probes=1, num_search_each_probe=1,
+                                          simulator=None, score='EI', interval=0, num_rand_basis=0)
+            new_input = list(get_input_from_actions(actions, X))
+
+        # Duplicate protection (this is not dependend on Python native types, numpy comparison is fine)
+        warnings.simplefilter('always', UserWarning)
+        if new_input in opt_inputs:
+            remaining_inputs = X
+            for element in opt_inputs:
+
+                while element in remaining_inputs:
+                    remaining_inputs.remove(element)
+                while tuple(element) in remaining_inputs:
+                    remaining_inputs.remove(tuple(element))
+
+            if len(remaining_inputs) == 0:
+                warnings.warn('All search combinations in the space have been exhausted. '
+                              'Repeating calculation based on COMBO optimization.')
+            else:
+                index = randint(0, len(remaining_inputs) - 1)
+                new_input = list(remaining_inputs[index])
 
         # Conversion to Native Types
         updated_input = []
