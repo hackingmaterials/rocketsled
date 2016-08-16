@@ -14,6 +14,13 @@ Here we compare the effectiveness of Skopt, COMBO, and random guessing on optimi
 
 Where A,B, and C are parameters which range from 1-100, and
 we would like to find the parameters which result in the maximum value of D.
+
+
+
+To execute this script, change the FW password to today's date (YYYY-MM-DD).
+WARNING: This will reset the fireworks database.
+
+
 """
 
 # Class for managing FireWorks
@@ -84,4 +91,4 @@ def graph(input_dict, n_runs=30, fw_password=''):
     plt.show()
 
 if __name__=="__main__":
-    graph(input_dict, n_runs=30, fw_password='2016-08-16')
+    graph(input_dict, n_runs=30, fw_password='')

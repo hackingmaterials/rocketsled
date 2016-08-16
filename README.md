@@ -71,12 +71,19 @@ Once you have a MongoDB database set up, start the `mongod` process by typing `m
 besides the default db location, use `mongod --dbpath path/to/my/database/data`
 
 ####Running a basic example
+
+You have a computationally expensive black box function which we call `IntegerTask`:
+```
+A*B/C = D
+```
+And you would like to find integer values of `A`, `B`, and `C`, which maximize `D` where `A`, `B`, and `C` range between `1-100`.   
+
 1. Navigate to your `TurboWorks` directory.
 2. Go to the directory: `examples/Tutorial_integer_example`
 3. The files inside are:
-  * `integer_task.py`: An arbitrary black box function as a FireTask which accepts 3 integer inputs and returns a float. 
-  * `integer_task_workflow_creator.py`: a function for creating and returning a workflow
-  * `executable.py`: the top level executable script which will make a graph demonstrating the optimization. 
+  * `integer_task.py`: Your black box function as a FireTask which accepts 3 integer inputs (`A,B,C`) and returns a float (`D`). 
+  * `integer_task_workflow_creator.py`: a function for creating and returning a workflow which executes `IntegerTask` and optimizes for the next trial. 
+  * `executable.py`: the top level executable script which will make a graph demonstrating the effect of optimization over time. 
 
 *rest of tutorial is coming soon*
 
