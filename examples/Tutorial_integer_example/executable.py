@@ -87,8 +87,11 @@ def graph(input_dict, n_runs=30, fw_password=''):
     print("Skopt best:", gp_best[-1])
     print("Dummy best: ", dummy_best[-1])
     print("Combo best:", combo_best[-1])
-    plt.plot(iterations,gp_best,'g', iterations, dummy_best,'r', iterations, combo_best,'b')
+    skoptline = plt.plot(iterations,gp_best,'g', label = 'skopt')
+    dummyline = plt.plot(iterations, dummy_best,'r', label = 'dummy')
+    comboline = plt.plot(iterations, combo_best,'b', label = 'combo')
+    plt.legend()
     plt.show()
 
 if __name__=="__main__":
-    graph(input_dict, n_runs=30, fw_password='')
+    graph(input_dict, n_runs=5, fw_password='2016-08-16')

@@ -61,13 +61,13 @@ Since both suites are under ongoing development, they may not work as intended w
 ## Get up and running
 
 ####Get familiar with FireWorks
-Have a complex scientific workflow you need to execute? Don't know about FireWorks? [Read more about how to use FireWorks.] (https://pythonhosted.org/FireWorks/)  
+Have a complex scientific workflow you need to execute? Don't know about FireWorks? [Read more about how to use FireWorks.] (https://pythonhosted.org/FireWorks/)
 **TurboWorks is implemented as a single [FireTask] (https://pythonhosted.org/FireWorks/guide_to_writing_firetasks.html) in Fireworks**  
 It will be executed as part of a FireWork, which is part of a workflow.    
 
 ####Get familiar with MongoDB
 Don't know about MongoDB? [read about and download MongoDB here] (https://docs.mongodb.com/getting-started/shell/)  
-Once you have a MongoDB database set up, start the `mongod` process by typing `mongod` into a terminal, or, if your database is stored somewhere  
+Once you have a MongoDB database set up, start the `mongod` process by typing `mongod` into a terminal, or, if your database is stored somewhere
 besides the default db location, use `mongod --dbpath path/to/my/database/data`
 
 ####Running a basic example
