@@ -23,7 +23,7 @@ dimensions = {"A_range":(1,100),"B_range":(1,100), "C_range":(1,100)}
 input_dict = {'input':input1, 'dimensions':dimensions}
 
 # How many times to run the workflow + optimization loop
-run_num = 5
+run_num = 30
 
 # Or dynamically call till within a max_val
 max_val = 10000
@@ -155,4 +155,4 @@ def testing_for_errors():
     print (gp_max)
 
 if __name__=="__main__":
-    best_graph()
+     scatter_graph()

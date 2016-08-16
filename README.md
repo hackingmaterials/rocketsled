@@ -74,10 +74,11 @@ besides the default db location, use `mongod --dbpath path/to/my/database/data`
 1. Navigate to your `TurboWorks` directory.
 2. Go to the directory: `examples/Tutorial_integer_example`
 3. The files inside are:
-  * `integer_task.py`: An arbitrary black box function which accepts 3 integer inputs and returns a float. 
-  * 
+  * `integer_task.py`: An arbitrary black box function as a FireTask which accepts 3 integer inputs and returns a float. 
+  * `integer_task_workflow_creator.py`: a function for creating and returning a workflow
+  * `executable.py`: the top level executable script which will make a graph demonstrating the optimization. 
 
-*coming soon*
+*rest of tutorial is coming soon*
 
 ## Implementing your own Optimization Algorithms
 *coming soon*

@@ -12,16 +12,12 @@ import sys, os
 
 
 """
-This FireTask optimizes float, integer, categorical, or mixed float/categorical/integer inputs for black box functions.
+Here are several classes illustrating FireTask implementation of optimization algorithms.
 """
 
 @explicit_serialize
 class SKOptimizeTask(FireTaskBase):
-    _fw_name = 'SKOptimizeTask'
-    required_params = ["func", "min_or_max"]
-
-    def run_task(self, fw_spec):
-        """
+    """
         This method runs an optimization algorithm for black-box optimization.
 
         This software uses a modification of the Scikit-Optimize package. Python 3.x is supported.
@@ -39,60 +35,18 @@ class SKOptimizeTask(FireTaskBase):
 
         :return: FWAction: object which creates new wf object based on updated params and specified workflow creator
         """
+    _fw_name = 'SKOptimizeTask'
+    required_params = ["func", "min_or_max"]
 
-        # Import only a function named as a module only in the working dir (taken from PyTask)
-        toks = self["func"].rsplit(".", 1)
-        if len(toks) == 2:
-            modname, funcname = toks
-            mod = __import__(modname, globals(), locals(), [str(funcname)], 0)
-            self.workflow_creator = getattr(mod, funcname)
+    def run_task(self, fw_spec):
+        """
+        The FireTask to be run.
+        """
 
-        # Store all spec data in DB
-        mongo = MongoClient('localhost', 27017)
-        db = mongo.TurboWorks
-        collection = db.TurboWorks_collection
-        collection.insert_one(OrderedDict(fw_spec))
+        output_datatypes = [int, float, np.int64, np.float64]
 
-        # Define optimization variables by reading from DB
-        opt_inputs = []
-        opt_outputs = []
-        opt_dim_history = []
-        opt_dimensions = []
-        input_keys = []
-        dim_keys = []
-        meta_fw_keys = ['_fw_name', 'func', '_tasks', '_id', '_fw_env']
-        cursor = collection.find()
-
-        try:
-            basestring
-        except NameError:  # Python3 compatibility
-            basestring = str
-
-        for document in cursor:
-            self.sublist = []
-            self.subdim = []
-            for key in sorted(document['input']):
-                if key not in meta_fw_keys:
-                    self.sublist.append(document['input'][key])
-                    if key not in input_keys:
-                        input_keys.append(key)
-            opt_inputs.append(self.sublist)
-            for key in sorted(document['dimensions']):
-                if key not in meta_fw_keys:
-                    self.subdim.append(tuple(document['dimensions'][key]))
-                    if key not in dim_keys:
-                        dim_keys.append(key)
-            opt_dim_history.append(self.subdim)
-            for key in document['output']:
-                if (type(document['output'][key]) == int or type(document['output'][key]) == float or type(
-                        document['output'][key]) == np.int64 or type(document['output'][key]) == np.float64):
-
-                        opt_outputs.append(document['output'][key])
-                else:
-                    raise ValueError("The optimization algorithm must take in a single output. Supported data types"
-                                     "are numpy int64, numpy float64, Python int and Python float")
-
-        opt_dimensions = opt_dim_history[-1]
+        self.workflow_creator, opt_inputs, opt_outputs, opt_dimensions, input_keys, dim_keys = \
+            get_data(self["func"], fw_spec, output_datatypes=output_datatypes, host='localhost', port=27017)
 
         # Optimization Algorithm and conversion to python native types
         if self["min_or_max"] == "max":
@@ -143,45 +97,12 @@ class DummyOptimizeTask(FireTaskBase):
     required_params = ["func"]
 
     def run_task(self, fw_spec):
+        """
+        The FireTask to be run.
+        """
 
-        # Import only a function named as a module only in the working dir (taken from PyTask)
-        toks = self["func"].rsplit(".", 1)
-        if len(toks) == 2:
-            modname, funcname = toks
-            mod = __import__(modname, globals(), locals(), [str(funcname)], 0)
-            self.workflow_creator = getattr(mod, funcname)
-
-        # Store all spec data in DB
-        mongo = MongoClient('localhost', 27017)
-        db = mongo.TurboWorks
-        collection = db.TurboWorks_collection
-        collection.insert_one(OrderedDict(fw_spec))
-
-        opt_dim_history = []
-        opt_dimensions = []
-        dim_keys = []
-        input_keys=[]
-        meta_fw_keys = ['_fw_name', 'func', '_tasks', '_id', '_fw_env']
-        cursor = collection.find()
-
-        try:
-            basestring
-        except NameError:  # Python3 compatibility
-            basestring = str
-
-        for document in cursor:
-            self.subdim = []
-            for key in sorted(document['dimensions']):
-                if key not in meta_fw_keys:
-                    self.subdim.append(tuple(document['dimensions'][key]))
-                    if key not in dim_keys:
-                        dim_keys.append(key)
-            opt_dim_history.append(self.subdim)
-            for key in sorted(document['input']):
-                if key not in meta_fw_keys:
-                    if key not in input_keys:
-                        input_keys.append(key)
-        opt_dimensions = opt_dim_history[-1]
+        self.workflow_creator, opt_inputs, opt_outputs, opt_dimensions, input_keys, dim_keys = \
+            get_data (self["func"], fw_spec, output_datatypes = None, host='localhost', port=27017)
 
         new_input = dummy_minimize(opt_dimensions)
 
@@ -221,59 +142,12 @@ class COMBOptomizeTask(FireTaskBase):
     required_params = ["func","min_or_max"]
 
     def run_task(self, fw_spec):
-        # Import only a function named as a module only in the working dir (taken from PyTask)
-        toks = self["func"].rsplit(".", 1)
-        if len(toks) == 2:
-            modname, funcname = toks
-            mod = __import__(modname, globals(), locals(), [str(funcname)], 0)
-            self.workflow_creator = getattr(mod, funcname)
+        """
+        The FireTask to be run.
+        """
 
-        # Store all spec data in DB
-        mongo = MongoClient('localhost', 27017)
-        db = mongo.TurboWorks
-        collection = db.TurboWorks_collection
-        collection.insert_one(OrderedDict(fw_spec))
-
-        # Define optimization variables by reading from DB
-        opt_inputs = []
-        opt_outputs = []
-        opt_dim_history = []
-        opt_dimensions = []
-        input_keys = []
-        dim_keys = []
-        meta_fw_keys = ['_fw_name', 'func', '_tasks', '_id', '_fw_env']
-        cursor = collection.find()
-
-        try:
-            basestring
-        except NameError:  # Python3 compatibility
-            basestring = str
-
-        for document in cursor:
-            self.sublist = []
-            self.subdim = []
-            for key in sorted(document['input']):
-                if key not in meta_fw_keys:
-                    self.sublist.append(document['input'][key])
-                    if key not in input_keys:
-                        input_keys.append(key)
-            opt_inputs.append(self.sublist)
-            for key in sorted(document['dimensions']):
-                if key not in meta_fw_keys:
-                    self.subdim.append(tuple(document['dimensions'][key]))
-                    if key not in dim_keys:
-                        dim_keys.append(key)
-            opt_dim_history.append(self.subdim)
-            for key in document['output']:
-                if (type(document['output'][key]) == int or type(document['output'][key]) == float or type(
-                        document['output'][key]) == np.int64 or type(document['output'][key]) == np.float64):
-
-                    opt_outputs.append(document['output'][key])
-                else:
-                    raise ValueError("The optimization algorithm must take in a single output. Supported data types"
-                                     "are numpy int64 and Python int")
-
-        opt_dimensions = opt_dim_history[-1]
+        self.workflow_creator, opt_inputs, opt_outputs, opt_dimensions, input_keys, dim_keys = \
+            get_data(self["func"], fw_spec, output_datatypes=None, host='localhost', port=27017)
 
         # Optimization Algorithm (with console spam suppressed temporarily)
         '''COMBO's default is maximum, so this is reversed from other optimization task classes.'''
@@ -341,3 +215,77 @@ class COMBOptomizeTask(FireTaskBase):
 
         # Initialize new workflow
         return FWAction(additions=self.workflow_creator(updated_dictionary, 'combo_gp'))
+
+
+def get_data(wf_func, fw_spec, output_datatypes = None, host='localhost', port=27017, ):
+
+    """
+    Common function for implementing
+    :param wf_func:
+    :param fw_spec:
+    :param output_datatypes:
+    :param host:
+    :param port:
+    :return:
+    """
+
+    # Import only a function named as a module only in the working dir (taken from PyTask)
+    toks = wf_func.rsplit(".", 1)
+    if len(toks) == 2:
+        modname, funcname = toks
+        mod = __import__(modname, globals(), locals(), [str(funcname)], 0)
+        workflow_creator = getattr(mod, funcname)
+
+    if output_datatypes is None:
+        output_datatypes = [np.int64, np.float64, np.int32, np.int64, int, float]
+
+    # Store all spec data in the TurboWorks DB
+    mongo = MongoClient(host, port)
+    db = mongo.TurboWorks
+    collection = db.TurboWorks_collection
+    collection.insert_one(OrderedDict(fw_spec))
+
+    # Define optimization variables by reading from DB
+    opt_inputs = []
+    opt_outputs = []
+    opt_dim_history = []
+    opt_dimensions = []
+    input_keys = []
+    dim_keys = []
+    meta_fw_keys = ['_fw_name', 'func', '_tasks', '_id', '_fw_env']
+    cursor = collection.find()
+
+    try:
+        basestring
+    except NameError:  # Python3 compatibility
+        basestring = str
+
+    for document in cursor:
+        sublist = []
+        subdim = []
+        for key in sorted(document['input']):
+            if key not in meta_fw_keys:
+                sublist.append(document['input'][key])
+                if key not in input_keys:
+                    input_keys.append(key)
+        opt_inputs.append(sublist)
+        for key in sorted(document['dimensions']):
+            if key not in meta_fw_keys:
+                subdim.append(tuple(document['dimensions'][key]))
+                if key not in dim_keys:
+                    dim_keys.append(key)
+        opt_dim_history.append(subdim)
+        for key in document['output']:
+            if type(document['output'][key]) in output_datatypes:
+                opt_outputs.append(document['output'][key])
+            else:
+                errormsg = 'The optimization must take in a single output. Suported data types are: \n'
+                for datatype in output_datatypes:
+                    errormsg += str(datatype) + ' || '
+
+                errormsg+= '\n the given type was ' + str(type(document['output'][key]))
+                raise ValueError(errormsg)
+
+    opt_dimensions = opt_dim_history[-1]
+
+    return workflow_creator, opt_inputs, opt_outputs, opt_dimensions, input_keys, dim_keys

@@ -1,5 +1,5 @@
 from turboworks.optimize_task import SKOptimizeTask, DummyOptimizeTask, COMBOptomizeTask
-from integer_task import Integertask
+from integer_task import IntegerTask
 from fireworks import Firework, Workflow
 
 """
@@ -26,13 +26,13 @@ def workflow_creator(input_dict, opt_method):
 
     # Assign FireTasks
     if opt_method=='skopt_gp':
-        firetask1 = ABCtask()
+        firetask1 = IntegerTask()
         firetask2 = SKOptimizeTask(func='integer_task_workflow_creator.workflow_creator', min_or_max="max")
     elif opt_method=='dummy':
-        firetask1 = ABCtask()
+        firetask1 = IntegerTask()
         firetask2 = DummyOptimizeTask(func='integer_task_workflow_creator.workflow_creator')
     elif opt_method=='combo_gp':
-        firetask1 = ABCtask()
+        firetask1 = IntegerTask()
         firetask2 = COMBOptomizeTask(func = 'integer_task_workflow_creator.workflow_creator', min_or_max="max")
     else:
         raise ValueError("Invalid optimization method: {}".format(opt_method))

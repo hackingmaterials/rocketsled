@@ -29,7 +29,7 @@ def dummy_minimize(dimensions):
         elif type(upper) == np.float64 or type(upper) == float:
             new_param = uniform(lower, upper)
             new_input.append(new_param)
-        elif isinstance(upper, basestring) or isinstance(upper, unicode) or isinstance(upper,np.unicode_):
+        elif isinstance(upper, basestring) or isinstance(upper, unicode) or isinstance(upper, np.unicode_):
             domain_size = len(dimset)-1
             new_param = randint(0,domain_size)
             new_input.append(dimset[new_param])

@@ -23,19 +23,21 @@ class ABCtask(FireTaskBase):
 
         # Run black box objective algorithm
 
-        D_output = A_input**2/100 - 3*B_input + C_input
-        if B_input > 45 and B_input < 55:
-            D_output +=10
-            if B_input == 50:
-                D_output += 10
-        if A_input > 45 and A_input < 55:
-            D_output += 10
-            if A_input == 50:
-                D_output += 10
-        if C_input < 10:
-            D_output += 10
-            if C_input == 5:
-                D_output +=10
+        # D_output = A_input**2/100 - 3*B_input + C_input
+        # if B_input > 45 and B_input < 55:
+        #     D_output +=10
+        #     if B_input == 50:
+        #         D_output += 10
+        # if A_input > 45 and A_input < 55:
+        #     D_output += 10
+        #     if A_input == 50:
+        #         D_output += 10
+        # if C_input < 10:
+        #     D_output += 10
+        #     if C_input == 5:
+        #         D_output +=10
+
+        D_output = float(A_input*B_input/C_input)
 
 
         D_write = {'output': {'D':D_output}}

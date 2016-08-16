@@ -14,23 +14,22 @@ launchpad = LaunchPad()
 manageDB = ManageDB()
 
 # Sample data
-A = 1
-B = 2
-C = 1
+A = 45
+B = 25
+C = 66
 input1 = {"A":A, "B":B, "C":C}
-dimensions = {"A_range":(1,2),"B_range":(1,2), "C_range":(1,2)}
+dimensions = {"A_range":(1,100),"B_range":(1,100), "C_range":(1,100)}
 
 # Define the initial input
 input_dict = {'input':input1, 'dimensions':dimensions}
 
 # How many times to run the workflow + optimization loop
-run_num = 10
+run_num = 50
 
 # Or dynamically call till within a max_val
 max_val = 10000
 tolerance = .95
 
-#
 launchpad.reset('', require_password=False)
 
 def best_graph():
@@ -67,13 +66,14 @@ def best_graph():
         launch_rocket(launchpad)
         combo_best.append(manageDB.get_optima('D', min_or_max='max')[0])
     manageDB.nuke_it()
+    launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
 
     iterations = list(range(run_num))
     print("GP best:", gp_best[-1])
     print("Dummy best: ", dummy_best[-1])
     print("Combo best:", combo_best[-1])
     plt.plot(iterations,gp_best,'g', iterations, dummy_best,'r', iterations, combo_best,'b')
-    plt.plot(iterations, combo_best,'b')
+    # plt.plot(iterations, gp_best, 'g', iterations, dummy_best, 'r')
     plt.show()
 
 def scatter_graph():
@@ -101,11 +101,23 @@ def scatter_graph():
     dummy_total = manageDB.get_param('D')
     manageDB.nuke_it()
 
+    # Run num_num iterations using COMBO
+    launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
+    wf = workflow_creator(input_dict, 'combo_gp')
+    launchpad.add_wf(wf)
+    rapidfire(launchpad, FWorker(), nlaunches=run_num, sleep_time=0)
+    combo_best = manageDB.get_optima('D', min_or_max='max')[0]
+    combo_average = manageDB.get_avg('D')
+    combo_total = manageDB.get_param('D')
+    manageDB.nuke_it()
+    launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
+
     # Compare the two optimizations graphically
     print('GP average: ', gp_average, '\n GP best:    ', gp_best)
     print('Dummy average: ', dummy_average, '\n Dummy best: ', dummy_best)
+    print('Combo average:', combo_average, '\n Combo best: ', combo_best)
     iterations = list(range(run_num))
-    plt.plot(iterations, gp_total, 'g.', iterations, dummy_total, 'r.')
+    plt.plot(iterations, gp_total, 'g.', iterations, dummy_total, 'r.', iterations, combo_total, '.b')
     plt.show()
 
 def converge_to():
