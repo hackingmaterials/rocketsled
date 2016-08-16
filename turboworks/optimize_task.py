@@ -45,7 +45,7 @@ class SKOptimizeTask(FireTaskBase):
 
         output_datatypes = [int, float, np.int64, np.float64]
 
-        self.workflow_creator, opt_inputs, opt_outputs, opt_dimensions, input_keys, dim_keys = \
+        self.workflow_creator, opt_inputs, opt_outputs, opt_dimensions, input_keys, dim_keys, output_keys = \
             get_data(self["func"], fw_spec, output_datatypes=output_datatypes, host='localhost', port=27017)
 
         # Optimization Algorithm and conversion to python native types
@@ -101,7 +101,7 @@ class DummyOptimizeTask(FireTaskBase):
         The FireTask to be run.
         """
 
-        self.workflow_creator, opt_inputs, opt_outputs, opt_dimensions, input_keys, dim_keys = \
+        self.workflow_creator, opt_inputs, opt_outputs, opt_dimensions, input_keys, dim_keys, output_keys = \
             get_data (self["func"], fw_spec, output_datatypes = None, host='localhost', port=27017)
 
         new_input = dummy_minimize(opt_dimensions)
@@ -146,7 +146,7 @@ class COMBOptomizeTask(FireTaskBase):
         The FireTask to be run.
         """
 
-        self.workflow_creator, opt_inputs, opt_outputs, opt_dimensions, input_keys, dim_keys = \
+        self.workflow_creator, opt_inputs, opt_outputs, opt_dimensions, input_keys, dim_keys, output_keys = \
             get_data(self["func"], fw_spec, output_datatypes=None, host='localhost', port=27017)
 
         # Optimization Algorithm (with console spam suppressed temporarily)
@@ -220,13 +220,48 @@ class COMBOptomizeTask(FireTaskBase):
 def get_data(wf_func, fw_spec, output_datatypes = None, host='localhost', port=27017, ):
 
     """
-    Common function for implementing
-    :param wf_func:
-    :param fw_spec:
-    :param output_datatypes:
-    :param host:
-    :param port:
-    :return:
+    Common function for getting data to optimizer implementations
+    :param wf_func: fully defined name of the workflow function. This is recommended to be self["func"] as part of
+    FireWorks infrastructure
+
+    :param fw_spec: The spec which allows FireWorks to operate.
+
+    :param output_datatypes: The data types which the optimization algorithm can handle as function output. Leave blank
+    if you do not know what to put here.
+
+    :param host: MongoDB host. Defaults to localhost.
+
+    :param port: MongoDB port. Defaults to local port 27017
+
+    :return: workflow_creator: the fully defined object used to create workflows as part of an optimization loop.
+
+    :return: opt_inputs: all inputs which will be used for the optimization in list of lists form. For example,
+    if the function has three parameters and has been run twice, the opt_inputs appears in [run1, run2] form as:
+
+                            opt_inputs = [[1, 20.98, "green"], [4, 23.11, "orange"]]
+
+    :return: opt_outputs: all outputs which will be used for the optimization in list form. For the built in algorithms,
+    the opt_outputs should only have one output per black box function evaluation. For example, if the black box
+    function has been run twice, the opt_outputs appears in [run1, run2] form as:
+
+                            opt_outs = [14.49, 19.34]
+
+    :return: opt_dimensions: dimensions of the search space for the current evaluation. Previous dimensions will be
+    stored in the database. The dimensions are in list of tuples/lists form depending on the dimension type. For
+    integers and floats, each dimension is (lower, upper). For categorical, each dimension is a list of string
+    categories. For example, the dimensions of our example run might be:
+
+                            opt_dimensions = [(1,20), (20.50, 25.00), ["red", "green", "orange", "black"]]
+
+    :return: input_keys: a list of the name of inputs, used for zipping together a dictionary to return to the workflow
+    creator. This is used if your workflow creator needs the names of the inputs.
+
+    :return: dim_keys: a list of the names of the dimensions, used for zipping together a dict to return to the workflow
+    This is used if your workflow creator needs the names of the dimensions
+
+    :return: output_keys: a list of the names of the output, used zipping together a dict to return to the workflow.
+    This is used if your workflow creator needs the names of the output (it rarely does, unless you have precomputed
+    some results. See the tutorial for optimizing new input based on precomputed output for more information).
     """
 
     # Import only a function named as a module only in the working dir (taken from PyTask)
@@ -252,6 +287,7 @@ def get_data(wf_func, fw_spec, output_datatypes = None, host='localhost', port=2
     opt_dimensions = []
     input_keys = []
     dim_keys = []
+    output_keys = []
     meta_fw_keys = ['_fw_name', 'func', '_tasks', '_id', '_fw_env']
     cursor = collection.find()
 
@@ -276,6 +312,9 @@ def get_data(wf_func, fw_spec, output_datatypes = None, host='localhost', port=2
                     dim_keys.append(key)
         opt_dim_history.append(subdim)
         for key in document['output']:
+            if key not in meta_fw_keys:
+                if key not in output_keys:
+                    output_keys.append(key)
             if type(document['output'][key]) in output_datatypes:
                 opt_outputs.append(document['output'][key])
             else:
@@ -288,4 +327,4 @@ def get_data(wf_func, fw_spec, output_datatypes = None, host='localhost', port=2
 
     opt_dimensions = opt_dim_history[-1]
 
-    return workflow_creator, opt_inputs, opt_outputs, opt_dimensions, input_keys, dim_keys
+    return workflow_creator, opt_inputs, opt_outputs, opt_dimensions, input_keys, dim_keys, output_keys

@@ -94,4 +94,4 @@ def graph(input_dict, n_runs=30, fw_password=''):
     plt.show()
 
 if __name__=="__main__":
-    graph(input_dict, n_runs=5, fw_password='2016-08-16')
+    graph(input_dict, n_runs=5, fw_password='')
