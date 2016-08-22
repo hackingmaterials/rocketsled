@@ -77,10 +77,11 @@ besides the default db location, use `mongod --dbpath path/to/my/database/data`
 3. There are 3 files inside. Lets take a look at `executable.py` first. 
 4. Let's run the `graph` function to make sure everything is working correctly. To **reset the fireworks database** and **delete all fireworks data**, enter the day
 in YYYY-MM-DD format as `fw_password` argument of `graph`. Set the number of function evaluations `n_runs = 30` parameter of `graph`. For example,
-```
-if __name__=="__main__":
-    graph(input_dict, n_runs=30, fw_password='2016-08-16')
-```
+
+    ```
+    if __name__=="__main__":
+        graph(input_dict, n_runs=30, fw_password='2016-08-16')
+    ```
 
 5. Now execute this script. The result should be a matplotlib graph showing the best attained score by each algorithm.   
 
@@ -107,50 +108,123 @@ TurboWorks will operate with no knowledge of the inner workings of `IntegerTask`
 (https://pythonhosted.org/FireWorks/guide_to_writing_firetasks.html).   
   
 The first portion of code here should remain the same.
-```
-from fireworks.utilities.fw_utilities import explicit_serialize
-from fireworks.core.firework import FireTaskBase, FWAction
-
-@explicit_serialize
-```
+    ```
+        from fireworks.utilities.fw_utilities import explicit_serialize
+        from fireworks.core.firework import FireTaskBase, FWAction
+    
+        @explicit_serialize
+    ```
 
 We name the class a relevant name, and give it a name in FireWorks as well. 
-```
-class IntegerTask(FireTaskBase):
-
-    _fw_name = "IntegerTask"
-```
+    ```
+    class IntegerTask(FireTaskBase):
+    
+        _fw_name = "IntegerTask"
+    ```
 
 The arguments of `run_task` should remain the same as shown here for any FireTask.
-```
+    ```
     def run_task(self, fw_spec):
-```
+    ```
 In `run_task`, we define our task using the spec `fw_spec`. First, gather inputs:
-```
+    ```
         # Gather inputs from spec
         A_input = fw_spec['input']['A']
         B_input = fw_spec['input']['B']
         C_input = fw_spec['input']['C']
-```
+    ```
 Now we execute our black box function. 
-```
+    ```
         # Run black box objective algorithm
         D_output = float(A_input*B_input/C_input)
-```
+    ```
 Finally, we can write the output of the function back to the spec under `output`...
-```
+    ```
         # Put the calculated output into a dictionary
         D_write = {'output': {'D':D_output}}
-```
+    ```
 ...And update our spec.
-```
+    ```
         # Modify spec accordingly
         return FWAction(update_spec=D_write)
-```
+    ```
 In summary, we gathered all of the relevant inputs from the fw_spec, calculated an output, and stored the output back in the spec.
 
 4. Open `integer_task_workflow_creator.py`. This file contains a function which can create an optimization workflow. With this method, we organize how
-to execute the black box function and optimize it. 
+to execute the black box function and optimize it. In this particular method, we want to compare 3 optimization algorithms; let's look at how
+one is assigned.   
+    ```
+        def workflow_creator(input_dict, opt_method):
+    ```  
+    ```
+            # Assign FireTasks
+            if opt_method=='skopt_gp':
+                firetask1 = IntegerTask()
+                firetask2 = SKOptimizeTask(func='integer_task_workflow_creator.workflow_creator', min_or_max="max")
+    ```
+The first FireTask is our black box task. The second FireTask is the Skopt optimization task.
+The optimization task must take the fully defined name of the workflow function as input. We also use the `min_or_max` argument to define
+whether we are looking to find a min or max. Now since the FireTasks are assigned, we put them in a workflow.
+    ```
+        # Execute FireWork
+        fw = [firetask1, firetask2]
+        firework1 = Firework(fw, spec=input_dict)
+        wf = Workflow([firework1])
+        return wf
+    ```
+The dictionary we are assigning to `input_dict` is the dictionary our black box task  in `IntegerTask` will use. 
+
+5. Open `executable.py`. This file is the top level script we will run to see how various optimization algorithms perform in this task. We'll skip
+all the Matplotlib graphing and just go over the most important parts.
+First, we import our other files and the classes we use to execute tasks in Fireworks:  
+ 
+    ```
+    from integer_task_workflow_creator import workflow_creator
+    from fireworks.core.rocket_launcher import rapidfire
+    from fireworks import FWorker, LaunchPad
+    from fireworks.core.rocket_launcher import launch_rocket
+    from turboworks.manage_DB import ManageDB
+    ```
+Instantiate a LaunchPad object (for use with FireWorks) and a ManageDB object (for use with TurboWorks database)  
+    ```
+    # Class for managing FireWorks
+    launchpad = LaunchPad()
+    ```  
+    ```
+    # Class for managing the TurboWorks database directly
+    manageDB = ManageDB()
+    ```  
+Lets put some sample data into our `input_dict` to start the optimization. We also define the dimensions as a dictionary with each dimension's boudnaries
+defined in the format `(upper, lower)`.
+    ```
+    # Sample data
+    A = 92
+    B = 26
+    C = 88
+    my_input = {"A":A, "B":B, "C":C}
+    dimensions = {"A_range":(1,100),"B_range":(1,100), "C_range":(1,100)}
+    ```
+Now let's put those into our input dictionary:
+    ```
+    # Define the initial input dictionary
+    input_dict = {'input':my_input, 'dimensions':dimensions}
+    ```
+Use FireWorks commands to execute our task. Use TurboWorks `ManageDB` to find the best result we have acquired so far. 
+    ```
+    # To reset FireWorks fw_password must be today's date in form 'YYYY-MM-DD'
+    launchpad.reset(fw_password, require_password=True)
+    ```  
+    ```
+    gp_best = []
+    wf = workflow_creator(input_dict, 'skopt_gp')
+    launchpad.add_wf(wf)
+    for i in range(n_runs):
+        launch_rocket(launchpad)
+        gp_best.append(manageDB.get_optima('D', min_or_max='max')[0])
+    ```
+The workflow creator function defines the workflow here. Every time it is executed, it returns another workflow, and stores the results
+in the default TurboWorks database. During the optimization each time, the algorithm uses every input in this database.
+
 ## Tutorial 2: Running your own optimization
 
 ##Tutorial 3: Using ManageDB to get useful information from your optimizations
