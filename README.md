@@ -83,9 +83,37 @@ And you would like to find integer values of `A`, `B`, and `C`, which maximize `
 3. The files inside are:
   * `integer_task.py`: Your black box function as a FireTask which accepts 3 integer inputs (`A,B,C`) and returns a float (`D`). 
   * `integer_task_workflow_creator.py`: a function for creating and returning a workflow which executes `IntegerTask` and optimizes for the next trial. 
-  * `executable.py`: the top level executable script which will make a graph demonstrating the effect of optimization over time. 
+  * `executable.py`: the top level executable script which will make a graph demonstrating the effect of optimization over time.
+4. Lets take a look at `executable.py` first. 
+5. Let's run the `graph` function to make sure everything is working correctly. To **reset the fireworks database** and **delete all fireworks data**, enter the day
+in YYYY-MM-DD format as `fw_password` argument of `graph`. Set the number of function evaluations using the `n_runs` parameter of `graph`. For example,
+```
+if __name__=="__main__":
+    graph(input_dict, n_runs=30, fw_password='2016-08-16')
+```
+6. Now execute this script. The result should be a matplotlib graph showing the best attained score by each algorithm.
+6. Congrats! Move onto the other tutorials to learn to use TurboWorks for your own problems!
 
-*rest of tutorial is coming soon*
+##Tutorials
 
-## Implementing your own Optimization Algorithms
+####Step by Step guide to using and understanding TurboWorks
+
+####Using ManageDB utility methods to get useful information from your optimizations
+TurboWorks keeps a separate Mongo databse from FireWorks in order to quickly and easily see the inputs and outputs from optimizations.  
+The class that handles several key TurboWorks DB functions is `ManageDB` in `manage_DB.py`
+* `__init__`: Gives options for instantiating the database methods  
+  example: `manageDB = ManageDB(hostname='my_host',portnum=12345, dbname='My_custom_TW_DB', collection='My_custom_TW_collection')`
+* `nuke_it`: deletes the entire collection specified during the `ManageDB` object's creation  
+  example: `manageDB.nukeit()`
+* `count_it`: counts how many documents are in the collection  
+  example: `manageDB.countit()`
+* `query_it`: queries the DB based on typical pymongo syntax  
+  example: `matching_docs = manageDB.queryit({'myvar':45}, print_to_console = True)`
+* `get_avg`: get the mean of a parameter 
+* `get_param`: get all values of the specified param/output
+* `get_optima`: get the maximum/minimum value of a specified param/output
+* `store_it`  : stores the entire collection in a backup collection
+   
+
+#### Implementing your own Optimization Algorithms
 *coming soon*

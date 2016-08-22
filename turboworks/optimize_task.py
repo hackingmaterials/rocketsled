@@ -217,7 +217,7 @@ class COMBOptomizeTask(FireTaskBase):
         return FWAction(additions=self.workflow_creator(updated_dictionary, 'combo_gp'))
 
 
-def get_data(wf_func, fw_spec, output_datatypes = None, host='localhost', port=27017, ):
+def get_data(wf_func, fw_spec, output_datatypes = None, host='localhost', port=27017):
 
     """
     Common function for getting data to optimizer implementations

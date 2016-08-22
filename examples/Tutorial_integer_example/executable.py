@@ -51,7 +51,7 @@ def graph(input_dict, n_runs=30, fw_password=''):
     'YYYY-MM-DD'. WARNING: this will erase all previous FireWorks data and will reset all workflows!
     """
 
-    # To reset the workflow, fw_password must be today's date in form 'YYYY-MM-DD'
+    # To reset FireWorks fw_password must be today's date in form 'YYYY-MM-DD'
     launchpad.reset(fw_password, require_password=True)
 
     # Run n_runs iterations using Skopt Gaussian Processes
@@ -83,6 +83,8 @@ def graph(input_dict, n_runs=30, fw_password=''):
         combo_best.append(manageDB.get_optima('D', min_or_max='max')[0])
     manageDB.nuke_it()
 
+
+    # Graph the results
     iterations = list(range(n_runs))
     print("Skopt best:", gp_best[-1])
     print("Dummy best: ", dummy_best[-1])
@@ -94,4 +96,4 @@ def graph(input_dict, n_runs=30, fw_password=''):
     plt.show()
 
 if __name__=="__main__":
-    graph(input_dict, n_runs=5, fw_password='')
+    graph(input_dict, n_runs=25, fw_password='2016-08-17')

@@ -34,6 +34,7 @@ class ManageDB():
     def nuke_it(self):
         """
         deletes all data in the TurboWorks DB collection (TurboWorks_collection)
+        :return num_deleted: (int) number of documents deleted from the database
         """
         docs_removed = self.collection.delete_many({})
         num_deleted = docs_removed.deleted_count
@@ -47,29 +48,41 @@ class ManageDB():
     def count_it(self):
         """
         counts documents in the TurboWorks DB collection (TurboWorks_collection)
+        :return cursor.count(): (int) the total number of documents in the collection
         """
         cursor = self.collection.find()
         print('\nNumber of documents:       ', cursor.count())
         return cursor.count()
 
-    def query_it(self, querydict=None):
+    def query_it(self, querydict=None, print_to_console = False):
         """
-        queries documents in the TurboWorks DB collection (TurboWorks_collection)
-        :param querydict (dict): a dictionary query entry compatible with pymongo syntax
+        queries documents via PyMongo's find()
+
+        :param print_to_console: (boolean) determine whether all found matching docs should be
+        printed to the console
+
+        :param querydict: (dictionary) a dictionary query entry compatible with pymongo syntax
+
+        :return docs: (list) a list of all documents matching the query
         """
         if querydict is None:
             querydict = {}
         cursor = self.collection.find(querydict)
         print('Documents matching:        ', cursor.count())
         print('Documents:')
-        for document in cursor:
-            pprint(document)
+
+        if print_to_console:
+            for document in cursor:
+                    pprint(document)
+
+        docs = [document for document in cursor]
+        return docs
 
     def get_avg(self, var):
         """
-        :param var (string): the variable to be averaged
+        :param var: (string) the variable to be averaged
             example: get_avg("some_output")
-        :return: average (int or float): the average of all the var in database
+        :return average: (int/float) the average of all the var in database
         """
         total_list = []
         cursor = self.collection.find()
@@ -90,8 +103,9 @@ class ManageDB():
 
     def get_param(self, var):
         """
-        :param var (string): the variable to be collected
-        :return: total_list (list): a list of all the var data in database
+        :param var: (string) the variable to be collected
+
+        :return total_list: (list) a list of all the var data in database
         """
         total_list = []
         cursor = self.collection.find()
