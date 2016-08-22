@@ -72,18 +72,18 @@ besides the default db location, use `mongod --dbpath path/to/my/database/data`
 
 ####Running a basic example in 5 Easy Steps   
 
-1. Navigate to your `TurboWorks` directory.
-2. Go to the directory: `examples/Tutorial_integer_example`
-3. There are 3 files inside. Lets take a look at `executable.py` first. 
-4. Let's run the `graph` function to make sure everything is working correctly. To **reset the fireworks database** and **delete all fireworks data**, enter the day
+__1)__ Navigate to your `TurboWorks` directory.
+__2)__ Go to the directory: `examples/Tutorial_integer_example`
+__3)__ There are 3 files inside. Lets take a look at `executable.py` first. 
+__4)__ Let's run the `graph` function to make sure everything is working correctly. To **reset the fireworks database** and **delete all fireworks data**, enter the day
 in YYYY-MM-DD format as `fw_password` argument of `graph`. Set the number of function evaluations `n_runs = 30` parameter of `graph`. For example,
 
-    ```
+
     if __name__=="__main__":
         graph(input_dict, n_runs=30, fw_password='2016-08-16')
-    ```
 
-5. Now execute this script. The result should be a matplotlib graph showing the best attained score by each algorithm.   
+
+__5)__ Now execute this script. The result should be a matplotlib graph showing the best attained score by each algorithm.   
 
 Congrats! Move onto the other tutorials to learn to use TurboWorks for your own problems!
 
@@ -102,60 +102,60 @@ And you would like to find integer values of `A`, `B`, and `C`, which maximize `
 TurboWorks will operate with no knowledge of the inner workings of `IntegerTask`. 
 
 
-1) Navigate to your `TurboWorks` directory.  
-2) Go to the directory: `examples/Tutorial_integer_example`  
-3) Open `integer_task.py`. This file contains our function in FireTask format. To learn more about how to write a FireTask, see the [FireWorks tutorial page]
+__1)__ Navigate to your `TurboWorks` directory.  
+__2)__ Go to the directory: `examples/Tutorial_integer_example`  
+__3)__ Open `integer_task.py`. This file contains our function in FireTask format. To learn more about how to write a FireTask, see the [FireWorks tutorial page]
 (https://pythonhosted.org/FireWorks/guide_to_writing_firetasks.html).  
   
 The first portion of code here should remain the same.
 
-    ```
+
     from fireworks.utilities.fw_utilities import explicit_serialize
     from fireworks.core.firework import FireTaskBase, FWAction
     
     @explicit_serialize
-    ```
+
 
 We name the class a relevant name, and give it a name in FireWorks as well. 
 
-    ```
+
     class IntegerTask(FireTaskBase):
         _fw_name = "IntegerTask"
-    ```
+
 
 The arguments of `run_task` should remain the same as shown here for any FireTask.
 
-    ```
+
     def run_task(self, fw_spec):
-    ```
+
 In `run_task`, we define our task using the spec `fw_spec`. First, gather inputs:
 
-    ```
+
         # Gather inputs from spec
         A_input = fw_spec['input']['A']
         B_input = fw_spec['input']['B']
         C_input = fw_spec['input']['C']
-    ```
+
 Now we execute our black box function. 
 
-    ```
+
         # Run black box objective algorithm
         D_output = float(A_input*B_input/C_input)
-    ```
+
 Finally, we can write the output of the function back to the spec under `output`...
 
-    ```
+
         # Put the calculated output into a dictionary
         D_write = {'output': {'D':D_output}}
-    ```
+        
 ...And update our spec.
 
-    ```
+
         # Modify spec accordingly
         return FWAction(update_spec=D_write)
-    ```
+        
 In summary, we gathered all of the relevant inputs from the fw_spec, calculated an output, and stored the output back in the spec.   
-4) Open `integer_task_workflow_creator.py`. This file contains a function which can create an optimization workflow. With this method, we organize how
+__4)__ Open `integer_task_workflow_creator.py`. This file contains a function which can create an optimization workflow. With this method, we organize how
 to execute the black box function and optimize it. In this particular method, we want to compare 3 optimization algorithms; let's look at how
 one is assigned.
 
@@ -178,7 +178,7 @@ whether we are looking to find a min or max. Now since the FireTasks are assigne
         
 The dictionary we are assigning to `input_dict` is the dictionary our black box task  in `IntegerTask` will use.  
   
-5) Open `executable.py`. This file is the top level script we will run to see how various optimization algorithms perform in this task. We'll skip
+__5)__ Open `executable.py`. This file is the top level script we will run to see how various optimization algorithms perform in this task. We'll skip
 all the Matplotlib graphing and just go over the most important parts.
 First, we import our other files and the classes we use to execute tasks in Fireworks:  
  
