@@ -102,10 +102,10 @@ And you would like to find integer values of `A`, `B`, and `C`, which maximize `
 TurboWorks will operate with no knowledge of the inner workings of `IntegerTask`. 
 
 
-1) Navigate to your `TurboWorks` directory.
-2) Go to the directory: `examples/Tutorial_integer_example`
+1) Navigate to your `TurboWorks` directory.  
+2) Go to the directory: `examples/Tutorial_integer_example`  
 3) Open `integer_task.py`. This file contains our function in FireTask format. To learn more about how to write a FireTask, see the [FireWorks tutorial page]
-(https://pythonhosted.org/FireWorks/guide_to_writing_firetasks.html).   
+(https://pythonhosted.org/FireWorks/guide_to_writing_firetasks.html).  
   
 The first portion of code here should remain the same.
 
@@ -154,11 +154,10 @@ Finally, we can write the output of the function back to the spec under `output`
         # Modify spec accordingly
         return FWAction(update_spec=D_write)
     ```
-In summary, we gathered all of the relevant inputs from the fw_spec, calculated an output, and stored the output back in the spec.
-
+In summary, we gathered all of the relevant inputs from the fw_spec, calculated an output, and stored the output back in the spec.   
 4) Open `integer_task_workflow_creator.py`. This file contains a function which can create an optimization workflow. With this method, we organize how
 to execute the black box function and optimize it. In this particular method, we want to compare 3 optimization algorithms; let's look at how
-one is assigned.   
+one is assigned.
 
     ```
         def workflow_creator(input_dict, opt_method):
@@ -179,8 +178,7 @@ whether we are looking to find a min or max. Now since the FireTasks are assigne
         wf = Workflow([firework1])
         return wf
     ```
-The dictionary we are assigning to `input_dict` is the dictionary our black box task  in `IntegerTask` will use. 
-
+The dictionary we are assigning to `input_dict` is the dictionary our black box task  in `IntegerTask` will use.  
 5) Open `executable.py`. This file is the top level script we will run to see how various optimization algorithms perform in this task. We'll skip
 all the Matplotlib graphing and just go over the most important parts.
 First, we import our other files and the classes we use to execute tasks in Fireworks:  
@@ -239,7 +237,6 @@ Finally, we execute the `graph function`:
 if __name__=="__main__":
     graph(input_dict, n_runs=25, fw_password='2016-08-17')
 ```
-
 
 
 ## Tutorial 2: Running your own optimization
