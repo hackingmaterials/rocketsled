@@ -70,19 +70,13 @@ Don't know about MongoDB? [read about and download MongoDB here] (https://docs.m
 Once you have a MongoDB database set up, start the `mongod` process by typing `mongod` into a terminal, or, if your database is stored somewhere
 besides the default db location, use `mongod --dbpath path/to/my/database/data`
 
-####Running a basic example in 5 Easy Steps
-
-Let's say you have a computationally expensive black box function which we call `IntegerTask`:
-```
-A*B/C = D
-```
-And you would like to find integer values of `A`, `B`, and `C`, which maximize `D` where `A`, `B`, and `C` range between `1-100`.   
+####Running a basic example in 5 Easy Steps   
 
 1. Navigate to your `TurboWorks` directory.
 2. Go to the directory: `examples/Tutorial_integer_example`
 3. There are 3 files inside. Lets take a look at `executable.py` first. 
 4. Let's run the `graph` function to make sure everything is working correctly. To **reset the fireworks database** and **delete all fireworks data**, enter the day
-in YYYY-MM-DD format as `fw_password` argument of `graph`. Set the number of function evaluations using the `n_runs` parameter of `graph`. For example,
+in YYYY-MM-DD format as `fw_password` argument of `graph`. Set the number of function evaluations `n_runs = 30` parameter of `graph`. For example,
 ```
 if __name__=="__main__":
     graph(input_dict, n_runs=30, fw_password='2016-08-16')
@@ -97,12 +91,66 @@ An optimization in TurboWorks consists of 3 parts:
 * a workflow creator function
 * a top level script 
 
+
+Let's say you have a computationally expensive black box function which we call `IntegerTask`:
+```
+A*B/C = D
+```
+And you would like to find integer values of `A`, `B`, and `C`, which maximize `D` where `A`, `B`, and `C` range between `1-100`.
+TurboWorks will operate with no knowledge of the inner workings of `IntegerTask`. 
+1. Navigate to your `TurboWorks` directory.
+2. Go to the directory: `examples/Tutorial_integer_example`
+3. Open `integer_task.py`. This file contains our function in FireTask format. To learn more about how to write a FireTask, see the [FireWorks tutorial page]
+(https://pythonhosted.org/FireWorks/guide_to_writing_firetasks.html).   
+  
+The first portion of code here should remain the same.
+```
+from fireworks.utilities.fw_utilities import explicit_serialize
+from fireworks.core.firework import FireTaskBase, FWAction
+
+@explicit_serialize
+```
+
+We name the class a relevant name, and give it a name in FireWorks as well. 
+```
+class IntegerTask(FireTaskBase):
+
+    _fw_name = "IntegerTask"
+```
+
+The arguments of `run_task` should remain the same as shown here for any FireTask.
+```
+    def run_task(self, fw_spec):
+```
+In `run_task`, we define our task using the spec `fw_spec`. First, gather inputs:
+```
+        # Gather inputs from spec
+        A_input = fw_spec['input']['A']
+        B_input = fw_spec['input']['B']
+        C_input = fw_spec['input']['C']
+```
+Now we execute our black box function. 
+```
+        # Run black box objective algorithm
+        D_output = float(A_input*B_input/C_input)
+```
+Finally, we can write the output of the function back to the spec under `output`...
+```
+        # Put the calculated output into a dictionary
+        D_write = {'output': {'D':D_output}}
+```
+...And update our spec.
+```
+        # Modify spec accordingly
+        return FWAction(update_spec=D_write)
+```
+In summary, we gathered all of the relevant inputs from the fw_spec, calculated an output, and stored the output back in the spec.
+4. Open `integer_task_workflow_creator.py`
 ## Tutorial 2: Running your own optimization
 
 ##Tutorial 3: Using ManageDB to get useful information from your optimizations
-TurboWorks keeps a separate Mongo databse from FireWorks in order to quickly and easily see the inputs and outputs from optimizations.  
-The class that handles several key TurboWorks DB functions is `ManageDB` in `manage_DB.py`
-* `__init__`: Specifies your the database you'd like to use  
+TurboWorks keeps a separate Mongo databse from FireWorks in order to quickly and easily see the inputs and outputs from optimizations. The class that handles several key TurboWorks DB functions is `ManageDB` in `manage_DB.py`
+* `__init__`: Specifies the database you'd like to use  
   example: `manageDB = ManageDB(hostname='my_host',portnum=12345, dbname='My_custom_TW_DB', collection='My_custom_TW_collection')`
 * `nuke_it`: deletes the entire collection specified during the `ManageDB` object's creation  
   example: `manageDB.nuke_it()`
@@ -116,7 +164,7 @@ The class that handles several key TurboWorks DB functions is `ManageDB` in `man
   example: `x_list = manageDB.get_param('x')`
 * `get_optima`: get the maximum/minimum value of a specified param/output  
   example: `x_optimum = manageDB.get_optima('x', 'max')`
-* `store_it`  : stores the entire collection in a backup collection
+* `store_it`  : stores the entire collection in a backup collection  
   example: `manageDB.store_it(hostname='localhost', portnum=27017, dbname='Local_backups', collection='TW_backup)`
    
 ##Tutorial 4: Implementing your own Optimization Algorithms
