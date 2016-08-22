@@ -1,6 +1,7 @@
 # TurboWorks
 Machine Learning Interface/Black Box Optimizer for FireWorks workflows.
 
+
 # What is TurboWorks?
 TurboWorks is a flexible machine-learning framework for maximizing throughput on distributed computing resources.
 ###Why would I use it?
@@ -72,19 +73,18 @@ besides the default db location, use `mongod --dbpath path/to/my/database/data`
 
 ####Running a basic example in 5 Easy Steps   
 
-__1)__ Navigate to your `TurboWorks` directory.
-__2)__ Go to the directory: `examples/Tutorial_integer_example`
-__3)__ There are 3 files inside. Lets take a look at `executable.py` first. 
+__1)__ Navigate to your `TurboWorks` directory.  
+__2)__ Go to the directory: `examples/Tutorial_integer_example`  
+__3)__ There are 3 files inside. Lets take a look at `executable.py` first.   
 __4)__ Let's run the `graph` function to make sure everything is working correctly. To **reset the fireworks database** and **delete all fireworks data**, enter the day
-in YYYY-MM-DD format as `fw_password` argument of `graph`. Set the number of function evaluations `n_runs = 30` parameter of `graph`. For example,
+in `YYYY-MM-DD` format as `fw_password` argument of `graph`. Set the number of function evaluations `n_runs = 30` parameter of `graph`. For example,
 
 
     if __name__=="__main__":
         graph(input_dict, n_runs=30, fw_password='2016-08-16')
 
 
-__5)__ Now execute this script. The result should be a matplotlib graph showing the best attained score by each algorithm.   
-
+__5)__ Now execute this script. The result should be a matplotlib graph showing the best attained score by each algorithm.      
 Congrats! Move onto the other tutorials to learn to use TurboWorks for your own problems!
 
 ##Tutorial 1: Step by Step guide to using and understanding TurboWorks
@@ -99,7 +99,7 @@ Let's say you have a computationally expensive black box function which we call 
 A*B/C = D
 ```
 And you would like to find integer values of `A`, `B`, and `C`, which maximize `D` where `A`, `B`, and `C` range between `1-100`.
-TurboWorks will operate with no knowledge of the inner workings of `IntegerTask`. 
+TurboWorks will operate with no knowledge of the inner workings of `IntegerTask`.  
 
 
 __1)__ Navigate to your `TurboWorks` directory.  
@@ -155,6 +155,8 @@ Finally, we can write the output of the function back to the spec under `output`
         return FWAction(update_spec=D_write)
         
 In summary, we gathered all of the relevant inputs from the fw_spec, calculated an output, and stored the output back in the spec.   
+
+
 __4)__ Open `integer_task_workflow_creator.py`. This file contains a function which can create an optimization workflow. With this method, we organize how
 to execute the black box function and optimize it. In this particular method, we want to compare 3 optimization algorithms; let's look at how
 one is assigned.
@@ -177,6 +179,7 @@ whether we are looking to find a min or max. Now since the FireTasks are assigne
         return wf
         
 The dictionary we are assigning to `input_dict` is the dictionary our black box task  in `IntegerTask` will use.  
+  
   
 __5)__ Open `executable.py`. This file is the top level script we will run to see how various optimization algorithms perform in this task. We'll skip
 all the Matplotlib graphing and just go over the most important parts.
