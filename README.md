@@ -81,6 +81,7 @@ in YYYY-MM-DD format as `fw_password` argument of `graph`. Set the number of fun
 if __name__=="__main__":
     graph(input_dict, n_runs=30, fw_password='2016-08-16')
 ```
+
 5. Now execute this script. The result should be a matplotlib graph showing the best attained score by each algorithm.   
 
 Congrats! Move onto the other tutorials to learn to use TurboWorks for your own problems!
@@ -98,6 +99,8 @@ A*B/C = D
 ```
 And you would like to find integer values of `A`, `B`, and `C`, which maximize `D` where `A`, `B`, and `C` range between `1-100`.
 TurboWorks will operate with no knowledge of the inner workings of `IntegerTask`. 
+
+
 1. Navigate to your `TurboWorks` directory.
 2. Go to the directory: `examples/Tutorial_integer_example`
 3. Open `integer_task.py`. This file contains our function in FireTask format. To learn more about how to write a FireTask, see the [FireWorks tutorial page]
@@ -145,7 +148,9 @@ Finally, we can write the output of the function back to the spec under `output`
         return FWAction(update_spec=D_write)
 ```
 In summary, we gathered all of the relevant inputs from the fw_spec, calculated an output, and stored the output back in the spec.
-4. Open `integer_task_workflow_creator.py`
+
+4. Open `integer_task_workflow_creator.py`. This file contains a function which can create an optimization workflow. With this method, we organize how
+to execute the black box function and optimize it. 
 ## Tutorial 2: Running your own optimization
 
 ##Tutorial 3: Using ManageDB to get useful information from your optimizations
