@@ -159,67 +159,61 @@ In summary, we gathered all of the relevant inputs from the fw_spec, calculated 
 to execute the black box function and optimize it. In this particular method, we want to compare 3 optimization algorithms; let's look at how
 one is assigned.
 
-    ```
         def workflow_creator(input_dict, opt_method):
 
             # Assign FireTasks
             if opt_method=='skopt_gp':
                 firetask1 = IntegerTask()
                 firetask2 = SKOptimizeTask(func='integer_task_workflow_creator.workflow_creator', min_or_max="max")
-    ```
+                
 The first FireTask is our black box task. The second FireTask is the Skopt optimization task.
 The optimization task must take the fully defined name of the workflow function as input. We also use the `min_or_max` argument to define
 whether we are looking to find a min or max. Now since the FireTasks are assigned, we put them in a workflow.
 
-    ```
         # Execute FireWork
         fw = [firetask1, firetask2]
         firework1 = Firework(fw, spec=input_dict)
         wf = Workflow([firework1])
         return wf
-    ```
+        
 The dictionary we are assigning to `input_dict` is the dictionary our black box task  in `IntegerTask` will use.  
+  
 5) Open `executable.py`. This file is the top level script we will run to see how various optimization algorithms perform in this task. We'll skip
 all the Matplotlib graphing and just go over the most important parts.
 First, we import our other files and the classes we use to execute tasks in Fireworks:  
  
-    ```
+ 
     from integer_task_workflow_creator import workflow_creator
     from fireworks.core.rocket_launcher import rapidfire
     from fireworks import FWorker, LaunchPad
     from fireworks.core.rocket_launcher import launch_rocket
     from turboworks.manage_DB import ManageDB
-    ```
 Instantiate a LaunchPad object (for use with FireWorks) and a ManageDB object (for use with TurboWorks database)  
 
-    ```
     # Class for managing FireWorks
     launchpad = LaunchPad()
 
     # Class for managing the TurboWorks database directly
     manageDB = ManageDB()
-    ```  
+    
 Lets put some sample data into our `input_dict` to start the optimization. We also define the dimensions as a dictionary with each dimension's boudnaries
 defined in the format `(upper, lower)`.
 
-    ```
     # Sample data
     A = 92
     B = 26
     C = 88
     my_input = {"A":A, "B":B, "C":C}
     dimensions = {"A_range":(1,100),"B_range":(1,100), "C_range":(1,100)}
-    ```
+
 Now let's put those into our input dictionary:
 
-    ```
     # Define the initial input dictionary
     input_dict = {'input':my_input, 'dimensions':dimensions}
-    ```
+    
 In our main function `graph`, we define everything we need to run the workflow.
 Use FireWorks commands to execute our task. Use TurboWorks `ManageDB` to find the best result we have acquired so far.
 
-    ```
     # To reset FireWorks fw_password must be today's date in form 'YYYY-MM-DD'
     launchpad.reset(fw_password, require_password=True)
 
@@ -229,10 +223,11 @@ Use FireWorks commands to execute our task. Use TurboWorks `ManageDB` to find th
     for i in range(n_runs):
         launch_rocket(launchpad)
         gp_best.append(manageDB.get_optima('D', min_or_max='max')[0])
-    ```
+        
 The workflow creator function defines the workflow here. Every time it is executed, it returns another workflow, and stores the results
 in the default TurboWorks database. During the optimization, the algorithm uses every input in this database.
 Finally, we execute the `graph function`:
+
 ```
 if __name__=="__main__":
     graph(input_dict, n_runs=25, fw_password='2016-08-17')
