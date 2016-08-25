@@ -11,7 +11,7 @@ to run your task, TurboWorks is for you.
 TurboWorks functions as a **black box optimizer and task manager**; it requires no knowledge of a function in order to optimize it, and TurboWorks **retains the workflow
 management abilties** of FireWorks (provenance, dynamic workflows, duplicate detection and correction, error handling).   
 TurboWorks is implemented as a modular atomic task in a FireWorks workflow, a series of complex tasks; it can run multiple optimizations for a single task, or it can execute
-only once in an entire workflow.  
+only once in an entire workflow. It's up to you.
 ###What kind of machine learning does it use?
 TurboWorks includes a general purpose **Gaussian process** algorithm (Skopt) which can handle categorical, continuous, discrete integer, and mixed data type optimization tasks.  
 TurboWorks also includes a specialized integer-specific Gaussian process library (COMBO) meant to reduce the computational time needed for optimizations on large data sets.  
@@ -74,7 +74,7 @@ besides the default db location, use `mongod --dbpath path/to/my/database/data`
 ####Running a basic example in 5 Easy Steps   
 
 __1)__ Navigate to your `TurboWorks` directory.  
-__2)__ Go to the directory: `examples/Tutorial_integer_example`  
+__2)__ Go to the directory: `examples/Tutorial 1`  
 __3)__ There are 3 files inside. Lets take a look at `executable.py` first.   
 __4)__ Let's run the `graph` function to make sure everything is working correctly. To **reset the fireworks database** and **delete all fireworks data**, enter the day
 in `YYYY-MM-DD` format as `fw_password` argument of `graph`. Set the number of function evaluations `n_runs = 30` parameter of `graph`. For example,
@@ -87,7 +87,11 @@ in `YYYY-MM-DD` format as `fw_password` argument of `graph`. Set the number of f
 __5)__ Now execute this script. The result should be a matplotlib graph showing the best attained score by each algorithm.      
 Congrats! Move onto the other tutorials to learn to use TurboWorks for your own problems!
 
+__The easiest way to learn to use FireWorks and TurboWorks is by copying and modifying the examples. If you
+want a detailed explanation, check out the tutorials!__
+
 ##Tutorial 1: Step by Step guide to using and understanding TurboWorks
+__This tutorial is meant to explain the example shown above__
 An optimization in TurboWorks consists of 3 parts:
 * a Firetask which needs to be executed
 * a workflow creator function
@@ -199,7 +203,7 @@ Instantiate a LaunchPad object (for use with FireWorks) and a ManageDB object (f
     # Class for managing the TurboWorks database directly
     manageDB = ManageDB()
     
-Lets put some sample data into our `input_dict` to start the optimization. We also define the dimensions as a dictionary with each dimension's boudnaries
+Lets put some sample data into our `input_dict` to start. We also define the dimensions as a dictionary with each dimension's boundaries
 defined in the format `(upper, lower)`.
 
     # Sample data
@@ -236,11 +240,14 @@ if __name__=="__main__":
     graph(input_dict, n_runs=25, fw_password='2016-08-17')
 ```
 
-
+Awesome! We made it all the way through! Modifying these files to your needs to run your own task. For an example, see
+Tutorial 2.
 ## Tutorial 2: Running your own optimization
+__This tutorial is meant to provide a step-by-step method for running your own optimizations, following along a different
+example__
 
 ##Tutorial 3: Using ManageDB to get useful information from your optimizations
-TurboWorks keeps a separate Mongo databse from FireWorks in order to quickly and easily see the inputs and outputs from optimizations. The class that handles several key TurboWorks DB functions is `ManageDB` in `manage_DB.py`
+TurboWorks keeps a separate Mongo database from FireWorks in order to quickly and easily see the inputs and outputs from optimizations. The class that handles several key TurboWorks DB functions is `ManageDB` in `manage_DB.py`
 * `__init__`: Specifies the database you'd like to use  
   example: `manageDB = ManageDB(hostname='my_host',portnum=12345, dbname='My_custom_TW_DB', collection='My_custom_TW_collection')`
 * `nuke_it`: deletes the entire collection specified during the `ManageDB` object's creation  
@@ -259,3 +266,5 @@ TurboWorks keeps a separate Mongo databse from FireWorks in order to quickly and
   example: `manageDB.store_it(hostname='localhost', portnum=27017, dbname='Local_backups', collection='TW_backup)`
    
 ##Tutorial 4: Implementing your own Optimization Algorithms
+__This tutorial is meant to provide a step-by-step method for incorporating your own optimization algorithm into 
+FireWorks/TurboWorks__
