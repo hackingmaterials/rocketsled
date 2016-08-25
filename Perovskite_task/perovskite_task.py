@@ -8,6 +8,7 @@ from turboworks.discrete_spacify import calculate_discrete_space
 from turboworks.dummy_opt import dummy_minimize
 import matplotlib.pyplot as plt
 import datetime
+from multiprocessing import Process
 
 connection = MongoClient()
 unc = connection.unc.data_raw
@@ -762,53 +763,46 @@ def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_gue
     plt.title("Computational Overhead of Optimization Algorithm")
     plt.show()
 
+# def multiprocessing_mendeleev_comparisons(iter_num=5, run_num=5, initial_guessing="random"):
+#     '''Run parameters'''
+# 
+#     combo_cands = []
+#     skopt_cands = []
+#     combo_iters = []
+#     skopt_iters = []
+#     combo_times = []
+#     skopt_times = []
+#     iterations = []
+#
+#     '''Running computations'''
+#     for i in range(run_num):
+#         if initial_guessing == "random":
+#             initial_guess = dummy_minimize([name_index, name_index, anion_names])
+#         else:
+#             initial_guess = initial_guessing
+#
+#         skopt_cand_iter, skopt_cand_count_at_iter, iterations, skopt_time = \
+#             mendeleev_integer_optimization_line_and_timing(guess=initial_guess, iterations=iter_num)
+#         combo_cand_iter, combo_cand_count_at_iter, iterations, combo_time = \
+#             mendeleev_integer_optimization_combo_line_and_timing(guess=initial_guess, iterations=iter_num)
+#
+#         skopt_times.append(skopt_time)
+#         combo_times.append(combo_time)
+#
+#         skopt_cands.append(skopt_cand_count_at_iter)
+#         combo_cands.append(combo_cand_count_at_iter)
+#
+#         skopt_iters.append(skopt_cand_iter)
+#         combo_iters.append(combo_cand_iter)
+#
+#     print "finished optimizing runs"
+
+
 # EXECUTABLE
 if __name__ =="__main__":
-    # mendeleev_integer_optimization_combo_line_and_timing(iterations=1000, guess = ['Os','Os','O3'])
-
+    mendeleev_integer_optimization_combo_line_and_timing(iterations=1000, guess = ['Os','Os','O3'])
     # uninformed comparison
     # mendeleev_integer_statistical_comparisons(iter_num=500, run_num= 3, initial_guessing="random")
-
-    skopt_iters = [[], [39], [47, 70, 335], [40, 317], [361, 478], [], [97, 184, 486], [319, 467], [244, 263, 329],
-                   [192, 201], [38], [], [426, 432], [438], [429], [244, 277], [71], [66], [20, 227, 309], [150],[52],
-                   [18], [489]]
-    skopt_cands = [[], [1], [1, 2, 3], [1, 2], [1, 2], [], [1, 2, 3], [1, 2], [1, 2, 3], [1, 2], [1], [], [1, 2], [1],
-                   [1], [1, 2], [1], [1], [1, 2, 3], [1], [1], [1], [1]]
-    combo_iters = [[139, 464, 465], [265, 351], [345], [4, 184, 279], [445], [], [318],
-                   [63, 73, 119, 343, 377, 467, 471], [154, 177, 411, 473], [110, 215], [157, 463], [58, 329, 475, 478],
-                   [381], [135, 142, 143, 155, 290, 291, 452], [68, 405], [228, 332, 335, 423, 424], [270, 385],
-                   [290, 354], [285], [94, 142, 146], [146, 147, 382], [183, 196, 303], [109, 113, 275, 279, 399]]
-    combo_cands = [[1, 2, 3], [1, 2], [1], [1, 2, 3], [1], [], [1], [1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4], [1, 2], [1, 2],
-                   [1, 2, 3, 4], [1], [1, 2, 3, 4, 5, 6, 7], [1, 2], [1, 2, 3, 4, 5], [1, 2], [1, 2], [1], [1, 2, 3],
-                   [1, 2, 3], [1, 2, 3], [1, 2, 3, 4, 5]]
-
-    skopt_iters, skopt_iters_std, skopt_cands = get_cand_stats(skopt_cands, skopt_iters)
-    combo_iters, combo_iters_std, combo_cands = get_cand_stats(combo_cands, combo_iters)
-
-    '''Plotting'''
-    candplot = plt.figure(1)
-    # skopterr = plt.errorbar(skopt_iters, skopt_cands, xerr=skopt_iters_std, fmt='og', ecolor='black',
-    #                         capthick=2, capsize=3, elinewidth=2)
-    # skoptline = plt.plot(skopt_iters, skopt_cands, 'g')
-
-    comboerr = plt.errorbar(combo_iters, combo_cands, xerr=combo_iters_std, fmt='ob', ecolor='black',
-                            capthick=2, capsize=3, elinewidth=2)
-
-    comboline = plt.plot(combo_iters, combo_cands, 'b')
-
-    rand_iters = []
-    if combo_iters[-1] > skopt_iters[-1]:
-        rand_iters = combo_iters
-    else:
-        rand_iters = skopt_iters
-    randline = plt.plot(rand_iters, [i / 946.4 for i in rand_iters])
-    # plt.setp(skoptline, linewidth=3, color='g')
-    plt.setp(comboline, linewidth=3, color='b')
-    plt.setp(randline, linewidth=3, color='black')
-    plt.xlabel("Iterations")
-    plt.ylabel("Candidates Found")
-    plt.title("Candidates vs Iterations")
-    plt.show()
 
 
 
