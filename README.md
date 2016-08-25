@@ -91,7 +91,7 @@ __The easiest way to learn to use FireWorks and TurboWorks is by copying and mod
 want a detailed explanation, check out the tutorials!__
 
 ##Tutorial 1: Step by Step guide to using and understanding TurboWorks
-__This tutorial is meant to explain the example shown above__
+__This tutorial is meant to explain the example shown above__  
 An optimization in TurboWorks consists of 3 parts:
 * a Firetask which needs to be executed
 * a workflow creator function
@@ -240,11 +240,12 @@ if __name__=="__main__":
     graph(input_dict, n_runs=25, fw_password='2016-08-17')
 ```
 
-Awesome! We made it all the way through! Modifying these files to your needs to run your own task. For an example, see
-Tutorial 2.
+Awesome! We made it all the way through! Modify these files to your needs to run your own task. For an example, see
+Tutorial 2.  
 ## Tutorial 2: Running your own optimization
 __This tutorial is meant to provide a step-by-step method for running your own optimizations, following along a different
-example__
+example__  
+_coming soon_
 
 ##Tutorial 3: Using ManageDB to get useful information from your optimizations
 TurboWorks keeps a separate Mongo database from FireWorks in order to quickly and easily see the inputs and outputs from optimizations. The class that handles several key TurboWorks DB functions is `ManageDB` in `manage_DB.py`
@@ -267,4 +268,5 @@ TurboWorks keeps a separate Mongo database from FireWorks in order to quickly an
    
 ##Tutorial 4: Implementing your own Optimization Algorithms
 __This tutorial is meant to provide a step-by-step method for incorporating your own optimization algorithm into 
-FireWorks/TurboWorks__
+FireWorks/TurboWorks__  
+_coming soon_
