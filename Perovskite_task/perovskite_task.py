@@ -4,11 +4,16 @@ from turboworks.gp_opt import gp_minimize
 import math
 import numpy as np
 import combo
-from turboworks.discrete_spacify import calculate_discrete_space
+from turboworks.discrete_spacify import calculate_discrete_space, duplicate_check
 from turboworks.dummy_opt import dummy_minimize
 import matplotlib.pyplot as plt
 import datetime
-from multiprocessing import Process
+from multiprocessing import Process, Manager
+import multiprocessing
+from contextlib import contextmanager
+import sys, os
+
+
 
 connection = MongoClient()
 unc = connection.unc.data_raw
@@ -300,7 +305,7 @@ def get_actions_from_input(input_list, X):
 
 
 
-# HELPER DATA CONVERTERS
+# HELPER DATA CONVERTERS + COMMON FUNCTIONS
 def get_time_stats(gp_times):
     avg_times = []
     for i in range(len(gp_times[0])):
@@ -337,6 +342,67 @@ def get_cand_stats(cands, iters):
 
     all_cands = list(range(max_cand + 1))
     return avg_iterations_at_candidate, std_iterations_at_candidate, all_cands
+
+def save_and_show(skopt_iters, skopt_cands, skopt_times, combo_iters, combo_cands, combo_times, iterations):
+    '''Save Results'''
+    text_file = open('results_raw.txt', 'w')
+    text_file.write("\n TIME OF RUN: {} \n".format(datetime.datetime.now().time().isoformat()))
+    text_file.write("skopt raw iterations: {} \n".format(skopt_iters))
+    text_file.write("skopt raw candidate list: {} \n".format(skopt_cands))
+    text_file.write("combo raw iterations: {} \n".format(combo_iters))
+    text_file.write("combo raw candidate list: {} \n".format(combo_cands))
+
+    '''Data Reformatting'''
+
+    combo_times = get_time_stats(combo_times)
+    skopt_times = get_time_stats(skopt_times)
+
+
+    skopt_iters, skopt_iters_std, skopt_cands = get_cand_stats(skopt_cands, skopt_iters)
+    combo_iters, combo_iters_std, combo_cands = get_cand_stats(combo_cands, combo_iters)
+
+    '''Save Results'''
+    text_file = open('results_processed.txt', 'w')
+    text_file.write("\n TIME OF RUN: {} \n".format(datetime.datetime.now().time().isoformat()))
+    text_file.write("skopt iterations: {} \n".format(skopt_iters))
+    text_file.write("skopt std dev iterations: {} \n".format(skopt_iters_std))
+    text_file.write("skopt candidate list: {} \n".format(skopt_cands))
+    text_file.write("combo iterations: {} \n".format(combo_iters))
+    text_file.write("combo std dev iterations: {} \n".format(combo_iters_std))
+    text_file.write("combo candidate list: {} \n".format(combo_cands))
+
+    '''Plotting'''
+    candplot = plt.figure(1)
+    skopterr = plt.errorbar(skopt_iters, skopt_cands, xerr=skopt_iters_std, fmt='og', ecolor='black',
+                            capthick=2, capsize=3, elinewidth=2)
+    skoptline = plt.plot(skopt_iters, skopt_cands, 'g')
+
+    comboerr = plt.errorbar(combo_iters, combo_cands, xerr=combo_iters_std, fmt='ob', ecolor='black',
+                            capthick=2, capsize=3, elinewidth=2)
+
+    comboline = plt.plot(combo_iters, combo_cands, 'b')
+
+    if combo_iters[-1] > skopt_iters[-1]:
+        rand_iters = combo_iters
+    else:
+        rand_iters = skopt_iters
+    randline = plt.plot(rand_iters, [i/946.4 for i in rand_iters])
+    plt.setp(skoptline, linewidth=3, color='g')
+    plt.setp(comboline, linewidth=3, color='b')
+    plt.setp(randline, linewidth=3, color='black')
+    plt.xlabel("Iterations")
+    plt.ylabel("Candidates Found")
+    plt.title("Candidates vs Iterations")
+
+    timeplot = plt.figure(2)
+    skopt_timeline = plt.plot(iterations, skopt_times)
+    combo_timeline = plt.plot(iterations, combo_times)
+    plt.setp(skopt_timeline, linewidth=3, color='g')
+    plt.setp(combo_timeline, linewidth=3, color='b')
+    plt.xlabel("Individual Iteration")
+    plt.ylabel("Time needed to execute GP")
+    plt.title("Computational Overhead of Optimization Algorithm")
+    plt.show()
 
 
 
@@ -624,12 +690,26 @@ def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=(
 
         start_time = timeit.default_timer()
 
-        prev_actions = get_actions_from_input(my_input, X)
-        policy = combo.search.discrete.policy(test_X=np.asarray(X))
-        policy.write(prev_actions, np.asarray(my_output))
-        actions = policy.bayes_search(max_num_probes=1, num_search_each_probe=1,
-                                      simulator=None, score='EI', interval=0, num_rand_basis=0)
-        guess = list(get_input_from_actions(actions, X))
+        @contextmanager
+        def suppress_stdout():
+            with open(os.devnull, "w") as devnull:
+                old_stdout = sys.stdout
+                sys.stdout = devnull
+                try:
+                    yield
+                finally:
+                    sys.stdout = old_stdout
+
+        with suppress_stdout():
+            prev_actions = get_actions_from_input(my_input, X)
+            policy = combo.search.discrete.policy(test_X=np.asarray(X))
+            policy.write(prev_actions, np.asarray(my_output))
+            actions = policy.bayes_search(max_num_probes=1, num_search_each_probe=1,
+                                          simulator=None, score='EI', interval=0, num_rand_basis=0)
+
+        guess_init = list(get_input_from_actions(actions, X))
+
+        guess = duplicate_check(guess_init, my_input, X, 'COMBO')
 
         elapsed = timeit.default_timer() - start_time
         times.append(elapsed)
@@ -668,6 +748,9 @@ def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=(
 
     return candidate_iteration, candidate_count_at_iteration, list(range(iterations)), times
 
+
+
+# STATISTICALLY SIGNIFICANT OPTIMIZATION EFFECT GRAPHERS
 def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_guessing="random"):
     '''Run parameters'''
 
@@ -701,108 +784,75 @@ def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_gue
         combo_iters.append(combo_cand_iter)
 
     print "finished optimizing runs"
+    save_and_show(skopt_iters, skopt_cands, skopt_times, combo_iters, combo_cands, combo_times, iterations)
 
-    '''Save Results'''
-    text_file = open('results_raw.txt', 'w')
-    text_file.write("\n TIME OF RUN: {} \n".format(datetime.datetime.now().time().isoformat()))
-    text_file.write("skopt raw iterations: {} \n".format(skopt_iters))
-    text_file.write("skopt raw candidate list: {} \n".format(skopt_cands))
-    text_file.write("combo raw iterations: {} \n".format(combo_iters))
-    text_file.write("combo raw candidate list: {} \n".format(combo_cands))
+def multiprocessing_mendeleev_comparisons(iter_num=5, run_num=5, initial_guessing="random"):
 
-    '''Data Reformatting'''
+    skopt_cands = Manager().list()
+    skopt_iters = Manager().list()
+    skopt_times = Manager().list()
+    combo_cands = Manager().list()
+    combo_iters = Manager().list()
+    combo_times = Manager().list()
+    iterations = Manager().list()
 
-    combo_times = get_time_stats(combo_times)
-    skopt_times = get_time_stats(skopt_times)
+    # A single run to be optimized (either skopt of combo)
+    def job(type):
+        if type == "skopt":
+            fun = mendeleev_integer_optimization_line_and_timing
+        elif type=="combo":
+            fun = mendeleev_integer_optimization_combo_line_and_timing
 
+        if initial_guessing == "random":
+            initial_guess = dummy_minimize([name_index, name_index, anion_names])
+        else:
+            initial_guess = initial_guessing
 
-    skopt_iters, skopt_iters_std, skopt_cands = get_cand_stats(skopt_cands, skopt_iters)
-    combo_iters, combo_iters_std, combo_cands = get_cand_stats(combo_cands, combo_iters)
+        cand_iter, cand_count_at_iter, iterations_single, times = fun(guess=initial_guess, iterations=iter_num)
 
-    '''Save Results'''
-    text_file = open('results_processed.txt', 'w')
-    text_file.write("\n TIME OF RUN: {} \n".format(datetime.datetime.now().time().isoformat()))
-    text_file.write("skopt iterations: {} \n".format(skopt_iters))
-    text_file.write("skopt std dev iterations: {} \n".format(skopt_iters_std))
-    text_file.write("skopt candidate list: {} \n".format(skopt_cands))
-    text_file.write("combo iterations: {} \n".format(combo_iters))
-    text_file.write("combo std dev iterations: {} \n".format(combo_iters_std))
-    text_file.write("combo candidate list: {} \n".format(combo_cands))
+        if type == "skopt":
+            skopt_cands.append(cand_count_at_iter)
+            skopt_iters.append(cand_iter)
+            skopt_times.append(times)
+        elif type == "combo":
+            combo_cands.append(cand_count_at_iter)
+            combo_iters.append(cand_iter)
+            combo_times.append(times)
+        iterations.append(iterations_single)
 
-    '''Plotting'''
-    candplot = plt.figure(1)
-    skopterr = plt.errorbar(skopt_iters, skopt_cands, xerr=skopt_iters_std, fmt='og', ecolor='black',
-                            capthick=2, capsize=3, elinewidth=2)
-    skoptline = plt.plot(skopt_iters, skopt_cands, 'g')
+    jobs = []
 
-    comboerr = plt.errorbar(combo_iters, combo_cands, xerr=combo_iters_std, fmt='ob', ecolor='black',
-                            capthick=2, capsize=3, elinewidth=2)
+    #TODO: use Pool class instead of Process (pool reallocates processes dynamically as they are finished)
 
-    comboline = plt.plot(combo_iters, combo_cands, 'b')
+    for i in range(run_num):
+        # p_combo = multiprocessing.Process(target=job, args=("combo",))
+        p_skopt = multiprocessing.Process(target=job, args=("skopt",))
+        # jobs.append(p_combo)
+        jobs.append(p_skopt)
+        # p_combo.start()
+        p_skopt.start()
 
-    rand_iters = []
-    if combo_iters[-1] > skopt_iters[-1]:
-        rand_iters = combo_iters
-    else:
-        rand_iters = skopt_iters
-    randline = plt.plot(rand_iters, [i/946.4 for i in rand_iters])
-    plt.setp(skoptline, linewidth=3, color='g')
-    plt.setp(comboline, linewidth=3, color='b')
-    plt.setp(randline, linewidth=3, color='black')
-    plt.xlabel("Iterations")
-    plt.ylabel("Candidates Found")
-    plt.title("Candidates vs Iterations")
+    for proc in jobs:
+        proc.join()
 
-    timeplot = plt.figure(2)
-    skopt_timeline = plt.plot(iterations, skopt_times)
-    combo_timeline = plt.plot(iterations, combo_times)
-    plt.setp(skopt_timeline, linewidth=3, color='g')
-    plt.setp(combo_timeline, linewidth=3, color='b')
-    plt.xlabel("Individual Iteration")
-    plt.ylabel("Time needed to execute GP")
-    plt.title("Computational Overhead of Optimization Algorithm")
-    plt.show()
+    print "done optimizing the jobs in parallel"
 
-# def multiprocessing_mendeleev_comparisons(iter_num=5, run_num=5, initial_guessing="random"):
-#     '''Run parameters'''
-# 
-#     combo_cands = []
-#     skopt_cands = []
-#     combo_iters = []
-#     skopt_iters = []
-#     combo_times = []
-#     skopt_times = []
-#     iterations = []
-#
-#     '''Running computations'''
-#     for i in range(run_num):
-#         if initial_guessing == "random":
-#             initial_guess = dummy_minimize([name_index, name_index, anion_names])
-#         else:
-#             initial_guess = initial_guessing
-#
-#         skopt_cand_iter, skopt_cand_count_at_iter, iterations, skopt_time = \
-#             mendeleev_integer_optimization_line_and_timing(guess=initial_guess, iterations=iter_num)
-#         combo_cand_iter, combo_cand_count_at_iter, iterations, combo_time = \
-#             mendeleev_integer_optimization_combo_line_and_timing(guess=initial_guess, iterations=iter_num)
-#
-#         skopt_times.append(skopt_time)
-#         combo_times.append(combo_time)
-#
-#         skopt_cands.append(skopt_cand_count_at_iter)
-#         combo_cands.append(combo_cand_count_at_iter)
-#
-#         skopt_iters.append(skopt_cand_iter)
-#         combo_iters.append(combo_cand_iter)
-#
-#     print "finished optimizing runs"
+    skopt_cands = list(skopt_cands)
+    skopt_iters = list(skopt_iters)
+    skopt_times = list(skopt_times)
+    combo_cands = list(combo_cands)
+    combo_iters = list(combo_iters)
+    combo_times = list(combo_times)
+
+    # save_and_show(skopt_iters, skopt_cands, skopt_times, combo_iters, combo_cands, combo_times, iterations)
 
 
 # EXECUTABLE
 if __name__ =="__main__":
-    mendeleev_integer_optimization_combo_line_and_timing(iterations=1000, guess = ['Os','Os','O3'])
     # uninformed comparison
-    # mendeleev_integer_statistical_comparisons(iter_num=500, run_num= 3, initial_guessing="random")
+    mendeleev_integer_statistical_comparisons(iter_num=2, run_num= 2, initial_guessing="random")
+    # multiprocessing_mendeleev_comparisons(iter_num=50, run_num=2)
+
 
 
 
