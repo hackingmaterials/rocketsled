@@ -1,5 +1,4 @@
 from pymongo import MongoClient
-from pprint import pprint
 from turboworks.gp_opt import gp_minimize
 import math
 import numpy as np
@@ -8,15 +7,12 @@ from turboworks.discrete_spacify import calculate_discrete_space, duplicate_chec
 from turboworks.dummy_opt import dummy_minimize
 import matplotlib.pyplot as plt
 import datetime
-from multiprocessing import Process, Manager
-import multiprocessing
 from contextlib import contextmanager
 import sys, os
+import multiprocessing
+import timeit
+import warnings
 
-
-
-connection = MongoClient()
-unc = connection.unc.data_raw
 
 """
 This file is doing perovskite testing without using the TW/FW overhead
@@ -474,7 +470,6 @@ def categorical_optimization_scatter(iterations=100,guess=("Li","V","O3"), fitne
     plt.show()
 
 def categorical_optimization_line_and_timing(iterations=100,guess=("Li","V","O3"), fitness_evaluator=eval_fitness_complex):
-    import timeit
 
     my_input = []
     my_output = []
@@ -663,7 +658,6 @@ def mendeleev_mixed_optimization_line_and_timing(iterations=100, guess=("Li", "V
 
 def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=("Li", "V", "O3"),
                                                          fitness_evaluator=eval_fitness_complex, plots="off"):
-    import timeit
 
     guess = (name2mendeleev_rank[guess[0]],name2mendeleev_rank[guess[1]], anion_name2mendeleev_rank[guess[2]])
     dimensions = [(0, 51), (0, 51), (0, 6)]
@@ -680,8 +674,6 @@ def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=(
 
     # optimizing search
     for i in range(iterations):
-        start_time = timeit.default_timer()
-
         q = mendeleev_rank_to_data(guess)[0]
         score = fitness_evaluator(q['gap_dir'], q['gap_ind'], q['heat_of_formation'],
                                        q['vb_dir'], q['cb_dir'], q['vb_ind'], q['cb_ind'])
@@ -689,6 +681,7 @@ def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=(
         my_output.append(score)
 
         start_time = timeit.default_timer()
+
 
         @contextmanager
         def suppress_stdout():
@@ -700,12 +693,18 @@ def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=(
                 finally:
                     sys.stdout = old_stdout
 
-        with suppress_stdout():
+        # with suppress_stdout():
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
             prev_actions = get_actions_from_input(my_input, X)
+            print 1
             policy = combo.search.discrete.policy(test_X=np.asarray(X))
+            print 2
             policy.write(prev_actions, np.asarray(my_output))
+            print 3
             actions = policy.bayes_search(max_num_probes=1, num_search_each_probe=1,
                                           simulator=None, score='EI', interval=0, num_rand_basis=0)
+            print 4
 
         guess_init = list(get_input_from_actions(actions, X))
 
@@ -749,7 +748,6 @@ def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=(
     return candidate_iteration, candidate_count_at_iteration, list(range(iterations)), times
 
 
-
 # STATISTICALLY SIGNIFICANT OPTIMIZATION EFFECT GRAPHERS
 def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_guessing="random"):
     '''Run parameters'''
@@ -788,19 +786,21 @@ def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_gue
 
 def multiprocessing_mendeleev_comparisons(iter_num=5, run_num=5, initial_guessing="random"):
 
-    skopt_cands = Manager().list()
-    skopt_iters = Manager().list()
-    skopt_times = Manager().list()
-    combo_cands = Manager().list()
-    combo_iters = Manager().list()
-    combo_times = Manager().list()
-    iterations = Manager().list()
+    skopt_cands = multiprocessing.Manager().list()
+    skopt_iters = multiprocessing.Manager().list()
+    skopt_times = multiprocessing.Manager().list()
+    combo_cands = multiprocessing.Manager().list()
+    combo_iters = multiprocessing.Manager().list()
+    combo_times = multiprocessing.Manager().list()
+    iterations = multiprocessing.Manager().list()
 
-    # A single run to be optimized (either skopt of combo)
+    # A single run to be optimized (either skopt or combo)
     def job(type):
+
+        print type, type == "skopt", type == "combo"
         if type == "skopt":
             fun = mendeleev_integer_optimization_line_and_timing
-        elif type=="combo":
+        if type=="combo":
             fun = mendeleev_integer_optimization_combo_line_and_timing
 
         if initial_guessing == "random":
@@ -814,10 +814,12 @@ def multiprocessing_mendeleev_comparisons(iter_num=5, run_num=5, initial_guessin
             skopt_cands.append(cand_count_at_iter)
             skopt_iters.append(cand_iter)
             skopt_times.append(times)
-        elif type == "combo":
+
+        if type == "combo":
             combo_cands.append(cand_count_at_iter)
             combo_iters.append(cand_iter)
             combo_times.append(times)
+
         iterations.append(iterations_single)
 
     jobs = []
@@ -825,12 +827,17 @@ def multiprocessing_mendeleev_comparisons(iter_num=5, run_num=5, initial_guessin
     #TODO: use Pool class instead of Process (pool reallocates processes dynamically as they are finished)
 
     for i in range(run_num):
-        # p_combo = multiprocessing.Process(target=job, args=("combo",))
-        p_skopt = multiprocessing.Process(target=job, args=("skopt",))
-        # jobs.append(p_combo)
-        jobs.append(p_skopt)
-        # p_combo.start()
-        p_skopt.start()
+        p_combo = multiprocessing.Process(target=job, args=("combo",))
+        # p_skopt = multiprocessing.Process(target=job, args=("skopt",))
+        jobs.append(p_combo)
+        # jobs.append(p_skopt)
+
+    connection = MongoClient()
+    global unc
+    unc = connection.unc.data_raw
+
+    for proc in jobs:
+        proc.start()
 
     for proc in jobs:
         proc.join()
@@ -844,14 +851,22 @@ def multiprocessing_mendeleev_comparisons(iter_num=5, run_num=5, initial_guessin
     combo_iters = list(combo_iters)
     combo_times = list(combo_times)
 
-    # save_and_show(skopt_iters, skopt_cands, skopt_times, combo_iters, combo_cands, combo_times, iterations)
+    print "combo_times:", combo_times
+
+    save_and_show(skopt_iters, skopt_cands, skopt_times, combo_iters, combo_cands, combo_times, iterations)
 
 
 # EXECUTABLE
 if __name__ =="__main__":
-    # uninformed comparison
-    mendeleev_integer_statistical_comparisons(iter_num=2, run_num= 2, initial_guessing="random")
-    # multiprocessing_mendeleev_comparisons(iter_num=50, run_num=2)
+
+    #previous statistical comparisons
+    # connection = MongoClient()
+    # unc = connection.unc.data_raw
+    # mendeleev_integer_statistical_comparisons(iter_num=2, run_num= 2, initial_guessing="random")
+
+
+    # multiprocessing requires mongo instance after forking
+    multiprocessing_mendeleev_comparisons(iter_num=2, run_num=1)
 
 
 
