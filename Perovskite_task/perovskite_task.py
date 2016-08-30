@@ -12,7 +12,7 @@ import sys, os
 import multiprocessing
 import timeit
 import warnings
-
+import pickle
 
 """
 This file is doing perovskite testing without using the TW/FW overhead
@@ -46,7 +46,7 @@ anion_mendeleev_rank = [3,2,1,0,6,5,4] # rank based on mendeleev number
 
 
 
-#CONVERSION DICTIONARIES
+# CONVERSION DICTIONARIES
 main2atomic = dict(zip(main_index, atomic_index))
 atomic2main = dict(zip(atomic_index, main_index))
 name2atomic = dict(zip(name_index,atomic_index))
@@ -65,9 +65,13 @@ name2mendeleev_rank = dict(zip(sorted(name2mendeleev, key=name2mendeleev.get), m
 
 
 # EXCLUSIONS
-# TODO: implement chemical rules via this exclusion array(?)
-exclusions = []
+# TODO: implement goldschmidt ranking somehow?
 
+def load_exclusions(filename):
+        if os.path.exists(filename):
+            with open(filename) as f:
+                return pickle.load(f)
+exclusions = load_exclusions("excluded_compounds.p")
 
 
 # FITNESS EVALUATORS AND REQUIREMENTS
@@ -697,14 +701,12 @@ def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=(
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             prev_actions = get_actions_from_input(my_input, X)
-            print 1
             policy = combo.search.discrete.policy(test_X=np.asarray(X))
-            print 2
             policy.write(prev_actions, np.asarray(my_output))
-            print 3
+            print "starting COMBO bayes search"
             actions = policy.bayes_search(max_num_probes=1, num_search_each_probe=1,
                                           simulator=None, score='EI', interval=0, num_rand_basis=0)
-            print 4
+            print "ending COMBO bayes search"
 
         guess_init = list(get_input_from_actions(actions, X))
 

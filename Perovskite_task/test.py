@@ -1,5 +1,8 @@
 import multiprocessing
 import time
+import pickle
+from pprint import pprint
+import os
 
 jobs = []
 
@@ -35,3 +38,21 @@ for proc in jobs:
     proc.join()
 
 print "done"
+
+
+def load_exclusions(filename):
+    if os.path.exists(filename):
+        with open(filename) as f:
+            return pickle.load(f)
+
+
+exclusions = load_exclusions("excluded_compounds.p")
+goldschmidt_rank = load_exclusions("goldschmidt_rank.p")
+
+# print type(exclusions)
+pprint(exclusions)
+print len(exclusions)
+time.sleep(5)
+pprint(goldschmidt_rank)
+print len(goldschmidt_rank)
+
