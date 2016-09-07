@@ -49,10 +49,14 @@ def load_exclusions(filename):
 exclusions = load_exclusions("excluded_compounds.p")
 goldschmidt_rank = load_exclusions("goldschmidt_rank.p")
 
-# print type(exclusions)
-pprint(exclusions)
-print len(exclusions)
-time.sleep(5)
-pprint(goldschmidt_rank)
-print len(goldschmidt_rank)
+# # print type(exclusions)
+# pprint(exclusions)
+# print len(exclusions)
+# time.sleep(5)
+# pprint(goldschmidt_rank)
+# print len(goldschmidt_rank)
 
+for i in xrange(10):
+  if i == 5:
+    continue
+  print i

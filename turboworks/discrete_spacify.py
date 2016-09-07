@@ -6,6 +6,7 @@ import itertools
 import numpy as np
 from random import randint
 import warnings
+import resource
 
 
 def calculate_discrete_space(dimensions):
@@ -21,8 +22,8 @@ def calculate_discrete_space(dimensions):
 
     In duplicate checking for discrete spaces, the generated list will be narrowed down until no entries remain.
 
-    WARNING: Very large discrete spaces will memory hog this process. Typically a space of about 1,000 entries takes
-    0.005s to compute, but larger spaces can take much longer.
+    WARNING: Very large discrete spaces will cause a memory bomb. Typically a space of about 1,000 entries takes
+    0.005s to compute, but larger spaces can take much longer (or may just nuke your computer RAM, be careful).
 
     """
     total_dimspace = []
@@ -74,4 +75,5 @@ def duplicate_check(new_input, opt_inputs, X, optimizer):
             return list(remaining_inputs[index])
     else:
         return new_input
+
 
