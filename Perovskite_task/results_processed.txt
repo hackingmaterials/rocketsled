@@ -1,0 +1,8 @@
+
+ TIME OF RUN: 10:28:28.074766 
+skopt iterations: [0] 
+skopt std dev iterations: [0] 
+skopt candidate list: [0] 
+combo iterations: [0] 
+combo std dev iterations: [0] 
+combo candidate list: [0] 

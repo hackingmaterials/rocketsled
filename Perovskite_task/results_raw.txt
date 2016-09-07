@@ -1,0 +1,6 @@
+
+ TIME OF RUN: 10:28:28.074253 
+skopt raw iterations: [[], []] 
+skopt raw candidate list: [[], []] 
+combo raw iterations: [[], []] 
+combo raw candidate list: [[], []] 

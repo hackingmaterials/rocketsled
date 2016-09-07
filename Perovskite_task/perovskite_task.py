@@ -12,14 +12,9 @@ from multiprocessing import Process, Manager
 import multiprocessing
 from contextlib import contextmanager
 import sys, os
-<<<<<<< HEAD
-import multiprocessing
 import timeit
 import warnings
 import pickle
-=======
-
->>>>>>> parent of cbf5b6b... multiprocessing attempt 2
 
 
 connection = MongoClient()
@@ -119,8 +114,6 @@ def eval_fitness_simple(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_
         gap_ind_score += 5
 
     return max(gap_ind_score, gap_dir_score) + stab_score
-
-
 def eval_fitness_complex(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_ind, cb_ind):
     stab_score = 0
     gap_dir_score = 0
@@ -170,8 +163,6 @@ def eval_fitness_complex(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb
         gap_ind_score += 10 * (1 - 1 / (1 + math.exp(-distance)))
 
     return max(gap_ind_score, gap_dir_score) + stab_score
-
-
 def eval_fitness_complex_product(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_ind, cb_ind):
     stab_score = 0
     gap_dir_score = 0
@@ -221,8 +212,6 @@ def eval_fitness_complex_product(gap_dir, gap_ind, heat_of_formation, vb_dir, cb
         gap_ind_score += 10 * (1 - 1 / (1 + math.exp(-distance)))
 
     return max(gap_ind_score, gap_dir_score) * stab_score * 0.15
-
-
 def gaussian_pdf(x, mean=0, width=0.5):
     return (1 / math.sqrt(2 * math.pi)) * math.exp(-width * (x - mean) * (x - mean))
 
@@ -246,8 +235,6 @@ def raw_tuple_to_data(tuple):
     all_the_data = {'vb_dir': vb_dir, 'cb_dir': cb_dir, 'vb_ind': vb_ind, 'cb_ind': cb_ind,
                     'gap_dir': gap_dir, 'gap_ind': gap_ind, 'heat_of_formation': heat_of_formation}
     return [all_the_data, document]
-
-
 def name_to_data(strings):
     A = strings[0]
     B = strings[1]
@@ -266,8 +253,6 @@ def name_to_data(strings):
     all_the_data = {'vb_dir': vb_dir, 'cb_dir': cb_dir, 'vb_ind': vb_ind, 'cb_ind': cb_ind,
                     'gap_dir': gap_dir, 'gap_ind': gap_ind, 'heat_of_formation': heat_of_formation}
     return [all_the_data, document]
-
-
 def mendeleev_rank_to_data(tuple):
     A = mendeleev_rank2name[tuple[0]]
     B = mendeleev_rank2name[tuple[1]]
@@ -286,8 +271,6 @@ def mendeleev_rank_to_data(tuple):
     all_the_data = {'vb_dir': vb_dir, 'cb_dir': cb_dir, 'vb_ind': vb_ind, 'cb_ind': cb_ind,
                     'gap_dir': gap_dir, 'gap_ind': gap_ind, 'heat_of_formation': heat_of_formation}
     return [all_the_data, document]
-
-
 def mendeleev_mixed_to_data(mixed_tuple):
     A = mendeleev_rank2name[mixed_tuple[0]]
     B = mendeleev_rank2name[mixed_tuple[1]]
@@ -306,8 +289,6 @@ def mendeleev_mixed_to_data(mixed_tuple):
     all_the_data = {'vb_dir': vb_dir, 'cb_dir': cb_dir, 'vb_ind': vb_ind, 'cb_ind': cb_ind,
                     'gap_dir': gap_dir, 'gap_ind': gap_ind, 'heat_of_formation': heat_of_formation}
     return [all_the_data, document]
-
-
 def get_input_from_actions(actions, X):
     output = []
     if len(actions) == 1:
@@ -316,8 +297,6 @@ def get_input_from_actions(actions, X):
         for action in actions:
             output.append(X[action])
     return output
-
-
 def get_actions_from_input(input_list, X):
     actions = []
     for input_vector in input_list:
@@ -334,8 +313,6 @@ def get_time_stats(gp_times):
             temp.append(time_arr[i])
         avg_times.append(np.asarray(temp).mean())
     return avg_times
-
-
 def get_cand_stats(cands, iters):
     max_cand = 0
     for cand in cands:
@@ -363,8 +340,6 @@ def get_cand_stats(cands, iters):
 
     all_cands = list(range(max_cand + 1))
     return avg_iterations_at_candidate, std_iterations_at_candidate, all_cands
-
-
 def save_and_show(skopt_iters, skopt_cands, skopt_times, combo_iters, combo_cands, combo_times, iterations):
     '''Save Results'''
     text_file = open('results_raw.txt', 'w')
@@ -425,7 +400,6 @@ def save_and_show(skopt_iters, skopt_cands, skopt_times, combo_iters, combo_cand
     plt.title("Computational Overhead of Optimization Algorithm")
     plt.show()
 
-
 # OPTIMIZATION EFFECT GRAPHERS
 def atomic_integer_optimization_scatter(iterations=100, guess=(1, 11, 0), fitness_evaluator=eval_fitness_complex):
     # This functions guess argument is in ranked atomic order
@@ -459,8 +433,6 @@ def atomic_integer_optimization_scatter(iterations=100, guess=(1, 11, 0), fitnes
     import matplotlib.pyplot as plt
     plt.plot(list(range(iterations)), [-1 * i for i in my_output], 'g.')
     plt.show()
-
-
 def categorical_optimization_scatter(iterations=100, guess=("Li", "V", "O3"), fitness_evaluator=eval_fitness_complex):
     my_input = []
     my_output = []
@@ -493,13 +465,6 @@ def categorical_optimization_scatter(iterations=100, guess=("Li", "V", "O3"), fi
     import matplotlib.pyplot as plt
     plt.plot(list(range(iterations)), [-1 * i for i in my_output], 'g.')
     plt.show()
-
-<<<<<<< HEAD
-=======
-def categorical_optimization_line_and_timing(iterations=100,guess=("Li","V","O3"), fitness_evaluator=eval_fitness_complex):
-    import timeit
->>>>>>> parent of cbf5b6b... multiprocessing attempt 2
-
 def categorical_optimization_line_and_timing(iterations=100, guess=("Li", "V", "O3"),
                                              fitness_evaluator=eval_fitness_complex):
     my_input = []
@@ -555,73 +520,6 @@ def categorical_optimization_line_and_timing(iterations=100, guess=("Li", "V", "
     plt.ylabel("Time needed to execute GP")
     plt.title("Computational Overhead of Optimization Algorithm")
     plt.show()
-
-
-def mendeleev_integer_optimization_line_and_timing(iterations=100, guess=("Li", "V", "O3"),
-                                                   fitness_evaluator=eval_fitness_complex, plots="off"):
-    import timeit
-
-    guess = (name2mendeleev_rank[guess[0]], name2mendeleev_rank[guess[1]], anion_name2mendeleev_rank[guess[2]])
-    dimensions = [(0, 51), (0, 51), (0, 6)]
-    my_output = []
-    my_input = []
-
-    candidate_count = 0
-    candidates = []
-    candidate_count_at_iteration = []
-    candidate_iteration = []
-    times = []
-
-    # optimizing search
-    for i in range(iterations):
-        start_time = timeit.default_timer()
-
-        q = mendeleev_rank_to_data(guess)[0]
-        score = -1 * fitness_evaluator(q['gap_dir'], q['gap_ind'], q['heat_of_formation'],
-                                       q['vb_dir'], q['cb_dir'], q['vb_ind'], q['cb_ind'])
-        my_input.append(list(guess))
-        my_output.append(score)
-
-        start_time = timeit.default_timer()
-        guess = gp_minimize(my_input, my_output, dimensions)
-        elapsed = timeit.default_timer() - start_time
-        times.append(elapsed)
-
-        print "CALCULATION:", i + 1, " WITH SCORE:", -1 * score
-
-        # Search for entry in GOOD_CANDS_LS
-        transform_entry = (mendeleev_rank2name[my_input[-1][0]], mendeleev_rank2name[my_input[-1][1]],
-                           anion_mendeleev_rank2name[my_input[-1][2]])
-        mod_entry = (
-        name2atomic[transform_entry[0]], name2atomic[transform_entry[1]], anion_name2index[transform_entry[2]])
-        if mod_entry in GOOD_CANDS_LS and mod_entry not in candidates:
-            candidate_count += 1
-            candidates.append(mod_entry)
-            candidate_count_at_iteration.append(candidate_count)
-            candidate_iteration.append(i)
-
-    print "candidates", candidate_count
-    print "These candidates are: ", candidates
-
-    # Plotting
-    if plots == "on":
-        candplot = plt.figure(1)
-        candline = plt.plot(candidate_iteration, candidate_count_at_iteration)
-        plt.setp(candline, linewidth=3, color='g')
-        plt.xlabel("Iterations")
-        plt.ylabel("Candidates Found")
-        plt.title("Candidates vs Iterations")
-
-        timeplot = plt.figure(2)
-        timeline = plt.plot(list(range(iterations)), times)
-        plt.setp(timeline, linewidth=3, color='b')
-        plt.xlabel("Individual Iteration")
-        plt.ylabel("Time needed to execute GP")
-        plt.title("Computational Overhead of Optimization Algorithm")
-        plt.show()
-    return candidate_iteration, candidate_count_at_iteration, list(range(iterations)), times
-
-
 def mendeleev_mixed_optimization_line_and_timing(iterations=100, guess=("Li", "V", "O3"),
                                                  fitness_evaluator=eval_fitness_complex):
     """
@@ -690,11 +588,8 @@ def mendeleev_mixed_optimization_line_and_timing(iterations=100, guess=("Li", "V
     plt.title("Computational Overhead of Optimization Algorithm")
     plt.show()
 
-
-def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=("Li", "V", "O3"),
-                                                         fitness_evaluator=eval_fitness_complex, plots="off"):
-    import timeit
-
+def mendeleev_integer_optimization_skopt_line_and_timing(iterations=100, guess=("Li", "V", "O3"),
+                                                   fitness_evaluator=eval_fitness_complex, plots="off"):
     guess = (name2mendeleev_rank[guess[0]], name2mendeleev_rank[guess[1]], anion_name2mendeleev_rank[guess[2]])
     dimensions = [(0, 51), (0, 51), (0, 6)]
     my_output = []
@@ -706,60 +601,28 @@ def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=(
     candidate_iteration = []
     times = []
 
-    X = calculate_discrete_space(dimensions)
-
     # optimizing search
     for i in range(iterations):
         start_time = timeit.default_timer()
 
         q = mendeleev_rank_to_data(guess)[0]
-        score = fitness_evaluator(q['gap_dir'], q['gap_ind'], q['heat_of_formation'],
-                                  q['vb_dir'], q['cb_dir'], q['vb_ind'], q['cb_ind'])
+        score = -1 * fitness_evaluator(q['gap_dir'], q['gap_ind'], q['heat_of_formation'],
+                                       q['vb_dir'], q['cb_dir'], q['vb_ind'], q['cb_ind'])
         my_input.append(list(guess))
         my_output.append(score)
 
         start_time = timeit.default_timer()
-
-        @contextmanager
-        def suppress_stdout():
-            with open(os.devnull, "w") as devnull:
-                old_stdout = sys.stdout
-                sys.stdout = devnull
-                try:
-                    yield
-                finally:
-                    sys.stdout = old_stdout
-
-        with suppress_stdout():
-<<<<<<< HEAD
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore") #ignores sciki-learn warnings on first iteration
-
-                prev_actions = get_actions_from_input(my_input, X)
-                policy = combo.search.discrete.policy(test_X=np.asarray(X))
-                policy.write(prev_actions, np.asarray(my_output))
-                actions = policy.bayes_search()
-=======
-            prev_actions = get_actions_from_input(my_input, X)
-            policy = combo.search.discrete.policy(test_X=np.asarray(X))
-            policy.write(prev_actions, np.asarray(my_output))
-            actions = policy.bayes_search(max_num_probes=1, num_search_each_probe=1,
-                                          simulator=None, score='EI', interval=0, num_rand_basis=0)
->>>>>>> parent of cbf5b6b... multiprocessing attempt 2
-
-        guess_init = list(get_input_from_actions(actions, X))
-
-        # guess = duplicate_check(guess_init, my_input, X, 'COMBO')
-
+        guess = gp_minimize(my_input, my_output, dimensions)
         elapsed = timeit.default_timer() - start_time
         times.append(elapsed)
 
-        print "CALCULATION:", i + 1, " WITH SCORE:", score
+        print "CALCULATION:", i + 1, " WITH SCORE:", -1 * score
 
         # Search for entry in GOOD_CANDS_LS
         transform_entry = (mendeleev_rank2name[my_input[-1][0]], mendeleev_rank2name[my_input[-1][1]],
                            anion_mendeleev_rank2name[my_input[-1][2]])
-        mod_entry = (name2atomic[transform_entry[0]], name2atomic[transform_entry[1]], anion_name2index[transform_entry[2]])
+        mod_entry = (
+        name2atomic[transform_entry[0]], name2atomic[transform_entry[1]], anion_name2index[transform_entry[2]])
         if mod_entry in GOOD_CANDS_LS and mod_entry not in candidates:
             candidate_count += 1
             candidates.append(mod_entry)
@@ -785,12 +648,160 @@ def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=(
         plt.ylabel("Time needed to execute GP")
         plt.title("Computational Overhead of Optimization Algorithm")
         plt.show()
+    return candidate_iteration, candidate_count_at_iteration, list(range(iterations)), times
+
+# def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=("Li", "V", "O3"),
+#                                                          fitness_evaluator=eval_fitness_complex, plots="off"):
+#     import timeit
+#
+#     guess = (name2mendeleev_rank[guess[0]], name2mendeleev_rank[guess[1]], anion_name2mendeleev_rank[guess[2]])
+#     dimensions = [(0, 51), (0, 51), (0, 6)]
+#     my_output = []
+#     my_input = []
+#
+#     candidate_count = 0
+#     candidates = []
+#     candidate_count_at_iteration = []
+#     candidate_iteration = []
+#     times = []
+#
+#     X = calculate_discrete_space(dimensions)
+#
+#     # optimizing search
+#     for i in range(iterations):
+#         start_time = timeit.default_timer()
+#
+#         q = mendeleev_rank_to_data(guess)[0]
+#         score = fitness_evaluator(q['gap_dir'], q['gap_ind'], q['heat_of_formation'],
+#                                   q['vb_dir'], q['cb_dir'], q['vb_ind'], q['cb_ind'])
+#         my_input.append(list(guess))
+#         my_output.append(score)
+#
+#         start_time = timeit.default_timer()
+#
+#         prev_actions = get_actions_from_input(my_input, X)
+#         policy = combo.search.discrete.policy(test_X=np.asarray(X))
+#         policy.write(prev_actions, np.asarray(my_output))
+#         actions = policy.bayes_search(max_num_probes=1, num_search_each_probe=1,
+#                                       simulator=None, score='EI', interval=0, num_rand_basis=0)
+#
+#         guess_init = list(get_input_from_actions(actions, X))
+#
+#         guess = duplicate_check(guess_init, my_input, X, 'COMBO')
+#
+#         elapsed = timeit.default_timer() - start_time
+#         times.append(elapsed)
+#
+#         print "CALCULATION:", i + 1, " WITH SCORE:", score
+#
+#         # Search for entry in GOOD_CANDS_LS
+#         transform_entry = (mendeleev_rank2name[my_input[-1][0]], mendeleev_rank2name[my_input[-1][1]],
+#                            anion_mendeleev_rank2name[my_input[-1][2]])
+#         mod_entry = (name2atomic[transform_entry[0]], name2atomic[transform_entry[1]], anion_name2index[transform_entry[2]])
+#         if mod_entry in GOOD_CANDS_LS and mod_entry not in candidates:
+#             candidate_count += 1
+#             candidates.append(mod_entry)
+#             candidate_count_at_iteration.append(candidate_count)
+#             candidate_iteration.append(i)
+#
+#     print "candidates", candidate_count
+#     print "These candidates are: ", candidates
+#
+#     # Plotting
+#     if plots == "on":
+#         candplot = plt.figure(1)
+#         candline = plt.plot(candidate_iteration, candidate_count_at_iteration)
+#         plt.setp(candline, linewidth=3, color='g')
+#         plt.xlabel("Iterations")
+#         plt.ylabel("Candidates Found")
+#         plt.title("Candidates vs Iterations")
+#
+#         timeplot = plt.figure(2)
+#         timeline = plt.plot(list(range(iterations)), times)
+#         plt.setp(timeline, linewidth=3, color='b')
+#         plt.xlabel("Individual Iteration")
+#         plt.ylabel("Time needed to execute GP")
+#         plt.title("Computational Overhead of Optimization Algorithm")
+#         plt.show()
+#
+#     return candidate_iteration, candidate_count_at_iteration, list(range(iterations)), times
+
+
+def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=("Li", "V", "O3"),
+                                                         fitness_evaluator=eval_fitness_complex, plots="off"):
+    import timeit
+
+    guess = (name2mendeleev_rank[guess[0]],name2mendeleev_rank[guess[1]], anion_name2mendeleev_rank[guess[2]])
+    dimensions = [(0, 51), (0, 51), (0, 6)]
+    my_output = []
+    my_input = []
+
+    candidate_count = 0
+    candidates = []
+    candidate_count_at_iteration = []
+    candidate_iteration = []
+    times = []
+
+    X = calculate_discrete_space(dimensions)
+
+    # optimizing search
+    for i in range(iterations):
+        start_time = timeit.default_timer()
+
+        q = mendeleev_rank_to_data(guess)[0]
+        score = fitness_evaluator(q['gap_dir'], q['gap_ind'], q['heat_of_formation'],
+                                       q['vb_dir'], q['cb_dir'], q['vb_ind'], q['cb_ind'])
+        my_input.append(list(guess))
+        my_output.append(score)
+
+        start_time = timeit.default_timer()
+
+        prev_actions = get_actions_from_input(my_input, X)
+        policy = combo.search.discrete.policy(test_X=np.asarray(X))
+        policy.write(prev_actions, np.asarray(my_output))
+        actions = policy.bayes_search(max_num_probes=1, num_search_each_probe=1,
+                                      simulator=None, score='EI', interval=0, num_rand_basis=0)
+        primary_guess = list(get_input_from_actions(actions, X))
+
+        guess = duplicate_check(primary_guess, my_input, X, "combo")
+
+        elapsed = timeit.default_timer() - start_time
+        times.append(elapsed)
+
+        print "CALCULATION:", i + 1, " WITH SCORE:", score
+
+        # Search for entry in GOOD_CANDS_LS
+        transform_entry = (mendeleev_rank2name[my_input[-1][0]], mendeleev_rank2name[my_input[-1][1]],
+                           anion_mendeleev_rank2name[my_input[-1][2]])
+        mod_entry = (name2atomic[transform_entry[0]], name2atomic[transform_entry[1]], anion_name2index[transform_entry[2]])
+        if mod_entry in GOOD_CANDS_LS and mod_entry not in candidates:
+            candidate_count += 1
+            candidates.append(mod_entry)
+            candidate_count_at_iteration.append(candidate_count)
+            candidate_iteration.append(i)
+
+    print "candidates", candidate_count
+    print "These candidates are: ", candidates
+
+    # Plotting
+    if plots =="on":
+        candplot = plt.figure(1)
+        candline = plt.plot(candidate_iteration, candidate_count_at_iteration)
+        plt.setp(candline, linewidth=3, color='g')
+        plt.xlabel("Iterations")
+        plt.ylabel("Candidates Found")
+        plt.title("Candidates vs Iterations")
+
+        timeplot = plt.figure(2)
+        timeline = plt.plot(list(range(iterations)), times)
+        plt.setp(timeline, linewidth=3, color='b')
+        plt.xlabel("Individual Iteration")
+        plt.ylabel("Time needed to execute GP")
+        plt.title("Computational Overhead of Optimization Algorithm")
+        plt.show()
 
     return candidate_iteration, candidate_count_at_iteration, list(range(iterations)), times
 
-
-
-# STATISTICALLY SIGNIFICANT OPTIMIZATION EFFECT GRAPHERS
 def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_guessing="random"):
     '''Run parameters'''
 
@@ -804,13 +815,13 @@ def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_gue
 
     '''Running computations'''
     for i in range(run_num):
-        if initial_guessing == "random":
+        if initial_guessing=="random":
             initial_guess = dummy_minimize([name_index, name_index, anion_names])
         else:
             initial_guess = initial_guessing
 
         skopt_cand_iter, skopt_cand_count_at_iter, iterations, skopt_time = \
-            mendeleev_integer_optimization_line_and_timing(guess=initial_guess, iterations=iter_num)
+            mendeleev_integer_optimization_skopt_line_and_timing( guess=initial_guess, iterations=iter_num)
         combo_cand_iter, combo_cand_count_at_iter, iterations, combo_time = \
             mendeleev_integer_optimization_combo_line_and_timing(guess=initial_guess, iterations=iter_num)
 
@@ -824,90 +835,15 @@ def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_gue
         combo_iters.append(combo_cand_iter)
 
     print "finished optimizing runs"
+
     save_and_show(skopt_iters, skopt_cands, skopt_times, combo_iters, combo_cands, combo_times, iterations)
-
-<<<<<<< HEAD
-
-# EXECUTABLE
-if __name__ == "__main__":
-    # previous statistical comparisons
-    connection = MongoClient()
-    unc = connection.unc.data_raw
-
-    mendeleev_integer_statistical_comparisons(iter_num=2, run_num=2, initial_guessing="random")
-
-
-    # multiprocessing requires mongo instance after forking
-    # connection = MongoClient(connect=False)
-    # unc = connection.unc.data_raw
-    # multiprocessing_mendeleev_comparisons(iter_num=1, run_num=2)
-=======
-def multiprocessing_mendeleev_comparisons(iter_num=5, run_num=5, initial_guessing="random"):
-
-    skopt_cands = Manager().list()
-    skopt_iters = Manager().list()
-    skopt_times = Manager().list()
-    combo_cands = Manager().list()
-    combo_iters = Manager().list()
-    combo_times = Manager().list()
-    iterations = Manager().list()
-
-    # A single run to be optimized (either skopt of combo)
-    def job(type):
-        if type == "skopt":
-            fun = mendeleev_integer_optimization_line_and_timing
-        elif type=="combo":
-            fun = mendeleev_integer_optimization_combo_line_and_timing
-
-        if initial_guessing == "random":
-            initial_guess = dummy_minimize([name_index, name_index, anion_names])
-        else:
-            initial_guess = initial_guessing
-
-        cand_iter, cand_count_at_iter, iterations_single, times = fun(guess=initial_guess, iterations=iter_num)
-
-        if type == "skopt":
-            skopt_cands.append(cand_count_at_iter)
-            skopt_iters.append(cand_iter)
-            skopt_times.append(times)
-        elif type == "combo":
-            combo_cands.append(cand_count_at_iter)
-            combo_iters.append(cand_iter)
-            combo_times.append(times)
-        iterations.append(iterations_single)
-
-    jobs = []
-
-    #TODO: use Pool class instead of Process (pool reallocates processes dynamically as they are finished)
-
-    for i in range(run_num):
-        # p_combo = multiprocessing.Process(target=job, args=("combo",))
-        p_skopt = multiprocessing.Process(target=job, args=("skopt",))
-        # jobs.append(p_combo)
-        jobs.append(p_skopt)
-        # p_combo.start()
-        p_skopt.start()
-
-    for proc in jobs:
-        proc.join()
-
-    print "done optimizing the jobs in parallel"
-
-    skopt_cands = list(skopt_cands)
-    skopt_iters = list(skopt_iters)
-    skopt_times = list(skopt_times)
-    combo_cands = list(combo_cands)
-    combo_iters = list(combo_iters)
-    combo_times = list(combo_times)
-
-    # save_and_show(skopt_iters, skopt_cands, skopt_times, combo_iters, combo_cands, combo_times, iterations)
 
 
 # EXECUTABLE
 if __name__ =="__main__":
+
     # uninformed comparison
     mendeleev_integer_statistical_comparisons(iter_num=2, run_num= 2, initial_guessing="random")
-    # multiprocessing_mendeleev_comparisons(iter_num=50, run_num=2)
 
 
 
@@ -918,9 +854,3 @@ if __name__ =="__main__":
 
 
 
-
-
-
-
-
->>>>>>> parent of cbf5b6b... multiprocessing attempt 2
