@@ -1,5 +1,5 @@
 
- TIME OF RUN: 10:28:28.074766 
+ TIME OF RUN: 10:40:47.260850 
 skopt iterations: [0] 
 skopt std dev iterations: [0] 
 skopt candidate list: [0] 

@@ -8,13 +8,12 @@ from turboworks.discrete_spacify import calculate_discrete_space, duplicate_chec
 from turboworks.dummy_opt import dummy_minimize
 import matplotlib.pyplot as plt
 import datetime
-from multiprocessing import Process, Manager
-import multiprocessing
 from contextlib import contextmanager
 import sys, os
 import timeit
 import warnings
 import pickle
+from pprint import pprint
 
 
 connection = MongoClient()
@@ -78,10 +77,9 @@ def load_exclusions(filename):
         with open(filename) as f:
             return pickle.load(f)
 
-
-# Loads list of tuples based on
 exclusions = load_exclusions("excluded_compounds.p")
-
+gs_rank = load_exclusions("goldschmidt_rank.p")
+gs_halffill_rank = load_exclusions("goldschmidt_rank_halffill.p")
 
 # FITNESS EVALUATORS AND REQUIREMENTS
 def eval_fitness_simple(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_ind, cb_ind):
@@ -220,8 +218,8 @@ def gaussian_pdf(x, mean=0, width=0.5):
 def raw_tuple_to_data(tuple):
     A = main2name[tuple[0]]
     B = main2name[tuple[1]]
-    X = anion_index2name[tuple[2]]
-    doc = unc.find({"A": A, "B": B, "anion": X})
+    anion = anion_index2name[tuple[2]]
+    doc = unc.find({"A": A, "B": B, "anion": anion})
     data_doc = {}
     for document in doc:
         data_doc = document
@@ -238,8 +236,8 @@ def raw_tuple_to_data(tuple):
 def name_to_data(strings):
     A = strings[0]
     B = strings[1]
-    X = strings[2]
-    doc = unc.find({"A": A, "B": B, "anion": X})
+    anion = strings[2]
+    doc = unc.find({"A": A, "B": B, "anion": anion})
     data_doc = {}
     for document in doc:
         data_doc = document
@@ -256,8 +254,8 @@ def name_to_data(strings):
 def mendeleev_rank_to_data(tuple):
     A = mendeleev_rank2name[tuple[0]]
     B = mendeleev_rank2name[tuple[1]]
-    X = anion_mendeleev_rank2name[tuple[2]]
-    doc = unc.find({"A": A, "B": B, "anion": X})
+    anion = anion_mendeleev_rank2name[tuple[2]]
+    doc = unc.find({"A": A, "B": B, "anion": anion})
     data_doc = {}
     for document in doc:
         data_doc = document
@@ -274,8 +272,8 @@ def mendeleev_rank_to_data(tuple):
 def mendeleev_mixed_to_data(mixed_tuple):
     A = mendeleev_rank2name[mixed_tuple[0]]
     B = mendeleev_rank2name[mixed_tuple[1]]
-    X = mixed_tuple[2]
-    doc = unc.find({"A": A, "B": B, "anion": X})
+    anion = mixed_tuple[2]
+    doc = unc.find({"A": A, "B": B, "anion": anion})
     data_doc = {}
     for document in doc:
         data_doc = document
@@ -298,6 +296,10 @@ def get_input_from_actions(actions, X):
             output.append(X[action])
     return output
 def get_actions_from_input(input_list, X):
+
+    # print "IN PROBLEM: input_list:", input_list
+    # print "IN PROBLEM: length X:", len(X)
+
     actions = []
     for input_vector in input_list:
         actions.append(X.index(tuple(input_vector)))
@@ -587,9 +589,8 @@ def mendeleev_mixed_optimization_line_and_timing(iterations=100, guess=("Li", "V
     plt.ylabel("Time needed to execute GP")
     plt.title("Computational Overhead of Optimization Algorithm")
     plt.show()
-
 def mendeleev_integer_optimization_skopt_line_and_timing(iterations=100, guess=("Li", "V", "O3"),
-                                                   fitness_evaluator=eval_fitness_complex, plots="off"):
+                                                        fitness_evaluator=eval_fitness_complex, plots="off"):
     guess = (name2mendeleev_rank[guess[0]], name2mendeleev_rank[guess[1]], anion_name2mendeleev_rank[guess[2]])
     dimensions = [(0, 51), (0, 51), (0, 6)]
     my_output = []
@@ -649,87 +650,17 @@ def mendeleev_integer_optimization_skopt_line_and_timing(iterations=100, guess=(
         plt.title("Computational Overhead of Optimization Algorithm")
         plt.show()
     return candidate_iteration, candidate_count_at_iteration, list(range(iterations)), times
-
-# def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=("Li", "V", "O3"),
-#                                                          fitness_evaluator=eval_fitness_complex, plots="off"):
-#     import timeit
-#
-#     guess = (name2mendeleev_rank[guess[0]], name2mendeleev_rank[guess[1]], anion_name2mendeleev_rank[guess[2]])
-#     dimensions = [(0, 51), (0, 51), (0, 6)]
-#     my_output = []
-#     my_input = []
-#
-#     candidate_count = 0
-#     candidates = []
-#     candidate_count_at_iteration = []
-#     candidate_iteration = []
-#     times = []
-#
-#     X = calculate_discrete_space(dimensions)
-#
-#     # optimizing search
-#     for i in range(iterations):
-#         start_time = timeit.default_timer()
-#
-#         q = mendeleev_rank_to_data(guess)[0]
-#         score = fitness_evaluator(q['gap_dir'], q['gap_ind'], q['heat_of_formation'],
-#                                   q['vb_dir'], q['cb_dir'], q['vb_ind'], q['cb_ind'])
-#         my_input.append(list(guess))
-#         my_output.append(score)
-#
-#         start_time = timeit.default_timer()
-#
-#         prev_actions = get_actions_from_input(my_input, X)
-#         policy = combo.search.discrete.policy(test_X=np.asarray(X))
-#         policy.write(prev_actions, np.asarray(my_output))
-#         actions = policy.bayes_search(max_num_probes=1, num_search_each_probe=1,
-#                                       simulator=None, score='EI', interval=0, num_rand_basis=0)
-#
-#         guess_init = list(get_input_from_actions(actions, X))
-#
-#         guess = duplicate_check(guess_init, my_input, X, 'COMBO')
-#
-#         elapsed = timeit.default_timer() - start_time
-#         times.append(elapsed)
-#
-#         print "CALCULATION:", i + 1, " WITH SCORE:", score
-#
-#         # Search for entry in GOOD_CANDS_LS
-#         transform_entry = (mendeleev_rank2name[my_input[-1][0]], mendeleev_rank2name[my_input[-1][1]],
-#                            anion_mendeleev_rank2name[my_input[-1][2]])
-#         mod_entry = (name2atomic[transform_entry[0]], name2atomic[transform_entry[1]], anion_name2index[transform_entry[2]])
-#         if mod_entry in GOOD_CANDS_LS and mod_entry not in candidates:
-#             candidate_count += 1
-#             candidates.append(mod_entry)
-#             candidate_count_at_iteration.append(candidate_count)
-#             candidate_iteration.append(i)
-#
-#     print "candidates", candidate_count
-#     print "These candidates are: ", candidates
-#
-#     # Plotting
-#     if plots == "on":
-#         candplot = plt.figure(1)
-#         candline = plt.plot(candidate_iteration, candidate_count_at_iteration)
-#         plt.setp(candline, linewidth=3, color='g')
-#         plt.xlabel("Iterations")
-#         plt.ylabel("Candidates Found")
-#         plt.title("Candidates vs Iterations")
-#
-#         timeplot = plt.figure(2)
-#         timeline = plt.plot(list(range(iterations)), times)
-#         plt.setp(timeline, linewidth=3, color='b')
-#         plt.xlabel("Individual Iteration")
-#         plt.ylabel("Time needed to execute GP")
-#         plt.title("Computational Overhead of Optimization Algorithm")
-#         plt.show()
-#
-#     return candidate_iteration, candidate_count_at_iteration, list(range(iterations)), times
-
-
 def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=("Li", "V", "O3"),
                                                          fitness_evaluator=eval_fitness_complex, plots="off"):
-    import timeit
+    @contextmanager
+    def suppress_stdout():
+        with open(os.devnull, "w") as devnull:
+            old_stdout = sys.stdout
+            sys.stdout = devnull
+            try:
+                yield
+            finally:
+                sys.stdout = old_stdout
 
     guess = (name2mendeleev_rank[guess[0]],name2mendeleev_rank[guess[1]], anion_name2mendeleev_rank[guess[2]])
     dimensions = [(0, 51), (0, 51), (0, 6)]
@@ -742,10 +673,9 @@ def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=(
     candidate_iteration = []
     times = []
 
-    X = calculate_discrete_space(dimensions)
-
     # optimizing search
     for i in range(iterations):
+        X = calculate_discrete_space(dimensions)
         start_time = timeit.default_timer()
 
         q = mendeleev_rank_to_data(guess)[0]
@@ -756,17 +686,21 @@ def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=(
 
         start_time = timeit.default_timer()
 
-        prev_actions = get_actions_from_input(my_input, X)
-        policy = combo.search.discrete.policy(test_X=np.asarray(X))
-        policy.write(prev_actions, np.asarray(my_output))
-        actions = policy.bayes_search(max_num_probes=1, num_search_each_probe=1,
-                                      simulator=None, score='EI', interval=0, num_rand_basis=0)
-        primary_guess = list(get_input_from_actions(actions, X))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            # with suppress_stdout():       #basically supressing all combo spam and scikit-learn spams
 
-        guess = duplicate_check(primary_guess, my_input, X, "combo")
+            prev_actions = get_actions_from_input(my_input, X)
+            policy = combo.search.discrete.policy(test_X=np.asarray(X))
+            policy.write(prev_actions, np.asarray(my_output))
+            actions = policy.bayes_search(max_num_probes=1, num_search_each_probe=1,
+                                          simulator=None, score='EI', interval=0, num_rand_basis=0)
+            primary_guess = list(get_input_from_actions(actions, X))
 
-        elapsed = timeit.default_timer() - start_time
-        times.append(elapsed)
+            guess = duplicate_check(primary_guess, my_input, X, "combo")
+
+            elapsed = timeit.default_timer() - start_time
+            times.append(elapsed)
 
         print "CALCULATION:", i + 1, " WITH SCORE:", score
 
@@ -802,6 +736,7 @@ def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=(
 
     return candidate_iteration, candidate_count_at_iteration, list(range(iterations)), times
 
+# STATISTICALLY SIGNIFICANT OPTIMIZATION FUNCTIONS
 def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_guessing="random"):
     '''Run parameters'''
 
@@ -843,9 +778,10 @@ def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_gue
 if __name__ =="__main__":
 
     # uninformed comparison
-    mendeleev_integer_statistical_comparisons(iter_num=2, run_num= 2, initial_guessing="random")
-
-
+    # mendeleev_integer_statistical_comparisons(iter_num=30, run_num= 1, initial_guessing="random")
+    # pprint(gs_rank[0])
+    # pprint(gs_halffill_rank[0])
+    mendeleev_integer_optimization_combo_line_and_timing(iterations=20, guess=("Al", "Al", "N3"))
 
 
 
