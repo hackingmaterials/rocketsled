@@ -62,3 +62,6 @@ testing_dir*
 
 # .DS_Store (native mac OSX files)
 .DS_Store
+
+# Huge DB file
+unc_inversedesign/
