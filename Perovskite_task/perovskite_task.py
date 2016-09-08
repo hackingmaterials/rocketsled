@@ -31,7 +31,7 @@ GOOD_CANDS_OS = [(20, 50, 0), (37, 22, 4), (37, 41, 0), (38, 22, 0), (38, 31, 4)
                  (56, 49, 4)]  # OXIDE SHIELDS (8)
 NUM_CANDS = 18928
 """
-* Main index ranks the elements based on their atomic number or mendeleev number(continuous)
+* Main index ranks the elements based on their atomic number
 * Atomic index is the elements as atomic number
 * Name index is the names of the elements
 * Mendeleev index is the elements as Mendeleev style number
@@ -76,8 +76,23 @@ def load_exclusions(filename):
     if os.path.exists(filename):
         with open(filename) as f:
             return pickle.load(f)
+def transform_exclusions(exclusions):
+    '''transforming atomic --> mendeleev rank'''
+    mendeleev_exclusions=[]
+    for exclusion in exclusions:
+        print exclusion
+        transform_exclusion = (atomic2name[exclusion[0]], atomic2name[exclusion[1]],
+                               anion_index2name[exclusion[2]])
+        print transform_exclusion
+        mendeleev_exclusion = (name2mendeleev_rank[transform_exclusion[0]],
+                               name2mendeleev_rank[transform_exclusion[1]],
+                               anion_name2mendeleev_rank[transform_exclusion[2]])
+        print mendeleev_exclusion
+        mendeleev_exclusions.append(mendeleev_exclusion)
+    return mendeleev_exclusions
 
-exclusions = load_exclusions("excluded_compounds.p")
+chemical_exclusions = load_exclusions("excluded_compounds.p") # these are atomic numbers
+mendeleev_chemical_exclusions = transform_exclusions(chemical_exclusions)
 gs_rank = load_exclusions("goldschmidt_rank.p")
 gs_halffill_rank = load_exclusions("goldschmidt_rank_halffill.p")
 
@@ -688,19 +703,19 @@ def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=(
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            # with suppress_stdout():       #basically supressing all combo spam and scikit-learn spams
+            with suppress_stdout():       #basically supressing all combo spam and scikit-learn spams
 
-            prev_actions = get_actions_from_input(my_input, X)
-            policy = combo.search.discrete.policy(test_X=np.asarray(X))
-            policy.write(prev_actions, np.asarray(my_output))
-            actions = policy.bayes_search(max_num_probes=1, num_search_each_probe=1,
-                                          simulator=None, score='EI', interval=0, num_rand_basis=0)
-            primary_guess = list(get_input_from_actions(actions, X))
+                prev_actions = get_actions_from_input(my_input, X)
+                policy = combo.search.discrete.policy(test_X=np.asarray(X))
+                policy.write(prev_actions, np.asarray(my_output))
+                actions = policy.bayes_search(max_num_probes=1, num_search_each_probe=1,
+                                              simulator=None, score='EI', interval=0, num_rand_basis=0)
+                primary_guess = list(get_input_from_actions(actions, X))
 
-            guess = duplicate_check(primary_guess, my_input, X, "combo")
+                guess = duplicate_check(primary_guess, my_input, X, "combo")
 
-            elapsed = timeit.default_timer() - start_time
-            times.append(elapsed)
+                elapsed = timeit.default_timer() - start_time
+                times.append(elapsed)
 
         print "CALCULATION:", i + 1, " WITH SCORE:", score
 
@@ -778,11 +793,12 @@ def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_gue
 if __name__ =="__main__":
 
     # uninformed comparison
-    # mendeleev_integer_statistical_comparisons(iter_num=30, run_num= 1, initial_guessing="random")
+    # mendeleev_integer_statistical_comparisons(iter_num=500, run_num= 1, initial_guessing="random")
     # pprint(gs_rank[0])
     # pprint(gs_halffill_rank[0])
-    mendeleev_integer_optimization_combo_line_and_timing(iterations=20, guess=("Al", "Al", "N3"))
+    # mendeleev_integer_optimization_combo_line_and_timing(iterations=20, guess=("Al", "Al", "N3"))
 
+    print "done"
 
 
 
