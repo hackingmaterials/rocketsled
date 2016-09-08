@@ -80,19 +80,16 @@ def transform_exclusions(exclusions):
     '''transforming atomic --> mendeleev rank'''
     mendeleev_exclusions=[]
     for exclusion in exclusions:
-        print exclusion
         transform_exclusion = (atomic2name[exclusion[0]], atomic2name[exclusion[1]],
                                anion_index2name[exclusion[2]])
-        print transform_exclusion
         mendeleev_exclusion = (name2mendeleev_rank[transform_exclusion[0]],
                                name2mendeleev_rank[transform_exclusion[1]],
                                anion_name2mendeleev_rank[transform_exclusion[2]])
-        print mendeleev_exclusion
         mendeleev_exclusions.append(mendeleev_exclusion)
     return mendeleev_exclusions
 
 chemical_exclusions = load_exclusions("excluded_compounds.p") # these are atomic numbers
-mendeleev_chemical_exclusions = transform_exclusions(chemical_exclusions)
+mendeleev_chemical_exclusions = transform_exclusions(chemical_exclusions) # these are via mendeleev rank
 gs_rank = load_exclusions("goldschmidt_rank.p")
 gs_halffill_rank = load_exclusions("goldschmidt_rank_halffill.p")
 

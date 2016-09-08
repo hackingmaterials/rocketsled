@@ -1,5 +1,6 @@
 from perovskite_task import *
 
+# SAVING AND GRAPHING
 def save_it(trial_iters, trial_cands, trial_times=None, name="placeholder"):
 
     '''Save Results'''
@@ -26,7 +27,12 @@ def save_it(trial_iters, trial_cands, trial_times=None, name="placeholder"):
         text_file.write("    {} iterations: {} \n".format(name,trial_iters))
         text_file.write("    {} std dev iterations: {} \n".format(name, trial_iters_std))
         text_file.write("    {} candidate list: {} \n".format(name, trial_cands))
+def graph_one():
+    pass
+def graph_all():
+    pass
 
+# INIDIVIDUAL TRIALS
 def skopt_trial(cands=1, guess=("Li", "V", "O3"),fitness_evaluator=eval_fitness_complex,exclusions=None):
     '''A complete, individual skopt trial
     Remeber, the exclusions should be in mendeleev form'''
@@ -55,6 +61,14 @@ def skopt_trial(cands=1, guess=("Li", "V", "O3"),fitness_evaluator=eval_fitness_
             q = mendeleev_rank_to_data(guess)[0]
             score = -1 * fitness_evaluator(q['gap_dir'], q['gap_ind'], q['heat_of_formation'],
                                            q['vb_dir'], q['cb_dir'], q['vb_ind'], q['cb_ind'])
+
+            # To prevent a good first guess from being overwritten
+            if current_iteration==1:
+                if tuple(guess) not in exclusions:
+                    my_input.append(list(guess))
+                    my_output.append(score)
+                    break
+
             my_input.append(list(guess))
             my_output.append(score)
             guess = gp_minimize(my_input, my_output, dimensions)
@@ -62,8 +76,9 @@ def skopt_trial(cands=1, guess=("Li", "V", "O3"),fitness_evaluator=eval_fitness_
             if tuple(guess) not in exclusions:
                 continue_exclusions=False
             elif tuple(guess) in exclusions:
-                print tuple(guess) + "EXCLUDED!"
+                # print "MENDELEEV RANK:", tuple(guess), "EXCLUDED!"
                 my_output[-1] = 0
+        # print "my_input, my_output
 
         elapsed = timeit.default_timer() - start_time
         times.append(elapsed)
@@ -112,6 +127,11 @@ def combo_trial(cands=1, guess=("Li", "V", "O3"),fitness_evaluator=eval_fitness_
     while candidate_count != cands:
         current_iteration+=1
         X = calculate_discrete_space(dimensions)
+        print "PREV LEN:", len(X)
+        for exclusion in exclusions:
+            X.remove(exclusion)
+        print "LEN:", len(X)
+        print X[3234]
         start_time = timeit.default_timer()
 
         q = mendeleev_rank_to_data(guess)[0]
@@ -153,21 +173,28 @@ def combo_trial(cands=1, guess=("Li", "V", "O3"),fitness_evaluator=eval_fitness_
     print "COMBO CANDIDATES", candidates
 
     return candidate_iteration, candidate_count_at_iteration, times
+def chemical_rules_trial(cands=1):
+    pass
+def random_trial(cands=1):
+    pass
+def sigopt_trial(cands=1):
+    pass
 
+# REPEATING/PARALLEL TRIALS
+def multiprocessor():
+    pass
 
-combo_iters= [[36, 286, 294], [45,53,109]]
-combo_cands = [[1, 2, 3],[1,2,3]]
-skopt_iters =  [[222, 296],[233, 405]]
-skopt_cands = [[1, 2],[1,2]]
-iterations = [1,500]
 
 if __name__== "__main__":
     # print len(exclusions)
     # combo_trial(cands=2)
+    # combo_trial(cands=2, exclusions=mendeleev_chemical_exclusions)
     skopt_trial(cands=2, exclusions=mendeleev_chemical_exclusions)
     # skopt_trial(cands=2)
-# save_it(combo_iters, combo_cands, iterations=iterations, name="combo")
-# save_it(skopt_iters, skopt_cands, iterations=iterations, name="skopt")
+    # if (0, 14, 3) in mendeleev_chemical_exclusions:
+    #     print "yep"
+    # else:
+    #     print "nope"
 
 
 
