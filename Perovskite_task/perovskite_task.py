@@ -790,15 +790,12 @@ def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_gue
 if __name__ =="__main__":
 
     # uninformed comparison
-    # mendeleev_integer_statistical_comparisons(iter_num=500, run_num= 1, initial_guessing="random")
+    mendeleev_integer_statistical_comparisons(iter_num=500, run_num= 3, initial_guessing="random")
     # pprint(gs_rank[0])
     # pprint(gs_halffill_rank[0])
     # mendeleev_integer_optimization_combo_line_and_timing(iterations=20, guess=("Al", "Al", "N3"))
 
     print "done"
-
-
-
 
 
 

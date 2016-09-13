@@ -1,4 +1,6 @@
 from perovskite_task import *
+from sigopt import Connection
+import time
 
 # SAVING AND GRAPHING
 def save_it(trial_iters, trial_cands, trial_times=None, name="placeholder"):
@@ -117,6 +119,9 @@ def combo_trial(cands=1, guess=("Li", "V", "O3"),fitness_evaluator=eval_fitness_
             finally:
                 sys.stdout = old_stdout
 
+    if exclusions==None:
+        exclusions=[]
+
     guess = (name2mendeleev_rank[guess[0]],name2mendeleev_rank[guess[1]], anion_name2mendeleev_rank[guess[2]])
     dimensions = [(0, 51), (0, 51), (0, 6)]
     my_output = []
@@ -133,13 +138,8 @@ def combo_trial(cands=1, guess=("Li", "V", "O3"),fitness_evaluator=eval_fitness_
     while candidate_count != cands:
         current_iteration+=1
         X = calculate_discrete_space(dimensions)
-        # print "PREV LEN:", len(X)
         for exclusion in exclusions:
             X.remove(exclusion)
-        # print "LEN:", len(X)
-        # print X[3234]
-        start_time = timeit.default_timer()
-
         q = mendeleev_rank_to_data(guess)[0]
         score = fitness_evaluator(q['gap_dir'], q['gap_ind'], q['heat_of_formation'],
                                        q['vb_dir'], q['cb_dir'], q['vb_ind'], q['cb_ind'])
@@ -179,7 +179,93 @@ def combo_trial(cands=1, guess=("Li", "V", "O3"),fitness_evaluator=eval_fitness_
     print "COMBO CANDIDATES", candidates
 
     return candidate_iteration, candidate_count_at_iteration, times
-def chemical_rules_trial(cands=1,ranking=gs_rank, exclusions=None):
+def sigopt_trial(cands=1,guess=("Li","V","O3"),interval=20,fitness_evaluator=eval_fitness_complex,exclusions=None,
+                 token="VEXZNUGYFSANVIWWDECDVMUELNFIAVWNJXQDSXALTMBOKAJQ"):
+
+    #todo: implement exlusions
+    #todo: implement duplicate check
+
+    conn = Connection(client_token=token)
+    dimensions = [(0, 51), (0, 51), (0, 6)]
+
+    if exclusions==None:
+        exclusions=[]
+
+    guess = (name2mendeleev_rank[guess[0]],name2mendeleev_rank[guess[1]], anion_name2mendeleev_rank[guess[2]])
+
+    candidate_count = 0
+    candidates = []
+    candidate_count_at_iteration = [0]
+    candidate_iteration = [0]
+    times = []
+    current_iteration=0
+
+    experiment = conn.experiments().create(
+        name='SigOpt Perovskite Trial',
+        parameters=[
+            dict(name='A', type='int', bounds=dict(min=0, max=51)),
+            dict(name='B', type='int', bounds=dict(min=0, max=51)),
+            dict(name='anion', type='int', bounds=dict(min=0, max=6))],)
+
+    def evaluate_model(assignments):
+        assign_A = assignments['A']
+        assign_B = assignments['B']
+        assign_X = assignments['anion']
+        q = mendeleev_rank_to_data((assign_A, assign_B, assign_X))[0]
+        score = fitness_evaluator(q['gap_dir'], q['gap_ind'], q['heat_of_formation'],
+                                  q['vb_dir'], q['cb_dir'], q['vb_ind'], q['cb_ind'])
+        return score
+
+    def get_suggestion(iter_num):
+        if iter_num%interval==0:
+            return True
+        else:
+            return False
+
+    while candidate_count != cands:
+        current_iteration+=1
+        start_time = time.time()
+
+        if get_suggestion(current_iteration):
+            guess = conn.experiments(experiment.id).suggestions().create(state="closed")
+            guess = {'A':guess.assignments['A'], 'B':guess.assignments['B'], 'anion':guess.assignments['anion']}
+            # print "232", guess
+        elif current_iteration==1:
+            guess = {'A': guess[0], 'B': guess[1], 'anion': guess[2]}
+            # print "234", guess
+        else:
+            arr_guess = (dummy_minimize(dimensions))
+            # print "236", arr_guess
+            guess = {'A':arr_guess[0], 'B':arr_guess[1], 'anion':arr_guess[2]}
+            # print "238", guess
+
+        score = evaluate_model(guess)  # score guess from list format
+
+        # Record current guess
+        conn.experiments(experiment.id).observations().create(
+            assignments=guess, value=score)
+        elapsed = time.time() - start_time
+        times.append(elapsed)
+
+        print "experiment ID", experiment.id
+
+        print "SIGOPT CALCULATION", current_iteration, "WITH SCORE", score
+
+        # Search for entry in GOOD_CANDS_LS
+        tuple_guess = (guess['A'], guess['B'], guess['anion'])
+        transform_entry = (mendeleev_rank2name[tuple_guess[0]], mendeleev_rank2name[tuple_guess[1]],
+                           anion_mendeleev_rank2name[tuple_guess[2]])
+        mod_entry = (
+        name2atomic[transform_entry[0]], name2atomic[transform_entry[1]], anion_name2index[transform_entry[2]])
+        if mod_entry in GOOD_CANDS_LS and mod_entry not in candidates:
+            candidate_count += 1
+            candidates.append(mod_entry)
+            candidate_count_at_iteration.append(candidate_count)
+            candidate_iteration.append(current_iteration)
+
+    print "SIGOPT CANDIDATES", candidates
+    return candidate_iteration, candidate_count_at_iteration, times
+def chemical_rules_trial(cands=1,ranking=gs_rank, exclusions=chemical_exclusions):
     candidate_count=0
     candidates=[]
     candidate_count_at_iteration=[0]
@@ -209,35 +295,64 @@ def chemical_rules_trial(cands=1,ranking=gs_rank, exclusions=None):
     print "CHEM RULE CANDIDATES", candidates
     return candidate_iteration, candidate_count_at_iteration
 def random_trial(cands=1):
-    pass
-def sigopt_trial(cands=1):
-    pass
+    candidate_count_at_iteration = list(range(cands))
+    candidate_iteration = [946.4 * element for element in candidate_count_at_iteration]
+    return candidate_iteration, candidate_count_at_iteration
 
 # REPEATING/PARALLEL TRIALS
-def multiprocessor():
+def multiprocessor(trial_types, trial_runs):
+    '''
+    skopt_trial => 'skopt'
+    combo_trial => 'combo'
+    chemical_rules_trial => 'cherules'
+    random_trial => 'random'
+    sigopt_trial => 'sigopt'
+    :param trial_types: ['sigopt', 'random', 'skopt']
+    :param trial_runsl: [20, 1, 20]
+    '''
+    def worker():
+        pass
     pass
 
-if __name__== "__main__":
-    # print len(exclusions)
-    # combo_trial(cands=2)
-    # combo_trial(cands=2, exclusions=mendeleev_chemical_exclusions)
-    # skopt_trial(cands=2, exclusions=mendeleev_chemical_exclusions)
-    # skopt_trial(cands=2)
-    # if (0, 14, 3) in mendeleev_chemical_exclusions:
-    #     print "yep"
-    # else:
-    #     print "nope"
 
-    crs_iteration, crs_count_at_iteration = chemical_rules_trial(cands=5, exclusions=chemical_exclusions)
-    crs_iteration2, crs_count_at_iteration2 = chemical_rules_trial(cands=5)
-    # graph_one(crs_iteration, crs_count_at_iteration,"Chemical Rule Search")
+# GRAPHING STUFF
+def rules_vs_rules_and_exclusions_gs_rank():
+    crs_iteration, crs_count_at_iteration = chemical_rules_trial(cands=20, exclusions=chemical_exclusions)
+    crs_iteration2, crs_count_at_iteration2 = chemical_rules_trial(cands=20)
+    rs_iteration, rs_count_at_iteration = random_trial(cands=20)
 
     candplot = plt.figure(1)
     candline = plt.plot(crs_iteration,  crs_count_at_iteration)
     candline2 = plt.plot(crs_iteration2, crs_count_at_iteration2)
+    candline3 = plt.plot(rs_iteration, rs_count_at_iteration)
     plt.setp(candline, linewidth=3, color='g')
-    plt.setp(candline, linewidth=3, color='r')
+    plt.setp(candline2, linewidth=3, color='r')
+    plt.setp(candline3, linewidth=3, color='black')
     plt.xlabel("Iterations")
     plt.ylabel("Candidates Found")
     plt.title("{}: Candidates vs Iterations".format("Chemical Rules Search"))
     plt.show()
+
+if __name__== "__main__":
+
+    so_cands, so_iters, so_times = sigopt_trial(cands=2, guess=("Li", "Li", "N3"))
+    save_it(so_iters, so_times,name="sigopt")
+    # c_iteration, c_count_at_iteration, c_times = combo_trial(cands=5, guess=("Li","Al","N3"))
+    # c_ex_iteration, c_ex_count_at_iteration, c_ex_times = combo_trial(cands=5, guess=("Li","Al","N3"),
+    #                                                                   exclusions=mendeleev_chemical_exclusions)
+    # rs_iteration, rs_count_at_iteration = random_trial(cands=5)
+    # crs_iteration, crs_count_at_iteration = chemical_rules_trial(cands=5)
+    #
+    # candplot = plt.figure(1)
+    # candline1 = plt.plot(c_iteration, c_count_at_iteration)
+    # candline2 = plt.plot(c_ex_iteration, c_ex_count_at_iteration)
+    # candline3 = plt.plot(rs_iteration, rs_count_at_iteration)
+    # candline4 = plt.plot(crs_iteration, crs_count_at_iteration)
+    # plt.setp(candline1, linewidth=3, color='green')
+    # plt.setp(candline2, linewidth=3, color='blue')
+    # plt.setp(candline3, linewidth=3, color='black')
+    # plt.setp(candline4, linewidth=3, color='r')
+    # plt.xlabel("Iterations")
+    # plt.ylabel("Candidates Found")
+    # plt.title("{}: Candidates vs Iterations".format("Combo results"))
+    # plt.show()
