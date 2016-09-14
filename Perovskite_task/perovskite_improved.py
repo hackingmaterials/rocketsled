@@ -40,6 +40,11 @@ def graph_one(candidate_iterations, candidate_count, text):
 def graph_all():
     pass
 
+# ASSORTED FUNCTIONS
+def del_sigopt_connection(experiment_id, token="VEXZNUGYFSANVIWWDECDVMUELNFIAVWNJXQDSXALTMBOKAJQ"):
+    conn = Connection(client_token=token)
+    conn.experiments(experiment_id).delete()
+
 # INIDIVIDUAL TRIALS
 def skopt_trial(cands=1, guess=("Li", "V", "O3"),fitness_evaluator=eval_fitness_complex,exclusions=None):
     '''A complete, individual skopt trial
@@ -86,7 +91,6 @@ def skopt_trial(cands=1, guess=("Li", "V", "O3"),fitness_evaluator=eval_fitness_
             elif tuple(guess) in exclusions:
                 # print "MENDELEEV RANK:", tuple(guess), "EXCLUDED!"
                 my_output[-1] = 0
-        # print "my_input, my_output
 
         elapsed = timeit.default_timer() - start_time
         times.append(elapsed)
@@ -179,14 +183,12 @@ def combo_trial(cands=1, guess=("Li", "V", "O3"),fitness_evaluator=eval_fitness_
     print "COMBO CANDIDATES", candidates
 
     return candidate_iteration, candidate_count_at_iteration, times
-def sigopt_trial(cands=1,guess=("Li","V","O3"),interval=20,fitness_evaluator=eval_fitness_complex,exclusions=None,
-                 token="VEXZNUGYFSANVIWWDECDVMUELNFIAVWNJXQDSXALTMBOKAJQ"):
+def sigopt_trial(cands=1,guess=("Li","V","O3"),fitness_evaluator=eval_fitness_complex,exclusions=None,
+                 token="VEXZNUGYFSANVIWWDECDVMUELNFIAVWNJXQDSXALTMBOKAJQ", experiment_id=None):
 
-    #todo: implement exlusions
     #todo: implement duplicate check
 
     conn = Connection(client_token=token)
-    dimensions = [(0, 51), (0, 51), (0, 6)]
 
     if exclusions==None:
         exclusions=[]
@@ -199,60 +201,63 @@ def sigopt_trial(cands=1,guess=("Li","V","O3"),interval=20,fitness_evaluator=eva
     candidate_iteration = [0]
     times = []
     current_iteration=0
+    true_iteration=0
 
-    experiment = conn.experiments().create(
-        name='SigOpt Perovskite Trial',
-        parameters=[
-            dict(name='A', type='int', bounds=dict(min=0, max=51)),
-            dict(name='B', type='int', bounds=dict(min=0, max=51)),
-            dict(name='anion', type='int', bounds=dict(min=0, max=6))],)
+    if experiment_id==None:
+        experiment = conn.experiments().create(
+            name='SigOpt Perovskite Trial',
+            parameters=[
+                dict(name='A', type='int', bounds=dict(min=0, max=51)),
+                dict(name='B', type='int', bounds=dict(min=0, max=51)),
+                dict(name='anion', type='int', bounds=dict(min=0, max=6))],)
+    else:
+        class ExperimentClass():
+            id = experiment_id
+        experiment=ExperimentClass()
+
+    print "experiment ID", experiment.id
 
     def evaluate_model(assignments):
         assign_A = assignments['A']
         assign_B = assignments['B']
         assign_X = assignments['anion']
         q = mendeleev_rank_to_data((assign_A, assign_B, assign_X))[0]
-        score = fitness_evaluator(q['gap_dir'], q['gap_ind'], q['heat_of_formation'],
+        fit_score = fitness_evaluator(q['gap_dir'], q['gap_ind'], q['heat_of_formation'],
                                   q['vb_dir'], q['cb_dir'], q['vb_ind'], q['cb_ind'])
-        return score
-
-    def get_suggestion(iter_num):
-        if iter_num%interval==0:
-            return True
-        else:
-            return False
+        return fit_score
 
     while candidate_count != cands:
         current_iteration+=1
+        true_iteration+=1
         start_time = time.time()
 
-        if get_suggestion(current_iteration):
-            guess = conn.experiments(experiment.id).suggestions().create(state="closed")
-            guess = {'A':guess.assignments['A'], 'B':guess.assignments['B'], 'anion':guess.assignments['anion']}
-            # print "232", guess
-        elif current_iteration==1:
-            guess = {'A': guess[0], 'B': guess[1], 'anion': guess[2]}
-            # print "234", guess
+        if true_iteration > 1200: # avoiding overrunning sigopt limit
+            break
+
+        # Have SigOpt create suggestion and score data
+        guess = conn.experiments(experiment.id).suggestions().create()
+        tuple_guess = (guess.assignments['A'], guess.assignments['B'], guess.assignments['anion'])
+        if tuple_guess in exclusions:
+            current_iteration-=1
+            score = 0
         else:
-            arr_guess = (dummy_minimize(dimensions))
-            # print "236", arr_guess
-            guess = {'A':arr_guess[0], 'B':arr_guess[1], 'anion':arr_guess[2]}
-            # print "238", guess
+            score = evaluate_model(guess.assignments)
+            print "SIGOPT CALCULATION", current_iteration, "WITH SCORE", score
 
-        score = evaluate_model(guess)  # score guess from list format
+        observation = conn.experiments(experiment.id).observations().create(
+            suggestion=guess.id,
+            value=score,
+        )
 
-        # Record current guess
-        conn.experiments(experiment.id).observations().create(
-            assignments=guess, value=score)
+        # uncomment this to go back to deleting the observations, problem is that sigopt runs same stuff over again
+        # if tuple_guess in exclusions:
+        #     conn.experiments(experiment.id).observations(observation.id).delete()
+        #     continue
+
         elapsed = time.time() - start_time
         times.append(elapsed)
 
-        print "experiment ID", experiment.id
-
-        print "SIGOPT CALCULATION", current_iteration, "WITH SCORE", score
-
         # Search for entry in GOOD_CANDS_LS
-        tuple_guess = (guess['A'], guess['B'], guess['anion'])
         transform_entry = (mendeleev_rank2name[tuple_guess[0]], mendeleev_rank2name[tuple_guess[1]],
                            anion_mendeleev_rank2name[tuple_guess[2]])
         mod_entry = (
@@ -314,11 +319,10 @@ def multiprocessor(trial_types, trial_runs):
         pass
     pass
 
-
 # GRAPHING STUFF
 def rules_vs_rules_and_exclusions_gs_rank():
     crs_iteration, crs_count_at_iteration = chemical_rules_trial(cands=20, exclusions=chemical_exclusions)
-    crs_iteration2, crs_count_at_iteration2 = chemical_rules_trial(cands=20)
+    crs_iteration2, crs_count_at_iteration2 = chemical_rules_trial(cands=20, exclusions=None)
     rs_iteration, rs_count_at_iteration = random_trial(cands=20)
 
     candplot = plt.figure(1)
@@ -335,24 +339,16 @@ def rules_vs_rules_and_exclusions_gs_rank():
 
 if __name__== "__main__":
 
-    so_cands, so_iters, so_times = sigopt_trial(cands=2, guess=("Li", "Li", "N3"))
-    save_it(so_iters, so_times,name="sigopt")
+    # del_sigopt_connection(experiment_id=7403)
+    # so_iters, so_cands, so_times = sigopt_trial(cands=1, exclusions=mendeleev_chemical_exclusions)
+    s_iters, s_cands, s_times = skopt_trial(cands=1, exclusions=mendeleev_chemical_exclusions)
+
+    # save_it(so_iters, so_cands,name="sigopt")
+    print s_iters, s_cands
+    # print so_iters, so_cands
+
+
     # c_iteration, c_count_at_iteration, c_times = combo_trial(cands=5, guess=("Li","Al","N3"))
     # c_ex_iteration, c_ex_count_at_iteration, c_ex_times = combo_trial(cands=5, guess=("Li","Al","N3"),
     #                                                                   exclusions=mendeleev_chemical_exclusions)
-    # rs_iteration, rs_count_at_iteration = random_trial(cands=5)
-    # crs_iteration, crs_count_at_iteration = chemical_rules_trial(cands=5)
-    #
-    # candplot = plt.figure(1)
-    # candline1 = plt.plot(c_iteration, c_count_at_iteration)
-    # candline2 = plt.plot(c_ex_iteration, c_ex_count_at_iteration)
-    # candline3 = plt.plot(rs_iteration, rs_count_at_iteration)
-    # candline4 = plt.plot(crs_iteration, crs_count_at_iteration)
-    # plt.setp(candline1, linewidth=3, color='green')
-    # plt.setp(candline2, linewidth=3, color='blue')
-    # plt.setp(candline3, linewidth=3, color='black')
-    # plt.setp(candline4, linewidth=3, color='r')
-    # plt.xlabel("Iterations")
-    # plt.ylabel("Candidates Found")
-    # plt.title("{}: Candidates vs Iterations".format("Combo results"))
-    # plt.show()
+
