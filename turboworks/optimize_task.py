@@ -75,7 +75,6 @@ class SKOptimizeTask(FireTaskBase):
         # Initialize new workflow
         return FWAction(additions=self.workflow_creator(updated_dictionary, 'skopt_gp'))
 
-
 @explicit_serialize
 class DummyOptimizeTask(FireTaskBase):
     """
@@ -122,7 +121,6 @@ class DummyOptimizeTask(FireTaskBase):
         updated_dictionary["dimensions"] = current_dimensions
 
         return FWAction(additions=self.workflow_creator(updated_dictionary, 'dummy'))
-
 
 @explicit_serialize
 class COMBOptomizeTask(FireTaskBase):
@@ -215,8 +213,6 @@ class COMBOptomizeTask(FireTaskBase):
 
         # Initialize new workflow
         return FWAction(additions=self.workflow_creator(updated_dictionary, 'combo_gp'))
-
-
 
 def get_data(wf_func, fw_spec, output_datatypes = None, host='localhost', port=27017):
 

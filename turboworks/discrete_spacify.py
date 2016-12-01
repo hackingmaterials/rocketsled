@@ -75,5 +75,3 @@ def duplicate_check(new_input, opt_inputs, X, optimizer):
             return list(remaining_inputs[index])
     else:
         return new_input
-
-

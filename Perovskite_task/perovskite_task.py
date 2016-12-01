@@ -27,6 +27,9 @@ This file is doing perovskite testing without using the TW/FW overhead
 GOOD_CANDS_LS = [(3, 23, 0), (11, 51, 0), (12, 73, 1), (20, 32, 0), (20, 50, 0), (20, 73, 1), (38, 32, 0), (38, 50, 0),
                  (38, 73, 1), (39, 73, 2), (47, 41, 0), (50, 22, 0), (55, 41, 0), (56, 31, 4), (56, 49, 4), (56, 50, 0),
                  (56, 73, 1), (57, 22, 1), (57, 73, 2), (82, 31, 4)]  # LIGHT SPLITTERS (20)
+GOOD_CANDS_LS_WRONG = [(3, 23, 0), (11, 51, 0), (12, 73, 1), (20, 32, 0), (49, 72, 4), (20, 73, 1), (38, 32, 0), (38, 50, 0),
+                 (38, 73, 1), (39, 73, 2), (47, 41, 0), (50, 22, 0), (55, 41, 0), (56, 31, 4), (56, 49, 4), (56, 50, 0),
+                 (56, 73, 1), (57, 22, 1), (57, 73, 2), (82, 31, 4)]  # LIGHT SPLITTERS (20)
 GOOD_CANDS_OS = [(20, 50, 0), (37, 22, 4), (37, 41, 0), (38, 22, 0), (38, 31, 4), (38, 50, 0), (55, 73, 0),
                  (56, 49, 4)]  # OXIDE SHIELDS (8)
 NUM_CANDS = 18928
@@ -47,10 +50,15 @@ name_index = ['Li', 'Be', 'B', 'Na', 'Mg', 'Al', 'Si', 'K', 'Ca', 'Sc', 'Ti', 'V
 mendeleev_index = [1, 67, 72, 2, 68, 73, 78, 3, 7, 11, 43, 46, 49, 52, 55, 58, 61, 64, 69, 74, 79, 84, 4, 8, 12, 44, 47,
                    50, 56, 59, 62, 65, 70, 75, 80,
                    85, 90, 5, 9, 13, 45, 48, 51, 54, 57, 60, 63, 66, 71, 76, 81, 86]
+eneg = [0.98, 1.57, 2.04, 0.93, 1.31, 1.61, 1.90, 0.82, 1.0, 1.36, 1.54, 1.63, 1.66, 1.55, 1.83, 1.88, 1.91, 1.90,
+        1.65, 1.81, 2.01, 2.18, 0.82, 0.95, 1.22, 1.33, 1.6, 2.16, 2.2, 2.28,2.20, 1.93, 1.69, 1.78, 1.96, 2.05,
+        2.1, 0.79, 0.89, 1.10, 1.3, 1.5, 2.36, 1.9, 2.2, 2.2, 2.28, 2.54, 2.0, 1.62, 2.33, 2.02]
 anion_index = list(range(7))
 anion_names = ['O3', 'O2N', 'ON2', 'N3', 'O2F', 'OFN', 'O2S']
 anion_mendeleev = [261, 256, 251, 246, 267, 262, 262]
 anion_mendeleev_rank = [3, 2, 1, 0, 6, 5, 4]  # rank based on mendeleev number
+anion_eneg_avg = [3.44, 3.307, 3.17, 3.04, 3.62, 3.49, 3.153]
+anion_eneg_rank = [4, 3, 2, 0, 6, 5, 1]
 
 # CONVERSION DICTIONARIES
 main2atomic = dict(zip(main_index, atomic_index))
@@ -62,15 +70,34 @@ name2main = dict(zip(name_index, main_index))
 anion_name2index = dict(zip(anion_names, anion_index))
 anion_index2name = dict(zip(anion_index, anion_names))
 name2mendeleev = dict(zip(name_index, mendeleev_index))
-anion_mendeleev_rank2name = dict(zip(anion_mendeleev_rank, anion_names))
+mendeleev_rank2anion_name = dict(zip(anion_mendeleev_rank, anion_names))
 anion_name2mendeleev_rank = dict(zip(anion_names, anion_mendeleev_rank))
+name2eneg = dict(zip(name_index, eneg))
+anion_name2eneg_rank = dict(zip(anion_names, anion_eneg_rank))
+eneg_rank2anion_name = dict(zip(anion_eneg_rank, anion_names))
+
 
 mendeleev_rank2name = dict(zip(main_index, sorted(name2mendeleev, key=name2mendeleev.get)))
 name2mendeleev_rank = dict(zip(sorted(name2mendeleev, key=name2mendeleev.get), main_index))
+eneg_rank2name = dict(zip(main_index, sorted(name2eneg, key=name2eneg.get)))
+name2eneg_rank = dict(zip(sorted(name2eneg, key=name2eneg.get), main_index))
+
+def mendeleev2name(guess):
+    transform_entry = (mendeleev_rank2name[guess[0]], mendeleev_rank2name[guess[1]],
+                       mendeleev_rank2anion_name[guess[2]])
+    return transform_entry
+def mendeleev2atomic(guess):
+    transform_entry = mendeleev2name(guess)
+    mod_entry = (
+        name2atomic[transform_entry[0]], name2atomic[transform_entry[1]], anion_name2index[transform_entry[2]])
+    return mod_entry
+def eneg_rank2namefn(guess):
+    transform_entry = (eneg_rank2name[guess[0]], eneg_rank2name[guess[1]],
+                        eneg_rank2anion_name[guess[2]])
+    return transform_entry
 
 
 # EXCLUSIONS
-# TODO: implement goldschmidt ranking somehow?
 
 def load_exclusions(filename):
     if os.path.exists(filename):
@@ -79,13 +106,14 @@ def load_exclusions(filename):
 def transform_exclusions(exclusions):
     '''transforming atomic --> mendeleev rank'''
     mendeleev_exclusions=[]
-    for exclusion in exclusions:
-        transform_exclusion = (atomic2name[exclusion[0]], atomic2name[exclusion[1]],
-                               anion_index2name[exclusion[2]])
-        mendeleev_exclusion = (name2mendeleev_rank[transform_exclusion[0]],
-                               name2mendeleev_rank[transform_exclusion[1]],
-                               anion_name2mendeleev_rank[transform_exclusion[2]])
-        mendeleev_exclusions.append(mendeleev_exclusion)
+    if exclusions != None:
+        for exclusion in exclusions:
+            transform_exclusion = (atomic2name[exclusion[0]], atomic2name[exclusion[1]],
+                                   anion_index2name[exclusion[2]])
+            mendeleev_exclusion = (name2mendeleev_rank[transform_exclusion[0]],
+                                   name2mendeleev_rank[transform_exclusion[1]],
+                                   anion_name2mendeleev_rank[transform_exclusion[2]])
+            mendeleev_exclusions.append(mendeleev_exclusion)
     return mendeleev_exclusions
 
 chemical_exclusions = load_exclusions("excluded_compounds.p") # these are atomic numbers
@@ -227,6 +255,8 @@ def gaussian_pdf(x, mean=0, width=0.5):
 
 
 # DATA CONVERSION
+#todo: these dont use the fudge factored numbers since the fudge factor only affects some
+#todo: see problems.txt for more explanation
 def raw_tuple_to_data(tuple):
     A = main2name[tuple[0]]
     B = main2name[tuple[1]]
@@ -266,7 +296,7 @@ def name_to_data(strings):
 def mendeleev_rank_to_data(tuple):
     A = mendeleev_rank2name[tuple[0]]
     B = mendeleev_rank2name[tuple[1]]
-    anion = anion_mendeleev_rank2name[tuple[2]]
+    anion = mendeleev_rank2anion_name[tuple[2]]
     doc = unc.find({"A": A, "B": B, "anion": anion})
     data_doc = {}
     for document in doc:
@@ -316,6 +346,8 @@ def get_actions_from_input(input_list, X):
     for input_vector in input_list:
         actions.append(X.index(tuple(input_vector)))
     return actions
+
+
 
 
 # HELPER DATA CONVERTERS + COMMON FUNCTIONS
@@ -368,6 +400,7 @@ def save_and_show(skopt_iters, skopt_cands, skopt_times, combo_iters, combo_cand
     combo_times = get_time_stats(combo_times)
     skopt_times = get_time_stats(skopt_times)
 
+    print skopt_iters, skopt_cands
     skopt_iters, skopt_iters_std, skopt_cands = get_cand_stats(skopt_cands, skopt_iters)
     combo_iters, combo_iters_std, combo_cands = get_cand_stats(combo_cands, combo_iters)
 
@@ -633,7 +666,7 @@ def mendeleev_integer_optimization_skopt_line_and_timing(iterations=100, guess=(
 
         # Search for entry in GOOD_CANDS_LS
         transform_entry = (mendeleev_rank2name[my_input[-1][0]], mendeleev_rank2name[my_input[-1][1]],
-                           anion_mendeleev_rank2name[my_input[-1][2]])
+                           mendeleev_rank2anion_name[my_input[-1][2]])
         mod_entry = (
         name2atomic[transform_entry[0]], name2atomic[transform_entry[1]], anion_name2index[transform_entry[2]])
         if mod_entry in GOOD_CANDS_LS and mod_entry not in candidates:
@@ -718,7 +751,7 @@ def mendeleev_integer_optimization_combo_line_and_timing(iterations=100, guess=(
 
         # Search for entry in GOOD_CANDS_LS
         transform_entry = (mendeleev_rank2name[my_input[-1][0]], mendeleev_rank2name[my_input[-1][1]],
-                           anion_mendeleev_rank2name[my_input[-1][2]])
+                           mendeleev_rank2anion_name[my_input[-1][2]])
         mod_entry = (name2atomic[transform_entry[0]], name2atomic[transform_entry[1]], anion_name2index[transform_entry[2]])
         if mod_entry in GOOD_CANDS_LS and mod_entry not in candidates:
             candidate_count += 1
@@ -790,7 +823,7 @@ def mendeleev_integer_statistical_comparisons(iter_num=5, run_num=5, initial_gue
 if __name__ =="__main__":
 
     # uninformed comparison
-    mendeleev_integer_statistical_comparisons(iter_num=500, run_num= 3, initial_guessing="random")
+    # mendeleev_integer_statistical_comparisons(iter_num=500, run_num= 3, initial_guessing="random")
     # pprint(gs_rank[0])
     # pprint(gs_halffill_rank[0])
     # mendeleev_integer_optimization_combo_line_and_timing(iterations=20, guess=("Al", "Al", "N3"))
