@@ -1,8 +1,0 @@
-
- TIME OF RUN: 00:02:47.000349 
-skopt iterations: [0, 0.0] 
-skopt std dev iterations: [0, 0.0] 
-skopt candidate list: [0, 1] 
-combo iterations: [0, 0.0] 
-combo std dev iterations: [0, 0.0] 
-combo candidate list: [0, 1] 

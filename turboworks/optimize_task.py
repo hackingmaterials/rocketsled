@@ -1,3 +1,10 @@
+"""
+FireTask implementation of optimization algorithms.
+"""
+
+__author__ = "Alexander Dunn <ardunn@lbl.gov>"
+__version__ = "0.1"
+
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase, FWAction
 from pymongo import MongoClient
@@ -11,9 +18,33 @@ from contextlib import contextmanager
 import sys, os
 
 
-"""
-Here are several classes illustrating FireTask implementation of optimization algorithms.
-"""
+
+@explicit_serialize
+class OptimizeTask(FireTaskBase):
+    _fw_name = "OptimizeTask"
+    required_params = ['optimizer_handle', 'optimizer_params']
+    # optional_params = ['hyperparameter_list']
+
+    def run_task(self, fw_spec):
+
+        opt = self["optimizer_handle"]
+        features = self['optimizer_params']
+        ret =
+
+
+
+
+
+
+class WorkFlowCreator(object):
+
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+
+
+
 
 @explicit_serialize
 class SKOptimizeTask(FireTaskBase):
@@ -325,3 +356,4 @@ def get_data(wf_func, fw_spec, output_datatypes = None, host='localhost', port=2
     opt_dimensions = opt_dim_history[-1]
 
     return workflow_creator, opt_inputs, opt_outputs, opt_dimensions, input_keys, dim_keys, output_keys
+

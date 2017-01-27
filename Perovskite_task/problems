@@ -1,5 +1,0 @@
-APPEARS BUT SHOULDNT: ATOMIC = [49, 72, 4], MENDELEEV RANK = [42, 13, 6], NAME = InHfO2F
-
-DOES NOT APPEAR: ATOMIC = [20, 50, 0], MENDELEEV RANK = [5, 46, 3], NAME = CaSnO3
-
-corrected_data and generated_data are both in terms of mendeleev rank
