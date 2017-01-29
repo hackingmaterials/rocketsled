@@ -22,26 +22,44 @@ import sys, os
 @explicit_serialize
 class OptimizeTask(FireTaskBase):
     _fw_name = "OptimizeTask"
-    required_params = ['optimizer_handle', 'optimizer_params']
+    required_params = ['optimizer_handle', 'param_list']
     # optional_params = ['hyperparameter_list']
 
     def run_task(self, fw_spec):
 
         opt = self["optimizer_handle"]
-        features = self['optimizer_params']
-        ret =
+        params = self['optimizer_params']
+
+        Utility.strip(fw_spec)
 
 
 
 
 
 
-class WorkFlowCreator(object):
+class Utility(object):
 
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+    def create_wf(self):
+        pass
+
+    @staticmethod
+    def store(fw_spec, host='localhost', port=27017):
+        mongo = MongoClient(host, port)
+        db = mongo.turboworks
+        collection = db.turboworks
+        collection.insert_one(OrderedDict(fw_spec))
+
+    def retrieve(self):
+        pass
+
+    @staticmethod
+    def strip(fw_spec):
+        print("stripping")
+        print(fw_spec)
 
 
 
