@@ -2,7 +2,7 @@ from integer_task_workflow_creator import workflow_creator
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import FWorker, LaunchPad
 from fireworks.core.rocket_launcher import launch_rocket
-from turboworks.manage_DB import ManageDB
+from turboworks.manage_db import ManageDB
 import matplotlib.pyplot as plt
 
 """
@@ -61,7 +61,7 @@ def graph(input_dict, n_runs=30, fw_password=''):
     for i in range(n_runs):
         launch_rocket(launchpad)
         gp_best.append(manageDB.get_optima('D', min_or_max='max')[0])
-    manageDB.nuke_it()
+    manageDB.nuke()
     launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
 
     # Run n_runs iterations using a dummy optimizer (returns random guesses)
@@ -71,7 +71,7 @@ def graph(input_dict, n_runs=30, fw_password=''):
     for i in range(n_runs):
         launch_rocket(launchpad)
         dummy_best.append(manageDB.get_optima('D', min_or_max='max')[0])
-    manageDB.nuke_it()
+    manageDB.nuke()
     launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
 
     # Run n_runs iterations using COMBO optimization
@@ -81,7 +81,7 @@ def graph(input_dict, n_runs=30, fw_password=''):
     for i in range(n_runs):
         launch_rocket(launchpad)
         combo_best.append(manageDB.get_optima('D', min_or_max='max')[0])
-    manageDB.nuke_it()
+    manageDB.nuke()
 
 
     # Graph the results

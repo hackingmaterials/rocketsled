@@ -3,22 +3,22 @@ from pprint import pprint
 import numpy as np
 
 """
-This file contains utility functions for managing the TurboWorks database. Here is a summary of each method:
+Utility functions for managing the turboworks database.
 
-    __init__  : allows class to be instantiated with custom MongoDB params (ie, store the DB somewhere besides default
-    nuke_it   : deletes the entire collection
-    count_it  : counts how many documents are in the collection
-    query_it  : queries the DB based on typical pymongo syntax
+    __init__  : allows custom MongoDB params (ie, store the DB somewhere besides default)
+    nuke      : deletes the entire collection
+    count     : counts how many documents are in the collection
+    query     : queries the DB based on typical pymongo syntax
     get_avg   : get the mean of a parameter
     get_param : get all values of the specified param/output
     get_optima: get the maximum/minimum value of a specified param/output
-    store_it  : stores the entire collection in a backup collection
+    back_up   : stores the entire collection in a backup collection
 """
 
 class ManageDB():
 
-    def __init__(self, hostname='localhost', portnum=27017, dbname='TurboWorks',
-                 collection='TurboWorks_collection'):
+    def __init__(self, hostname='localhost', portnum=27017, dbname='turboworks',
+                 collection='turboworks'):
         """
         Allows configuration of the TurboWorks DB
         :param hostname: (str) host name of the MongoDB
@@ -31,7 +31,7 @@ class ManageDB():
         self.collection = getattr(self.db,collection)
         self.collection_string = collection
 
-    def nuke_it(self):
+    def nuke(self):
         """
         deletes all data in the TurboWorks DB collection (TurboWorks_collection)
         :return num_deleted: (int) number of documents deleted from the database
@@ -45,7 +45,7 @@ class ManageDB():
         print('Documents remaining:        0')
         return num_deleted
 
-    def count_it(self):
+    def count(self):
         """
         counts documents in the TurboWorks DB collection (TurboWorks_collection)
         :return cursor.count(): (int) the total number of documents in the collection
@@ -54,7 +54,7 @@ class ManageDB():
         print('\nNumber of documents:       ', cursor.count())
         return cursor.count()
 
-    def query_it(self, querydict=None, print_to_console = False):
+    def query(self, querydict=None, print_to_console = False):
         """
         queries documents via PyMongo's find()
 
@@ -181,9 +181,8 @@ class ManageDB():
             print("Invalid option for min_or_max \nUsing minimum")
             self.get_optima(var)
 
-
-    def store_it(self, hostname='localhost', portnum=27017, dbname='TW_backup',
-                 collection='TW_backup'):
+    def back_up(self, hostname='localhost', portnum=27017, dbname='turboworks',
+                collection='backup'):
         """
         Transfers all data from the TurboWorks DB to another DB
         :param hostname: (str) host name of the MongoDB

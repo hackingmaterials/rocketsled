@@ -2,7 +2,7 @@ from Branin_workflow_creator import workflow_creator
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import FWorker, LaunchPad
 from fireworks.core.rocket_launcher import launch_rocket
-from turboworks.manage_DB import ManageDB
+from turboworks.manage_db import ManageDB
 import matplotlib.pyplot as plt
 
 """
@@ -41,7 +41,7 @@ def best_graph():
     for i in range(run_num):
         launch_rocket(launchpad)
         gp_best.append(manageDB.get_optima('f', min_or_max='min')[0])
-    manageDB.nuke_it()
+    manageDB.nuke()
     launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
 
     # Run run_num iterations using a dummy optimizer (returns random)
@@ -51,7 +51,7 @@ def best_graph():
     for i in range(run_num):
         launch_rocket(launchpad)
         dummy_best.append(manageDB.get_optima('f', min_or_max='min')[0])
-    manageDB.nuke_it()
+    manageDB.nuke()
 
     iterations = list(range(run_num))
     print("GP best:", gp_best[-1])
@@ -72,7 +72,7 @@ def scatter_graph():
     gp_best = manageDB.get_optima('f', min_or_max='min')[0]
     gp_average = manageDB.get_avg('f')
     gp_total = manageDB.get_param('f')
-    manageDB.nuke_it()
+    manageDB.nuke()
 
     # Run run_num iterations using a dummy optimizer (returns random)
     launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
@@ -82,7 +82,7 @@ def scatter_graph():
     dummy_best = manageDB.get_optima('f', min_or_max='min')[0]
     dummy_average = manageDB.get_avg('f')
     dummy_total = manageDB.get_param('f')
-    manageDB.nuke_it()
+    manageDB.nuke()
 
     # Compare the two optimizations graphically
     print('GP average: ', gp_average, '\n GP best:    ', gp_best)
@@ -114,7 +114,7 @@ def converge_to():
         launch_rocket(launchpad)
         gp_best.append(manageDB.get_optima('f', min_or_max='min')[0])
 
-    manageDB.nuke_it()
+    manageDB.nuke()
 
     # Run some number of iterations until dummy iteration has converged
     launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
@@ -131,7 +131,7 @@ def converge_to():
         launch_rocket(launchpad)
         dummy_best.append(manageDB.get_optima('f', min_or_max='min')[0])
 
-    manageDB.nuke_it()
+    manageDB.nuke()
 
     print("GP iterations:", gp_iter)
     print("Dummy iterations:", dummy_iter)
