@@ -32,7 +32,8 @@ class SkoptimizeTask(OptimizeTask):
 
         x = gp_minimize(X,y,dim)
 
-        update = self.to_vars()
+        update = self.to_vars(['A','B','C'], x)
+
 
 
 

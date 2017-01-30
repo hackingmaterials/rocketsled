@@ -87,7 +87,7 @@ class OptimizeTask(FireTaskBase):
     def key_extractor(self, key):
         pass
 
-    def to_vars(keys, values):
+    def to_vars(self, keys, values):
         return dict(zip(keys, values + [None] * (len(keys) - len(values))))
 
     def store(self, fw_spec):
@@ -97,6 +97,7 @@ class OptimizeTask(FireTaskBase):
         return FWAction(stored_data = storage, additions = objs)
 
 
+#todo: deprecate to end of file
 class Utility(object):
 
     def get_data(wf_func, fw_spec, output_datatypes=None, host='localhost', port=27017):
