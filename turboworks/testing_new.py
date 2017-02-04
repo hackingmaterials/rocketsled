@@ -6,6 +6,8 @@ from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.rocket_launcher import launch_rocket
 
 
+from pprint import pprint
+
 @explicit_serialize
 class CalculateTask(FireTaskBase):
     _fw_name = "CalculateTask"
@@ -15,8 +17,8 @@ class CalculateTask(FireTaskBase):
         B = fw_spec['input']['B']
         C = fw_spec['input']['C']
 
-        D_output = {'output': {'D': A * B / C}}
-
+        # D_output = {'output': {'D': A * B / C}}
+        D_output = {'output': {'D':A*C}}
         # Modify changes in spec
         return FWAction(update_spec=D_output)
 
@@ -25,14 +27,21 @@ class SkoptimizeTask(OptimizeTask):
     _fw_name = "SkoptimizeTask"
 
     def run_task(self, fw_spec):
+
         self.store(fw_spec)
-        X = self.to_list('input')
-        y = self.to_list('output', type='list')
-        dim = self.to_list('dim', type='dim')
+        # X = self.gather_single('input')
+        # y = self.gather_single('output', type='list')
+        # dim = self.gather_single('dim', type='dim')
 
-        x = gp_minimize(X,y,dim)
 
-        update = self.to_vars(['A','B','C'], x)
+        # autod = self.gather_all()
+
+        X = self.gather_recursive('C')
+        print(X)
+
+        update = self.deconsolidate(features = ['A', 'B', 'C'], matrix = x)
+        #todo: have function automatically make updated dictionary based on
+        #todo: structure of fw_spec input
 
 
 
@@ -46,7 +55,7 @@ if __name__ == "__main__":
     launchpad = LaunchPad()
     launchpad.reset('', require_password=False)
 
-    fw_spec = {'input': {'A': 1.0, 'B': 2.0, 'C': 3.0},
+    fw_spec = {'input': {'A': 6.0, 'B': {'C':12}, 'C': 6.0},
                'dim': {'A':(1,100), 'B':(1,100), 'C':(12,30)}}
     param_list = {'data': ['X', 'y'], 'hyperparameters': []}
 

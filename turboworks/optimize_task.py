@@ -42,53 +42,83 @@ class OptimizeTask(FireTaskBase):
         self._tw_mongo = MongoClient(self._tw_host, self._tw_port)
         self._tw_db = self._tw_mongo.turboworks
         self._tw_collection = self._tw_db.turboworks
+        self.cursor = self._tw_collection.find()
 
 
     def run_task(self, fw_spec):
         # This method should be overridden
         pass
 
-    def to_list(self, key, type='generic'):
+    def gather_single(self, key, type='generic'):
         '''Generic function for extracting a matrix from the turboworks mongodb collection
 
         Args:
             key (string): should be 'input', 'output', or 'dim'
 
         Return:
-            extracted (list of lists): inner lists contain one feature's data for all data points, outer lists features
+            output (list of lists): inner lists contain one feature's data for all data points, outer lists features
         '''
 
-        cursor = self._tw_collection.find()
-
-        extracted = []
+        output = []
 
         if type=='generic':
-            for doc in cursor:
+            for doc in self.cursor:
                 sublist = []
                 for subkey in sorted(doc[key]):
                     sublist.append(doc[key][subkey])
 
-                extracted.append(sublist)
+                output.append(sublist)
         elif type=='list':
-            for doc in cursor:
+            for doc in self.cursor:
                 for subkey in sorted(doc[key]):
-                    extracted.append(doc[key][subkey])
+                    output.append(doc[key][subkey])
         elif type=='dim':
             doc = self._tw_collection.find_one()
-            for subkey in doc[key]:
-                extracted.append(tuple(doc[key][subkey]))
+            for subkey in sorted(doc[key]):
+                output.append(tuple(doc[key][subkey]))
 
-        return(extracted)
+        return(output)
 
-    def to_list_individual(self, key):
-        # recursively searches for key and then gets all instances of it?
+    def gather_all(self):
+        data = {}
+        for key, value in {'input':'generic', 'output':'list', 'dim':'dim'}.items():
+            data[key] = self.gather_single(key, type = value)
+
+        return data
+
+    def gather_recursive(self, query, dictionary = None, output=None):
+        # recursively searches for query and then gets all instances of it.
+
+        if dictionary is None:
+            dict_list = self.cursor
+        else:
+            dict_list = [dictionary]
+
+        for doc in dict_list:
+
+            if output is None:
+                output = []
+
+            for key in doc:
+                if key == query:
+                    output.append(doc[key])
+                elif type(doc[key]) == dict:
+                    self.gather_recursive(query=query, dictionary=doc[key], output=output)
+
+        return output
+
+    def gather_all_recursive(self):
         pass
 
     def key_extractor(self, key):
         pass
 
-    def to_vars(self, keys, values):
-        return dict(zip(keys, values + [None] * (len(keys) - len(values))))
+    def deconsolidate(self, features=None, matrix=None):
+        return dict(zip(features, matrix + [None] * (len(features) - len(matrix))))
+
+    def update_input(self, new_spec, old_spec):
+        #automatically associates a recently joined dictionary and puts it back in fw_spec form
+        pass
 
     def store(self, fw_spec):
         self._tw_collection.insert_one(OrderedDict(fw_spec))
