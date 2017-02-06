@@ -85,6 +85,60 @@ class OptimizeTask(FireTaskBase):
                 pass
 
     def auto_extract(self, inputs=None, outputs=None, n=None):
+        '''
+
+        auto_extract processes documents in a mongo database to gather complete (or limited)
+        sets of data for specified sets of input and output variables.
+
+            Example:
+
+            # define a nested dictionary
+            my_dict = {
+                'A':1200,
+                'energy': 0.001,
+                'types': {
+                    'old':{
+                        'q': 88,
+                        'r': 99
+                    },
+                    'new':{
+                        's': 65,
+                        't': 53
+                    }}}
+
+
+            # insert 3 identical documents into a db
+            for _ in range(2):
+                db.collection.insertOne(my_dict)
+
+            print(auto_extract(inputs = ['A', 'types.old.q'], outputs = ['energy']))
+
+            {'inputs': [[1200, 12000, 1200], [88, 88, 88]], 'outputs': [0.001, 0.001, 0.001]}
+
+        :param inputs: (list) of possible (string) ML inputs which will be used as keys searching
+        the turboworks database for all stored data. given in class/attr 'dot' form for nested
+         dictionaries.
+
+                Example: inputs = ['Structure.A', 'energy']
+
+            If a nested dictionary is given as an input, it will gather all non-dict
+            variables specified in that dictionary.
+
+        :param outputs: (list) of possible (string) ML outputs which will be used as keys searching
+        the turboworks database for all stored data.  given in class/attr 'dot' form for nested
+        dictionaries
+
+                Example: outputs = ['myOutputs.old_stuff.X3', 'left_coordinate']
+
+        :param n: (int) number of documents to search
+
+                Example: n = 2500
+
+        :return: extract (dict) containing all datapoints from the database matching the inputs and
+        outputs arguments. Each dict value is a list of lists; innermost lists are collections of
+        a single feature across multiple documents.
+
+        '''
 
         extract = dict()
 
@@ -98,84 +152,23 @@ class OptimizeTask(FireTaskBase):
             for compound_key in ob:
                 sublist = []
                 for doc in self._tw_collection.find():
-                    sublist.append(self.extract(compound_key,doc))
+                    if len(sublist) <= n:
+                        sublist.append(self.extract(compound_key,doc))
                 extract[header].append(sublist)
+
+
+            # makes single feature/output extracts NOT as a nested list
+            # for example, if outputs = ['X'], extract['output'] is [32], NOT [[32]]
+            if type(ob) is list:
+                if len(ob) == 1:
+                    extract[header] = extract[header][0]
+
 
         return extract
 
-#todo: deprecate to end of file
-class HoldingClass(object):
-
-    def gather_single(self, key, type='generic'):
-
-        output = []
-
-        if type=='generic':
-            for doc in self._tw_collection.find():
-                sublist = []
-                for subkey in sorted(doc[key]):
-                    sublist.append(doc[key][subkey])
-
-                output.append(sublist)
-        elif type=='list':
-            for doc in self._tw_collection.find():
-                for subkey in sorted(doc[key]):
-                    output.append(doc[key][subkey])
-        elif type=='dim':
-            doc = self._tw_collection.find_one()
-            for subkey in sorted(doc[key]):
-                output.append(tuple(doc[key][subkey]))
-
-        return output
-
-    def get_keys(self, type='input'):
-        keys = []
-        print self._tw_cursor
-
-        for doc in self._tw_cursor:
-            print(doc)
-            # for key in sorted(doc[type]):
-            #     keys.append(key) if key not in keys else None
-
-        return keys
-
-    def get_keys_recursive(self):
+    def key_scavenger(self, k, d):
+        #returns all lowest level non-dict entries in class dict style
         pass
-
-    def gather_all(self):
-        data = {}
-        for key, value in {'input':'generic', 'output':'list', 'dim':'dim'}.items():
-            data[key] = self.gather_single(key, type = value)
-
-        return data
-
-    def gather_recursive(self, query, dictionary = None, output=None):
-        # recursively searches for query and then gets all instances of it.
-
-        if dictionary is None:
-            dict_list = self._tw_cursor
-        else:
-            dict_list = [dictionary]
-
-        for doc in dict_list:
-
-            if output is None:
-                output = []
-
-            for key in doc:
-                if key == query:
-                    output.append(doc[key])
-                elif type(doc[key]) == dict:
-                    self.gather_recursive(query=query, dictionary=doc[key], output=output)
-
-        return output
-
-    def gather_all_recursive(self):
-        #todo: make this go to lowest variable level and save in form 'upperdict.lowervar'
-        pass
-
-    def deconsolidate(self, features=None, matrix=None):
-        return dict(zip(features, matrix + [None] * (len(features) - len(matrix))))
 
     def update_input(self, new_spec, old_spec):
         #automatically associates a recently joined dictionary and puts it back in fw_spec form

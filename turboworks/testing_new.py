@@ -31,12 +31,13 @@ class SkoptimizeTask(OptimizeTask):
 
     def run_task(self, fw_spec):
 
-        # self.store(fw_spec)
+        self.store(fw_spec)
         # X = self.gather_single('input')
         # y = self.gather_single('output', type='list')
         # dim = self.gather_single('dim', type='dim')
 
-        print(self.auto_extract(inputs=['Structure.A', 'e_above_hull', 'types.new.s']))
+        print(self.auto_extract(inputs=['Structure.A', 'e_above_hull', 'types.new.s'],
+                                outputs=['types.new.t']))
 
 
 
