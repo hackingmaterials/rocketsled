@@ -8,6 +8,8 @@ from turboworks.reference import ref_dict
 
 
 from pprint import pprint
+from pymongo import MongoClient
+from collections import OrderedDict
 
 @explicit_serialize
 class CalculateTask(FireTaskBase):
@@ -36,13 +38,6 @@ class SkoptimizeTask(OptimizeTask):
 
         print(self.auto_extract(inputs=['Structure.A', 'e_above_hull', 'types.new.s']))
 
-        # print(X)
-
-        # update = self.deconsolidate(features = ['A', 'B', 'C'], matrix = autod)
-        #todo: have function automatically make updated dictionary based on
-        #todo: structure of fw_spec input
-
-
 
 
 if __name__ == "__main__":
@@ -55,7 +50,6 @@ if __name__ == "__main__":
     launchpad.reset('', require_password=False)
 
     fw_spec = ref_dict
-
 
     # create the Firework consisting of a single task
     firetask1 = CalculateTask()

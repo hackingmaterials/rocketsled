@@ -20,6 +20,7 @@ import sys, os
 
 #todo: remove this:
 from pprint import pprint
+from turboworks.reference import ref_dict
 
 
 @explicit_serialize
@@ -32,6 +33,7 @@ class OptimizeTask(FireTaskBase):
     def __init__(self, *args, **kwargs):
         super(FireTaskBase, self).__init__(*args, **kwargs)
 
+        #todo: make this work with fw style dictionaries
         if 'host' in kwargs:
             self._tw_host = kwargs['host']
         else:
@@ -42,10 +44,12 @@ class OptimizeTask(FireTaskBase):
         else:
             self._tw_port = 27017
 
+        self._tw_port = 27017
+        self._tw_host = 'localhost'
+
         self._tw_mongo = MongoClient(self._tw_host, self._tw_port)
         self._tw_db = self._tw_mongo.turboworks
         self._tw_collection = self._tw_db.turboworks
-        self.cursor = self._tw_collection.find()
         self.delimiter = '.'
 
 
@@ -54,6 +58,7 @@ class OptimizeTask(FireTaskBase):
         pass
 
     def store(self, fw_spec):
+        pprint(fw_spec)
         self._tw_collection.insert_one(OrderedDict(fw_spec))
 
     def extract(self, k, d):
@@ -69,49 +74,51 @@ class OptimizeTask(FireTaskBase):
         else:
             keys = [k]
 
-            for key in keys:
-                try:
-                    if type(d[key]) == dict and keys.index(key) != (len(keys) - 1):
-                        d = d[key]
-                    else:
-                        return d[key]
+        for key in keys:
+            try:
+                if type(d[key]) == dict and keys.index(key) != (len(keys) - 1):
+                    d = d[key]
+                else:
+                    return d[key]
 
-                except(KeyError):
-                    pass
-
+            except(KeyError):
+                pass
 
     def auto_extract(self, inputs=None, outputs=None, n=None):
 
-        for ob in [inputs, outputs]:
+        extract = dict()
+
+        for header, ob in {'inputs':inputs, 'outputs':outputs}.iteritems():
             if ob is None:
-                ob = []
+                continue
             ob.sort()
 
-        X = []
+            extract[header] = []
 
-        for doc in self.cursor:
-            sublist = []
-            for compound_key in inputs:
-                sublist.append(self.extract(compound_key,doc))
+            for compound_key in ob:
+                sublist = []
+                for doc in self._tw_collection.find():
+                    sublist.append(self.extract(compound_key,doc))
+                extract[header].append(sublist)
 
-            X.append(sublist)
+        return extract
 
-        return X
-
+#todo: deprecate to end of file
+class HoldingClass(object):
 
     def gather_single(self, key, type='generic'):
 
         output = []
 
         if type=='generic':
-            for doc in self.cursor:
+            for doc in self._tw_collection.find():
                 sublist = []
                 for subkey in sorted(doc[key]):
                     sublist.append(doc[key][subkey])
 
                 output.append(sublist)
         elif type=='list':
-            for doc in self.cursor:
+            for doc in self._tw_collection.find():
                 for subkey in sorted(doc[key]):
                     output.append(doc[key][subkey])
         elif type=='dim':
@@ -123,9 +130,9 @@ class OptimizeTask(FireTaskBase):
 
     def get_keys(self, type='input'):
         keys = []
-        print self.cursor
+        print self._tw_cursor
 
-        for doc in self.cursor:
+        for doc in self._tw_cursor:
             print(doc)
             # for key in sorted(doc[type]):
             #     keys.append(key) if key not in keys else None
@@ -146,7 +153,7 @@ class OptimizeTask(FireTaskBase):
         # recursively searches for query and then gets all instances of it.
 
         if dictionary is None:
-            dict_list = self.cursor
+            dict_list = self._tw_cursor
         else:
             dict_list = [dictionary]
 
@@ -162,8 +169,6 @@ class OptimizeTask(FireTaskBase):
                     self.gather_recursive(query=query, dictionary=doc[key], output=output)
 
         return output
-
-
 
     def gather_all_recursive(self):
         #todo: make this go to lowest variable level and save in form 'upperdict.lowervar'
@@ -181,7 +186,6 @@ class OptimizeTask(FireTaskBase):
         return FWAction(stored_data = storage, additions = objs)
 
 
-#todo: deprecate to end of file
 class Utility(object):
 
     def get_data(wf_func, fw_spec, output_datatypes=None, host='localhost', port=27017):
