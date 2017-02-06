@@ -1,5 +1,5 @@
 """
-This file contains utility functions for discrete space calculations.
+Utility functions for discrete space calculations.
 """
 
 import itertools

@@ -18,6 +18,9 @@ from contextlib import contextmanager
 import sys, os
 
 
+#todo: remove this:
+from pprint import pprint
+
 
 @explicit_serialize
 class OptimizeTask(FireTaskBase):
@@ -43,21 +46,60 @@ class OptimizeTask(FireTaskBase):
         self._tw_db = self._tw_mongo.turboworks
         self._tw_collection = self._tw_db.turboworks
         self.cursor = self._tw_collection.find()
+        self.delimiter = '.'
 
 
     def run_task(self, fw_spec):
         # This method should be overridden
         pass
 
-    def gather_single(self, key, type='generic'):
-        '''Generic function for extracting a matrix from the turboworks mongodb collection
+    def store(self, fw_spec):
+        self._tw_collection.insert_one(OrderedDict(fw_spec))
 
-        Args:
-            key (string): should be 'input', 'output', or 'dim'
-
-        Return:
-            output (list of lists): inner lists contain one feature's data for all data points, outer lists features
+    def extract(self, k, d):
         '''
+
+        :param k: a single key in class form, e.g. 'types.old.r'
+        :param d: a nested dictionary to be searched
+        :return: the desired value defined by k
+        '''
+
+        if self.delimiter in k:
+            keys = k.split(self.delimiter)  # a top down list of nested dictionary keys
+        else:
+            keys = [k]
+
+            for key in keys:
+                try:
+                    if type(d[key]) == dict and keys.index(key) != (len(keys) - 1):
+                        d = d[key]
+                    else:
+                        return d[key]
+
+                except(KeyError):
+                    pass
+
+
+    def auto_extract(self, inputs=None, outputs=None, n=None):
+
+        for ob in [inputs, outputs]:
+            if ob is None:
+                ob = []
+            ob.sort()
+
+        X = []
+
+        for doc in self.cursor:
+            sublist = []
+            for compound_key in inputs:
+                sublist.append(self.extract(compound_key,doc))
+
+            X.append(sublist)
+
+        return X
+
+
+    def gather_single(self, key, type='generic'):
 
         output = []
 
@@ -77,7 +119,21 @@ class OptimizeTask(FireTaskBase):
             for subkey in sorted(doc[key]):
                 output.append(tuple(doc[key][subkey]))
 
-        return(output)
+        return output
+
+    def get_keys(self, type='input'):
+        keys = []
+        print self.cursor
+
+        for doc in self.cursor:
+            print(doc)
+            # for key in sorted(doc[type]):
+            #     keys.append(key) if key not in keys else None
+
+        return keys
+
+    def get_keys_recursive(self):
+        pass
 
     def gather_all(self):
         data = {}
@@ -107,10 +163,10 @@ class OptimizeTask(FireTaskBase):
 
         return output
 
-    def gather_all_recursive(self):
-        pass
 
-    def key_extractor(self, key):
+
+    def gather_all_recursive(self):
+        #todo: make this go to lowest variable level and save in form 'upperdict.lowervar'
         pass
 
     def deconsolidate(self, features=None, matrix=None):
@@ -120,8 +176,6 @@ class OptimizeTask(FireTaskBase):
         #automatically associates a recently joined dictionary and puts it back in fw_spec form
         pass
 
-    def store(self, fw_spec):
-        self._tw_collection.insert_one(OrderedDict(fw_spec))
 
     def create_wf(self, objs = None, storage=None):
         return FWAction(stored_data = storage, additions = objs)
@@ -444,5 +498,4 @@ class COMBOptomizeTask(FireTaskBase):
 
         # Initialize new workflow
         return FWAction(additions=self.workflow_creator(updated_dictionary, 'combo_gp'))
-
 
