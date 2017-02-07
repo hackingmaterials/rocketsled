@@ -16,6 +16,8 @@ import combo
 from turboworks.discrete_spacify import calculate_discrete_space, duplicate_check
 from contextlib import contextmanager
 import sys, os
+from functools import reduce
+import operator
 
 
 #todo: remove this:
@@ -30,10 +32,13 @@ class OptimizeTask(FireTaskBase):
     required_params = []
     optional_params = []
 
+#COMPLETED METHODS
+    #todo: write docstrings
+
     def __init__(self, *args, **kwargs):
         super(FireTaskBase, self).__init__(*args, **kwargs)
 
-        #todo: make this work with fw style dictionaries
+        #todo: make this work with fw style dictionaries?
         if 'host' in kwargs:
             self._tw_host = kwargs['host']
         else:
@@ -53,13 +58,39 @@ class OptimizeTask(FireTaskBase):
         self.delimiter = '.'
 
 
+
+        self.input_list = []
+        self.output_list = []
+        self.aux_list = []
+
+        self.auto_extract_has_run = False
+        self.store_has_run = False
+        self.auto_update_has_run = False
+        self.tw_spec = {}
+
     def run_task(self, fw_spec):
         # This method should be overridden
         pass
 
     def store(self, fw_spec):
-        pprint(fw_spec)
+
+        self.tw_spec = fw_spec
         self._tw_collection.insert_one(OrderedDict(fw_spec))
+        self.store_has_run = True
+
+    def parse_compound_key(self, k):
+
+        if type(k) is list:    #the parsing request has been sent from extract on behalf of update_input
+            keys = k
+        elif isinstance(k, basestring):
+            if self.delimiter in k:
+                keys = k.split(self.delimiter)  # a top down list of nested dictionary keys
+            else:
+                keys = [k]
+        else:
+            raise TypeError("parse_compound_key wasn't given a compound key or list")
+
+        return keys
 
     def extract(self, k, d):
         '''
@@ -69,20 +100,8 @@ class OptimizeTask(FireTaskBase):
         :return: the desired value defined by k
         '''
 
-        if self.delimiter in k:
-            keys = k.split(self.delimiter)  # a top down list of nested dictionary keys
-        else:
-            keys = [k]
-
-        for key in keys:
-            try:
-                if type(d[key]) == dict and keys.index(key) != (len(keys) - 1):
-                    d = d[key]
-                else:
-                    return d[key]
-
-            except(KeyError):
-                pass
+        keys = self.parse_compound_key(k)
+        return reduce(operator.getitem, keys, d)
 
     def auto_extract(self, inputs=None, outputs=None, n=None):
         '''
@@ -142,15 +161,27 @@ class OptimizeTask(FireTaskBase):
 
         extract = dict()
 
+
+        if n is None:
+            n = self._tw_collection.count()
+
+
         for header, ob in {'inputs':inputs, 'outputs':outputs}.iteritems():
             if ob is None:
                 continue
-            ob.sort()
+
+            ob = sorted(ob, key=str.lower)
+
+            if header == 'inputs':
+
+                self.input_list = ob
 
             extract[header] = []
 
             for compound_key in ob:
                 sublist = []
+
+                #todo: check if _tw_collection.find() results in diff order when called
                 for doc in self._tw_collection.find():
                     if len(sublist) <= n:
                         sublist.append(self.extract(compound_key,doc))
@@ -163,20 +194,61 @@ class OptimizeTask(FireTaskBase):
                 if len(ob) == 1:
                     extract[header] = extract[header][0]
 
-
+        # self.auto_extract_has_run = True
         return extract
 
-    def key_scavenger(self, k, d):
-        #returns all lowest level non-dict entries in class dict style
-        pass
+    def update_input(self, updated_value, k, d=None):
+        # updates a single input
 
-    def update_input(self, new_spec, old_spec):
-        #automatically associates a recently joined dictionary and puts it back in fw_spec form
-        pass
+        if d is None:
+            d = self.tw_spec
 
+        keys = self.parse_compound_key(k)
+
+        if len(keys) == 1:
+            self.tw_spec[keys[0]] = updated_value
+        else:
+            self.extract(keys[:-1],d)[keys[-1]] = updated_value
+
+    def auto_update(self, updated_values, keys=None):
+        # automatically associates a recently joined dictionary and puts it back in fw_spec form
+        # takes an ordered list of class/attr dict strings, a list of new ML'd data for the guess
+        # and it updates the fw_spec accordingly
+
+        if keys is None:
+            keys = sorted(self.input_list, key = str.lower)
+        if type(keys) is not list:
+            raise TypeError("Keys should be in list form. For example, ['X', 'Y.b.z']")
+
+        if type(updated_values) is dict:
+            print "is dict"
+            #todo: make this work with dict type?
+        elif type(updated_values) is list:
+            for i, updated_value in enumerate(updated_values):
+                try:
+                    self.update_input(updated_value, keys[i])
+
+                except(KeyError):
+                    raise ValueError("Keys should be the same as they were extracted with.")
+
+        self.auto_update_has_run = True
+
+#IN PROGRESS METHODS
 
     def create_wf(self, objs = None, storage=None):
+        #1st saves parameters entered into init
+        #2nd reproduces the entered workflow
         return FWAction(stored_data = storage, additions = objs)
+
+
+# POSSIBLE IMPROVEMENTS AND TOOLS
+
+    def key_scavenger(self, k, d):
+        # returns all highest level non-dict entries in a list of class/attr dict style strings
+        # will be used as a tool to return all values if a compound key ends in a dict.
+        # for example selecting 'types.old' from ref_dict results in selecting 'types.old.q'
+        # and 'types.old.r'
+        pass
 
 
 class Utility(object):

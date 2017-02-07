@@ -36,8 +36,19 @@ class SkoptimizeTask(OptimizeTask):
         # y = self.gather_single('output', type='list')
         # dim = self.gather_single('dim', type='dim')
 
-        print(self.auto_extract(inputs=['Structure.A', 'e_above_hull', 'types.new.s'],
-                                outputs=['types.new.t']))
+        extract = self.auto_extract(inputs=['Structure.A', 'e_above_hull', 'types.new.s'],
+                                outputs=['types.new.t'])
+
+        X = extract['inputs']
+        y = extract['outputs']
+
+        dimensions = [(0, 100), (0,100), (0,100)]
+
+        y_new = [.003, 2.5, 101]
+
+        self.auto_update(y_new)
+
+
 
 
 
