@@ -31,22 +31,26 @@ class SkoptimizeTask(OptimizeTask):
 
     def run_task(self, fw_spec):
 
+        # Store new data
         self.store(fw_spec)
-        # X = self.gather_single('input')
-        # y = self.gather_single('output', type='list')
-        # dim = self.gather_single('dim', type='dim')
 
-        extract = self.auto_extract(inputs=['Structure.A', 'e_above_hull', 'types.new.s'],
-                                outputs=['types.new.t'])
+        # Extract the data we want from the database
+        self.auto_extract(inputs=['Structure.A', 'e_above_hull', 'types.new.s'],
+                                outputs=['types.new.t'], n=2)
 
-        X = extract['inputs']
-        y = extract['outputs']
+        X = self.extracted['inputs']
+        y = self.extracted['outputs']
 
+        # Run a machine learning algorithm on the data
         dimensions = [(0, 100), (0,100), (0,100)]
-
         y_new = [.003, 2.5, 101]
 
+        # Update our workflow spec with the new data
         self.auto_update(y_new)
+
+        # Return a workflow
+        new_fw = Firework([CalculateTask(), SkoptimizeTask()], spec=self.tw_spec)
+        return FWAction(additions=new_fw)
 
 
 
@@ -54,8 +58,8 @@ class SkoptimizeTask(OptimizeTask):
 
 if __name__ == "__main__":
 
-    # mdb = ManageDB()
-    # mdb.nuke()
+    mdb = ManageDB()
+    mdb.nuke()
 
     # set up the LaunchPad and reset it
     launchpad = LaunchPad()
@@ -68,7 +72,11 @@ if __name__ == "__main__":
     firetask2 = SkoptimizeTask()
 
     # firework = Firework([firetask1, firetask2], spec=fw_spec)
-    firework = Firework([firetask1, firetask2],  spec=fw_spec)
+    firework = Firework([CalculateTask(), SkoptimizeTask()],  spec=fw_spec)
     # store workflow and launch it locally
     launchpad.add_wf(firework)
-    launch_rocket(launchpad)
+
+
+    # Repeatedly execute the optimization loop
+    for i in range(3):
+        launch_rocket(launchpad)

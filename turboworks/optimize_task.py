@@ -2,7 +2,8 @@
 FireTask implementation of optimization algorithms.
 """
 
-__author__ = "Alexander Dunn <ardunn@lbl.gov>"
+__author__ = "Alexander Dunn"
+__email__ = "ardunn@lbl.gov"
 __version__ = "0.1"
 
 from fireworks.utilities.fw_utilities import explicit_serialize
@@ -39,6 +40,7 @@ class OptimizeTask(FireTaskBase):
         super(FireTaskBase, self).__init__(*args, **kwargs)
 
         #todo: make this work with fw style dictionaries?
+        #todo: make this not so horrible
         if 'host' in kwargs:
             self._tw_host = kwargs['host']
         else:
@@ -57,8 +59,6 @@ class OptimizeTask(FireTaskBase):
         self._tw_collection = self._tw_db.turboworks
         self.delimiter = '.'
 
-
-
         self.input_list = []
         self.output_list = []
         self.aux_list = []
@@ -66,7 +66,11 @@ class OptimizeTask(FireTaskBase):
         self.auto_extract_has_run = False
         self.store_has_run = False
         self.auto_update_has_run = False
+
         self.tw_spec = {}
+        self.extracted=[]
+
+        print("Initializing OptimizeTask")
 
     def run_task(self, fw_spec):
         # This method should be overridden
@@ -183,7 +187,7 @@ class OptimizeTask(FireTaskBase):
 
                 #todo: check if _tw_collection.find() results in diff order when called
                 for doc in self._tw_collection.find():
-                    if len(sublist) <= n:
+                    if len(sublist) <= n-1:
                         sublist.append(self.extract(compound_key,doc))
                 extract[header].append(sublist)
 
@@ -195,6 +199,7 @@ class OptimizeTask(FireTaskBase):
                     extract[header] = extract[header][0]
 
         # self.auto_extract_has_run = True
+        self.extracted = extract
         return extract
 
     def update_input(self, updated_value, k, d=None):
@@ -232,13 +237,6 @@ class OptimizeTask(FireTaskBase):
                     raise ValueError("Keys should be the same as they were extracted with.")
 
         self.auto_update_has_run = True
-
-#IN PROGRESS METHODS
-
-    def create_wf(self, objs = None, storage=None):
-        #1st saves parameters entered into init
-        #2nd reproduces the entered workflow
-        return FWAction(stored_data = storage, additions = objs)
 
 
 # POSSIBLE IMPROVEMENTS AND TOOLS
