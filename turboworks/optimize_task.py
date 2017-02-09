@@ -7,7 +7,7 @@ __email__ = "ardunn@lbl.gov"
 __version__ = "0.1"
 
 from fireworks.utilities.fw_utilities import explicit_serialize
-from fireworks.core.firework import FireTaskBase, FWAction
+from fireworks.core.firework import FireTaskBase
 from pymongo import MongoClient
 from collections import OrderedDict
 from functools import reduce
@@ -207,6 +207,7 @@ class OptimizeTask(FireTaskBase):
         # takes an ordered list of class/attr dict strings, a list of new ML'd data for the guess
         # and it updates the fw_spec accordingly
 
+
         if keys is None:
             keys = sorted(self.input_list, key = str.lower)
         if type(keys) is not list:
@@ -214,11 +215,20 @@ class OptimizeTask(FireTaskBase):
 
         if type(updated_values) is list:
             for i, updated_value in enumerate(updated_values):
+
+                if len(updated_values) != len(keys):
+                    #if you're trying to write too few or too many data to the list of compound keys
+                    raise TypeError("""
+                                        The updated input does not have the same dimensions as the original input.
+                                        Make sure to call auto_extract with label = 'output' so the outputs are not
+                                        overwriting
+                                        your original inputs.""")
                 try:
                     self.update_input(updated_value, keys[i])
 
                 except(KeyError):
                     raise ValueError("Keys should be the same as they were extracted with.")
+
 
     def key_scavenger(self, d, compound_key='', top_level=True, compound_keys=None, superkey = None):
         # returns all highest level non-dict entries in a list of class/attr dict style strings
@@ -275,7 +285,7 @@ class OptimizeTask(FireTaskBase):
 
     # POSSIBLE IMPROVEMENTS AND TOOLS
 
-    def auto_run(self, inputs=None, outputs=None):
+    def auto_optimize(self, inputs=None, outputs=None):
         # automatically runs some default optimization algorithm based on inputs/outputs
         pass
 

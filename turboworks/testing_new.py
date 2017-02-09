@@ -2,6 +2,7 @@ from fireworks import Firework, LaunchPad, FWAction, FireTaskBase, Workflow
 from turboworks.optimize_task import OptimizeTask
 from turboworks.manage_db import ManageDB
 from turboworks.gp_opt import gp_minimize
+from turboworks.dummy_opt import dummy_minimize
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.rocket_launcher import launch_rocket
 from turboworks.reference import ref_dict
@@ -35,29 +36,20 @@ class SkoptimizeTask(OptimizeTask):
         self.store(fw_spec)
 
         # Extract the data we want from the database
-        features = ['Structure.A', 'e_above_hull', 'types.new.s']
-        output = ['types.new']
+        features = ['Structure']
+        output = ['energy.good_estimate']
 
-        X = self.auto_extract(['Cars.Toyota', 'Pets.Dog.Terrier'], n=250)
-        y = self.auto_extract(['my_output_var'], n=250)
-
-        X = self.auto_extract(label = 'input', n=2)
-        y = self.auto_extract(output, label = 'output', n=2)
-
-        print self.input_list
-        print self.output_list
-
+        X = self.auto_extract(features, label='inputs')
+        y = self.auto_extract(output, label='outputs')
 
         # Run a machine learning algorithm on the data
         dimensions = [(0, 100), (0,100), (0,100)]
-        y_new = [.003, 2.5, 101]
+        y_new = dummy_minimize(dimensions)
+
+        # y_new = gp_minimize(X,y,dimensions)
 
         # Update our workflow spec with the new data
         self.auto_update(y_new)
-
-        # Updates Cars.Toyota.Corolla, Cars.Toyota.Tundra, Cars.Toyota.Camry,
-        # Cars.Toyota.RAV4, Cars.Toyota.Prius, Cars.Toyota.Sienna, Pets.Dog.Terrier
-        # in new spec
 
         # Return a workflow
         new_fw = Firework([CalculateTask(), SkoptimizeTask()], spec=self.tw_spec)
@@ -69,8 +61,8 @@ class SkoptimizeTask(OptimizeTask):
 
 if __name__ == "__main__":
 
-    mdb = ManageDB()
-    mdb.nuke()
+    # mdb = ManageDB()
+    # mdb.nuke()
 
     # set up the LaunchPad and reset it
     launchpad = LaunchPad()
@@ -89,5 +81,5 @@ if __name__ == "__main__":
 
 
     # Repeatedly execute the optimization loop
-    for i in range(3):
+    for i in range(1):
         launch_rocket(launchpad)
