@@ -65,10 +65,6 @@ class OptimizeTask(FireTaskBase):
         self.output_list = []
         self.aux_list = []
 
-        self.auto_extract_has_run = False
-        self.store_has_run = False
-        self.auto_update_has_run = False
-
         self.tw_spec = {}
         self.extracted=[]
 
@@ -80,7 +76,6 @@ class OptimizeTask(FireTaskBase):
 
         self.tw_spec = fw_spec
         self._tw_collection.insert_one(OrderedDict(fw_spec))
-        self.store_has_run = True
 
     def parse_compound_key(self, k):
 
@@ -228,18 +223,13 @@ class OptimizeTask(FireTaskBase):
         if type(keys) is not list:
             raise TypeError("Keys should be in list form. For example, ['X', 'Y.b.z']")
 
-        if type(updated_values) is dict:
-            print "is dict"
-            #todo: make this work with dict type?
-        elif type(updated_values) is list:
+        if type(updated_values) is list:
             for i, updated_value in enumerate(updated_values):
                 try:
                     self.update_input(updated_value, keys[i])
 
                 except(KeyError):
                     raise ValueError("Keys should be the same as they were extracted with.")
-
-        self.auto_update_has_run = True
 
     def key_scavenger(self, d, compound_key='', top_level=True, compound_keys=None, superkey = None):
         # returns all highest level non-dict entries in a list of class/attr dict style strings
