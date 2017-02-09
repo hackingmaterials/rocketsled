@@ -19,6 +19,7 @@ from contextlib import contextmanager
 import sys, os
 from functools import reduce
 import operator
+from six import string_types
 
 
 #todo: remove this:
@@ -58,6 +59,7 @@ class OptimizeTask(FireTaskBase):
         self._tw_db = self._tw_mongo.turboworks
         self._tw_collection = self._tw_db.turboworks
         self.delimiter = '.'
+        self.meta_fw_keys = ['_id', '_tasks']
 
         self.input_list = []
         self.output_list = []
@@ -105,8 +107,7 @@ class OptimizeTask(FireTaskBase):
         keys = self.parse_compound_key(k)
         return reduce(operator.getitem, keys, d)
 
-    #todo: make auto_extract work with only one list, not input and output
-    def auto_extract(self, query, label="inputs", n=None):
+    def auto_extract(self, query = None, label="inputs", n=None):
         '''
 
         auto_extract processes documents in a mongo database to gather complete (or limited)
@@ -164,9 +165,20 @@ class OptimizeTask(FireTaskBase):
             n = self._tw_collection.count()
 
 
+        if type(query) is not list and query is not None:
+            if not isinstance(query[0], string_types):
+                raise TypeError("Keys should be in list of strings form. For example, ['X', 'Y.b.z']")
 
-        if type(query) is not list or not isinstance(query[0], basestring):
-            raise TypeError("Keys should be in list form. For example, ['X', 'Y.b.z']")
+
+        #todo: change this?
+        dict_template = self._tw_collection.find_one()
+        query = self.extend_compound_key_list(key_list=query, d=dict_template)
+
+        try:
+            query = [x.encode('UTF8') for x in query]
+        except:
+            pass
+
         query = sorted(query, key=str.lower)
 
         if label in ['inputs', 'input', 'in', 'input_list', 'features']:
@@ -174,13 +186,13 @@ class OptimizeTask(FireTaskBase):
         elif label in ['outputs', 'output', 'out', 'output_list']:
             self.output_list = query
 
-        for compound_key in query:
+        for k in query:
             sublist = []
 
             #todo: check if _tw_collection.find() results in diff order when called
             for doc in self._tw_collection.find():
                 if len(sublist) <= n-1:
-                    sublist.append(self.extract(compound_key,doc))
+                    sublist.append(self.extract(k,doc))
             extract.append(sublist)
 
 
@@ -229,17 +241,60 @@ class OptimizeTask(FireTaskBase):
 
         self.auto_update_has_run = True
 
-
-# POSSIBLE IMPROVEMENTS AND TOOLS
-
-    def key_scavenger(self, k, d):
+    def key_scavenger(self, d, compound_key='', top_level=True, compound_keys=None, superkey = None):
         # returns all highest level non-dict entries in a list of class/attr dict style strings
-        # will be used as a tool to return all values if a compound key ends in a dict.
+        # used as a tool to return all values if a compound key ends in a dict.
         # for example selecting 'types.old' from ref_dict results in selecting 'types.old.q'
         # and 'types.old.r'
 
-        #should be implemented as the default way extract works
-        pass
+        if compound_keys is None:
+            compound_keys = []
+
+        for key in d:
+            if type(d[key]) is dict:
+                if top_level:
+                    self.key_scavenger(d[key], compound_key=compound_key + key,
+                                  top_level=False, compound_keys=compound_keys)
+                else:
+                    self.key_scavenger(d[key], compound_key=compound_key + self.delimiter + key,
+                                  top_level=False, compound_keys=compound_keys)
+
+            else:
+                if top_level:
+                    compound_keys.append(key)
+                else:
+                    compound_keys.append(compound_key + self.delimiter + key)
+
+        if top_level:
+            if superkey is None:
+                return compound_keys
+            else:
+                return [superkey + self.delimiter + key for key in compound_keys]
+
+    def extend_compound_key_list(self, key_list = None, d = None):
+        #expands a list of compound keys to include subkeys if not explicitly mentioned
+
+        if key_list is None:
+            # should get the entire dictionary...
+            key_list = self.key_scavenger(d)
+
+            # ...except if its a meta_fw_key
+            key_list = [key for key in key_list if key not in self.meta_fw_keys]
+
+        if d is None:
+            # to preserve argument order
+            raise TypeError("extend_compound_key requires a dictionary as input.")
+
+        for key in key_list:
+            sub = self.extract(key, d)
+            if type(sub) is dict:
+                key_list.remove(key)
+                key_list.extend(self.key_scavenger(sub, superkey=key))
+            else: pass
+
+        return key_list
+
+# POSSIBLE IMPROVEMENTS AND TOOLS
 
     def auto_run(self, inputs=None, outputs=None):
         # automatically runs some default optimization algorithm based on inputs/outputs

@@ -36,10 +36,14 @@ class SkoptimizeTask(OptimizeTask):
 
         # Extract the data we want from the database
         features = ['Structure.A', 'e_above_hull', 'types.new.s']
-        output = ['types.new.t']
+        # features = ['Structure']
+        output = ['types.new']
 
-        X = self.auto_extract(features, label = 'input', n=2)
+        X = self.auto_extract(label = 'input', n=2)
         y = self.auto_extract(output, label = 'output', n=2)
+
+        print self.input_list
+        print self.output_list
 
 
         # Run a machine learning algorithm on the data
