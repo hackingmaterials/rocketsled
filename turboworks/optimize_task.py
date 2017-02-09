@@ -40,7 +40,7 @@ class OptimizeTask(FireTaskBase):
         super(FireTaskBase, self).__init__(*args, **kwargs)
 
         #todo: make this work with fw style dictionaries?
-        #todo: make this not so horrible
+        #todo: cleanup attrs + make this not so horrible
         if 'host' in kwargs:
             self._tw_host = kwargs['host']
         else:
@@ -69,8 +69,6 @@ class OptimizeTask(FireTaskBase):
 
         self.tw_spec = {}
         self.extracted=[]
-
-        print("Initializing OptimizeTask")
 
     def run_task(self, fw_spec):
         # This method should be overridden
@@ -107,7 +105,8 @@ class OptimizeTask(FireTaskBase):
         keys = self.parse_compound_key(k)
         return reduce(operator.getitem, keys, d)
 
-    def auto_extract(self, inputs=None, outputs=None, n=None):
+    #todo: make auto_extract work with only one list, not input and output
+    def auto_extract(self, query, label="inputs", n=None):
         '''
 
         auto_extract processes documents in a mongo database to gather complete (or limited)
@@ -134,11 +133,11 @@ class OptimizeTask(FireTaskBase):
             for _ in range(2):
                 db.collection.insertOne(my_dict)
 
-            print(auto_extract(inputs = ['A', 'types.old.q'], outputs = ['energy']))
+            print(auto_extract(['A', 'types.old.q'], label='inputs'))
 
-            {'inputs': [[1200, 12000, 1200], [88, 88, 88]], 'outputs': [0.001, 0.001, 0.001]}
+            [[1200, 12000, 1200], [88, 88, 88]]]
 
-        :param inputs: (list) of possible (string) ML inputs which will be used as keys searching
+        :param query: (list) of possible (string) ML inputs which will be used as keys searching
         the turboworks database for all stored data. given in class/attr 'dot' form for nested
          dictionaries.
 
@@ -147,11 +146,7 @@ class OptimizeTask(FireTaskBase):
             If a nested dictionary is given as an input, it will gather all non-dict
             variables specified in that dictionary.
 
-        :param outputs: (list) of possible (string) ML outputs which will be used as keys searching
-        the turboworks database for all stored data.  given in class/attr 'dot' form for nested
-        dictionaries
-
-                Example: outputs = ['myOutputs.old_stuff.X3', 'left_coordinate']
+        :param label: (string) stores class attr under the label if label = "input" or label = "output"
 
         :param n: (int) number of documents to search
 
@@ -163,42 +158,38 @@ class OptimizeTask(FireTaskBase):
 
         '''
 
-        extract = dict()
-
+        extract = list()
 
         if n is None:
             n = self._tw_collection.count()
 
 
-        for header, ob in {'inputs':inputs, 'outputs':outputs}.iteritems():
-            if ob is None:
-                continue
 
-            ob = sorted(ob, key=str.lower)
+        if type(query) is not list or not isinstance(query[0], basestring):
+            raise TypeError("Keys should be in list form. For example, ['X', 'Y.b.z']")
+        query = sorted(query, key=str.lower)
 
-            if header == 'inputs':
+        if label in ['inputs', 'input', 'in', 'input_list', 'features']:
+            self.input_list = query
+        elif label in ['outputs', 'output', 'out', 'output_list']:
+            self.output_list = query
 
-                self.input_list = ob
+        for compound_key in query:
+            sublist = []
 
-            extract[header] = []
-
-            for compound_key in ob:
-                sublist = []
-
-                #todo: check if _tw_collection.find() results in diff order when called
-                for doc in self._tw_collection.find():
-                    if len(sublist) <= n-1:
-                        sublist.append(self.extract(compound_key,doc))
-                extract[header].append(sublist)
+            #todo: check if _tw_collection.find() results in diff order when called
+            for doc in self._tw_collection.find():
+                if len(sublist) <= n-1:
+                    sublist.append(self.extract(compound_key,doc))
+            extract.append(sublist)
 
 
-            # makes single feature/output extracts NOT as a nested list
-            # for example, if outputs = ['X'], extract['output'] is [32], NOT [[32]]
-            if type(ob) is list:
-                if len(ob) == 1:
-                    extract[header] = extract[header][0]
+        # makes single feature/output extracts NOT as a nested list
+        # for example, if outputs = ['X'], extract is [32], NOT [[32]]
+        if type(query) is list:
+            if len(query) == 1:
+                extract = extract[0]
 
-        # self.auto_extract_has_run = True
         self.extracted = extract
         return extract
 
@@ -246,6 +237,12 @@ class OptimizeTask(FireTaskBase):
         # will be used as a tool to return all values if a compound key ends in a dict.
         # for example selecting 'types.old' from ref_dict results in selecting 'types.old.q'
         # and 'types.old.r'
+
+        #should be implemented as the default way extract works
+        pass
+
+    def auto_run(self, inputs=None, outputs=None):
+        # automatically runs some default optimization algorithm based on inputs/outputs
         pass
 
 

@@ -35,11 +35,12 @@ class SkoptimizeTask(OptimizeTask):
         self.store(fw_spec)
 
         # Extract the data we want from the database
-        self.auto_extract(inputs=['Structure.A', 'e_above_hull', 'types.new.s'],
-                                outputs=['types.new.t'], n=2)
+        features = ['Structure.A', 'e_above_hull', 'types.new.s']
+        output = ['types.new.t']
 
-        X = self.extracted['inputs']
-        y = self.extracted['outputs']
+        X = self.auto_extract(features, label = 'input', n=2)
+        y = self.auto_extract(output, label = 'output', n=2)
+
 
         # Run a machine learning algorithm on the data
         dimensions = [(0, 100), (0,100), (0,100)]
