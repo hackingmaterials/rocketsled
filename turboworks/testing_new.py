@@ -20,7 +20,7 @@ class CalculateTask(FireTaskBase):
         B = fw_spec['Structure']['B']
         C = fw_spec['Structure']['C']
 
-        D_output = {'output': {'D': A * B / C}}
+        D_output = {'energy': {'good_estimate': A * B / C}}
         # D_output = {'output': {'D':A*C}}
         # Modify changes in spec
         return FWAction(update_spec=D_output)
@@ -36,8 +36,10 @@ class SkoptimizeTask(OptimizeTask):
 
         # Extract the data we want from the database
         features = ['Structure.A', 'e_above_hull', 'types.new.s']
-        # features = ['Structure']
         output = ['types.new']
+
+        X = self.auto_extract(['Cars.Toyota', 'Pets.Dog.Terrier'], n=250)
+        y = self.auto_extract(['my_output_var'], n=250)
 
         X = self.auto_extract(label = 'input', n=2)
         y = self.auto_extract(output, label = 'output', n=2)
@@ -52,6 +54,10 @@ class SkoptimizeTask(OptimizeTask):
 
         # Update our workflow spec with the new data
         self.auto_update(y_new)
+
+        # Updates Cars.Toyota.Corolla, Cars.Toyota.Tundra, Cars.Toyota.Camry,
+        # Cars.Toyota.RAV4, Cars.Toyota.Prius, Cars.Toyota.Sienna, Pets.Dog.Terrier
+        # in new spec
 
         # Return a workflow
         new_fw = Firework([CalculateTask(), SkoptimizeTask()], spec=self.tw_spec)

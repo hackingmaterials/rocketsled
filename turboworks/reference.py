@@ -26,3 +26,20 @@ ref_dict = {'Structure':{
                         's': 65,
                         't': 53
                     }}}
+
+
+ref_dict_casual = {
+    'Car':{
+        'Toyota':{
+            'Corolla': 42,
+            'Tundra': 27,
+        },
+        'Ford':{
+            'F250':19
+        }
+    },
+    'Pet':{
+        'Dog': 5,
+        'Cat':8
+    }
+}
