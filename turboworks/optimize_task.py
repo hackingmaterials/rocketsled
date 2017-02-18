@@ -13,6 +13,8 @@ from collections import OrderedDict
 from functools import reduce
 import operator
 from six import string_types
+from skopt import gbrt_minimize
+from .dummy_opt import dummy_minimize
 
 
 
@@ -31,6 +33,7 @@ class OptimizeTask(FireTaskBase):
 
         #todo: make this work with fw style dictionaries?
         #todo: cleanup attrs + make this not so horrible
+        #todo: add constructor arg for a new workflow
         if 'host' in kwargs:
             self._tw_host = kwargs['host']
         else:
@@ -43,26 +46,25 @@ class OptimizeTask(FireTaskBase):
 
         self._tw_port = 27017
         self._tw_host = 'localhost'
-
         self._tw_mongo = MongoClient(self._tw_host, self._tw_port)
         self._tw_db = self._tw_mongo.turboworks
         self._tw_collection = self._tw_db.turboworks
         self.delimiter = '.'
         self.meta_fw_keys = ['_id', '_tasks']
 
-        self.input_list = []
-        self.output_list = []
-        self.aux_list = []
-
+        self.input_keys = []
+        self.output_keys = []
+        self.dimension_keys = []
         self.tw_spec = {}
-        self.extracted=[]
+        self.fw_spec_form = {}
 
     def run_task(self, fw_spec):
         # This method should be overridden
-        pass
+        raise NotImplementedError("You must have a run_task implemented!")
 
+    #todo: fix store so its automatic and keeps original spec form and add _auto_store!! -> tw_spec_to_fw_spec
     def store(self, fw_spec):
-
+    
         self.tw_spec = fw_spec
         self._tw_collection.insert_one(OrderedDict(fw_spec))
 
@@ -148,11 +150,9 @@ class OptimizeTask(FireTaskBase):
         if n is None:
             n = self._tw_collection.count()
 
-
         if type(query) is not list and query is not None:
             if not isinstance(query[0], string_types):
                 raise TypeError("Keys should be in list of strings form. For example, ['X', 'Y.b.z']")
-
 
         #todo: change this?
         dict_template = self._tw_collection.find_one()
@@ -166,9 +166,11 @@ class OptimizeTask(FireTaskBase):
         query = sorted(query, key=str.lower)
 
         if label in ['inputs', 'input', 'in', 'input_list', 'features']:
-            self.input_list = query
+            self.input_keys = query
         elif label in ['outputs', 'output', 'out', 'output_list']:
-            self.output_list = query
+            self.output_keys = query
+        elif label in ['dimensions', 'dims', 'dim', 'input_dimensions', 'input_dims', 'input_dim']:
+            self.dimension_keys = query
 
         for k in query:
             sublist = []
@@ -186,7 +188,6 @@ class OptimizeTask(FireTaskBase):
             if len(query) == 1:
                 extract = extract[0]
 
-        self.extracted = extract
         return extract
 
     def update_input(self, updated_value, k, d=None):
@@ -209,7 +210,7 @@ class OptimizeTask(FireTaskBase):
 
 
         if keys is None:
-            keys = sorted(self.input_list, key = str.lower)
+            keys = sorted(self.input_keys, key = str.lower)
         if type(keys) is not list:
             raise TypeError("Keys should be in list form. For example, ['X', 'Y.b.z']")
 
@@ -228,7 +229,6 @@ class OptimizeTask(FireTaskBase):
 
                 except(KeyError):
                     raise ValueError("Keys should be the same as they were extracted with.")
-
 
     def key_scavenger(self, d, compound_key='', top_level=True, compound_keys=None, superkey = None):
         # returns all highest level non-dict entries in a list of class/attr dict style strings
@@ -283,14 +283,51 @@ class OptimizeTask(FireTaskBase):
 
         return key_list
 
-    # POSSIBLE IMPROVEMENTS AND TOOLS
+    def skopt_dummy(self, inputs):
+        """
+        Allows for the current skopt API to be used for sequential optimization without skopt modification
+        :param inputs: skopt requires this
+        :return: any number, does not matter because skopt is not storing this value and its not used elsewhere
+        """
+        return 0
 
-    def auto_optimize(self, inputs=None, outputs=None):
-        # automatically runs some default optimization algorithm based on inputs/outputs
+    def tw_spec_to_fw_spec(self):
         pass
+
+
+class AutoOptimizeTask(OptimizeTask):
+    required_params = ['workflow', 'inputs', 'outputs', 'dimensions']
+    optional_params = []
+
+    def run_task(self, fw_spec):
+
+        input_keys = self['inputs']
+        output_keys = self['outputs']
+        dimensions = self['dimensions']
+        wf = self['workflow']
+
+        X = self.auto_extract(input_keys, label = 'inputs')
+        y = self.auto_extract(output_keys, label = 'outputs')
+
+        try:
+            if isinstance(dimensions[0], basestring):
+                skopt_dimensions = self.auto_extract(dimensions, label='dimensions')
+            elif isinstance(dimensions[0], tuple):
+                skopt_dimensions = dimensions
+        except:
+            raise TypeError('Dimensions should either be a list of dimension keys or a list of tuples')
+
+        #todo: replace this with Optimizer object?
+        new_input = gbrt_minimize(self.skopt_dummy, skopt_dimensions, x0=X, y0=y, n_calls=1, n_random_starts=0)
+
+        new_spec = self.auto_update(new_input)
+
+
 
 
 class Visualize(object):
     def __init__(self):
         pass
+
+
 

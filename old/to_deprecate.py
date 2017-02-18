@@ -1,10 +1,13 @@
-import combo
-from turboworks.discrete_spacify import calculate_discrete_space, duplicate_check
+import os
+import sys
 from contextlib import contextmanager
-import sys, os
-from turboworks.gp_opt import gp_minimize
-from turboworks.dummy_opt import dummy_minimize
+
 import numpy as np
+
+import combo
+from old.gp_opt import gp_minimize
+from turboworks.discrete_spacify import calculate_discrete_space, duplicate_check
+from turboworks.dummy_opt import dummy_minimize
 
 
 class Utility(object):
