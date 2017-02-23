@@ -1,10 +1,12 @@
-from fireworks import Firework, LaunchPad, FWAction, FireTaskBase
+from fireworks import Firework, LaunchPad, FWAction, FireTaskBase, Workflow, ScriptTask
 from fireworks.core.rocket_launcher import launch_rocket
 from fireworks.utilities.fw_utilities import explicit_serialize
 
+from turboworks.manage_db import ManageDB
+
 from turboworks.dummy_opt import dummy_minimize
-from turboworks.optimize_task import OptimizeTask
-from turboworks.reference import ref_dict
+from turboworks.optimize_task import OptimizeTask, AutoOptimizeTask
+from turboworks.reference import ref_dict, ref_dict2
 
 
 @explicit_serialize
@@ -12,6 +14,8 @@ class CalculateTask(FireTaskBase):
     _fw_name = "CalculateTask"
 
     def run_task(self, fw_spec):
+
+        print "running calculatetask"
         A = fw_spec['Structure']['A']
         B = fw_spec['Structure']['B']
         C = fw_spec['Structure']['C']
@@ -20,6 +24,18 @@ class CalculateTask(FireTaskBase):
         # D_output = {'output': {'D':A*C}}
         # Modify changes in spec
         return FWAction(update_spec=D_output)
+
+
+
+@explicit_serialize
+class NothingTask(OptimizeTask):
+    _fw_name = "SkoptimizeTask"
+
+    def run_task(self, fw_spec):
+        print "running nothingtask"
+        print fw_spec['energy']['good_estimate']
+
+
 
 @explicit_serialize
 class SkoptimizeTask(OptimizeTask):
@@ -47,10 +63,8 @@ class SkoptimizeTask(OptimizeTask):
         self.auto_update(y_new)
 
         # Return a workflow
-        new_fw = Firework([CalculateTask(), SkoptimizeTask()], spec=self.tw_spec)
-        return FWAction(additions=new_fw)
-
-
+        fw = Firework([CalculateTask(), SkoptimizeTask()], spec=self.tw_spec)
+        return FWAction(additions=fw)
 
 
 
@@ -63,18 +77,19 @@ if __name__ == "__main__":
     launchpad = LaunchPad()
     launchpad.reset('', require_password=False)
 
-    fw_spec = ref_dict
-
     # create the Firework consisting of a single task
     firetask1 = CalculateTask()
-    firetask2 = SkoptimizeTask()
+    firetask2 = NothingTask()
 
     # firework = Firework([firetask1, firetask2], spec=fw_spec)
-    firework = Firework([CalculateTask(), SkoptimizeTask()],  spec=fw_spec)
-    # store workflow and launch it locally
-    launchpad.add_wf(firework)
+    firework1 = Firework([CalculateTask(), NothingTask()], spec=ref_dict)
+    firework2 = Firework([CalculateTask(), NothingTask()], spec=ref_dict2)
+    wf = Workflow([firework1, firework2], {firework1:[firework2]})
 
+    firework3 = Firework([AutoOptimizeTask(workflow=wf, inputs = [], outputs=[], dimensions=[])])
+
+    launchpad.add_wf(firework3)
 
     # Repeatedly execute the optimization loop
-    for i in range(1):
+    for i in range(3):
         launch_rocket(launchpad)

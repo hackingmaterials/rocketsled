@@ -12,3 +12,7 @@ dimensions = [(-2.0, 2.0),(-2.0, 5.0)]
 print "beginning optimization"
 res = gbrt_minimize(f, dimensions, x0=x0, y0=y0, n_calls=1, n_random_starts=0)
 print "next guess to try:", res.x_iters[-1]
+
+
+
+#alternatively, using Optimizer

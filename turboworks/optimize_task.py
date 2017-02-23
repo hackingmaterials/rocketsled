@@ -15,6 +15,7 @@ import operator
 from six import string_types
 from skopt import gbrt_minimize
 from .dummy_opt import dummy_minimize
+from fireworks import FWAction, Workflow
 
 
 
@@ -34,15 +35,6 @@ class OptimizeTask(FireTaskBase):
         #todo: make this work with fw style dictionaries?
         #todo: cleanup attrs + make this not so horrible
         #todo: add constructor arg for a new workflow
-        if 'host' in kwargs:
-            self._tw_host = kwargs['host']
-        else:
-            self._tw_host = 'localhost'
-
-        if 'port' in kwargs:
-            self._tw_port = kwargs['port']
-        else:
-            self._tw_port = 27017
 
         self._tw_port = 27017
         self._tw_host = 'localhost'
@@ -63,10 +55,10 @@ class OptimizeTask(FireTaskBase):
         raise NotImplementedError("You must have a run_task implemented!")
 
     #todo: fix store so its automatic and keeps original spec form and add _auto_store!! -> tw_spec_to_fw_spec
-    def store(self, fw_spec):
-    
-        self.tw_spec = fw_spec
-        self._tw_collection.insert_one(OrderedDict(fw_spec))
+    def store(self, spec):
+
+        self.tw_spec = spec
+        self._tw_collection.insert_one(OrderedDict(spec))
 
     def parse_compound_key(self, k):
 
@@ -294,36 +286,124 @@ class OptimizeTask(FireTaskBase):
     def tw_spec_to_fw_spec(self):
         pass
 
-
+@explicit_serialize
 class AutoOptimizeTask(OptimizeTask):
     required_params = ['workflow', 'inputs', 'outputs', 'dimensions']
-    optional_params = []
+    optional_params = ['initialized']
+
+    _fw_name = "AutoOptimizeTask"
 
     def run_task(self, fw_spec):
 
+        wf_dict = self['workflow']
+
+        wf = Workflow.from_dict(wf_dict)
         input_keys = self['inputs']
         output_keys = self['outputs']
-        dimensions = self['dimensions']
-        wf = self['workflow']
+        dim_keys = self['dimensions']
 
-        X = self.auto_extract(input_keys, label = 'inputs')
-        y = self.auto_extract(output_keys, label = 'outputs')
+        print "AutoOptimizeTask running"
 
+        print wf_dict["fws"][-1]["spec"]["_tasks"]
+        wf_dict["fws"][-1]["spec"]["_tasks"].append(AutoOptimizeTask(initialized=True, inputs = input_keys, outputs = output_keys,
+                                               dimensions=dim_keys, workflow=wf))
+        print wf_dict["fws"][-1]["spec"]["_tasks"]
+        wf = Workflow.from_dict(wf_dict)
+
+        # for idx, fw in enumerate(wf_dict["fws"]):
+        #     fname = "FW--{}".format(fw["name"])
+        #     if use_slug:
+        #         fname = get_slug(fname)
+        #     wf_dict["fws"][idx]["spec"]["_tasks"].insert(0, FileWriteTask(
+        #         files_to_write=[{"filename": fname, "contents": ""}]).to_dict())
+
+        #if the optimizer task has been run
         try:
-            if isinstance(dimensions[0], basestring):
-                skopt_dimensions = self.auto_extract(dimensions, label='dimensions')
-            elif isinstance(dimensions[0], tuple):
-                skopt_dimensions = dimensions
-        except:
-            raise TypeError('Dimensions should either be a list of dimension keys or a list of tuples')
-
-        #todo: replace this with Optimizer object?
-        new_input = gbrt_minimize(self.skopt_dummy, skopt_dimensions, x0=X, y0=y, n_calls=1, n_random_starts=0)
-
-        new_spec = self.auto_update(new_input)
+            self['initialized']
+            print "Optimizer being run from an artificial workflow"
 
 
+        #if the optimizer is being run for the first time:
+        except KeyError:
+            # Add AutoOptimizeTask at the end
+            # wf.fws[-1].tasks.append(AutoOptimizeTask(initialized=True, inputs = input_keys, outputs = output_keys,
+            #                                    dimensions=dim_keys, workflow=wf))
 
+            print "Optimizer being run for the first time"
+            #execute the workflow
+            return FWAction(additions=wf)
+
+
+        flat = {}
+        # grab all relevant values from the specs of each fw using the input, output, and dim keys
+        # for fw in wf.fws:
+
+
+        # store all the values in a document in Mongo in flat dict with upper.lower.etc keys
+        # make the pretty X,y matrices
+        # run random forest
+        # associate the new x with the compound keys
+        # update all the specs of the workflow with their nested values
+        # return a FWAction(additons=wf) where wf includes a new AutoOptimizeTask with initialized = true
+        # return FWAction(additions=wf)
+
+
+
+
+@explicit_serialize
+class OptimizeTaskFromVector(FireTaskBase):
+
+    required_params = ['input', 'output', 'dimensions']
+    optional_params = []
+
+    _fw_name = "OptimizeTaskFromVector"
+
+    def __init__(self):
+        self._tw_port = 27017
+        self._tw_host = 'localhost'
+        self._tw_mongo = MongoClient(self._tw_host, self._tw_port)
+        self._tw_db = self._tw_mongo.turboworks
+        self._tw_collection = self._tw_db.turboworks2
+
+    def run_task(self, fw_spec):
+
+        x = self['input']
+        yi = self['output']
+        d = self['dimensions']
+
+        self.store(x, yi, d)
+        X = self.get_field('input')
+        y = self.get_field('output')
+
+        print "got here"
+
+        x_new = gbrt_minimize(self.dummy, d, x0=X, y0=y, n_calls=1, n_random_starts=0)
+
+        print x_new
+
+        return FWAction(update_spec={'input':x_new})
+
+
+    def store(self, input, output, dimensions):
+        store_dict = {'input':input, 'output':output, 'dimensions':dimensions}
+        self._tw_collection.insert_one(store_dict)
+
+
+    def get_field(self, field):
+
+        biglist = []
+        for doc in self._tw_collection.find():
+            biglist.append(doc[field])
+
+        return biglist
+
+    def dummy(self, inputs):
+        return 0
+
+
+
+# my_wf = [fw1, fw2, fw3]
+# should add AutoOptimizeTask onto fw3
 
 class Visualize(object):
     def __init__(self):
