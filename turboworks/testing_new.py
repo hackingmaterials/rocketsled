@@ -84,12 +84,12 @@ if __name__ == "__main__":
     # firework = Firework([firetask1, firetask2], spec=fw_spec)
     firework1 = Firework([CalculateTask(), NothingTask()], spec=ref_dict)
     firework2 = Firework([CalculateTask(), NothingTask()], spec=ref_dict2)
-    wf = Workflow([firework1, firework2], {firework1:[firework2]})
+    wf = Workflow([firework1, firework2])
 
     firework3 = Firework([AutoOptimizeTask(workflow=wf, inputs = [], outputs=[], dimensions=[])])
 
     launchpad.add_wf(firework3)
 
     # Repeatedly execute the optimization loop
-    for i in range(3):
+    for i in range(40):
         launch_rocket(launchpad)

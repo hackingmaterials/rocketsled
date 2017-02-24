@@ -304,18 +304,17 @@ class AutoOptimizeTask(OptimizeTask):
 
         print "AutoOptimizeTask running"
 
-        print wf_dict["fws"][-1]["spec"]["_tasks"]
-        wf_dict["fws"][-1]["spec"]["_tasks"].append(AutoOptimizeTask(initialized=True, inputs = input_keys, outputs = output_keys,
-                                               dimensions=dim_keys, workflow=wf))
-        print wf_dict["fws"][-1]["spec"]["_tasks"]
-        wf = Workflow.from_dict(wf_dict)
+        print "fireworks", wf_dict["fws"]
 
-        # for idx, fw in enumerate(wf_dict["fws"]):
-        #     fname = "FW--{}".format(fw["name"])
-        #     if use_slug:
-        #         fname = get_slug(fname)
-        #     wf_dict["fws"][idx]["spec"]["_tasks"].insert(0, FileWriteTask(
-        #         files_to_write=[{"filename": fname, "contents": ""}]).to_dict())
+        print "firework2 tasks", wf_dict["fws"][0]["spec"]
+        print "firework1 tasks", wf_dict["fws"][1]["spec"]
+        print "last firework tasks", wf_dict["fws"][-1]["spec"]
+
+        # The last firework is 0. The first firework is N.
+        wf_dict["fws"][0]["spec"]["_tasks"].append(AutoOptimizeTask(initialized=True, inputs = input_keys, outputs = output_keys,
+                                               dimensions=dim_keys, workflow=wf))
+
+        wf = Workflow.from_dict(wf_dict)
 
         #if the optimizer task has been run
         try:
@@ -331,7 +330,7 @@ class AutoOptimizeTask(OptimizeTask):
 
             print "Optimizer being run for the first time"
             #execute the workflow
-            return FWAction(additions=wf)
+        return FWAction(additions=wf)
 
 
         flat = {}
