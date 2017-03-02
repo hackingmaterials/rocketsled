@@ -3,9 +3,9 @@ from fireworks.core.rocket_launcher import launch_rocket
 from fireworks.utilities.fw_utilities import explicit_serialize
 
 from old.optimize_task import OptimizeTask, AutoOptimizeTask
-from turboworks.dummy import dummy_minimize
+from old.reference import ref_dict, ref_dict2
 from turboworks.db import DB
-from turboworks.reference import ref_dict, ref_dict2
+from turboworks.dummy import dummy_minimize
 
 
 @explicit_serialize

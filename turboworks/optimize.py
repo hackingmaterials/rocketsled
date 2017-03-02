@@ -3,15 +3,14 @@ from __future__ import print_function
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from pymongo import MongoClient
-from fireworks import FWAction, Workflow
-from turboworks.dummy import dummy_minimize
+from fireworks import FWAction
 import skopt
 
 
 @explicit_serialize
 class OptTask(FireTaskBase):
 
-    _fw_name = "VectorOptimize"
+    _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
     optional_params = ['get_x', 'predictor']
 
@@ -129,7 +128,7 @@ class OptTask(FireTaskBase):
                                                          arg3=Z_ext_dims))
 
         else:
-            z_total_new = skopt.gbrt_minimize(lambda x:0, Z_ext_dims, x0=Z_ext, y0=Y, n_calls=1, n_random_starts=0).x_iters[-1]
+            z_total_new = skopt.forest_minimize(lambda x:0, Z_ext_dims, x0=Z_ext, y0=Y, n_calls=1, n_random_starts=0).x_iters[-1]
 
         # remove X features from the new Z vector
         z_new = z_total_new[0:len(z)]
@@ -138,6 +137,3 @@ class OptTask(FireTaskBase):
         # return a new workflow
         return FWAction(additions=wf_creator(z_new))
 
-
-class Vizualizer(object):
-    pass

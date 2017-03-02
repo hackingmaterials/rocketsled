@@ -15,6 +15,8 @@ Utility functions for managing the turboworks database.
 """
 
 import numpy
+from references import dtypes
+import warnings
 
 class DB():
 
@@ -108,11 +110,59 @@ class DB():
         if var in ['X', 'Y', 'Z']:
             var = var.lower()
 
-
         X = [x[var] for x in self.collection.find()]
 
         mean = numpy.mean(X, 0).tolist()
         return mean
+
+    def store(self, obj):
+        """
+
+        :param obj: A dict or list of dicts which can be used with turboworks db.
+                for example: obj = {'z':[1,2,3], 'y':5}
+        :return: None
+        """
+
+        warning_list = "key {} exists in dictionary {}, but is not a list or array. \n" \
+                       " this may cause errors internally in turboworks"
+        warning_value = "{} must be a {}. Entry skipped. \n" \
+                        "Consult turboworks.references.dtypes for a full list of supported datatypes."
+        warning_key = "required key {} not in {}. Entry skipped. \n" \
+                      " Stored dictionaries must have 'z' and 'y' to be stored in the turboworks db."
+        warning_dict = "Object {} is {}, not dict. Entry skipped. \n " \
+                       "Turboworks can only store dictionaries in the database."
+        error_list = "Object {} is {}, not list. Turboworks can only process a list of dictionaries."
+
+        if isinstance(obj, dict):
+            obj = [obj]
+
+        store_dict = None
+        if isinstance(obj, list):
+            for d in obj:
+                if isinstance(d, dict):
+                    if 'z' in d.keys():
+                        if 'y' in d.keys():
+                            if isinstance(d['z'], list) or isinstance(d['z'], numpy.ndarray):
+                                if type(d['y']) in dtypes.numbers:
+                                    store_dict = {'z':d['z'], 'y':d['y']}
+                                    if 'x' in d.keys():
+                                        if isinstance(d['x'], list) or isinstance(d['x'], numpy.ndarray):
+                                            store_dict['x'] = d['x']
+                                        else:
+                                            warnings.warn(warning_list.format('x', d))
+                                    self.collection.insert_one(store_dict)
+                                else:
+                                    warnings.warn(warning_value.format('y','number'))
+                            else:
+                                warnings.warn(warning_list.format('z', d))
+                        else:
+                            warnings.warn(warning_key.format('y',d))
+                    else:
+                        warnings.warn(warning_key.format('z', d))
+                else:
+                    warnings.warn(warning_dict.format(d, type(d)))
+        else:
+            raise TypeError(error_list.format(obj, type(obj)))
 
     def back_up(self, hostname='localhost', portnum=27017, dbname='turboworks',
                 collection='backup'):
@@ -139,9 +189,11 @@ class DB():
 class Result(object):
 
     def __init__(self, value, collection):
+
         self.value = value
         self.collection = collection
-        self.data = [x for x in self.collection.find({'y':value})]
 
-
+        if type(value) in dtypes.numbers:
+            self.data = [x for x in self.collection.find({'y':value})]
+            self.datum = self.data[0]
 

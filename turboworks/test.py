@@ -7,6 +7,7 @@ from fireworks import FWAction, Workflow, Firework, LaunchPad
 from turboworks.optimize import OptTask
 from turboworks.db import DB
 from turboworks.dummy import dummy_minimize
+import matplotlib.pyplot as plot
 
 
 @explicit_serialize
@@ -19,7 +20,7 @@ class CalculateTask(FireTaskBase):
         B = fw_spec['B']
         C = fw_spec['C']
 
-        output = {'_y': A * B / C}
+        output = {'_y': A**2 + B**2 / C}
         return FWAction(update_spec=output)
 
 @explicit_serialize
@@ -40,8 +41,8 @@ def wf_creator(z):
     #CalculateTask writes _y field to the spec internally.
 
     firework1 = Firework([CalculateTask(), ArbitraryTask(),
-                          OptTask(wf_creator ='vector_optimize_test.wf_creator',
-                                  get_x='vector_optimize_test.get_x',
+                          OptTask(wf_creator ='test.wf_creator',
+                                  get_x='test.get_x',
                                   predictor='gp_minimize',
                                   dimensions=Z_dim)],
                          spec=spec1)
@@ -59,10 +60,18 @@ if __name__ == "__main__":
 
     launchpad = LaunchPad()
     launchpad.reset('', require_password=False)
-    launchpad.add_wf(wf_creator([15.0, 25.0, 35.0]))
+    launchpad.add_wf(wf_creator([95.0, 95.0, 13.0]))
+
+
+    minima = []
 
     for i in range(100):
         launch_rocket(launchpad)
+        minima.append(db.min.value)
 
-    from pprint import pprint
-    pprint(db.min.data)
+
+    plot.plot(range(len(minima)), minima)
+    plot.ylabel('Best Minimum Value')
+    plot.xlabel('Iteration')
+    plot.show()
+
