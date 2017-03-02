@@ -32,20 +32,7 @@ class ManageDB():
         self.collection = getattr(self.db,collection)
         self.collection_string = collection
 
-    def nuke(self):
-        """
-        deletes all data in the TurboWorks DB collection (TurboWorks_collection)
-        :return num_deleted: (int) number of documents deleted from the database
-        """
-        docs_removed = self.collection.delete_many({})
-        num_deleted = docs_removed.deleted_count
-        try:
-            print 'Documents removed:         ', num_deleted
-        except:
-            print('Documents removed:         ', num_deleted)
-        print('Documents remaining:        0')
-        return num_deleted
-
+    @property
     def count(self):
         """
         counts documents in the TurboWorks DB collection (TurboWorks_collection)
@@ -54,6 +41,23 @@ class ManageDB():
         cursor = self.collection.find()
         print('\nNumber of documents:       ', cursor.count())
         return cursor.count()
+
+    @property
+    def min(self):
+        """
+        :return: A Result object holding all information pertinent to the minimum 'y' value in the turboworks db.
+        """
+        Y = [y['y'] for y in self.collection.find()]
+        return Result(min(Y), self.collection)
+
+    @property
+    def max(self):
+        """
+        :return: A Result object holding all information pertinent to the maximum 'y' value in the turboworks db.
+
+        """
+        Y = [y['y'] for y in self.collection.find()]
+        return Result(max(Y), self.collection)
 
     def query(self, querydict=None, print_to_console = False):
         """
@@ -79,6 +83,20 @@ class ManageDB():
         docs = [document for document in cursor]
         return docs
 
+    def nuke(self):
+        """
+        deletes all data in the TurboWorks DB collection (TurboWorks_collection)
+        :return num_deleted: (int) number of documents deleted from the database
+        """
+        docs_removed = self.collection.delete_many({})
+        num_deleted = docs_removed.deleted_count
+        try:
+            print 'Documents removed:         ', num_deleted
+        except:
+            print('Documents removed:         ', num_deleted)
+        print('Documents remaining:        0')
+        return num_deleted
+
     def avg(self, var):
         """
         :param var: (string) the variable to be averaged. Should be 'Z', or 'X' or 'Y'
@@ -93,30 +111,8 @@ class ManageDB():
 
         X = [x[var] for x in self.collection.find()]
 
-        try:
-            num_features = len(X[0])
-            list_by_feature = []
-            for i in range(num_features):
-                list_by_feature.append([x[i] for x in X])
-        except TypeError:
-            list_by_feature = X
-
-        mean = numpy.mean(list_by_feature, 0).tolist()
+        mean = numpy.mean(X, 0).tolist()
         return mean
-
-    def min(self):
-        """
-        :return: The minimum of 'y', the output scalar.
-        """
-        Y = [y['y'] for y in self.collection.find()]
-        return min(Y)
-
-    def max(self):
-        """
-        :return: The maximum of 'y', the output scalar.
-        """
-        Y = [y['y'] for y in self.collection.find()]
-        return max(Y)
 
     def back_up(self, hostname='localhost', portnum=27017, dbname='turboworks',
                 collection='backup'):
@@ -138,3 +134,12 @@ class ManageDB():
             backup_collection.insert_one(document)
 
         print("Ended storage in DB {}".format(backup_collection_string))
+
+
+class Result():
+
+    def __init__(self, value, collection):
+        self.value = value
+        self.collection = collection
+        self.params = [x for x in self.collection.find({'y':value})]
+

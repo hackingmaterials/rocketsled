@@ -5,7 +5,6 @@ from fireworks.core.firework import FireTaskBase
 from fireworks.core.rocket_launcher import launch_rocket
 from fireworks import FWAction, Workflow, Firework, LaunchPad
 from turboworks.vector_optimize import VectorOptimize
-from turboworks.dummy_opt import dummy_minimize
 from turboworks.manage_db import ManageDB
 
 
@@ -39,7 +38,7 @@ def wf_creator(z):
 
     firework1 = Firework([CalculateTask(), ArbitraryTask(),
                           VectorOptimize(wf_creator ='vector_optimize_test.wf_creator',
-                                         get_x = 'vector_optimize_test.get_x',
+                                         # get_x='vector_optimize_test.get_x',
                                          dimensions=Z_dim)],
                          spec=spec1, name='firework1')
 
@@ -55,5 +54,7 @@ if __name__ == "__main__":
     launchpad.reset('', require_password=False)
     launchpad.add_wf(wf_creator([1.0, 2.0, 3.0]))
 
-    for i in range(300):
+    for i in range(100):
         launch_rocket(launchpad)
+
+    print(mdb.min.params)
