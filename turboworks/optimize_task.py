@@ -41,7 +41,7 @@ class OptimizeTask(FireTaskBase):
         self._tw_mongo = MongoClient(self._tw_host, self._tw_port)
         self._tw_db = self._tw_mongo.turboworks
         self._tw_collection = self._tw_db.turboworks
-        self.delimiter = '.'
+        self.delimiter = '/'
         self.meta_fw_keys = ['_id', '_tasks']
 
         self.input_keys = []
@@ -85,7 +85,64 @@ class OptimizeTask(FireTaskBase):
         keys = self.parse_compound_key(k)
         return reduce(operator.getitem, keys, d)
 
-    def auto_extract(self, query = None, label="inputs", n=None):
+    # Extracting compound keys from a single nested dictionary and storing in a new flat dictionary
+    def flatten(self, k_list = None, d = None):
+
+        if type(k_list) is not list and k_list is not None:
+            if not isinstance(k_list[0], string_types):
+                raise TypeError("Keys should be in list of strings form. For example, ['X', 'Y/b/z']")
+
+        from pprint import pprint
+        pprint(d)
+
+        k_list = self.extend_compound_key_list(key_list=k_list, d=d)
+
+        try:
+            k_list = [x.encode('UTF8') for x in k_list]
+        except:
+            pass
+
+
+
+        k_list = sorted(k_list, key=str.lower)
+
+        flat = {}
+        for k in k_list:
+            flat[k] = self.extract(k,d)
+
+        return flat
+
+    # Extracting from a list of flat dictionaries (using compound keys)
+    def flat_extract(self, k_list = None, d_list=None):
+        if d_list is None:
+            d_list = self._tw_collection.find()
+
+        k_list = self.fix_keys(k_list=k_list)
+
+        extract = []
+
+        for doc in d_list:
+            extract.append([doc[k] for k in k_list])
+
+        # return self.flatten_nested_list(extract)
+        return extract
+
+    # Fix a list of compound keys
+    def fix_keys(self, k_list = None, extension = False, dict_template = None):
+
+        if extension:
+            k_list = self.extend_compound_key_list(key_list=k_list, d=dict_template)
+
+        try:
+            k_list = [x.encode('UTF8') for x in k_list]
+        except:
+            pass
+
+        return sorted(k_list, key=str.lower)
+
+    # Extracting from a list of nested dictionaries
+    # todo: not working
+    def auto_extract(self, k_list = None, d_list=None, label="inputs", n=None):
         '''
 
         auto_extract processes documents in a mongo database to gather complete (or limited)
@@ -116,7 +173,7 @@ class OptimizeTask(FireTaskBase):
 
             [[1200, 12000, 1200], [88, 88, 88]]]
 
-        :param query: (list) of possible (string) ML inputs which will be used as keys searching
+        :param k_list: (list) of possible (string) ML inputs which will be used as keys searching
         the turboworks database for all stored data. given in class/attr 'dot' form for nested
          dictionaries.
 
@@ -139,48 +196,57 @@ class OptimizeTask(FireTaskBase):
 
         extract = list()
 
-        if n is None:
-            n = self._tw_collection.count()
-
-        if type(query) is not list and query is not None:
-            if not isinstance(query[0], string_types):
+        if type(k_list) is not list and k_list is not None:
+            if not isinstance(k_list[0], string_types):
                 raise TypeError("Keys should be in list of strings form. For example, ['X', 'Y.b.z']")
-
-        #todo: change this?
-        dict_template = self._tw_collection.find_one()
-        query = self.extend_compound_key_list(key_list=query, d=dict_template)
-
-        try:
-            query = [x.encode('UTF8') for x in query]
-        except:
+        elif k_list is None:
+            # key_scavenger in extend_compound_key already handles this
             pass
 
-        query = sorted(query, key=str.lower)
+        if d_list is None:
+            #todo: fix this?
+            dict_template = self._tw_collection.find_one()
+            d_list = self._tw_collection.find()
+
+            if n is None:
+                n = self._tw_collection.count()
+        else:
+            dict_template = d_list[0]
+
+            if n is None:
+                n = len(d_list)
+
+        k_list = self.fix_keys(k_list = k_list, extension=True, dict_template=dict_template)
 
         if label in ['inputs', 'input', 'in', 'input_list', 'features']:
-            self.input_keys = query
+            self.input_keys = k_list
         elif label in ['outputs', 'output', 'out', 'output_list']:
-            self.output_keys = query
+            self.output_keys = k_list
         elif label in ['dimensions', 'dims', 'dim', 'input_dimensions', 'input_dims', 'input_dim']:
-            self.dimension_keys = query
+            self.dimension_keys = k_list
 
-        for k in query:
+        for k in k_list:
             sublist = []
 
             #todo: check if _tw_collection.find() results in diff order when called
-            for doc in self._tw_collection.find():
+            for doc in d_list:
                 if len(sublist) <= n-1:
                     sublist.append(self.extract(k,doc))
             extract.append(sublist)
 
+        return self.flatten_nested_list(extract)
 
-        # makes single feature/output extracts NOT as a nested list
+    # makes single feature/output extracts NOT as a nested list
+    # todo: maybe not needed
+    def flatten_nested_list(self, nested_list):
+
         # for example, if outputs = ['X'], extract is [32], NOT [[32]]
-        if type(query) is list:
-            if len(query) == 1:
-                extract = extract[0]
+        if type(nested_list) is list:
+            if len(nested_list) == 1:
+                extract = nested_list[0]
+                return extract
 
-        return extract
+        return nested_list
 
     def update_input(self, updated_value, k, d=None):
         # updates a single input
@@ -293,58 +359,94 @@ class AutoOptimizeTask(OptimizeTask):
 
     _fw_name = "AutoOptimizeTask"
 
+    def create_dict_by_fw(self, wf_dict):
+        dict_by_fw = {}
+        for fw in wf_dict["fws"]:
+            name = fw["name"]
+            spec = fw["spec"]
+
+            if name in dict_by_fw:
+                last_clone = self.get_last_clone_number(name, dict_by_fw)
+                name = name + str(last_clone + 1)
+
+            dict_by_fw[name] = spec
+
+        return dict_by_fw
+
+    #todo: this doesn't work if the d has a number in front of it...
+    def get_last_clone_number(self, k, d):
+        biggest = 0
+        for i in d:
+            if k in i:
+                try:
+                    num = int(i.replace(k, "", 1))
+                    if num > biggest:
+                        biggest = num
+                except:
+                    pass
+
+        return biggest
+
+    @property
+    def is_initialized(self):
+        try:
+            self["initialized"]
+            return True
+        except:
+            return False
+
     def run_task(self, fw_spec):
 
         wf_dict = self['workflow']
-
         wf = Workflow.from_dict(wf_dict)
+
         input_keys = self['inputs']
         output_keys = self['outputs']
         dim_keys = self['dimensions']
 
-        print "AutoOptimizeTask running"
-
-        print "fireworks", wf_dict["fws"]
-
-        print "firework2 tasks", wf_dict["fws"][0]["spec"]
-        print "firework1 tasks", wf_dict["fws"][1]["spec"]
-        print "last firework tasks", wf_dict["fws"][-1]["spec"]
-
-        # The last firework is 0. The first firework is N.
-        wf_dict["fws"][0]["spec"]["_tasks"].append(AutoOptimizeTask(initialized=True, inputs = input_keys, outputs = output_keys,
-                                               dimensions=dim_keys, workflow=wf))
-
-        wf = Workflow.from_dict(wf_dict)
-
-        #if the optimizer task has been run
-        try:
-            self['initialized']
-            print "Optimizer being run from an artificial workflow"
-
-
-        #if the optimizer is being run for the first time:
-        except KeyError:
-            # Add AutoOptimizeTask at the end
-            # wf.fws[-1].tasks.append(AutoOptimizeTask(initialized=True, inputs = input_keys, outputs = output_keys,
-            #                                    dimensions=dim_keys, workflow=wf))
-
-            print "Optimizer being run for the first time"
-            #execute the workflow
-        return FWAction(additions=wf)
+        all_keys = input_keys + output_keys + dim_keys
 
 
         flat = {}
         # grab all relevant values from the specs of each fw using the input, output, and dim keys
-        # for fw in wf.fws:
+        from pprint import pprint
+        # pprint(wf_dict["fws"][0])
+
+        if self.is_initialized:
+
+            dict_by_fw = self.create_dict_by_fw(wf_dict)
+            # pprint(dict_by_fw)
+
+            # ['Firework1.Structure.A', 'Firework2.Structure.B']
 
 
-        # store all the values in a document in Mongo in flat dict with upper.lower.etc keys
-        # make the pretty X,y matrices
-        # run random forest
-        # associate the new x with the compound keys
-        # update all the specs of the workflow with their nested values
+            from pprint import pprint
+            pprint(wf_dict)
+
+            tw_spec = self.flatten(k_list=all_keys, d=dict_by_fw)
+            # {'Firework1.Structure.A': 1.31, 'Firework2.Structure.B': 2.03, etc.}
+            # store all the values in a document in Mongo in flat dict with upper.lower.etc keys
+            self.store(tw_spec)
+
+            # make the pretty X,y matrices
+            X = self.flat_extract(k_list=input_keys)
+            y = self.flat_extract(k_list=output_keys)
+            print X
+            print y
+
+
+            # run random forest
+            # associate the new x with the compound keys
+            # update all the specs of the workflow with their nested values
+
+
         # return a FWAction(additons=wf) where wf includes a new AutoOptimizeTask with initialized = true
-        # return FWAction(additions=wf)
+        wf_dict["fws"][0]["spec"]["_tasks"].append(AutoOptimizeTask(initialized = True, inputs = input_keys,
+                                                                    outputs = output_keys, dimensions=dim_keys,
+                                                                    workflow=wf))
+        wf = Workflow.from_dict(wf_dict)
+
+        return FWAction(additions=wf)
 
 
 

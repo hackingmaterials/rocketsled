@@ -1,4 +1,4 @@
-from fireworks import Firework, LaunchPad, FWAction, FireTaskBase, Workflow, ScriptTask
+from fireworks import Firework, LaunchPad, FWAction, FireTaskBase, Workflow
 from fireworks.core.rocket_launcher import launch_rocket
 from fireworks.utilities.fw_utilities import explicit_serialize
 
@@ -15,7 +15,6 @@ class CalculateTask(FireTaskBase):
 
     def run_task(self, fw_spec):
 
-        print "running calculatetask"
         A = fw_spec['Structure']['A']
         B = fw_spec['Structure']['B']
         C = fw_spec['Structure']['C']
@@ -23,17 +22,16 @@ class CalculateTask(FireTaskBase):
         D_output = {'energy': {'good_estimate': A * B / C}}
         # D_output = {'output': {'D':A*C}}
         # Modify changes in spec
-        return FWAction(update_spec=D_output)
+        return FWAction(update_spec=D_output, stored_data=D_output)
 
 
 
 @explicit_serialize
-class NothingTask(OptimizeTask):
-    _fw_name = "SkoptimizeTask"
+class NothingTask(FireTaskBase):
+    _fw_name = "NothingTask"
 
     def run_task(self, fw_spec):
-        print "running nothingtask"
-        print fw_spec['energy']['good_estimate']
+        print "final task result:", fw_spec['energy']['good_estimate']
 
 
 
@@ -48,10 +46,12 @@ class SkoptimizeTask(OptimizeTask):
 
         # Extract the data we want from the database
         features = ['Structure']
-        output = ['energy.good_estimate']
+        # output = ['energy.good_estimate']
 
         X = self.auto_extract(features, label='inputs')
-        y = self.auto_extract(output, label='outputs')
+        # y = self.auto_extract(output, label='outputs')
+
+        print X
 
         # Run a machine learning algorithm on the data
         dimensions = [(0, 100), (0,100), (0,100)]
@@ -67,11 +67,10 @@ class SkoptimizeTask(OptimizeTask):
         return FWAction(additions=fw)
 
 
-
 if __name__ == "__main__":
 
-    # mdb = ManageDB()
-    # mdb.nuke()
+    mdb = ManageDB()
+    mdb.nuke()
 
     # set up the LaunchPad and reset it
     launchpad = LaunchPad()
@@ -82,14 +81,20 @@ if __name__ == "__main__":
     firetask2 = NothingTask()
 
     # firework = Firework([firetask1, firetask2], spec=fw_spec)
-    firework1 = Firework([CalculateTask(), NothingTask()], spec=ref_dict)
-    firework2 = Firework([CalculateTask(), NothingTask()], spec=ref_dict2)
+    firework1 = Firework([CalculateTask(), NothingTask()], spec=ref_dict, name='Firework1')
+    firework2 = Firework([CalculateTask(), NothingTask()], spec=ref_dict2, name='Firework2')
     wf = Workflow([firework1, firework2])
 
-    firework3 = Firework([AutoOptimizeTask(workflow=wf, inputs = [], outputs=[], dimensions=[])])
+    firework3 = Firework([AutoOptimizeTask(workflow=wf, inputs = ['Firework1/Structure/A', 'Firework2/Structure/B'],
+                                           outputs=['Firework2/energy/good_estimate'], dimensions=[])])
 
+
+    # firework4 = Firework([SkoptimizeTask()], spec=ref_dict)
+    # firework5 = Firework([SkoptimizeTask()], spec=ref_dict2)
+    # wf = Workflow([firework1, firework2])
+    #
     launchpad.add_wf(firework3)
 
     # Repeatedly execute the optimization loop
-    for i in range(40):
+    for i in range(3):
         launch_rocket(launchpad)
