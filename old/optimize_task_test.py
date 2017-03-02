@@ -2,10 +2,9 @@ from fireworks import Firework, LaunchPad, FWAction, FireTaskBase, Workflow
 from fireworks.core.rocket_launcher import launch_rocket
 from fireworks.utilities.fw_utilities import explicit_serialize
 
-from turboworks.manage_db import ManageDB
-
+from old.optimize_task import OptimizeTask, AutoOptimizeTask
 from turboworks.dummy_opt import dummy_minimize
-from turboworks.optimize_task import OptimizeTask, AutoOptimizeTask
+from turboworks.manage_db import ManageDB
 from turboworks.reference import ref_dict, ref_dict2
 
 

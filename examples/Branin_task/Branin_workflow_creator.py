@@ -1,6 +1,7 @@
-from turboworks.optimize_task import SKOptimizeTask, DummyOptimizeTask
-from Branin_task import BraninTask
 from fireworks import Firework, Workflow
+
+from Branin_task import BraninTask
+from old.optimize_task import SKOptimizeTask, DummyOptimizeTask
 
 """
 This file specifies a function that creates a workflow to:

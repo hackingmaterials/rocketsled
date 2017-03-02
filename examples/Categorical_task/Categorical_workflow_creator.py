@@ -1,6 +1,7 @@
-from turboworks.optimize_task import SKOptimizeTask, DummyOptimizeTask
-from Categorical_task import CategoricalTask
 from fireworks import Firework, Workflow
+
+from Categorical_task import CategoricalTask
+from old.optimize_task import SKOptimizeTask, DummyOptimizeTask
 
 """
 This file specifies a function that creates a workflow to:

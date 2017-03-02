@@ -37,14 +37,13 @@ def wf_creator(z):
     spec1 = {'A':z[0], 'B':z[1], 'C':z[2], '_z':z}
     Z_dim = [(1.0,100.0), (1.0,200.0), (1.0,300.0)]
 
-    firework1 = Firework([CalculateTask(),
-                          ArbitraryTask(),
+    firework1 = Firework([CalculateTask(), ArbitraryTask(),
                           VectorOptimize(wf_creator ='vector_optimize_test.wf_creator',
-                                         dimensions=Z_dim, get_x = 'vector_optimize_test.get_x')],
+                                         get_x = 'vector_optimize_test.get_x',
+                                         dimensions=Z_dim)],
                          spec=spec1, name='firework1')
 
     return Workflow([firework1])
-
 
 if __name__ == "__main__":
 
@@ -56,5 +55,5 @@ if __name__ == "__main__":
     launchpad.reset('', require_password=False)
     launchpad.add_wf(wf_creator([1.0, 2.0, 3.0]))
 
-    for i in range(50):
+    for i in range(300):
         launch_rocket(launchpad)

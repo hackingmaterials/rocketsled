@@ -90,9 +90,11 @@ class VectorOptimize(FireTaskBase):
         Z_dims = [tuple(dim) for dim in self['dimensions']]
         wf_creator = self.deserialize_function(self['wf_creator'])
 
-        get_x = self.deserialize_function(self['get_x']) if self.attr_exists('x') else lambda *args, **kwargs : []
-
+        # define the function which can fetch X
+        get_x = self.deserialize_function(self['get_x']) if self.attr_exists('get_x') else lambda *args, **kwargs : []
         x = get_x(z)
+
+        # store the data
         id = self.store({'z':z, 'y':y, 'x':x}).inserted_id
 
         # gather all docs from the collection
@@ -136,3 +138,5 @@ class VectorOptimize(FireTaskBase):
         return FWAction(additions=wf_creator(z_new))
 
 
+class Vizualizer(object):
+    pass

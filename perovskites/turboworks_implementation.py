@@ -2,8 +2,8 @@ from fireworks import Firework, LaunchPad, FWAction, FireTaskBase
 from fireworks.core.rocket_launcher import launch_rocket
 from fireworks.utilities.fw_utilities import explicit_serialize
 
+from old.optimize_task import OptimizeTask
 from turboworks.dummy_opt import dummy_minimize
-from turboworks.optimize_task import OptimizeTask
 from turboworks.reference import ref_dict
 
 
