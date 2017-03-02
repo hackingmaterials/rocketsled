@@ -2,7 +2,7 @@ from integer_task_workflow_creator import workflow_creator
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import FWorker, LaunchPad
 from fireworks.core.rocket_launcher import launch_rocket
-from turboworks.manage_db import ManageDB
+from turboworks.db import DB
 import matplotlib.pyplot as plt
 
 """
@@ -27,7 +27,7 @@ WARNING: This will reset the fireworks database.
 launchpad = LaunchPad()
 
 # Class for managing the TurboWorks database directly
-manageDB = ManageDB()
+manageDB = DB()
 
 # Sample data
 A = 92

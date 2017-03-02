@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from old.gp_opt import gp_minimize
-from turboworks.dummy_opt import dummy_minimize
+from turboworks.dummy import dummy_minimize
 
 
 def branin(x):

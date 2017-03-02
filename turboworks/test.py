@@ -4,8 +4,9 @@ from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from fireworks.core.rocket_launcher import launch_rocket
 from fireworks import FWAction, Workflow, Firework, LaunchPad
-from turboworks.vector_optimize import VectorOptimize
-from turboworks.manage_db import ManageDB
+from turboworks.optimize import OptTask
+from turboworks.db import DB
+from turboworks.dummy import dummy_minimize
 
 
 @explicit_serialize
@@ -34,27 +35,34 @@ def get_x(z):
 def wf_creator(z):
 
     spec1 = {'A':z[0], 'B':z[1], 'C':z[2], '_z':z}
-    Z_dim = [(1.0,100.0), (1.0,200.0), (1.0,300.0)]
+    Z_dim = [(1.0,100.0), (1.0,100.0), (1.0,100.0)]
+
+    #CalculateTask writes _y field to the spec internally.
 
     firework1 = Firework([CalculateTask(), ArbitraryTask(),
-                          VectorOptimize(wf_creator ='vector_optimize_test.wf_creator',
-                                         # get_x='vector_optimize_test.get_x',
-                                         dimensions=Z_dim)],
-                         spec=spec1, name='firework1')
+                          OptTask(wf_creator ='vector_optimize_test.wf_creator',
+                                  get_x='vector_optimize_test.get_x',
+                                  predictor='gp_minimize',
+                                  dimensions=Z_dim)],
+                         spec=spec1)
 
     return Workflow([firework1])
 
+def example_predictor_wrapper(Z_ext, Y, Z_ext_dims):
+    return dummy_minimize(Z_ext_dims)
+
+
 if __name__ == "__main__":
 
-    mdb = ManageDB()
-    mdb.nuke()
+    db = DB()
+    db.nuke()
 
-    # set up the LaunchPad and reset it
     launchpad = LaunchPad()
     launchpad.reset('', require_password=False)
-    launchpad.add_wf(wf_creator([1.0, 2.0, 3.0]))
+    launchpad.add_wf(wf_creator([15.0, 25.0, 35.0]))
 
     for i in range(100):
         launch_rocket(launchpad)
 
-    print(mdb.min.params)
+    from pprint import pprint
+    pprint(db.min.data)

@@ -6,8 +6,8 @@ import numpy as np
 
 import combo
 from old.gp_opt import gp_minimize
-from turboworks.discrete_spacify import calculate_discrete_space, duplicate_check
-from turboworks.dummy_opt import dummy_minimize
+from turboworks.discrete import calculate_discrete_space, duplicate_check
+from turboworks.dummy import dummy_minimize
 
 
 class Utility(object):

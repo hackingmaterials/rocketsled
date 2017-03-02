@@ -16,7 +16,7 @@ Utility functions for managing the turboworks database.
 
 import numpy
 
-class ManageDB():
+class DB():
 
     def __init__(self, hostname='localhost', portnum=27017, dbname='turboworks',
                  collection='turboworks'):
@@ -136,10 +136,12 @@ class ManageDB():
         print("Ended storage in DB {}".format(backup_collection_string))
 
 
-class Result():
+class Result(object):
 
     def __init__(self, value, collection):
         self.value = value
         self.collection = collection
-        self.params = [x for x in self.collection.find({'y':value})]
+        self.data = [x for x in self.collection.find({'y':value})]
+
+
 

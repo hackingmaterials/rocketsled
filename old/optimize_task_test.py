@@ -3,8 +3,8 @@ from fireworks.core.rocket_launcher import launch_rocket
 from fireworks.utilities.fw_utilities import explicit_serialize
 
 from old.optimize_task import OptimizeTask, AutoOptimizeTask
-from turboworks.dummy_opt import dummy_minimize
-from turboworks.manage_db import ManageDB
+from turboworks.dummy import dummy_minimize
+from turboworks.db import DB
 from turboworks.reference import ref_dict, ref_dict2
 
 
@@ -68,7 +68,7 @@ class SkoptimizeTask(OptimizeTask):
 
 if __name__ == "__main__":
 
-    mdb = ManageDB()
+    mdb = DB()
     mdb.nuke()
 
     # set up the LaunchPad and reset it

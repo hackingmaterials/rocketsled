@@ -23,8 +23,8 @@ from sklearn.utils import check_random_state
 from skopt.acquisition import _gaussian_acquisition
 from skopt.space import Space
 
-from turboworks.dummy_opt import dummy_minimize
-from turboworks.discrete_spacify import calculate_discrete_space, duplicate_check
+from turboworks.dummy import dummy_minimize
+from turboworks.discrete import calculate_discrete_space, duplicate_check
 
 
 def _acquisition(X, model, y_opt=None, method="LCB", xi=0.01, kappa=1.96):

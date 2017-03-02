@@ -4,12 +4,12 @@ from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from pymongo import MongoClient
 from fireworks import FWAction, Workflow
-from turboworks.dummy_opt import dummy_minimize
+from turboworks.dummy import dummy_minimize
 import skopt
 
 
 @explicit_serialize
-class VectorOptimize(FireTaskBase):
+class OptTask(FireTaskBase):
 
     _fw_name = "VectorOptimize"
     required_params = ['wf_creator', 'dimensions']
@@ -27,6 +27,8 @@ class VectorOptimize(FireTaskBase):
         self._tw_mongo = MongoClient(self._tw_host, self._tw_port)
         self._tw_db = self._tw_mongo.turboworks
         self._tw_collection = self._tw_db.turboworks
+
+        self.optimizers = ['gbrt_minimize', 'dummy_minimize', 'forest_minimize', 'gp_minimize']
 
     def store(self, spec, update = False, id = None):
 
@@ -107,8 +109,7 @@ class VectorOptimize(FireTaskBase):
         # run machine learner on Z and X features
         if self.attr_exists('predictor'):
 
-
-            if self['predictor'] in ['gbrt_minimize', 'dummy_minimize', 'forest_minimize', 'gp_minimize']:
+            if self['predictor'] in self.optimizers:
                 z_total_new = getattr(skopt, self['predictor'])(lambda x:0, Z_ext_dims, x0=Z_ext, y0=Y, n_calls=1,
                                                                 n_random_starts=0).x_iters[-1]
             else:
