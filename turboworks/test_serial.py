@@ -1,4 +1,4 @@
-from __future__ import print_function
+# from __future__ import print_function
 
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
@@ -64,17 +64,17 @@ if __name__ == "__main__":
     launchpad.add_wf(wf_creator([3,5,1]))
 
 
-    # minima = []
-    #
-    # for i in range(100):
-    #     launch_rocket(launchpad)
-    #     minima.append(db.min.value)
-    #
-    #
-    # plot.plot(range(len(minima)), minima)
-    # plot.ylabel('Best Minimum Value')
-    # plot.xlabel('Iteration')
-    # plot.show()
+    minima = []
+
+    for i in range(100):
+        launch_rocket(launchpad)
+        minima.append(db.min.value)
+
+
+    plot.plot(range(len(minima)), minima)
+    plot.ylabel('Best Minimum Value')
+    plot.xlabel('Iteration')
+    plot.show()
 
 
     # check to see if issues with m_launch
