@@ -31,12 +31,12 @@ class ArbitraryTask(FireTaskBase):
         print("final task result:", fw_spec['_y'])
 
 def get_x(z):
-    return [z[1] * .0000007, z[2]**0.87 - 15]
+    return [z[1] * 2, z[2]**3]
 
 def wf_creator(z):
 
     spec1 = {'A':z[0], 'B':z[1], 'C':z[2], '_z':z}
-    Z_dim = [(1.0,100.0), (1.0,100.0), (1.0,100.0)]
+    Z_dim = [(1,5), (1,5), (1,5)]
 
     #CalculateTask writes _y field to the spec internally.
 
@@ -60,18 +60,26 @@ if __name__ == "__main__":
 
     launchpad = LaunchPad()
     launchpad.reset('', require_password=False)
-    launchpad.add_wf(wf_creator([95.0, 95.0, 13.0]))
+    launchpad.add_wf(wf_creator([1,4,3]))
+    launchpad.add_wf(wf_creator([3,5,1]))
 
 
-    minima = []
+    # minima = []
+    #
+    # for i in range(100):
+    #     launch_rocket(launchpad)
+    #     minima.append(db.min.value)
+    #
+    #
+    # plot.plot(range(len(minima)), minima)
+    # plot.ylabel('Best Minimum Value')
+    # plot.xlabel('Iteration')
+    # plot.show()
 
-    for i in range(100):
-        launch_rocket(launchpad)
-        minima.append(db.min.value)
 
+    # check to see if issues with m_launch
+    # two z's can run at same time
+    # make sure no duplicate z
 
-    plot.plot(range(len(minima)), minima)
-    plot.ylabel('Best Minimum Value')
-    plot.xlabel('Iteration')
-    plot.show()
-
+    # make module importable
+    # send anubhav code
