@@ -1,0 +1,5 @@
+matplotlib
+numpy
+sklearn
+fireworks
+skopt

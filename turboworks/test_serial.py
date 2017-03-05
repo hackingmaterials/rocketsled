@@ -7,7 +7,6 @@ from fireworks import FWAction, Workflow, Firework, LaunchPad
 from turboworks.optimize import OptTask
 from turboworks.db import DB
 from turboworks.dummy import dummy_minimize
-import matplotlib.pyplot as plot
 
 
 @explicit_serialize
@@ -71,15 +70,22 @@ if __name__ == "__main__":
         minima.append(db.min.value)
 
 
+<<<<<<< Updated upstream:turboworks/test_serial.py
     plot.plot(range(len(minima)), minima)
     plot.ylabel('Best Minimum Value')
     plot.xlabel('Iteration')
     plot.show()
+=======
+    # plot.plot(range(len(minima)), minima)
+    # plot.ylabel('Best Minimum Value')
+    # plot.xlabel('Iteration')
+    # plot.show()
+>>>>>>> Stashed changes:turboworks/test.py
 
 
-    # check to see if issues with m_launch
+    # check to see if issues with m_launch........
     # two z's can run at same time
     # make sure no duplicate z
 
-    # make module importable
-    # send anubhav code
+    # make module importable......................
+    # send anubhav code...........................
