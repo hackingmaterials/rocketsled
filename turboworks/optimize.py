@@ -28,8 +28,16 @@ class OptTask(FireTaskBase):
     includes all possible categories.
         example: dimensions = [(1,100), (9.293, 18.2838) ("red, "blue", "green")].
 
-    :param get_x: (function) given a z vector, returns another vector x which provides extra information to the machine
-    learner. The features defined in x are not
+    :param get_x: (string) names a function which, given a z vector, returns another vector x which provides extra
+    information to the machine learner. The features defined in x are not used to run the workflow creator.
+        example: get_x = 'my_module.my_fun'
+
+    :param predictor: (string) names a function which given a list of inputs, a list of outputs, and a dimensions space,
+     can return a new optimized input vector. Can specify either a skopt function or a custom function.
+        example: predictor = 'my_module.my_predictor'
+
+    :param duplicate_check: (boolean) If True, checks for duplicate guesss in discrete, finite spaces. (NOT currently
+    working with concurrent workflows). Default is no duplicate check.
     """
 
     _fw_name = "OptTask"
@@ -286,7 +294,7 @@ class OptTask(FireTaskBase):
 
             except:
                 raise ValueError("The custom predictor function {fun} did not call correctly! "
-                                 "The arguments were: \n arg1: list of {arg1len} lists of {arg1}"
+                                 "The arguments were: \n arg1: list of {arg1len} lists of {arg1} \n"
                                  "arg2: list {arg2} of length {arg2len} \n arg3: {arg3}"
                                  .format(fun=predictor, arg1=type(Z_ext[0][0]), arg1len=len(Z_ext), arg2=type(Y[0]),
                                          arg2len=len(Y), arg3=Z_ext_dims))

@@ -58,7 +58,7 @@ def wf_creator(z):
     firework1 = Firework([CalculateTask(), ArbitraryTask(),
                           OptTask(wf_creator ='test.wf_creator',
                                   get_x='test.get_x',
-                                  predictor='example_predictor_wrapper',
+                                  # predictor='test.example_predictor_wrapper',
                                   dimensions=Z_dim)],
                          spec=spec1)
 
@@ -100,8 +100,8 @@ if __name__ == "__main__":
     # uncomment the line below to run
     # launchpad.reset('', require_password=False)
 
-    # test_serial(20)
-    test_parallel(5)
+    test_serial(20)
+    # test_parallel(5)
 
 
 
