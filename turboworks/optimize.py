@@ -136,44 +136,38 @@ class OptTask(FireTaskBase):
         # store the data
         id = self.store({'z':z, 'y':y, 'x':x}).inserted_id
 
-        # gather all docs from the collection
-        Z_ext = [doc['z'] + doc['x'] for doc in self.collection]
-        Y = [doc['y'] for doc in self.collection]
+        # gather all docs from the collection in a concurrency-friendly manner
+        Z_ext = []
+        Y = []
+        for doc in self.collection:
+            if all (k in doc for k in ('x','y','z')):
+                Z_ext.append(doc['z'] + doc['x'])
+                Y.append(doc['y'])
 
-        # extend the dimensions to X features, so that skopt features will run
+        # extend the dimensions to X features, so that X information can be used in optimization
         Z_ext_dims = Z_dims + self.X_dims if x != [] else Z_dims
 
         # run machine learner on Z and X features
-        if self.attr_exists('predictor'):
 
-            if self['predictor'] in self.optimizers:
-                z_total_new = getattr(skopt, self['predictor'])(lambda x:0, Z_ext_dims, x0=Z_ext, y0=Y, n_calls=1,
+        predictor = 'forest_minimize' if not self.attr_exists('predictor') else self['predictor']
+
+        if predictor in self.optimizers:
+                z_total_new = getattr(skopt, predictor)(lambda x:0, Z_ext_dims, x0=Z_ext, y0=Y, n_calls=1,
                                                                 n_random_starts=0).x_iters[-1]
-            else:
-                try:
-                    predictor = self.deserialize_function(self['predictor'])
-                    z_total_new = predictor(Z_ext, Y, Z_ext_dims)
-
-                except:
-                    raise ValueError("The custom predictor function {fun} did not call correctly!"
-                                    "The arguments were: \n arg1: list of {arg1len} lists of {arg1}"
-                                    "arg2: list {arg2} of length {arg2len}"
-                                    "arg3: {arg3}".format(fun=self['predictor'],
-                                                         arg1=type(Z_ext[0][0]),
-                                                         arg1len=len(Z_ext),
-                                                         arg2=type(Y[0]),
-                                                         arg2len=len(Y),
-                                                         arg3=Z_ext_dims))
-
         else:
-            # print("x", Z_ext)
-            # print("y", Y)
-            z_total_new = skopt.forest_minimize(lambda x:0, Z_ext_dims, x0=Z_ext, y0=Y, n_calls=1,
-                                                n_random_starts=0).x_iters[-1]
+            try:
+                predictor_fun = self.deserialize_function(predictor)
+                z_total_new = predictor_fun(Z_ext, Y, Z_ext_dims)
+
+            except:
+                raise ValueError("The custom predictor function {fun} did not call correctly! "
+                                 "The arguments were: \n arg1: list of {arg1len} lists of {arg1}"
+                                 "arg2: list {arg2} of length {arg2len} \n arg3: {arg3}"
+                                 .format(fun=predictor, arg1=type(Z_ext[0][0]), arg1len=len(Z_ext), arg2=type(Y[0]),
+                                         arg2len=len(Y), arg3=Z_ext_dims))
 
         # remove X features from the new Z vector
         z_new = z_total_new[0:len(z)]
-
 
         # duplicate checking. makes sure no repeat z vectors are inserted into the turboworks collection
         if self.is_discrete(Z_dims):

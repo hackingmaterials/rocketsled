@@ -63,18 +63,18 @@ if __name__ == "__main__":
     launchpad = LaunchPad()
     launchpad.reset('', require_password=False)
     launchpad.add_wf(wf_creator([1,4,3]))
-    # launchpad.add_wf(wf_creator([3,5,1]))
-    # launchpad.add_wf(wf_creator([2,5,1]))
-    # launchpad.add_wf(wf_creator([5,5,1]))
-    # launchpad.add_wf(wf_creator([2,4,3]))
-    # launchpad.add_wf(wf_creator([1, 3, 3]))
-    # launchpad.add_wf(wf_creator([3, 4, 1]))
-    # launchpad.add_wf(wf_creator([2, 4, 1]))
-    # launchpad.add_wf(wf_creator([5, 1, 1]))
-    # launchpad.add_wf(wf_creator([2, 1, 3]))
+    launchpad.add_wf(wf_creator([3,5,1]))
+    launchpad.add_wf(wf_creator([2,5,1]))
+    launchpad.add_wf(wf_creator([5,5,1]))
+    launchpad.add_wf(wf_creator([2,4,3]))
+    launchpad.add_wf(wf_creator([1, 3, 3]))
+    launchpad.add_wf(wf_creator([3, 4, 1]))
+    launchpad.add_wf(wf_creator([2, 4, 1]))
+    launchpad.add_wf(wf_creator([5, 1, 1]))
+    launchpad.add_wf(wf_creator([2, 1, 3]))
 
-    for i in range(127):
-        launch_rocket(launchpad)
+    # for i in range(12):
+    #     launch_rocket(launchpad)
 
 
 
@@ -100,3 +100,4 @@ if __name__ == "__main__":
     # make module importable......................
     # make ability to start with x random guesses.
     # send anubhav code...........................
+    # use scikit learn model
