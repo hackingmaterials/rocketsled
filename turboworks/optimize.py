@@ -79,11 +79,7 @@ class OptTask(FireTaskBase):
             self._tw_meta_collection.delete_one({"_id":_id})
 
         if self._tw_meta_collection.count() == 0:  # the db has been exhausted of choices
-            warnings.warn("The dimensions space has been exhausted of points."
-                          "The workflow will be restarted with using the last guess.")
-            self._tw_space_exhausted = True
-            print("z in dupe check".format(z))
-            self._tw_meta_collection.insert_one({'vector': z})
+            raise ValueError("The search space has been exhausted.")
 
         return z
 
@@ -188,11 +184,7 @@ class OptTask(FireTaskBase):
             z_new = self.dupe_check(z_new)
             z_total_new = z_new + z_total_new[len(z_new):]
 
-        if not self._tw_space_exhausted:
-            self.store({'z_new':z_new, 'z_total_new':z_total_new}, update=True, id=id)
-        else:
-            # the space is exhausted and the guess is a repeat, and should not be stored.
-            pass
+        self.store({'z_new':z_new, 'z_total_new':z_total_new}, update=True, id=id)
 
         # return a new workflow
         return FWAction(additions=wf_creator(z_new))
