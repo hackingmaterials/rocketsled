@@ -164,9 +164,9 @@ class DB(object):
         docs_removed = self.collection.delete_many({})
         num_deleted = docs_removed.deleted_count
         try:
-            print 'Documents removed:         ', num_deleted
+            print 'Documents removed from {db}:         {n}'.format(db=self.collection_string, n=num_deleted)
         except:
-            print('Documents removed:         ', num_deleted)
+            print('Documents removed from {db}:         {n}'.format(db=self.collection_string, n=num_deleted))
         print('Documents remaining:        0')
         return num_deleted
 
