@@ -6,7 +6,6 @@ import itertools
 import numpy as np
 from random import randint
 import warnings
-import resource
 
 
 def calculate_discrete_space(dimensions):

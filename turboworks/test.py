@@ -18,6 +18,8 @@ __email__ = "ardunn@lbl.gov"
 
 dims = [(1,5), (1,5), (1,5)]
 
+
+# Some arbitrary tasks
 @explicit_serialize
 class CalculateTask(FireTaskBase):
     _fw_name = "CalculateTask"
@@ -38,9 +40,14 @@ class ArbitraryTask(FireTaskBase):
     def run_task(self, fw_spec):
         print("final task result:", fw_spec['_y'])
 
+
+
+# An optional function which returns extra information 'x' from unique vector 'z'
 def get_x(z):
     return [z[1] * 2, z[2]**3]
 
+
+# a workflow creator function which takes z and returns a workflow based on z
 def wf_creator(z):
 
     spec1 = {'A':z[0], 'B':z[1], 'C':z[2], '_z':z}
@@ -51,16 +58,20 @@ def wf_creator(z):
     firework1 = Firework([CalculateTask(), ArbitraryTask(),
                           OptTask(wf_creator ='test.wf_creator',
                                   get_x='test.get_x',
-                                  # predictor='gp_minimize',
+                                  predictor='example_predictor_wrapper',
                                   dimensions=Z_dim)],
                          spec=spec1)
 
     return Workflow([firework1])
 
+
+# how an example custom optimization function could be used
+# replace dummy_mimize with your favorite optimizer
+
 def example_predictor_wrapper(Z_ext, Y, Z_ext_dims):
     return dummy_minimize(Z_ext_dims)
 
-
+# test a serial implementation of turboworks
 def test_serial(n_launches):
     launchpad.add_wf(wf_creator([1,2,1]))
 
@@ -74,11 +85,12 @@ def test_serial(n_launches):
     plot.xlabel('Iteration')
     plot.show()
 
-
+# try a parallel implementation of turboworks
 def test_parallel(n_processes):
     # after running this function, from terminal use rlaunch multi n_processes
     for i in range(n_processes):
         launchpad.add_wf(wf_creator(dummy_minimize(dims)))
+
 
 if __name__ == "__main__":
 
@@ -87,7 +99,6 @@ if __name__ == "__main__":
     launchpad = LaunchPad()
     # uncomment the line below to run
     # launchpad.reset('', require_password=False)
-
 
     # test_serial(20)
     test_parallel(5)
