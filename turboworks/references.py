@@ -1,6 +1,20 @@
+"""
+This module contains general references for the turboworks package.
+"""
+
 import numpy as np
 
+
+__author__ = "Alexander Dunn"
+__version__ = "0.1"
+__email__ = "ardunn@lbl.gov"
+
+
 class Dtypes(object):
+    """
+    Defines the datatypes available for optimization.
+    """
+
     def __init__(self):
         d = np.sctypes
         self.ints = d['int'] + d['uint'] + [int]

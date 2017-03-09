@@ -45,7 +45,7 @@ def best_graph():
     for i in range(run_num):
         launch_rocket(launchpad)
         gp_best.append(manageDB.get_optima('D', min_or_max='max')[0])
-    manageDB.nuke()
+    manageDB.clean()
     launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
 
     # Run run_num iterations using a dummy optimizer (returns random)
@@ -55,7 +55,7 @@ def best_graph():
     for i in range(run_num):
         launch_rocket(launchpad)
         dummy_best.append(manageDB.get_optima('D', min_or_max='max')[0])
-    manageDB.nuke()
+    manageDB.clean()
     launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
 
     # Run run_num iterations using COMBO optimization
@@ -65,7 +65,7 @@ def best_graph():
     for i in range(run_num):
         launch_rocket(launchpad)
         combo_best.append(manageDB.get_optima('D', min_or_max='max')[0])
-    manageDB.nuke()
+    manageDB.clean()
     launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
 
     iterations = list(range(run_num))
@@ -89,7 +89,7 @@ def scatter_graph():
     gp_best = manageDB.get_optima('D', min_or_max='max')[0]
     gp_average = manageDB.get_avg('D')
     gp_total = manageDB.get_param('D')
-    manageDB.nuke()
+    manageDB.clean()
 
     # Run run_num iterations using a dummy optimizer (returns random)
     launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
@@ -99,7 +99,7 @@ def scatter_graph():
     dummy_best = manageDB.get_optima('D', min_or_max='max')[0]
     dummy_average = manageDB.get_avg('D')
     dummy_total = manageDB.get_param('D')
-    manageDB.nuke()
+    manageDB.clean()
 
     # Run num_num iterations using COMBO
     launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
@@ -109,7 +109,7 @@ def scatter_graph():
     combo_best = manageDB.get_optima('D', min_or_max='max')[0]
     combo_average = manageDB.get_avg('D')
     combo_total = manageDB.get_param('D')
-    manageDB.nuke()
+    manageDB.clean()
     launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
 
     # Compare the two optimizations graphically
@@ -143,7 +143,7 @@ def converge_to():
         launch_rocket(launchpad)
         gp_best.append(manageDB.get_optima('D', min_or_max='max')[0])
 
-    manageDB.nuke()
+    manageDB.clean()
 
     # Run some number of iterations until dummy iteration has converged
     launchpad.defuse_wf(launchpad.get_fw_ids()[-1])
@@ -160,7 +160,7 @@ def converge_to():
         launch_rocket(launchpad)
         dummy_best.append(manageDB.get_optima('D', min_or_max='max')[0])
 
-    manageDB.nuke()
+    manageDB.clean()
 
     print("GP iterations:", gp_iter)
     print("Dummy iterations:", dummy_iter)

@@ -23,7 +23,7 @@ def calculate_discrete_space(dimensions):
     In duplicate checking for discrete spaces, the generated list will be narrowed down until no entries remain.
 
     WARNING: Very large discrete spaces will cause a memory bomb. Typically a space of about 1,000 entries takes
-    0.005s to compute, but larger spaces can take much longer (or may just nuke your computer RAM, be careful).
+    0.005s to compute, but larger spaces can take much longer (or may just clean your computer RAM, be careful).
 
     """
     total_dimspace = []

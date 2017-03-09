@@ -1,4 +1,6 @@
-# from __future__ import print_function
+"""
+Running examples to see how turboworks works and/or fails.
+"""
 
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
@@ -9,6 +11,12 @@ from turboworks.db import DB
 from turboworks.dummy import dummy_minimize
 from matplotlib import pyplot as plot
 
+__author__ = "Alexander Dunn"
+__version__ = "0.1"
+__email__ = "ardunn@lbl.gov"
+
+
+dims = [(1,5), (1,5), (1,5)]
 
 @explicit_serialize
 class CalculateTask(FireTaskBase):
@@ -36,7 +44,7 @@ def get_x(z):
 def wf_creator(z):
 
     spec1 = {'A':z[0], 'B':z[1], 'C':z[2], '_z':z}
-    Z_dim = [(1,5), (1,5), (1,5)]
+    Z_dim = dims
 
     #CalculateTask writes _y field to the spec internally.
 
@@ -53,51 +61,37 @@ def example_predictor_wrapper(Z_ext, Y, Z_ext_dims):
     return dummy_minimize(Z_ext_dims)
 
 
+def test_serial(n_launches):
+    launchpad.add_wf(wf_creator([1,2,1]))
+
+    minima = []
+    for i in range(n_launches):
+        launch_rocket(launchpad)
+        minima.append(db.min.value)
+
+    plot.plot(range(len(minima)), minima)
+    plot.ylabel('Best Minimum Value')
+    plot.xlabel('Iteration')
+    plot.show()
+
+
+def test_parallel(n_processes):
+    # after running this function, from terminal use rlaunch multi n_processes
+    for i in range(n_processes):
+        launchpad.add_wf(wf_creator(dummy_minimize(dims)))
+
 if __name__ == "__main__":
 
     db = DB()
-    db_meta = DB(collection = 'meta')
-    db.nuke()
-    db_meta.nuke()
-
+    db.reset()
     launchpad = LaunchPad()
-    launchpad.reset('', require_password=False)
-    launchpad.add_wf(wf_creator([1,4,3]))
-    launchpad.add_wf(wf_creator([3,5,1]))
-    launchpad.add_wf(wf_creator([2,5,1]))
-    launchpad.add_wf(wf_creator([5,5,1]))
-    launchpad.add_wf(wf_creator([2,4,3]))
-    launchpad.add_wf(wf_creator([1, 3, 3]))
-    launchpad.add_wf(wf_creator([3, 4, 1]))
-    launchpad.add_wf(wf_creator([2, 4, 1]))
-    launchpad.add_wf(wf_creator([5, 1, 1]))
-    launchpad.add_wf(wf_creator([2, 1, 3]))
+    # uncomment the line below to run
+    # launchpad.reset('', require_password=False)
 
-    # for i in range(12):
-    #     launch_rocket(launchpad)
+
+    # test_serial(20)
+    test_parallel(5)
 
 
 
 
-
-    # minima = []
-    #
-    # for i in range(100):
-    #     launch_rocket(launchpad)
-    #     minima.append(db.min.value)
-    #
-    #
-    # plot.plot(range(len(minima)), minima)
-    # plot.ylabel('Best Minimum Value')
-    # plot.xlabel('Iteration')
-    # plot.show()
-
-
-    # check to see if issues with m_launch........
-    # two z's can run at same time................
-
-    # make sure no duplicate z/space searched exhaustively..............[done]
-    # make module importable......................
-    # make ability to start with x random guesses.
-    # send anubhav code...........................
-    # use scikit learn model

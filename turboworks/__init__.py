@@ -5,10 +5,14 @@ The Scikit-Optimize library is built on top of NumPy, SciPy and Scikit-Learn.
 
 """
 
-__version__ = "0.0"
+__author__ = "Alexander Dunn"
+__version__ = "0.1"
+__email__ = "ardunn@lbl.gov"
 
 
 __all__ = ("discrete.py",
-           "references.py",
            "db.py",
+           "dummy.py",
+           "visualize.py"
+           "references.py",
            "optimize.py")

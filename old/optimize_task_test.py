@@ -69,7 +69,7 @@ class SkoptimizeTask(OptimizeTask):
 if __name__ == "__main__":
 
     mdb = DB()
-    mdb.nuke()
+    mdb.clean()
 
     # set up the LaunchPad and reset it
     launchpad = LaunchPad()
