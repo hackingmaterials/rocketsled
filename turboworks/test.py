@@ -7,6 +7,7 @@ from fireworks import FWAction, Workflow, Firework, LaunchPad
 from turboworks.optimize import OptTask
 from turboworks.db import DB
 from turboworks.dummy import dummy_minimize
+from matplotlib import pyplot as plot
 
 
 @explicit_serialize
@@ -42,7 +43,7 @@ def wf_creator(z):
     firework1 = Firework([CalculateTask(), ArbitraryTask(),
                           OptTask(wf_creator ='test.wf_creator',
                                   get_x='test.get_x',
-                                  predictor='gp_minimize',
+                                  # predictor='gp_minimize',
                                   dimensions=Z_dim)],
                          spec=spec1)
 
@@ -55,37 +56,47 @@ def example_predictor_wrapper(Z_ext, Y, Z_ext_dims):
 if __name__ == "__main__":
 
     db = DB()
+    db_meta = DB(collection = 'meta')
     db.nuke()
+    db_meta.nuke()
 
     launchpad = LaunchPad()
     launchpad.reset('', require_password=False)
     launchpad.add_wf(wf_creator([1,4,3]))
-    launchpad.add_wf(wf_creator([3,5,1]))
+    # launchpad.add_wf(wf_creator([3,5,1]))
+    # launchpad.add_wf(wf_creator([2,5,1]))
+    # launchpad.add_wf(wf_creator([5,5,1]))
+    # launchpad.add_wf(wf_creator([2,4,3]))
+    # launchpad.add_wf(wf_creator([1, 3, 3]))
+    # launchpad.add_wf(wf_creator([3, 4, 1]))
+    # launchpad.add_wf(wf_creator([2, 4, 1]))
+    # launchpad.add_wf(wf_creator([5, 1, 1]))
+    # launchpad.add_wf(wf_creator([2, 1, 3]))
 
-
-    minima = []
-
-    for i in range(100):
+    for i in range(127):
         launch_rocket(launchpad)
-        minima.append(db.min.value)
 
 
-<<<<<<< Updated upstream:turboworks/test_serial.py
-    plot.plot(range(len(minima)), minima)
-    plot.ylabel('Best Minimum Value')
-    plot.xlabel('Iteration')
-    plot.show()
-=======
+
+
+
+    # minima = []
+    #
+    # for i in range(100):
+    #     launch_rocket(launchpad)
+    #     minima.append(db.min.value)
+    #
+    #
     # plot.plot(range(len(minima)), minima)
     # plot.ylabel('Best Minimum Value')
     # plot.xlabel('Iteration')
     # plot.show()
->>>>>>> Stashed changes:turboworks/test.py
 
 
     # check to see if issues with m_launch........
-    # two z's can run at same time
-    # make sure no duplicate z
+    # two z's can run at same time................
 
+    # make sure no duplicate z/space searched exhaustively..............[done]
     # make module importable......................
+    # make ability to start with x random guesses.
     # send anubhav code...........................

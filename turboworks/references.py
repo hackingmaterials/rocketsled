@@ -9,6 +9,7 @@ class Dtypes(object):
         self.complex = d['complex']
         self.numbers = self.reals + self.complex
         self.others = d['others']
+        self.discrete = self.ints + self.others
         self.all = self.numbers + self.others
 
 dtypes = Dtypes()

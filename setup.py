@@ -7,4 +7,5 @@ except ImportError:
 setup(name='turboworks',
       version='0.1',
       author = 'Alex Dunn',
-      description = 'Machine learning integration with Fireworks workflows')
+      description = 'Machine learning integration with Fireworks workflows',
+      packages=['turboworks'])
