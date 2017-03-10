@@ -105,7 +105,7 @@ class DB(object):
         """
 
         cursor = self.collection.find()
-        print('\nNumber of documents:       ', cursor.count())
+        # print('Number of documents:       ', cursor.count())
         return cursor.count()
 
     @property

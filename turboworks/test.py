@@ -61,7 +61,6 @@ def wf_creator(z):
                                   # predictor='test.example_predictor_wrapper',
                                   dimensions=Z_dim)],
                          spec=spec1)
-
     return Workflow([firework1])
 
 
@@ -98,10 +97,14 @@ if __name__ == "__main__":
     db.reset()
     launchpad = LaunchPad()
     # uncomment the line below to run
-    # launchpad.reset('', require_password=False)
+    launchpad.reset('', require_password=False)
 
-    test_serial(20)
-    # test_parallel(5)
+    test_serial(3)
+    # test_parallel(1)
+
+    # from turboworks.visualize import visualize
+    # "running visualize"
+    # visualize()
 
 
 

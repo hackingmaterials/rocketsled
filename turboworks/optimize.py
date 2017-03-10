@@ -9,7 +9,7 @@ from fireworks import FWAction
 from pymongo import MongoClient
 from turboworks.references import dtypes
 from turboworks.discrete import calculate_discrete_space
-import skopt
+
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
@@ -36,13 +36,20 @@ class OptTask(FireTaskBase):
      can return a new optimized input vector. Can specify either a skopt function or a custom function.
         example: predictor = 'my_module.my_predictor'
 
+    :param wf_creator_args: (dict) details the kwargs to be passed to the wf_creator function alongside the z vector
+        example:
+        If the wf_creator function is declared as
+            wf_creator(z, param1=14, param2="glass")
+        The wf_creator_args should be
+            {'param1':14, 'param2':'glass'}
+
     :param duplicate_check: (boolean) If True, checks for duplicate guesss in discrete, finite spaces. (NOT currently
     working with concurrent workflows). Default is no duplicate check.
     """
 
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
-    optional_params = ['get_x', 'predictor', 'duplicate_check']
+    optional_params = ['get_x', 'predictor', 'wf_creator_args', 'duplicate_check']
 
     def __init__(self, *args, **kwargs):
 
@@ -92,24 +99,6 @@ class OptTask(FireTaskBase):
             modname, funcname = toks
             mod = __import__(modname, globals(), locals(), [str(funcname)], 0)
             return getattr(mod, funcname)
-
-    def attr_exists(self, attr):
-        """
-        Test if a dict-style attribute of the FireTask object was defined in the constructor as a kwarg.
-
-            for example:
-                o = OptTask(wf_creator = 'mymod.myfun', dimensions = [(1,100)], get_x = 'mymod.get_x')
-                o.attr_exists('predictor') --> returns False, since the predictor kwarg was not given.
-
-        :param attr: (String) the name of an attrbute for the FireTask.
-        :return: (boolean) whether the attribute as kwarg was given to the FireTask or not.
-        """
-
-        try:
-            self[attr]
-            return True
-        except(KeyError):
-            return False
 
     def is_discrete(self, dims):
         """
@@ -262,9 +251,13 @@ class OptTask(FireTaskBase):
         y = fw_spec['_y']
         Z_dims = [tuple(dim) for dim in self['dimensions']]
         wf_creator = self.deserialize_function(self['wf_creator'])
+        wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else {}
+
+        if not isinstance(wf_creator_args, dict):
+            raise TypeError("wf_creator_args should be a dictonary of keyword arguments.")
 
         # define the function which can fetch X
-        get_x = self.deserialize_function(self['get_x']) if self.attr_exists('get_x') else lambda *args, **kwargs : []
+        get_x = self.deserialize_function(self['get_x']) if 'get_x' in self else lambda *args, **kwargs : []
         x = get_x(z)
 
         # store the data
@@ -282,11 +275,12 @@ class OptTask(FireTaskBase):
         Z_ext_dims = Z_dims + self.X_dims if x != [] else Z_dims
 
         # run machine learner on Z and X features
-        predictor = 'forest_minimize' if not self.attr_exists('predictor') else self['predictor']
+        predictor = 'forest_minimize' if not 'predictor' in self else self['predictor']
 
         if predictor in self.optimizers:
-                z_total_new = getattr(skopt, predictor)(lambda x:0, Z_ext_dims, x0=Z_ext, y0=Y, n_calls=1,
-                                                                n_random_starts=0).x_iters[-1]
+            import skopt
+            z_total_new = getattr(skopt, predictor)(lambda x:0, Z_ext_dims, x0=Z_ext, y0=Y, n_calls=1,
+                                                            n_random_starts=0).x_iters[-1]
         else:
             try:
                 predictor_fun = self.deserialize_function(predictor)
@@ -303,7 +297,7 @@ class OptTask(FireTaskBase):
         z_new = z_total_new[0:len(z)]
 
         # duplicate checking. makes sure no repeat z vectors are inserted into the turboworks collection
-        if self.attr_exists('duplicate_check'):
+        if 'duplicate_check' in self:
             if self['duplicate_check']:
                 if self.is_discrete(Z_dims):
                     if self.meta_empty:
@@ -316,5 +310,5 @@ class OptTask(FireTaskBase):
         self.store({'z_new':z_new, 'z_total_new':z_total_new}, update=True, id=id)
 
         # return a new workflow
-        return FWAction(additions=wf_creator(z_new))
+        return FWAction(additions=wf_creator(z_new,**wf_creator_args))
 

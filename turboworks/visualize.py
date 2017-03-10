@@ -1,28 +1,48 @@
 from bokeh.plotting import figure, output_file, show
+import pylab as plt
+import numpy as np
+from turboworks.db import DB
+from bokeh.plotting import figure, curdoc
+from bokeh.models.sources import ColumnDataSource
+from bokeh.client import push_session
+from bokeh.driving import linear
+import subprocess
 
 
-class Visualize(object):
+# class Visualize(object):
 
-    def __init__(self):
+def visualize(pause=1.0, threshold=None):
+    db = DB()
 
-
-        # prepare some data
-        x = [1, 2, 3, 4, 5]
-        y = [6, 7, 2, 4, 5]
-
-        # output to static HTML file
-        output_file("lines.html")
-
-        # create a new plot with a title and axis labels
-        p = figure(title="simple line example", x_axis_label='x', y_axis_label='y')
-
-        # add a line renderer with legend and line thickness
-        p.line(x, y, legend="Temp.", line_width=2)
-
-        # show the results
-        show(p)
+    X = []
+    Y = []
+    plt.ion()
+    graph = plt.plot(X, Y)[0]
 
 
-if __name__ == "__main__":
-    viz = Visualize()
+
+    while True:
+
+        try:
+            min = db.min.value
+            data = db.min.data
+        except (ValueError):
+            plt.pause(pause)
+            continue
+
+
+        Y.append(min)
+        print "data:", data
+        print "ydata:", Y
+        graph.set_ydata(Y)
+        graph.set_xdata(range(len(Y)))
+        plt.draw()
+        plt.pause(pause)
+
+
+
+
+
+# if __name__ == "__main__":
+#     viz = Visualize()
 
