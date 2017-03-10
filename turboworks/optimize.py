@@ -2,7 +2,7 @@
 The main FireTasks for running automatic optimization loops are contained in this module.
 """
 
-
+import sys
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction
@@ -31,6 +31,10 @@ class OptTask(FireTaskBase):
     :param get_x: (string) names a function which, given a z vector, returns another vector x which provides extra
     information to the machine learner. The features defined in x are not used to run the workflow creator.
         example: get_x = 'my_module.my_fun'
+
+    Strings including path names to directory folders can also be used. Simply append the module name and function name
+    in python "." format (e.g., mod.func) to the end of the path name (e.g., /Users/me/Documents/project).
+        example: get_x = '/path/to/module/mod.func'
 
     :param predictor: (string) names a function which given a list of inputs, a list of outputs, and a dimensions space,
      can return a new optimized input vector. Can specify either a skopt function or a custom function.
@@ -91,14 +95,20 @@ class OptTask(FireTaskBase):
         """
         Takes a fireworks serialzed function handle and maps it to a function object.
 
-        :param fun: (String) a 'module.function' style string specifying the function
+        :param fun: (String) a 'module.function' or '/path/to/mod.func' style string specifying the function
         :return: (function) the function object defined by fun
         """
+
         toks = fun.rsplit(".", 1)
-        if len(toks) == 2:
-            modname, funcname = toks
-            mod = __import__(modname, globals(), locals(), [str(funcname)], 0)
-            return getattr(mod, funcname)
+        modname, funcname = toks
+
+        if "/" in toks[0]:
+            path, modname = toks[0].rsplit("/", 1)
+            sys.path.append(path)
+
+        mod = __import__(str(modname), globals(), locals(), fromlist=[str(funcname)])
+        return getattr(mod, funcname)
+
 
     def is_discrete(self, dims):
         """

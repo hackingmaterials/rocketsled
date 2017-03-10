@@ -57,7 +57,8 @@ def wf_creator(z):
 
     firework1 = Firework([CalculateTask(), ArbitraryTask(),
                           OptTask(wf_creator ='test.wf_creator',
-                                  get_x='test.get_x',
+                                  get_x = '/Users/alexdunn/Downloads/get_x.get_x',
+                                  # get_x = 'test.get_x',
                                   # predictor='test.example_predictor_wrapper',
                                   dimensions=Z_dim)],
                          spec=spec1)
@@ -99,7 +100,7 @@ if __name__ == "__main__":
     # uncomment the line below to run
     launchpad.reset('', require_password=False)
 
-    test_serial(3)
+    test_serial(30)
     # test_parallel(1)
 
     # from turboworks.visualize import visualize
