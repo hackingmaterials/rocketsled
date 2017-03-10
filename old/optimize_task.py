@@ -54,7 +54,7 @@ class OptimizeTask(FireTaskBase):
         # This method should be overridden
         raise NotImplementedError("You must have a run_task implemented!")
 
-    #todo: fix store so its automatic and keeps original spec form and add _auto_store!! -> tw_spec_to_fw_spec
+    #todo: fix _store so its automatic and keeps original spec form and add _auto_store!! -> tw_spec_to_fw_spec
     def store(self, spec):
 
         self.tw_spec = spec
@@ -167,7 +167,7 @@ class OptimizeTask(FireTaskBase):
 
             # insert 3 identical documents into a db
             for _ in range(2):
-                db.collection.insertOne(my_dict)
+                db._collection.insertOne(my_dict)
 
             print(auto_extract(['A', 'types.old.q'], label='inputs'))
 
@@ -425,7 +425,7 @@ class AutoOptimizeTask(OptimizeTask):
 
             tw_spec = self.flatten(k_list=all_keys, d=dict_by_fw)
             # {'Firework1.Structure.A': 1.31, 'Firework2.Structure.B': 2.03, etc.}
-            # store all the values in a document in Mongo in flat dict with upper.lower.etc keys
+            # _store all the values in a document in Mongo in flat dict with upper.lower.etc keys
             self.store(tw_spec)
 
             # make the pretty X,y matrices

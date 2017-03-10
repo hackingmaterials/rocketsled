@@ -76,7 +76,7 @@ class OptTask(FireTaskBase):
         self._tw_meta_collection = self._tw_db.meta
         self.optimizers = ['gbrt_minimize', 'dummy_minimize', 'forest_minimize', 'gp_minimize']
 
-    def store(self, spec, update = False, id = None):
+    def _store(self, spec, update = False, id = None):
         """
         Stores and updates turboworks database files.
 
@@ -91,13 +91,15 @@ class OptTask(FireTaskBase):
         else:
             return self._tw_collection.update({"_id":id },{'$set' : spec})
 
-    def deserialize_function(self, fun):
+    def _deserialize_function(self, fun):
         """
         Takes a fireworks serialzed function handle and maps it to a function object.
 
         :param fun: (String) a 'module.function' or '/path/to/mod.func' style string specifying the function
         :return: (function) the function object defined by fun
         """
+
+        #todo: merge with PyTask's deserialze code, move to fw utils
 
         toks = fun.rsplit(".", 1)
         modname, funcname = toks
@@ -110,7 +112,7 @@ class OptTask(FireTaskBase):
         return getattr(mod, funcname)
 
 
-    def is_discrete(self, dims):
+    def _is_discrete(self, dims):
         """
         Checks if the search space is totally discrete.
 
@@ -123,7 +125,7 @@ class OptTask(FireTaskBase):
                 return False
         return True
 
-    def populate_meta(self, dims):
+    def _populate_meta(self, dims):
         """
         Populates the turboworks meta database. Used for error checking and giving new guesses if optimizer repeats.
 
@@ -135,7 +137,7 @@ class OptTask(FireTaskBase):
             if self._tw_meta_collection.find({'z':z}).count() == 0: # if the guess is not already in the db
                 self._tw_meta_collection.insert_one({'z':z, 'guessed':'no'})
 
-    def dupe_check(self, z):
+    def _dupe_check(self, z):
         '''
         Checks to see if a unique input vector z has already been run for the database.
         Currently only works for workflows acessing the database sequentially.
@@ -159,13 +161,13 @@ class OptTask(FireTaskBase):
             z = new_doc['z']
             self._tw_meta_collection.update_many({'z':z, 'guessed':'no'}, {'$set':{'guessed':'yes'}})
 
-        if self.meta_exhausted:  # the db has been exhausted of choices
+        if self._meta_exhausted:  # the db has been exhausted of choices
             raise ValueError("The search space has been exhausted.")
 
         return z
 
     @property
-    def meta_exhausted(self):
+    def _meta_exhausted(self):
         """
         Checks if the turboworks meta database is exhausted (i.e., all possible guesses in the space have been guessed).
 
@@ -174,7 +176,7 @@ class OptTask(FireTaskBase):
         return True if self._tw_meta_collection.find({'guessed': 'no'}).count() == 0 else False
 
     @property
-    def meta_empty(self):
+    def _meta_empty(self):
         """
         Checks if the turboworks meta database is empty (i.e., it's been reset for a new workflow or optimization).
 
@@ -183,9 +185,9 @@ class OptTask(FireTaskBase):
         return True if self._tw_meta_collection.count() == 0 else False
 
     @property
-    def collection(self):
+    def _collection(self):
         """
-        Wrapper of .find() pymongo method for easy access to most up to date collection.
+        Wrapper of .find() pymongo method for easy access to most up to date _collection.
 
         :return: (PyMongo cursor object) the results of an empty turboworks database query.
         """
@@ -193,7 +195,7 @@ class OptTask(FireTaskBase):
         return self._tw_collection.find()
 
     @property
-    def X_dims(self):
+    def _X_dims(self):
         """
         Creates some X dimensions so that the optimizer can run without the user specifing the X dimension range.
         Simply sets each dimension equal to the (lowest, highest) values of any x for that dimension in the database.
@@ -206,7 +208,7 @@ class OptTask(FireTaskBase):
         :return: (list of tuples) a list of dimensions
         """
 
-        X = [doc['x'] for doc in self.collection]
+        X = [doc['x'] for doc in self._collection]
         dims = [[x, x] for x in X[0]]
         check = dims
 
@@ -232,6 +234,8 @@ class OptTask(FireTaskBase):
         if dims == check:  # there's only one document
             for i, dim in enumerate(dims):
                 if type(dim[0]) in dtypes.numbers:
+                    # invent some dimensions
+                    # the prediction coming from these dimensions will not be used anyway, since it is x
                     if type(dim[0]) in dtypes.floats:
                         dim[0] = dim[0] - 0.05 * dim[0]
                         dim[1] = dim[1] + 0.05 * dim[1]
@@ -260,29 +264,29 @@ class OptTask(FireTaskBase):
         z = fw_spec['_z']
         y = fw_spec['_y']
         Z_dims = [tuple(dim) for dim in self['dimensions']]
-        wf_creator = self.deserialize_function(self['wf_creator'])
+        wf_creator = self._deserialize_function(self['wf_creator'])
         wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else {}
 
         if not isinstance(wf_creator_args, dict):
             raise TypeError("wf_creator_args should be a dictonary of keyword arguments.")
 
         # define the function which can fetch X
-        get_x = self.deserialize_function(self['get_x']) if 'get_x' in self else lambda *args, **kwargs : []
+        get_x = self._deserialize_function(self['get_x']) if 'get_x' in self else lambda *args, **kwargs : []
         x = get_x(z)
 
-        # store the data
-        id = self.store({'z':z, 'y':y, 'x':x}).inserted_id
+        # _store the data
+        id = self._store({'z':z, 'y':y, 'x':x}).inserted_id
 
-        # gather all docs from the collection in a concurrency-friendly manner
+        # gather all docs from the _collection in a concurrency-friendly manner
         Z_ext = []
         Y = []
-        for doc in self.collection:
+        for doc in self._collection:
             if all (k in doc for k in ('x','y','z')):
                 Z_ext.append(doc['z'] + doc['x'])
                 Y.append(doc['y'])
 
         # extend the dimensions to X features, so that X information can be used in optimization
-        Z_ext_dims = Z_dims + self.X_dims if x != [] else Z_dims
+        Z_ext_dims = Z_dims + self._X_dims if x != [] else Z_dims
 
         # run machine learner on Z and X features
         predictor = 'forest_minimize' if not 'predictor' in self else self['predictor']
@@ -293,7 +297,7 @@ class OptTask(FireTaskBase):
                                                             n_random_starts=0).x_iters[-1]
         else:
             try:
-                predictor_fun = self.deserialize_function(predictor)
+                predictor_fun = self._deserialize_function(predictor)
                 z_total_new = predictor_fun(Z_ext, Y, Z_ext_dims)
 
             except:
@@ -306,18 +310,18 @@ class OptTask(FireTaskBase):
         # remove X features from the new Z vector
         z_new = z_total_new[0:len(z)]
 
-        # duplicate checking. makes sure no repeat z vectors are inserted into the turboworks collection
+        # duplicate checking. makes sure no repeat z vectors are inserted into the turboworks _collection
         if 'duplicate_check' in self:
             if self['duplicate_check']:
-                if self.is_discrete(Z_dims):
-                    if self.meta_empty:
-                        self.populate_meta(Z_dims)
+                if self._is_discrete(Z_dims):
+                    if self._meta_empty:
+                        self._populate_meta(Z_dims)
                         self._tw_meta_collection.update_many({'z':z}, {'$set':{'guessed':'yes'}})
 
-                    z_new = self.dupe_check(z_new)
+                    z_new = self._dupe_check(z_new)
                     z_total_new = z_new + z_total_new[len(z_new):]
 
-        self.store({'z_new':z_new, 'z_total_new':z_total_new}, update=True, id=id)
+        self._store({'z_new':z_new, 'z_total_new':z_total_new}, update=True, id=id)
 
         # return a new workflow
         return FWAction(additions=wf_creator(z_new,**wf_creator_args))

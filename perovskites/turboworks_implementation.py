@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
     # firework = Firework([firetask1, firetask2], spec=fw_spec)
     firework = Firework([CalculateTask(), SkoptimizeTask()],  spec=fw_spec)
-    # store workflow and launch it locally
+    # _store workflow and launch it locally
     launchpad.add_wf(firework)
 
 

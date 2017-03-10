@@ -1,15 +1,17 @@
 """
 Utility functions for managing the turboworks databases.
 
-    __init__  : allows custom MongoDB params (ie, store the DB somewhere besides default)
-    store     : put custom, ready to go JSON data directly into the turboworks database
-    clean     : deletes the entire collection
-    count     : counts how many documents are in the collection
-    query     : queries the DB based on typical pymongo syntax
-    avg       : finds average
-    min       : finds min
-    max       : finds max
-    back_up   : stores the entire collection in a backup collection
+    __init__         : allows custom MongoDB params (ie, store the DB somewhere besides default)
+    store            : put custom, ready to go JSON data directly into the turboworks database
+    process          : processes a dictionary and list of relevant keys into a turboworks-friendly JSON format
+    process_and_store: processes a custom dictionary and stores its optimization-ready counterpart in the tw db
+    clean            : deletes the entire collection
+    count            : counts how many documents are in the collection
+    query            : queries the DB based on typical pymongo syntax
+    avg              : finds average
+    min              : finds min
+    max              : finds max
+    back_up          : stores the entire collection in a backup collection
 """
 
 from pymongo import MongoClient
@@ -38,7 +40,7 @@ class DB(object):
         :param hostname: (str) host name of the MongoDB
         :param portnum: (str) port number of the DB
         :param dbname: (str) database name (creates it if nonexistent)
-        :param collection: (str) collection name (creates it if nonexistent)
+        :param collection: (str) _collection name (creates it if nonexistent)
         """
         self.mongo = MongoClient(hostname, portnum)
         self.db = getattr(self.mongo,dbname)
@@ -62,13 +64,12 @@ class DB(object):
         warning_key = "required key {} not in {}. Entry skipped. \n" \
                       " Stored dictionaries must have 'z' and 'y' to be stored in the turboworks db."
         warning_dict = "Object {} is {}, not dict. Entry skipped. \n " \
-                       "Turboworks can only store dictionaries in the database."
+                       "Turboworks can only _store dictionaries in the database."
         error_list = "Object {} is {}, not list. Turboworks can only process a list of dictionaries."
 
         if isinstance(obj, dict):
             obj = [obj]
 
-        store_dict = None
         if isinstance(obj, list):
             for d in obj:
                 if isinstance(d, dict):
@@ -96,12 +97,42 @@ class DB(object):
         else:
             raise TypeError(error_list.format(obj, type(obj)))
 
+    def process(self, obj, z_keys, y_key, x_keys = None):
+        """
+        Construct a turboworks-ready list of documents from a single (or list of) dictionary-style objects.
+
+        :param obj: (list of dicts or dict) the original documents containing optimization info to be stored
+        :param z_keys: (list of strings) keys from which to construct z
+        :param x_keys: (list of strings) keys from which to construct x
+        :param y_key: (string) key to construct y
+        :return: the processed document in turboworks-ready format
+        """
+        processed = []
+
+        if isinstance(obj, dict):
+            obj = [obj]
+
+        if x_keys is None:
+            x_keys = []
+
+        for d in obj:
+            doc = {}
+            doc['z'] = [d[zk] for zk in z_keys]
+            doc['x'] = [d[xk] for xk in x_keys]
+            doc['y'] = d[y_key]
+            processed.append(doc)
+        return processed
+
+    def process_and_store (self, obj, z_keys, y_key, x_keys = None):
+        processed = self.process(obj, z_keys, y_key, x_keys=x_keys)
+        self.store(processed)
+
     @property
     def count(self):
         """
-        Counts documents in the TurboWorks DB collection (TurboWorks_collection)
+        Counts documents in the TurboWorks DB _collection (TurboWorks_collection)
 
-        :return: (int) the total number of documents in the collection
+        :return: (int) the total number of documents in the _collection
         """
 
         cursor = self.collection.find()
@@ -154,20 +185,23 @@ class DB(object):
         docs = [document for document in cursor]
         return docs
 
-    def clean(self):
+    def clean(self, query=None):
         """
-        Deletes all data in the TurboWorks DB collection (TurboWorks_collection)
+        Deletes all data in the TurboWorks DB _collection (TurboWorks_collection)
 
-
+        :param query: (mongodb compatible dict) a filter which selects the documents to delete
         :return num_deleted: (int) number of documents deleted from the database
         """
-        docs_removed = self.collection.delete_many({})
+        if query is None:
+            query = {}
+
+        docs_removed = self.collection.delete_many(query)
         num_deleted = docs_removed.deleted_count
         try:
-            print 'Documents removed from {db}:         {n}'.format(db=self.collection_string, n=num_deleted)
+            print('Documents removed from {db}: {n}'.format(db=self.collection_string, n=num_deleted))
         except:
-            print('Documents removed from {db}:         {n}'.format(db=self.collection_string, n=num_deleted))
-        print('Documents remaining:        0')
+            print('Documents removed from {db}: {n}'.format(db=self.collection_string, n=num_deleted))
+        print('Documents remaining: {n}'.format(n=self.collection.count()))
         return num_deleted
 
     def avg(self, var):
@@ -188,7 +222,6 @@ class DB(object):
         mean = numpy.mean(X, 0).tolist()
         return mean
 
-    @classmethod
     def reset(self):
         """
         Resets the meta and turboworks databases by deleting all their data.
@@ -210,7 +243,7 @@ class DB(object):
         :param hostname: (str) host name of the MongoDB
         :param portnum: (str) port number of the DB
         :param dbname: (str) database name (creates it if nonexistent)
-        :param collection: (str) collection name (creates it if nonexistent)
+        :param collection: (str) _collection name (creates it if nonexistent)
         """
         cursor = self.collection.find()
         backup_mongo = MongoClient(hostname, portnum)
@@ -236,7 +269,7 @@ class Result(object):
         initialization of Result object
 
         :param value: the value which is extracted
-        :param collection:  (iterable) the collection which the value is a part of
+        :param collection:  (iterable) the _collection which the value is a part of
         """
 
         self.value = value
