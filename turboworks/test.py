@@ -18,7 +18,6 @@ __email__ = "ardunn@lbl.gov"
 
 dims = [(1,5), (1,5), (1,5)]
 
-
 # Some arbitrary tasks
 @explicit_serialize
 class CalculateTask(FireTaskBase):
@@ -58,6 +57,7 @@ def wf_creator(z):
     firework1 = Firework([CalculateTask(), ArbitraryTask(),
                           OptTask(wf_creator ='test.wf_creator',
                                   get_x = '/Users/alexdunn/Downloads/get_x.get_x',
+                                  duplicate_check = True,
                                   # get_x = 'test.get_x',
                                   # predictor='test.example_predictor_wrapper',
                                   dimensions=Z_dim)],
@@ -100,13 +100,8 @@ if __name__ == "__main__":
     # uncomment the line below to run
     launchpad.reset('', require_password=False)
 
-    test_serial(30)
-    # test_parallel(1)
-
-    # from turboworks.visualize import visualize
-    # "running visualize"
-    # visualize()
-
+    test_serial(126)
+    # test_parallel(10)
 
 
 

@@ -73,7 +73,6 @@ class OptTask(FireTaskBase):
         self._tw_mongo = MongoClient(self._tw_host, self._tw_port)
         self._tw_db = self._tw_mongo.turboworks
         self._tw_collection = self._tw_db.turboworks
-        self._tw_meta_collection = self._tw_db.meta
         self.optimizers = ['gbrt_minimize', 'dummy_minimize', 'forest_minimize', 'gp_minimize']
 
     def _store(self, spec, update = False, id = None):
@@ -125,64 +124,22 @@ class OptTask(FireTaskBase):
                 return False
         return True
 
-    def _populate_meta(self, dims):
-        """
-        Populates the turboworks meta database. Used for error checking and giving new guesses if optimizer repeats.
+    def _dupe_check(self, z, Z_dim):
 
-        :param dims: (list of tuples)
-        :return: None
-        """
-        space = calculate_discrete_space(dims)
-        for z in space:
-            if self._tw_meta_collection.find({'z':z}).count() == 0: # if the guess is not already in the db
-                self._tw_meta_collection.insert_one({'z':z, 'guessed':'no'})
+        available_z = calculate_discrete_space(Z_dim)
 
-    def _dupe_check(self, z):
-        '''
-        Checks to see if a unique input vector z has already been run for the database.
-        Currently only works for workflows acessing the database sequentially.
+        for doc in self._collection:
+            if tuple(doc['z']) in available_z:
+                available_z.remove(tuple(doc['z']))
 
-        :param z: list of categorical values or integers specifying a unique point in the input space.
-            example: z = [1,2,3,'orange','dog']
-
-        :return: z, the new z vector. if z was already tried, z is a random guess from the remaining untried space.
-        '''
-        # todo: duplicate checking does not work with multiple processes
-        # todo: find a better, less storage/write/read intensive method that is also multiprocess compat.
-
-        available_z = self._tw_meta_collection.find({'z':z, 'guessed':'no'})
-
-        if available_z.count() > 0:
-            # the z is available and is in the db, check all concurrently written instances and update them
-            self._tw_meta_collection.update_many({'z':z, 'guessed':'no'}, {'$set':{'guessed':'yes'}})
-        else:
-            # the z is not available because it is not in the db, randomly sample remaining space for new z
-            new_doc = self._tw_meta_collection.find_one({'guessed':'no'})
-            z = new_doc['z']
-            self._tw_meta_collection.update_many({'z':z, 'guessed':'no'}, {'$set':{'guessed':'yes'}})
-
-        if self._meta_exhausted:  # the db has been exhausted of choices
+        if len(available_z) == 0:
             raise ValueError("The search space has been exhausted.")
 
-        return z
-
-    @property
-    def _meta_exhausted(self):
-        """
-        Checks if the turboworks meta database is exhausted (i.e., all possible guesses in the space have been guessed).
-
-        :return: (boolean) whether all the guesses in the space have been guessed.
-        """
-        return True if self._tw_meta_collection.find({'guessed': 'no'}).count() == 0 else False
-
-    @property
-    def _meta_empty(self):
-        """
-        Checks if the turboworks meta database is empty (i.e., it's been reset for a new workflow or optimization).
-
-        :return: (boolean) whether the database is empty
-        """
-        return True if self._tw_meta_collection.count() == 0 else False
+        if z in available_z:
+            return z
+        else:
+            import random
+            return random.choice(available_z)
 
     @property
     def _collection(self):
@@ -314,12 +271,7 @@ class OptTask(FireTaskBase):
         if 'duplicate_check' in self:
             if self['duplicate_check']:
                 if self._is_discrete(Z_dims):
-                    if self._meta_empty:
-                        self._populate_meta(Z_dims)
-                        self._tw_meta_collection.update_many({'z':z}, {'$set':{'guessed':'yes'}})
-
-                    z_new = self._dupe_check(z_new)
-                    z_total_new = z_new + z_total_new[len(z_new):]
+                    z_new = self._dupe_check(z, Z_dims)
 
         self._store({'z_new':z_new, 'z_total_new':z_total_new}, update=True, id=id)
 
