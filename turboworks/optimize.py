@@ -125,6 +125,13 @@ class OptTask(FireTaskBase):
         return True
 
     def _dupe_check(self, z, Z_dim):
+        """
+        Check for duplicates so that expensive workflow will not be needlessly rerun.
+
+        :param z: (list) input to be duplicate checked
+        :param Z_dim: (list of tuples) space in which to check for duplicate
+        :return: (list) updated input which is either the duplicate-checked input z or a randomly picked replacement
+        """
 
         available_z = calculate_discrete_space(Z_dim)
 
