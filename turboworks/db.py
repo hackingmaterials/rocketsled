@@ -132,11 +132,10 @@ class DB(object):
         """
         Counts documents in the TurboWorks DB _collection (TurboWorks_collection)
 
-        :return: (int) the total number of documents in the _collection
+        :return: (int) the total number of documents in the collection
         """
 
         cursor = self.collection.find()
-        # print('Number of documents:       ', cursor.count())
         return cursor.count()
 
     @property
@@ -187,7 +186,7 @@ class DB(object):
 
     def clean(self, query=None):
         """
-        Deletes all data in the TurboWorks DB _collection (TurboWorks_collection)
+        Deletes all data in the TurboWorks DB collection
 
         :param query: (mongodb compatible dict) a filter which selects the documents to delete
         :return num_deleted: (int) number of documents deleted from the database
@@ -221,19 +220,6 @@ class DB(object):
 
         mean = numpy.mean(X, 0).tolist()
         return mean
-
-    def reset(self):
-        """
-        Resets the meta and turboworks databases by deleting all their data.
-
-        :return: None
-        """
-
-        db = DB()
-        db_meta = DB(collection='meta')
-        db.clean()
-        db_meta.clean()
-
 
     def back_up(self, hostname='localhost', portnum=27017, dbname='turboworks',
                 collection='backup'):

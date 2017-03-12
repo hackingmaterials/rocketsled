@@ -8,7 +8,8 @@ from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction
 from pymongo import MongoClient
 from turboworks.references import dtypes
-from turboworks.discrete import calculate_discrete_space
+import itertools
+
 
 
 __author__ = "Alexander Dunn"
@@ -73,7 +74,7 @@ class OptTask(FireTaskBase):
         self._tw_mongo = MongoClient(self._tw_host, self._tw_port)
         self._tw_db = self._tw_mongo.turboworks
         self._tw_collection = self._tw_db.turboworks
-        self.optimizers = ['gbrt_minimize', 'dummy_minimize', 'forest_minimize', 'gp_minimize']
+        self._optimizers = ['gbrt_minimize', 'dummy_minimize', 'forest_minimize', 'gp_minimize']
 
     def _store(self, spec, update = False, id = None):
         """
@@ -124,6 +125,43 @@ class OptTask(FireTaskBase):
                 return False
         return True
 
+    def _calculate_discrete_space(self, dims):
+        """
+        Calculates all entries in a discrete space.
+        For example, if the dimensions are
+
+         [(1,2), ["red","blue"]]
+
+        _calculate_discrete_space will return all possible combinations of these dimensions' entries:
+
+        [(1, 'red'), (1, 'blue'), (2, 'red'), (2, 'blue')]
+
+        In duplicate checking for discrete spaces, the generated list will be narrowed down until no entries remain.
+
+        WARNING: Very large discrete spaces will cause a memory bomb. Typically a space of about 1,000 entries takes
+        0.005s to compute, but larger spaces can take much longer (or may just hog your RAM, be careful).
+
+        :param dims: (list of tuples) dimensions of the search space.
+        :return: (list of lists) all possible combinations inside the discrete space
+
+        """
+        total_dimspace = []
+
+        for dim in dims:
+            if type(dim[0]) in dtypes.ints:
+                # Then the dimension is of the form (lower, upper)
+                lower = dim[0]
+                upper = dim[1]
+                dimspace = list(range(lower, upper + 1))
+            elif type(dim[0]) in dtypes.floats:
+                # The chance of a random sample of identical float is nil
+                raise ValueError("The dimension is a float. The dimension space is infinite.")
+            else:  # The dimension is a discrete finite string list
+                dimspace = dim
+            total_dimspace.append(dimspace)
+
+        return [[x] for x in total_dimspace[0]] if len(dims)==1 else list(itertools.product(*total_dimspace))
+
     def _dupe_check(self, z, Z_dim):
         """
         Check for duplicates so that expensive workflow will not be needlessly rerun.
@@ -133,7 +171,7 @@ class OptTask(FireTaskBase):
         :return: (list) updated input which is either the duplicate-checked input z or a randomly picked replacement
         """
 
-        available_z = calculate_discrete_space(Z_dim)
+        available_z = self._calculate_discrete_space(Z_dim)
 
         for doc in self._collection:
             if tuple(doc['z']) in available_z:
@@ -255,7 +293,7 @@ class OptTask(FireTaskBase):
         # run machine learner on Z and X features
         predictor = 'forest_minimize' if not 'predictor' in self else self['predictor']
 
-        if predictor in self.optimizers:
+        if predictor in self._optimizers:
             import skopt
             z_total_new = getattr(skopt, predictor)(lambda x:0, Z_ext_dims, x0=Z_ext, y0=Y, n_calls=1,
                                                             n_random_starts=0).x_iters[-1]
@@ -266,12 +304,10 @@ class OptTask(FireTaskBase):
 
             except:
                 raise ValueError("The custom predictor function {fun} did not call correctly! "
-                                 "The arguments were: \n arg1: list of {arg1len} lists of {arg1} \n"
-                                 "arg2: list {arg2} of length {arg2len} \n arg3: {arg3}"
-                                 .format(fun=predictor, arg1=type(Z_ext[0][0]), arg1len=len(Z_ext), arg2=type(Y[0]),
-                                         arg2len=len(Y), arg3=Z_ext_dims))
+                                 "The arguments were: \n arg1: {arg1}, arg2: {arg2}, arg3: {arg3}"
+                                 .format(fun=predictor, arg1=Z_ext, arg2=Y, arg3=Z_ext_dims))
 
-        # remove X features from the new Z vector
+        # remove 'predicted' X features from the new Zzvector
         z_new = z_total_new[0:len(z)]
 
         # duplicate checking. makes sure no repeat z vectors are inserted into the turboworks _collection
