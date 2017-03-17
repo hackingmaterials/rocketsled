@@ -1,6 +1,5 @@
 from random import uniform, randint
-import numpy as np
-
+from turboworks.references import dtypes
 def dummy_minimize(dimensions):
     """
     This function returns random new inputs based on the dimensions of the search space.
@@ -23,13 +22,13 @@ def dummy_minimize(dimensions):
     for dimset in dimensions:
         upper = dimset[1]
         lower = dimset[0]
-        if type(upper) == np.int64 or type(upper) == int:
+        if type(lower) in dtypes.ints:
             new_param = randint(lower, upper)
             new_input.append(new_param)
-        elif type(upper) == np.float64 or type(upper) == float:
+        elif type(lower) in dtypes.floats:
             new_param = uniform(lower, upper)
             new_input.append(new_param)
-        elif isinstance(upper, basestring) or isinstance(upper, unicode) or isinstance(upper, np.unicode_):
+        elif type(lower) in dtypes.others:
             domain_size = len(dimset)-1
             new_param = randint(0,domain_size)
             new_input.append(dimset[new_param])

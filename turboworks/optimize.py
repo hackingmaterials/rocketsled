@@ -11,7 +11,6 @@ from turboworks.references import dtypes
 import itertools
 
 
-
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
@@ -50,11 +49,16 @@ class OptTask(FireTaskBase):
 
     :param duplicate_check: (boolean) If True, checks for duplicate guesss in discrete, finite spaces. (NOT currently
     working with concurrent workflows). Default is no duplicate check.
+
+    :param opt_label: (string) Describes the optimization being run. If multiple optimizations have been run, this
+    differentiates the runs so the data is not mixed together.
     """
 
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
-    optional_params = ['get_x', 'predictor', 'wf_creator_args', 'duplicate_check']
+    optional_params = ['get_x', 'predictor', 'wf_creator_args', 'duplicate_check', 'opt_label']
+
+    # todo: once integrated with Fireworks, default opt_label to _fw_name
 
     def __init__(self, *args, **kwargs):
 
@@ -64,8 +68,6 @@ class OptTask(FireTaskBase):
         :param args: variable positional args for initialization
         :param kwargs: variable keyword args for initialization
         """
-
-        # todo: cleanup or refactor
 
         super(FireTaskBase, self).__init__(*args, **kwargs)
 
@@ -194,7 +196,10 @@ class OptTask(FireTaskBase):
         :return: (PyMongo cursor object) the results of an empty turboworks database query.
         """
 
-        return self._tw_collection.find()
+        if 'opt_label' in self:
+            return self._tw_collection.find({'opt_label':self['opt_label']})
+        else:
+            return self._tw_collection.find()
 
     @property
     def _X_dims(self):
@@ -268,6 +273,8 @@ class OptTask(FireTaskBase):
         Z_dims = [tuple(dim) for dim in self['dimensions']]
         wf_creator = self._deserialize_function(self['wf_creator'])
         wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else {}
+        opt_label = self['opt_label'] if 'opt_label' in self else None
+
 
         if not isinstance(wf_creator_args, dict):
             raise TypeError("wf_creator_args should be a dictonary of keyword arguments.")
@@ -277,7 +284,7 @@ class OptTask(FireTaskBase):
         x = get_x(z)
 
         # _store the data
-        id = self._store({'z':z, 'y':y, 'x':x}).inserted_id
+        id = self._store({'opt_label':opt_label, 'z':z, 'y':y, 'x':x}).inserted_id
 
         # gather all docs from the _collection in a concurrency-friendly manner
         Z_ext = []
@@ -307,7 +314,7 @@ class OptTask(FireTaskBase):
                                  "The arguments were: \n arg1: {arg1}, arg2: {arg2}, arg3: {arg3}"
                                  .format(fun=predictor, arg1=Z_ext, arg2=Y, arg3=Z_ext_dims))
 
-        # remove 'predicted' X features from the new Zzvector
+        # remove 'predicted' X features from the new Z vector
         z_new = z_total_new[0:len(z)]
 
         # duplicate checking. makes sure no repeat z vectors are inserted into the turboworks _collection
@@ -319,5 +326,5 @@ class OptTask(FireTaskBase):
         self._store({'z_new':z_new, 'z_total_new':z_total_new}, update=True, id=id)
 
         # return a new workflow
+        print wf_creator_args
         return FWAction(additions=wf_creator(z_new,**wf_creator_args))
-
