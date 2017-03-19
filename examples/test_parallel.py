@@ -10,6 +10,12 @@ from turboworks.utils import random_guess
 from matplotlib import pyplot as plot
 from examples.calculate_task import BasicCalculateTask as CalculateTask
 
+
+# Get the full path of the directory containing this file
+path = os.path.dirname(os.path.realpath(__file__))
+# You don't need this if your code is inside a package
+
+
 dims = [(1, 5), (1, 5), (1, 5)]
 
 # a workflow creator function which takes z and returns a workflow based on z
@@ -18,7 +24,7 @@ def wf_creator(z):
     spec = {'A':z[0], 'B':z[1], 'C':z[2], '_z':z}
     Z_dim = dims
 
-    firework1 = Firework([CalculateTask(), OptTask(wf_creator ='examples.test_parallel.wf_creator',
+    firework1 = Firework([CalculateTask(), OptTask(wf_creator =path + 'test_parallel.wf_creator',
                                                    dimensions=Z_dim,
                                                    opt_label="parallel")], spec=spec)
     return Workflow([firework1])

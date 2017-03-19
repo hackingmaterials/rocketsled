@@ -7,9 +7,10 @@ optimization to be stored and accessed.
 
 
 
+
 '''
 
-
+import os
 from fireworks.core.rocket_launcher import launch_rocket
 from fireworks import Workflow, Firework, LaunchPad
 from turboworks.optimize import OptTask
@@ -17,6 +18,14 @@ from turboworks.optdb import OptDB
 from turboworks.utils import random_guess
 from matplotlib import pyplot as plot
 from examples.calculate_task import MixedCalculateTask as CalculateTask
+
+
+
+
+# Get the full path of the directory containing this file
+path = os.path.dirname(os.path.realpath(__file__))
+# You don't need this if your code is inside a package
+
 
 # use a wf_creator function with more arguments...
 def wf_creator(z, my_kwarg=1):
@@ -27,11 +36,11 @@ def wf_creator(z, my_kwarg=1):
     # CalculateTask writes _y field to the spec internally.
 
     firework1 = Firework([CalculateTask(),
-                          OptTask(wf_creator='test_extras.wf_creator',
+                          OptTask(wf_creator=path + 'test_extras.wf_creator',
                                   dimensions=fw1_dim,
-                                  get_x='test_extras.get_x',
+                                  get_x=path + 'test_extras.get_x',
                                   # predictor='gp_minimize',
-                                  predictor = 'test_extras.example_predictor',
+                                  predictor = path + 'test_extras.example_predictor',
                                   opt_label="extras",
                                   duplicate_check=True,
                                   wf_creator_args={'my_kwarg':my_kwarg*2})],
