@@ -11,13 +11,11 @@ from fireworks import Workflow, Firework, LaunchPad
 from turboworks.optimize import OptTask
 from turboworks.optdb import OptDB
 from matplotlib import pyplot as plot
-from turboworks_examples.calculate_task import BasicCalculateTask as CalculateTask
+from calculate_task import BasicCalculateTask as CalculateTask
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
-
-
 
 
 # a workflow creator function which takes z and returns a workflow based on z
@@ -37,7 +35,7 @@ if __name__ == "__main__":
 
     launchpad = LaunchPad()
     # uncomment the line below to reset fw database
-    # launchpad.reset('', require_password=False)
+    launchpad.reset('', require_password=False)
 
     # clean up tw database if necessary
     # todo: should be integrated with launchpad.reset?

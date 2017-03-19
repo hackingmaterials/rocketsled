@@ -31,9 +31,9 @@ def wf_creator(z, my_kwarg=1):
     # CalculateTask writes _y field to the spec internally.
 
     firework1 = Firework([CalculateTask(),
-                          OptTask(wf_creator='turboworks_examples.test_extras.wf_creator',
+                          OptTask(wf_creator='test_extras.wf_creator',
                                   dimensions=fw1_dim,
-                                  get_x='turboworks_examples.test_extras.get_x',
+                                  get_x='test_extras.get_x',
                                   # predictor='gp_minimize',
                                   predictor = 'turboworks_examples.test_extras.example_predictor',
                                   opt_label="extras",
