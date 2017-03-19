@@ -4,6 +4,9 @@ Examples of using extra turboworks features.
 Note that in this optimization we can keep all the data from the text_basic
 example by using opt_label. Naming the opt_label parameter allows more than one
 optimization to be stored and accessed.
+
+
+
 '''
 
 
@@ -12,7 +15,6 @@ from fireworks import Workflow, Firework, LaunchPad
 from turboworks.optimize import OptTask
 from turboworks.optdb import OptDB
 from turboworks.utils import random_guess
-from turboworks.references import example_data
 from matplotlib import pyplot as plot
 from examples.calculate_task import MixedCalculateTask as CalculateTask
 
@@ -60,6 +62,10 @@ if __name__ == "__main__":
     # uncomment the line below to reset fireworks
     # launchpad.reset('', require_password=False)
 
+    example_data = [{'A': 1, 'B': 2, 'C': 1, 'D': 'blue', 'output': 19.121},
+                    {'A': 2, 'B': 2, 'C': 2, 'D': 'red', 'output': 81.2},
+                    {'A': 1, 'B': 1, 'C': 1, 'D': 'blue', 'output': 15.3}]
+
     launchpad.add_wf(wf_creator([1, 2, 1, "red"]))
 
     # store some precomputed data in the optimization db prior to running a workflow, if we desire
@@ -72,7 +78,7 @@ if __name__ == "__main__":
     minima = []
     for i in range(n_runs):
         launch_rocket(launchpad)
-        minima.append(db.min.value)
+        minima.append(opt_db.min.value)
     plot.plot(range(len(minima)), minima)
     plot.ylabel('Best Minimum Value')
     plot.xlabel('Iteration')

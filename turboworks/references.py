@@ -28,6 +28,3 @@ class Dtypes(object):
 
 dtypes = Dtypes()
 
-example_data = [{'A': 1, 'B': 2, 'C': 1, 'D': 'blue', 'output': 19.121},
-                 {'A': 2, 'B': 2, 'C': 2, 'D': 'red', 'output': 81.2},
-                 {'A': 1, 'B': 1, 'C': 1, 'D': 'blue', 'output': 15.3}]
