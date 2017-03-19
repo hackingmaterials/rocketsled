@@ -52,8 +52,8 @@ def example_predictor(Z_ext, Y, Z_ext_dims):
 
 if __name__ == "__main__":
     launchpad = LaunchPad()
-    db = OptDB(opt_label="extras")  # only use database entries pertaining to this workflow
-    db.clean()   # only cleans previous runs of test_extras
+    opt_db = OptDB(opt_label="extras")  # only use database entries pertaining to this workflow
+    opt_db.clean()   # only cleans previous runs of test_extras
 
     # optimization works with or without cleaning the test_basic run
 
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     launchpad.add_wf(wf_creator([1, 2, 1, "red"]))
 
     # store some precomputed data in the optimization db prior to running a workflow, if we desire
-    db.store(example_data, z_keys=['A', 'B', 'C', 'D'], y_key='output', opt_label='extras')
+    opt_db.store(example_data, z_keys=['A', 'B', 'C', 'D'], y_key='output', opt_label='extras')
 
     # The number of loops to run
     # If >=21, the search space will be exhausted and OptTask will raise an exception.
