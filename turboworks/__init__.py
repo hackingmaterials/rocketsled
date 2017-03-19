@@ -11,7 +11,7 @@ __email__ = "ardunn@lbl.gov"
 
 
 __all__ = ("optdb.py",
-           "dummy.py",
+           "utils.py",
            "optimize.py",
            "references.py",
            "visualize.py")
