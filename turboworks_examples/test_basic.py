@@ -6,22 +6,18 @@ The Firework contains 2 Tasks.
     1. CalculateTask - a task that reads A, B, and C from the spec and calculates (A^2 + B^2)/C
     2. OptTask - a task that stores optimiztion data in the db and optimizes the next guess.
 """
-import os
 from fireworks.core.rocket_launcher import launch_rocket
 from fireworks import Workflow, Firework, LaunchPad
 from turboworks.optimize import OptTask
 from turboworks.optdb import OptDB
 from matplotlib import pyplot as plot
-from calculate_task import BasicCalculateTask as CalculateTask
+from turboworks_examples.calculate_task import BasicCalculateTask as CalculateTask
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
 
 
-# Get the full path of the directory containing this file
-path = os.path.dirname(os.path.realpath(__file__))
-# You don't need this if your code is inside a package
 
 
 # a workflow creator function which takes z and returns a workflow based on z
@@ -32,7 +28,7 @@ def wf_creator(z):
 
     #CalculateTask writes _y field to the spec internally.
 
-    firework1 = Firework([CalculateTask(), OptTask(wf_creator=path + 'test_basic.wf_creator',
+    firework1 = Firework([CalculateTask(), OptTask(wf_creator='turboworks_examples.test_basic.wf_creator',
                                                    dimensions=Z_dim)], spec=spec)
     return Workflow([firework1])
 
