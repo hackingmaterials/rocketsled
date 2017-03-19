@@ -16,7 +16,7 @@ from turboworks.optimize import OptTask
 from turboworks.optdb import OptDB
 from turboworks.utils import random_guess
 from matplotlib import pyplot as plot
-from turboworks_examples.calculate_task import MixedCalculateTask as CalculateTask
+from calculate_task import MixedCalculateTask as CalculateTask
 
 
 
@@ -31,11 +31,11 @@ def wf_creator(z, my_kwarg=1):
     # CalculateTask writes _y field to the spec internally.
 
     firework1 = Firework([CalculateTask(),
-                          OptTask(wf_creator='test_extras.wf_creator',
+                          OptTask(wf_creator='turboworks_examples.test_extras.wf_creator',
                                   dimensions=fw1_dim,
-                                  get_x='test_extras.get_x',
-                                  # predictor='gp_minimize',
-                                  predictor = 'turboworks_examples.test_extras.example_predictor',
+                                  get_x='turboworks_examples.test_extras.get_x',
+                                  # predictor='gp_minimize',  # use one of the 4 built-in optimizers
+                                  predictor = 'turboworks_examples.test_extras.example_predictor',  # or your own
                                   opt_label="extras",
                                   duplicate_check=True,
                                   wf_creator_args={'my_kwarg':my_kwarg*2})],

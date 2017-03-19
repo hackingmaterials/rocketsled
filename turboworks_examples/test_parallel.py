@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
 
     # uncomment the line below to reset fireworks
-    launchpad.reset('', require_password=False)
+    # launchpad.reset('', require_password=False)
 
     n_processes = 2
     n_runs = 5

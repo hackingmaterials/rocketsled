@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
     launchpad = LaunchPad()
     # uncomment the line below to reset fw database
-    launchpad.reset('', require_password=False)
+    # launchpad.reset('', require_password=False)
 
     # clean up tw database if necessary
     # todo: should be integrated with launchpad.reset?
