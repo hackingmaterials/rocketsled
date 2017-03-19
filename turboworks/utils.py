@@ -1,8 +1,19 @@
+"""
+Utility functions for turboworks.
+"""
+
 from random import uniform, randint
 from turboworks.references import dtypes
-def dummy_minimize(dimensions):
+from pymongo import MongoClient
+
+__author__ = "Alexander Dunn"
+__version__ = "0.1"
+__email__ = "ardunn@lbl.gov"
+
+
+def random_guess(dimensions):
     """
-    This function returns random new inputs based on the dimensions of the search space.
+    Returns random new inputs based on the dimensions of the search space.
     It works with float, integer, and categorical types
 
     :param dimensions (list of 2-tuples and/or lists of strings): defines the dimensions of each parameter
@@ -11,11 +22,6 @@ def dummy_minimize(dimensions):
     :return: new_input (list): randomly chosen next parameters in the search space
         example: [12, 1.9383, "green"]
     """
-
-    try:
-        basestring
-    except NameError:  # Python3 compatibility
-        basestring = str
 
     new_input = []
 
@@ -38,3 +44,27 @@ def dummy_minimize(dimensions):
 
 
     return new_input
+
+
+
+def find_dupes(host='localhost', port=27017, opt_label='Unnamed'):
+    """
+    For testing and development. Finds duplicate 'z' entries in the optdb.
+
+    :param host: host of the optdb
+    :param port: port of the optdb
+    :return: (list) of entries which are duplicates, including duplicates of duplicates
+    """
+
+    mongo = MongoClient(host=host, port=port)
+    db = mongo.turboworks.turboworks
+
+    dupes = []
+    unique = []
+    for doc in db.find({'opt_label':opt_label}):
+        if doc['z'] not in unique:
+            unique.append(doc['z'])
+        else:
+            dupes.append(doc['z'])
+
+    return dupes

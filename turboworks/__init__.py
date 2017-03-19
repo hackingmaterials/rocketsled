@@ -10,9 +10,8 @@ __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
 
 
-__all__ = ("discrete.py",
-           "db.py",
+__all__ = ("optdb.py",
            "dummy.py",
-           "visualize.py"
+           "optimize.py",
            "references.py",
-           "optimize.py")
+           "visualize.py")

@@ -4,7 +4,7 @@ from fireworks.utilities.fw_utilities import explicit_serialize
 
 from old.optimize_task import OptimizeTask
 from old.reference import ref_dict
-from turboworks.dummy import dummy_minimize
+from turboworks.utils import random_guess
 
 
 @explicit_serialize
@@ -39,7 +39,7 @@ class SkoptimizeTask(OptimizeTask):
 
         # Run a machine learning algorithm on the data
         dimensions = [(0, 100), (0,100), (0,100)]
-        y_new = dummy_minimize(dimensions)
+        y_new = random_guess(dimensions)
 
         # y_new = gp_minimize(X,y,dimensions)
 

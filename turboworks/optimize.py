@@ -3,13 +3,12 @@ The main FireTasks for running automatic optimization loops are contained in thi
 """
 
 import sys
+import itertools
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction
 from pymongo import MongoClient
-from turboworks.references import dtypes
-import itertools
-
+from references import dtypes
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
@@ -51,7 +50,7 @@ class OptTask(FireTaskBase):
     working with concurrent workflows). Default is no duplicate check.
 
     :param opt_label: (string) Describes the optimization being run. If multiple optimizations have been run, this
-    differentiates the runs so the data is not mixed together.
+    differentiates the runs so the data is not mixed together. The defaul is 'Unnamed'
     """
 
     _fw_name = "OptTask"
@@ -76,7 +75,7 @@ class OptTask(FireTaskBase):
         self._tw_mongo = MongoClient(self._tw_host, self._tw_port)
         self._tw_db = self._tw_mongo.turboworks
         self._tw_collection = self._tw_db.turboworks
-        self._optimizers = ['gbrt_minimize', 'dummy_minimize', 'forest_minimize', 'gp_minimize']
+        self._optimizers = ['gbrt_minimize', 'random_guess', 'forest_minimize', 'gp_minimize']
 
     def _store(self, spec, update = False, id = None):
         """
@@ -173,7 +172,9 @@ class OptTask(FireTaskBase):
         :return: (list) updated input which is either the duplicate-checked input z or a randomly picked replacement
         """
 
-        available_z = self._calculate_discrete_space(Z_dim)
+        # todo: available_z should be stored per job, so it does not have to be created more than once.
+
+        available_z = self._calculate_discrete_space(Z_dim)   # all possible choices in the discrete space
 
         for doc in self._collection:
             if tuple(doc['z']) in available_z:
@@ -191,7 +192,8 @@ class OptTask(FireTaskBase):
     @property
     def _collection(self):
         """
-        Wrapper of .find() pymongo method for easy access to most up to date _collection.
+        Wrapper of .find() pymongo method for easy access to most up to date _collection. If 'opt_label' is
+        defined, uses only the data with the correct label.
 
         :return: (PyMongo cursor object) the results of an empty turboworks database query.
         """
@@ -273,7 +275,10 @@ class OptTask(FireTaskBase):
         Z_dims = [tuple(dim) for dim in self['dimensions']]
         wf_creator = self._deserialize_function(self['wf_creator'])
         wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else {}
-        opt_label = self['opt_label'] if 'opt_label' in self else None
+
+
+        opt_label = self['opt_label'] if 'opt_label' in self else 'Unnamed'
+        # todo: if left empty, this should default to a string uniquely representing the fireworks workflow.
 
 
         if not isinstance(wf_creator_args, dict):
@@ -286,11 +291,11 @@ class OptTask(FireTaskBase):
         # _store the data
         id = self._store({'opt_label':opt_label, 'z':z, 'y':y, 'x':x}).inserted_id
 
-        # gather all docs from the _collection in a concurrency-friendly manner
+        # gather all docs from the collection
         Z_ext = []
         Y = []
         for doc in self._collection:
-            if all (k in doc for k in ('x','y','z')):
+            if all (k in doc for k in ('x','y','z')):  # concurrency read protection
                 Z_ext.append(doc['z'] + doc['x'])
                 Y.append(doc['y'])
 
@@ -309,22 +314,20 @@ class OptTask(FireTaskBase):
                 predictor_fun = self._deserialize_function(predictor)
                 z_total_new = predictor_fun(Z_ext, Y, Z_ext_dims)
 
-            except:
-                raise ValueError("The custom predictor function {fun} did not call correctly! "
-                                 "The arguments were: \n arg1: {arg1}, arg2: {arg2}, arg3: {arg3}"
-                                 .format(fun=predictor, arg1=Z_ext, arg2=Y, arg3=Z_ext_dims))
+            except Exception as E:
+                raise ValueError("The custom predictor function {} did not call correctly! \n {}".format(predictor,E))
 
-        # remove 'predicted' X features from the new Z vector
-        z_new = z_total_new[0:len(z)]
+        # separate 'predicted' X features from the new Z vector
+        z_new, x_new = z_total_new[:len(z)], z_total_new[len(z):]
 
-        # duplicate checking. makes sure no repeat z vectors are inserted into the turboworks _collection
+        # duplicate checking. makes sure no repeat z vectors are inserted into the turboworks collection
         if 'duplicate_check' in self:
             if self['duplicate_check']:
                 if self._is_discrete(Z_dims):
                     z_new = self._dupe_check(z, Z_dims)
+                    # do not worry about mismatch with x_new, as x_new is not used for any calculations
 
-        self._store({'z_new':z_new, 'z_total_new':z_total_new}, update=True, id=id)
+        self._store({'z_new':z_new, 'x_new':x_new}, update=True, id=id)
 
         # return a new workflow
-        print wf_creator_args
         return FWAction(additions=wf_creator(z_new,**wf_creator_args))

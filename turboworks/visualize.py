@@ -1,7 +1,7 @@
 from bokeh.plotting import figure, output_file, show
 import pylab as plt
 import numpy as np
-from turboworks.db import DB
+from turboworks.optdb import OptDB
 from bokeh.plotting import figure, curdoc
 from bokeh.models.sources import ColumnDataSource
 from bokeh.client import push_session
@@ -12,7 +12,7 @@ import subprocess
 # class Visualize(object):
 
 def visualize(pause=1.0, threshold=None):
-    db = DB()
+    db = OptDB()
 
     X = []
     Y = []

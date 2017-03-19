@@ -65,11 +65,11 @@ testing_dir*
 
 # Huge DB file
 unc_inversedesign/
-perovskites/.DS_Store
+old/perovskites/.DS_Store
 
-perovskites/.DS_Store
+old/perovskites/.DS_Store
 
-perovskites/.DS_Store
+old/perovskites/.DS_Store
 .idea/
 
 # generated .html

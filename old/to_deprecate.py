@@ -7,7 +7,7 @@ import numpy as np
 import combo
 from old.gp_opt import gp_minimize
 from turboworks.discrete import calculate_discrete_space, duplicate_check
-from turboworks.dummy import dummy_minimize
+from turboworks.utils import random_guess
 
 
 class Utility(object):
@@ -216,7 +216,7 @@ class DummyOptimizeTask(FireTaskBase):
         self.workflow_creator, opt_inputs, opt_outputs, opt_dimensions, input_keys, dim_keys, output_keys = \
             Utility.get_data (self["func"], fw_spec, output_datatypes = None, host='localhost', port=27017)
 
-        new_input = dummy_minimize(opt_dimensions)
+        new_input = random_guess(opt_dimensions)
 
         updated_input = []
         for entry in new_input:

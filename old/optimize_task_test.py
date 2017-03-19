@@ -4,8 +4,8 @@ from fireworks.utilities.fw_utilities import explicit_serialize
 
 from old.optimize_task import OptimizeTask, AutoOptimizeTask
 from old.reference import ref_dict, ref_dict2
-from turboworks.db import DB
-from turboworks.dummy import dummy_minimize
+from turboworks.optdb import OptDB
+from turboworks.utils import random_guess
 
 
 @explicit_serialize
@@ -54,7 +54,7 @@ class SkoptimizeTask(OptimizeTask):
 
         # Run a machine learning algorithm on the data
         dimensions = [(0, 100), (0,100), (0,100)]
-        y_new = dummy_minimize(dimensions)
+        y_new = random_guess(dimensions)
 
         # y_new = gp_minimize(X,y,dimensions)
 
@@ -68,7 +68,7 @@ class SkoptimizeTask(OptimizeTask):
 
 if __name__ == "__main__":
 
-    mdb = DB()
+    mdb = OptDB()
     mdb.clean()
 
     # set up the LaunchPad and reset it

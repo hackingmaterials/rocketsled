@@ -23,7 +23,7 @@ from sklearn.utils import check_random_state
 from skopt.acquisition import _gaussian_acquisition
 from skopt.space import Space
 
-from turboworks.dummy import dummy_minimize
+from turboworks.utils import random_guess
 from turboworks.discrete import calculate_discrete_space, duplicate_check
 
 
@@ -228,7 +228,7 @@ def gp_minimize(my_input, my_output, dimensions, base_estimator=None, acq="LCB",
     # Duplicate discrete entry checking
     if next_x in my_input:
         # Cheap solution is to randomly sample again.
-        next_x = dummy_minimize(dimensions)
+        next_x = random_guess(dimensions)
         # Expensive solution is to randomly sample from remaining data
         if next_x in my_input:
             # still there

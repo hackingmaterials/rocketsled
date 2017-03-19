@@ -14,7 +14,7 @@ from functools import reduce
 import operator
 from six import string_types
 from skopt import gbrt_minimize
-from turboworks.dummy import dummy_minimize
+from turboworks.utils import random_guess
 from fireworks import FWAction, Workflow
 
 

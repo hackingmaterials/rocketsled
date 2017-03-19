@@ -2,7 +2,7 @@ from Mixed_categorical_workflow_creator import workflow_creator
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import FWorker, LaunchPad
 from fireworks.core.rocket_launcher import launch_rocket
-from turboworks.db import DB
+from turboworks.optdb import OptDB
 import matplotlib.pyplot as plt
 
 """
@@ -10,7 +10,7 @@ This is the top level script for this turboworks example, and is used primarily 
 """
 
 launchpad = LaunchPad()
-manageDB = DB()
+manageDB = OptDB()
 
 # Sample data
 my_input = {"x1": 3, "x2": 2, "color": "green"}

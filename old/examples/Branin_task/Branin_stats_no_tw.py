@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from old.gp_opt import gp_minimize
-from turboworks.dummy import dummy_minimize
+from turboworks.utils import random_guess
 
 
 def branin(x):
@@ -30,8 +30,8 @@ def iteration_bar_graph(runs):
     for run in range(runs):
         dummy_y = []
         gp_y = []
-        gp_x = [dummy_minimize(dimensions)]
-        dummy_x = [dummy_minimize(dimensions)]
+        gp_x = [random_guess(dimensions)]
+        dummy_x = [random_guess(dimensions)]
 
         iterations = 0
         print "Computing gp run {} of {}:".format(run+1, runs)
@@ -47,7 +47,7 @@ def iteration_bar_graph(runs):
         print "Computing dummy run {} of {}:".format(run + 1, runs)
         while dummy_y==[] or dummy_y[-1]>tolerance*target:
             dummy_y.append(branin(dummy_x[-1]))
-            dummy_x.append(dummy_minimize(dimensions))
+            dummy_x.append(random_guess(dimensions))
             # print "Dummy brainin score:", dummy_y[-1]
             iterations+=1
         dummy_iterations.append(iterations)
@@ -91,8 +91,8 @@ def learning_trends(runs, iterations):
     for run in range(runs):
         dummy_y = []
         gp_y = []
-        gp_x = [dummy_minimize(dimensions)]
-        dummy_x = [dummy_minimize(dimensions)]
+        gp_x = [random_guess(dimensions)]
+        dummy_x = [random_guess(dimensions)]
 
         print "computing run {} of {}:".format(run+1, runs)
 
@@ -102,7 +102,7 @@ def learning_trends(runs, iterations):
             gp_x.append(gp_minimize(gp_x, gp_y, dimensions))
 
             dummy_y.append(branin(dummy_x[-1]))
-            dummy_x.append(dummy_minimize(dimensions))
+            dummy_x.append(random_guess(dimensions))
 
         dsl.append(dummy_y)
         gsl.append(gp_y)

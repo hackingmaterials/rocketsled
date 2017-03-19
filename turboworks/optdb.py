@@ -2,9 +2,9 @@
 Utility functions for managing the turboworks databases.
 
     __init__         : allows custom MongoDB params (ie, store the DB somewhere besides default)
-    store            : put custom, ready to go JSON data directly into the turboworks database
+    _store           : put custom, ready to go JSON data directly into the turboworks database
     process          : processes a dictionary and list of relevant keys into a turboworks-friendly JSON format
-    process_and_store: processes a custom dictionary and stores its optimization-ready counterpart in the tw db
+    store            : processes a custom dictionary and stores its optimization-ready counterpart in the tw db
     clean            : deletes the entire collection
     count            : counts how many documents are in the collection
     query            : queries the DB based on typical pymongo syntax
@@ -14,18 +14,18 @@ Utility functions for managing the turboworks databases.
     back_up          : stores the entire collection in a backup collection
 """
 
-from pymongo import MongoClient
-from pprint import pprint
-import numpy
-from references import dtypes
 import warnings
+from pymongo import MongoClient
+from numpy import ndarray
+from numpy import mean as npmean
+from references import dtypes
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
 
 
-class DB(object):
+class OptDB(object):
 
     """
     Manages the turboworks databases.
@@ -33,7 +33,7 @@ class DB(object):
     """
 
     def __init__(self, hostname='localhost', portnum=27017, dbname='turboworks',
-                 collection='turboworks'):
+                 collection='turboworks', opt_label="Unnamed"):
         """
         Allows configuration of the TurboWorks DB
 
@@ -41,24 +41,33 @@ class DB(object):
         :param portnum: (str) port number of the DB
         :param dbname: (str) database name (creates it if nonexistent)
         :param collection: (str) _collection name (creates it if nonexistent)
+        :param opt_label: (String) Used for keeping track of optimization labels. If this does not match the opt_label
+        that OptTask is using, this data will not be used!
         """
         self.mongo = MongoClient(hostname, portnum)
         self.db = getattr(self.mongo,dbname)
         self.collection = getattr(self.db,collection)
         self.collection_string = collection
 
-    def store(self, obj):
-        """
+        self.opt_label = opt_label
 
-        A utility for storing turboworks-ready documents in the database.
+
+
+    def _store(self, obj, opt_label=None):
+        """
+        Internal utility for storing turboworks-ready documents in the database.
 
         :param obj: A dict or list of dicts which can be used with turboworks db.
                 for example: obj = {'z':[1,2,3], 'y':5}
+
+        :param opt_label: (String) Used for keeping track of optimization labels. If this does not match the opt_label
+        that OptTask is using, this data will not be used!
+
         :return: None
         """
 
         warning_list = "key {} exists in dictionary {}, but is not a list or array. \n" \
-                       " this may cause errors internally in turboworks"
+                       "this may cause errors internally in turboworks"
         warning_value = "{} must be a {}. Entry skipped. \n" \
                         "Consult turboworks.references.dtypes for a full list of supported datatypes."
         warning_key = "required key {} not in {}. Entry skipped. \n" \
@@ -75,14 +84,18 @@ class DB(object):
                 if isinstance(d, dict):
                     if 'z' in d.keys():
                         if 'y' in d.keys():
-                            if isinstance(d['z'], list) or isinstance(d['z'], numpy.ndarray):
+                            if isinstance(d['z'], list) or isinstance(d['z'], ndarray):
                                 if type(d['y']) in dtypes.numbers:
                                     store_dict = {'z': d['z'], 'y': d['y']}
                                     if 'x' in d.keys():
-                                        if isinstance(d['x'], list) or isinstance(d['x'], numpy.ndarray):
+                                        if isinstance(d['x'], list) or isinstance(d['x'], ndarray):
                                             store_dict['x'] = d['x']
                                         else:
                                             warnings.warn(warning_list.format('x', d))
+
+                                    if opt_label is not None:
+                                        store_dict['opt_label'] = opt_label
+
                                     self.collection.insert_one(store_dict)
                                 else:
                                     warnings.warn(warning_value.format('y', 'number'))
@@ -123,9 +136,29 @@ class DB(object):
             processed.append(doc)
         return processed
 
-    def process_and_store (self, obj, z_keys, y_key, x_keys = None):
+    def store (self, obj, z_keys, y_key, x_keys = None, opt_label=None):
+        """
+        User function for putting an iterable of dict-style objects into the optimization db directly.
+
+        :param obj: (iterable of dicts) Iterable structure containing data for optimization.
+        :param z_keys: (list of Strings) Key values of the unique features (z) vector
+        :param y_key: (String) Key value of the y scalar
+        :param x_keys: (list of Strings) Key values of the extra features (x) vector.
+        :param opt_label: (String) optimization label. Use if you are storing more than one set of optimization data
+        in the db.
+        :return: None
+        """
+
+        if opt_label == None:
+            opt_label = self.opt_label
+
         processed = self.process(obj, z_keys, y_key, x_keys=x_keys)
-        self.store(processed)
+        self._store(processed, opt_label)
+
+
+    @property
+    def subcollection(self):
+        return self.collection.find({'opt_label': self.opt_label})
 
     @property
     def count(self):
@@ -135,8 +168,7 @@ class DB(object):
         :return: (int) the total number of documents in the collection
         """
 
-        cursor = self.collection.find()
-        return cursor.count()
+        return self.subcollection.count()
 
     @property
     def min(self):
@@ -146,8 +178,8 @@ class DB(object):
         :return: (Result object) holds all information pertinent to the minimum 'y' value in the turboworks db.
         """
 
-        Y = [y['y'] for y in self.collection.find()]
-        return Result(min(Y), self.collection)
+        Y = [y['y'] for y in self.subcollection]
+        return Result(min(Y), self.subcollection)
 
     @property
     def max(self):
@@ -157,8 +189,8 @@ class DB(object):
         :return: A Result object holding all information pertinent to the maximum 'y' value in the turboworks db.
         """
 
-        Y = [y['y'] for y in self.collection.find()]
-        return Result(max(Y), self.collection)
+        Y = [y['y'] for y in self.subcollection]
+        return Result(max(Y), self.subcollection)
 
     def query(self, querydict=None, print_to_console = False):
         """
@@ -173,29 +205,40 @@ class DB(object):
         """
         if querydict is None:
             querydict = {}
+
+        querydict.update({'opt_label':self.opt_label})
+
         cursor = self.collection.find(querydict)
         print('Documents matching:        ', cursor.count())
         print('Documents:')
 
         if print_to_console:
             for document in cursor:
-                    pprint(document)
+                    print(document)
 
         docs = [document for document in cursor]
         return docs
 
-    def clean(self, query=None):
+    def clean(self, clean_all=False, query=None):
         """
         Deletes all data in the TurboWorks DB collection
 
+        :param clean_all: (Boolean) specify whether to clean all optimization data or just for the current opt_label
         :param query: (mongodb compatible dict) a filter which selects the documents to delete
         :return num_deleted: (int) number of documents deleted from the database
         """
         if query is None:
             query = {}
 
+        if clean_all:
+            pass
+        else:
+            if 'opt_label' not in query.keys():       # user did not specify an opt_label for cleaning
+                query['opt_label'] = self.opt_label   # use the current one for the instance
+
         docs_removed = self.collection.delete_many(query)
         num_deleted = docs_removed.deleted_count
+
         try:
             print('Documents removed from {db}: {n}'.format(db=self.collection_string, n=num_deleted))
         except:
@@ -216,9 +259,9 @@ class DB(object):
         if var in ['X', 'Y', 'Z']:
             var = var.lower()
 
-        X = [x[var] for x in self.collection.find()]
+        X = [x[var] for x in self.subcollection]
 
-        mean = numpy.mean(X, 0).tolist()
+        mean = npmean(X, 0).tolist()
         return mean
 
     def back_up(self, hostname='localhost', portnum=27017, dbname='turboworks',
@@ -231,7 +274,7 @@ class DB(object):
         :param dbname: (str) database name (creates it if nonexistent)
         :param collection: (str) _collection name (creates it if nonexistent)
         """
-        cursor = self.collection.find()
+        cursor = self.subcollection
         backup_mongo = MongoClient(hostname, portnum)
         backup_db = getattr(backup_mongo, dbname)
         backup_collection = getattr(backup_db, collection)
@@ -255,13 +298,13 @@ class Result(object):
         initialization of Result object
 
         :param value: the value which is extracted
-        :param collection:  (iterable) the _collection which the value is a part of
+        :param collection:  (iterable) the collection which the value is a part of
         """
 
         self.value = value
         self.collection = collection
 
         if type(value) in dtypes.numbers:
-            self.data = [x for x in self.collection.find({'y':value})]
+            self.data = [doc for doc in self.collection if doc['y']==self.value]
             self.datum = self.data[0]
 
