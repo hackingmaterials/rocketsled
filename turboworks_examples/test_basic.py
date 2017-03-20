@@ -42,7 +42,7 @@ if __name__ == "__main__":
     opt_db = OptDB()
     opt_db.clean()
 
-    launchpad.add_wf(wf_creator([1, 2, 1]))
+    launchpad.add_wf(wf_creator([5, 5, 2]))
 
     minima = []
     for i in range(10):

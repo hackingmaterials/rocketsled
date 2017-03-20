@@ -16,8 +16,6 @@ from calculate_task import MixedCalculateTask as CalculateTask
 
 
 
-
-
 # use a wf_creator function with more arguments...
 def wf_creator(z, my_kwarg=1):
 
@@ -67,7 +65,7 @@ if __name__ == "__main__":
                     {'A': 2, 'B': 2, 'C': 2, 'D': 'red', 'output': 81.2},
                     {'A': 1, 'B': 1, 'C': 1, 'D': 'blue', 'output': 15.3}]
 
-    launchpad.add_wf(wf_creator([1, 2, 1, "red"]))
+    launchpad.add_wf(wf_creator([2, 2, 1, "red"]))
 
     # store some precomputed data in the optimization db prior to running a workflow, if we desire
     opt_db.store(example_data, z_keys=['A', 'B', 'C', 'D'], y_key='output', opt_label='extras')
