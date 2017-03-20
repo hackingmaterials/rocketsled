@@ -71,9 +71,9 @@ if __name__ == "__main__":
     opt_db.store(example_data, z_keys=['A', 'B', 'C', 'D'], y_key='output', opt_label='extras')
 
     # The number of loops to run.
-    n_runs = 21
-    # If >=21 and there's no other wflows on the lpad,
-    # the search space will be exhausted and OptTask will raise an exception.
+    n_runs = 20
+    # If >=21 and there's no other wflows on the lpad, the search space will be exhausted
+    # and OptTask will raise an exception.
 
     minima = []
     for i in range(n_runs):
