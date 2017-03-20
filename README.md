@@ -24,7 +24,19 @@ To learn more about FireWorks, see the [official documentation] (https://pythonh
 - FireWorks
 - MongoDB
 
-## Get up and running
+## Installation
+~~~~
+# Download the repository and install
+git clone https://github.com/ardunn/turboworks.git
+cd turboworks
+pip install .
+
+
+# Now lets run an example
+cd turboworks_examples
+lpad reset
+python test_basic.py
+~~~~
 
 ## Tutorial 1: Get Up and running
 
