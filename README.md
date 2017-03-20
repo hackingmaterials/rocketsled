@@ -29,10 +29,10 @@ To learn more about FireWorks, see the [official documentation] (https://pythonh
 # Download the repository and install
 git clone https://github.com/ardunn/turboworks.git
 cd turboworks
-pip install .
+pip install . -r requirements
 
 
-# Now lets run an example
+# Now lets run a minimization example
 cd turboworks_examples
 lpad reset
 python test_basic.py
@@ -42,4 +42,4 @@ python test_basic.py
 
 ## Tutorial 2: Implementing your own Optimization Algorithms
 
-## Tutorial 3: Using ManageDB to get useful information from your optimizations
+## Tutorial 3: Using OptDB to get useful information from your optimizations
