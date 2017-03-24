@@ -1,3 +1,5 @@
+# TODO: the documentation below is not needed
+
 """
 Utility functions for managing the turboworks databases.
 
@@ -24,6 +26,11 @@ __author__ = "Alexander Dunn"
 __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
 
+# TODO: Suggest to just put this as part of the Launchpad db? You can still keep OptDB as a separate Python file, but the constructor takes a LaunchPad instance and uses LaunchPad.db
+# the collection name can be custom for different optimization experiments but you are still using the same LaunchPad db
+# this would remove all the clunky database connection code like MongoClient() and you won't need to repeat things like serializing the database to/from a file
+
+# TODO: I don't see the point of 99% of this code. If you pare this down to the essentials you can probably make it <100 lines of code. Pretend every line of (non-documentation) code you add costs $100
 
 class OptDB(object):
 
@@ -44,12 +51,17 @@ class OptDB(object):
         :param opt_label: (String) Used for keeping track of optimization labels. If this does not match the opt_label
         that OptTask is using, this data will not be used!
         """
+
+        # TODO: instead of opt_label you might just want to have separate collections for each optimization run
+
         self.mongo = MongoClient(hostname, portnum)
         self.db = getattr(self.mongo,dbname)
         self.collection = getattr(self.db,collection)
         self.collection_string = collection
 
         self.opt_label = opt_label
+
+        # TODO: consider adding indexes for performance on certain keys
 
 
 
@@ -76,8 +88,11 @@ class OptDB(object):
                        "Turboworks can only _store dictionaries in the database."
         error_list = "Object {} is {}, not list. Turboworks can only process a list of dictionaries."
 
+
         if isinstance(obj, dict):
             obj = [obj]
+        # TODO: this logic is madness. Why all these ifs/else? it is impoosbile to tell what is going on. this is not clear to anyone but you.
+        # instead of enforcing all these crazy dict formats why not simply take in an x, y, z as separate paramters and document what they should look like?? The calling code can separate them out as needed.
 
         if isinstance(obj, list):
             for d in obj:
@@ -155,11 +170,12 @@ class OptDB(object):
         processed = self.process(obj, z_keys, y_key, x_keys=x_keys)
         self._store(processed, opt_label)
 
-
+    # TODO: one-line functions like this are crazy. Please don't overdesign like this, it kills code clarity in favor of useless abstractions
     @property
     def subcollection(self):
         return self.collection.find({'opt_label': self.opt_label})
 
+    # TODO: one-line functions like this are crazy. Please don't overdesign like this, it kills code clarity in favor of useless abstractions
     @property
     def count(self):
         """
@@ -170,6 +186,7 @@ class OptDB(object):
 
         return self.subcollection.count()
 
+    # TODO: even these are pushing it...
     @property
     def min(self):
         """
@@ -192,6 +209,7 @@ class OptDB(object):
         Y = [y['y'] for y in self.subcollection]
         return Result(max(Y), self.subcollection)
 
+    # TODO: you don't need this...
     def query(self, querydict=None, print_to_console = False):
         """
         Queries documents via PyMongo's find()
@@ -219,6 +237,7 @@ class OptDB(object):
         docs = [document for document in cursor]
         return docs
 
+    # TODO: don't need this either
     def clean(self, clean_all=False, query=None):
         """
         Deletes all data in the TurboWorks DB collection
@@ -264,6 +283,7 @@ class OptDB(object):
         mean = npmean(X, 0).tolist()
         return mean
 
+    # TODO: don't need this ... user can just use mongodump to back up
     def back_up(self, hostname='localhost', portnum=27017, dbname='turboworks',
                 collection='backup'):
         """
