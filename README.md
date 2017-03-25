@@ -41,5 +41,3 @@ python test_basic.py
 ## Tutorial 1: Get Up and running
 
 ## Tutorial 2: Implementing your own Optimization Algorithms
-
-## Tutorial 3: Using OptDB to get useful information from your optimizations
