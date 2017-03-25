@@ -167,7 +167,7 @@ class OptimizeTask(FireTaskBase):
 
             # insert 3 identical documents into a db
             for _ in range(2):
-                db._collection.insertOne(my_dict)
+                db.collection.insertOne(my_dict)
 
             print(auto_extract(['A', 'types.old.q'], label='inputs'))
 

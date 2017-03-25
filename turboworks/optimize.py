@@ -55,27 +55,8 @@ class OptTask(FireTaskBase):
 
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
-    optional_params = ['get_x', 'predictor', 'wf_creator_args', 'duplicate_check', 'opt_label']
+    optional_params = ['get_x', 'predictor', 'wf_creator_args', 'duplicate_check', 'host', 'port', 'name', 'opt_label']
 
-    # todo: once integrated with Fireworks, default opt_label to _fw_name
-
-    def __init__(self, *args, **kwargs):
-
-        """
-        Initialization of OptTask object.
-
-        :param args: variable positional args for initialization
-        :param kwargs: variable keyword args for initialization
-        """
-
-        super(FireTaskBase, self).__init__(*args, **kwargs)
-
-        self._tw_port = 27017
-        self._tw_host = 'localhost'
-        self._tw_mongo = MongoClient(self._tw_host, self._tw_port)
-        self._tw_db = self._tw_mongo.turboworks
-        self._tw_collection = self._tw_db.turboworks
-        self._optimizers = ['gbrt_minimize', 'random_guess', 'forest_minimize', 'gp_minimize']
 
     def _store(self, spec, update = False, id = None):
         """
@@ -88,9 +69,9 @@ class OptTask(FireTaskBase):
         """
 
         if update == False:
-            return self._tw_collection.insert_one(spec)
+            return self.collection.insert_one(spec)
         else:
-            return self._tw_collection.update({"_id":id },{'$set' : spec})
+            return self.collection.update({"_id":id },{'$set' : spec})
 
     def _deserialize_function(self, fun):
         """
@@ -176,7 +157,7 @@ class OptTask(FireTaskBase):
 
         available_z = self._calculate_discrete_space(Z_dim)   # all possible choices in the discrete space
 
-        for doc in self._collection:
+        for doc in self.collection.find():
             if tuple(doc['z']) in available_z:
                 available_z.remove(tuple(doc['z']))
 
@@ -188,20 +169,6 @@ class OptTask(FireTaskBase):
         else:
             import random
             return random.choice(available_z)
-
-    @property
-    def _collection(self):
-        """
-        Wrapper of .find() pymongo method for easy access to most up to date _collection. If 'opt_label' is
-        defined, uses only the data with the correct label.
-
-        :return: (PyMongo cursor object) the results of an empty turboworks database query.
-        """
-
-        if 'opt_label' in self:
-            return self._tw_collection.find({'opt_label':self['opt_label']})
-        else:
-            return self._tw_collection.find()
 
     @property
     def _X_dims(self):
@@ -217,7 +184,7 @@ class OptTask(FireTaskBase):
         :return: (list of tuples) a list of dimensions
         """
 
-        X = [doc['x'] for doc in self._collection]
+        X = [doc['x'] for doc in self.collection.find()]
         dims = [[x, x] for x in X[0]]
         check = dims
 
@@ -274,27 +241,34 @@ class OptTask(FireTaskBase):
         y = fw_spec['_y']
         Z_dims = [tuple(dim) for dim in self['dimensions']]
         wf_creator = self._deserialize_function(self['wf_creator'])
+
         wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else {}
-
-
-        opt_label = self['opt_label'] if 'opt_label' in self else 'Unnamed'
-        # todo: if left empty, this should default to a string uniquely representing the fireworks workflow.
-
-
         if not isinstance(wf_creator_args, dict):
             raise TypeError("wf_creator_args should be a dictonary of keyword arguments.")
+
+        opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default'
+        # TODO: if left empty, this should default to a string uniquely representing the fireworks workflow.
+        # TODO: once integrated with Fireworks, default opt_label to _fw_name
+
+        host = self['host'] if 'host' in self else 'localhost'
+        port = self['port'] if 'port' in self else 27017
+        name = self['name'] if 'name' in self else 'turboworks'
+
+        mongo = MongoClient(host, port)
+        db = getattr(mongo, name)
+        self.collection = getattr(db, opt_label)
 
         # define the function which can fetch X
         get_x = self._deserialize_function(self['get_x']) if 'get_x' in self else lambda *args, **kwargs : []
         x = get_x(z)
 
         # _store the data
-        id = self._store({'opt_label':opt_label, 'z':z, 'y':y, 'x':x}).inserted_id
+        id = self._store({'z':z, 'y':y, 'x':x}).inserted_id
 
         # gather all docs from the collection
         Z_ext = []
         Y = []
-        for doc in self._collection:
+        for doc in self.collection.find():
             if all (k in doc for k in ('x','y','z')):  # concurrency read protection
                 Z_ext.append(doc['z'] + doc['x'])
                 Y.append(doc['y'])
@@ -305,7 +279,7 @@ class OptTask(FireTaskBase):
         # run machine learner on Z and X features
         predictor = 'forest_minimize' if not 'predictor' in self else self['predictor']
 
-        if predictor in self._optimizers:
+        if predictor in ['gbrt_minimize', 'random_guess', 'forest_minimize', 'gp_minimize']:
             import skopt
             z_total_new = getattr(skopt, predictor)(lambda x:0, Z_ext_dims, x0=Z_ext, y0=Y, n_calls=1,
                                                             n_random_starts=0).x_iters[-1]

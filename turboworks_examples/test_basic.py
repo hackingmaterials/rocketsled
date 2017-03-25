@@ -6,12 +6,12 @@ The Firework contains 2 Tasks.
     1. CalculateTask - a task that reads A, B, and C from the spec and calculates (A^2 + B^2)/C
     2. OptTask - a task that stores optimiztion data in the db and optimizes the next guess.
 """
-from fireworks.core.rocket_launcher import launch_rocket
+import os
+from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
 from turboworks.optimize import OptTask
-from turboworks.optdb import OptDB
-from matplotlib import pyplot as plot
 from calculate_task import BasicCalculateTask as CalculateTask
+
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
@@ -33,25 +33,16 @@ def wf_creator(z):
 
 if __name__ == "__main__":
 
-    launchpad = LaunchPad()
-    # uncomment the line below to reset fw database
-    # launchpad.reset('', require_password=False)
+    TESTDB_NAME = 'turboworks'
+    launchpad = LaunchPad(name=TESTDB_NAME)
+    launchpad.reset(password=None, require_password=False)
 
     # clean up tw database if necessary
     # todo: should be integrated with launchpad.reset?
-    opt_db = OptDB()
-    opt_db.clean()
 
     launchpad.add_wf(wf_creator([5, 5, 2]))
 
-    minima = []
-    for i in range(10):
-        launch_rocket(launchpad)
-        minima.append(opt_db.min.value)
+    rapidfire(launchpad, nlaunches=10, sleep_time=0)
 
-    plot.plot(range(len(minima)), minima)
-    plot.ylabel('Best Minimum Value')
-    plot.xlabel('Iteration')
-    plot.show()
 
 

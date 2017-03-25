@@ -32,30 +32,19 @@ def load_parallel_wfs(n_processes):
 
 
 if __name__ == "__main__":
-    launchpad = LaunchPad()
-    opt_db = OptDB(opt_label="parallel")
-    opt_db.clean()  # cleans only previous runs of test_parallel
 
-
-    # uncomment the line below to reset fireworks
-    # launchpad.reset('', require_password=False)
+    TESTDB_NAME = 'turboworks'
+    launchpad = LaunchPad(name=TESTDB_NAME)
+    launchpad.reset(password=None, require_password=False)
 
     n_processes = 2
     n_runs = 5
 
     load_parallel_wfs(n_processes)
 
-    minima = []
     for i in range(n_runs):
-        sh_output = os.system('rlaunch multi ' + str(n_processes) + ' --nlaunches 1')
+        sh_output = os.system('rlaunch -l my_launchpad.yaml multi ' + str(n_processes) + ' --nlaunches 1')
         print(sh_output)
-        minima.append(opt_db.min.value)
-
-    plot.plot(range(len(minima)), minima)
-    plot.ylabel('Best Minimum Value')
-    plot.xlabel('Iteration')
-    plot.show()
-
 
 
 
