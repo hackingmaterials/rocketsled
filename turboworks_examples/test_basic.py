@@ -44,5 +44,8 @@ if __name__ == "__main__":
 
     rapidfire(launchpad, nlaunches=10, sleep_time=0)
 
+    # tear down database
+    # launchpad.connection.drop_database(TESTDB_NAME)
+
 
 

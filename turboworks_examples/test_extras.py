@@ -59,3 +59,6 @@ if __name__ == "__main__":
     # if n_launches > 23 for this particular example, the search space will be exhausted and OptTask will throw
     # an exception
     rapidfire(launchpad, nlaunches=23, sleep_time=0)
+
+    # tear down database
+    # launchpad.connection.drop_database(TESTDB_NAME)

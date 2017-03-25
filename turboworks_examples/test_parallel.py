@@ -47,6 +47,10 @@ if __name__ == "__main__":
         print(sh_output)
 
 
+    # tear down database
+    # launchpad.connection.drop_database(TESTDB_NAME)
+
+
 
 
 
