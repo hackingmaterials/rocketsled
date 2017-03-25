@@ -1,9 +1,9 @@
 '''
 Examples of using extra turboworks features.
 
-Note that in this optimization we can keep all the data from the text_basic
-example by using opt_label. Naming the opt_label parameter allows more than one
-optimization to be stored and accessed.
+In this task, the calculation and optimization includes a categorical dimension, a function to fetch extra features
+(get_x), a custom predictor function, extra arguments to the workflow creator, duplicate checking enabled, and a custom
+storage location for the optimization data.
 '''
 
 from fireworks.core.rocket_launcher import launch_rocket, rapidfire
@@ -11,7 +11,6 @@ from fireworks import Workflow, Firework, LaunchPad
 from turboworks.optimize import OptTask
 from turboworks.utils import random_guess
 from calculate_task import MixedCalculateTask as CalculateTask
-
 
 
 # use a wf_creator function with more arguments...

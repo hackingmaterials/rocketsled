@@ -16,11 +16,13 @@ def random_guess(dimensions):
     Returns random new inputs based on the dimensions of the search space.
     It works with float, integer, and categorical types
 
-    :param dimensions (list of 2-tuples and/or lists of strings): defines the dimensions of each parameter
-        example:[ (1,50),(-18.939,22.435),["red", "green" , "blue", "orange"]]
+    Args:
+        dimensions ([tuple]): defines the dimensions of each parameter
+            example: [(1,50),(-18.939,22.435),["red", "green" , "blue", "orange"]]
 
-    :return: new_input (list): randomly chosen next parameters in the search space
-        example: [12, 1.9383, "green"]
+    Returns:
+        new_input (list): randomly chosen next parameters in the search space
+            example: [12, 1.9383, "green"]
     """
 
     new_input = []
@@ -47,21 +49,24 @@ def random_guess(dimensions):
 
 
 
-def find_dupes(host='localhost', port=27017, opt_label='Unnamed'):
+def find_dupes(host='localhost', port=27017, opt_label='opt_default'):
     """
     For testing and development. Finds duplicate 'z' entries in the optdb.
 
-    :param host: host of the optdb
-    :param port: port of the optdb
-    :return: (list) of entries which are duplicates, including duplicates of duplicates
+    Args:
+        host (string): host of the database
+        port (int): port of the database
+
+    Return:
+        (list) of entries which are duplicates, including duplicates of duplicates
     """
 
     mongo = MongoClient(host=host, port=port)
-    db = mongo.turboworks.turboworks
+    collection = getattr(mongo.turboworks, opt_label)
 
     dupes = []
     unique = []
-    for doc in db.find({'opt_label':opt_label}):
+    for doc in collection.find():
         if doc['z'] not in unique:
             unique.append(doc['z'])
         else:

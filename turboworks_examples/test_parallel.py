@@ -7,7 +7,6 @@ from fireworks import Workflow, Firework, LaunchPad
 from turboworks.optimize import OptTask
 from turboworks.optdb import OptDB
 from turboworks.utils import random_guess
-from matplotlib import pyplot as plot
 from turboworks_examples.calculate_task import BasicCalculateTask as CalculateTask
 
 

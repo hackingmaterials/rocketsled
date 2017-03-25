@@ -1,5 +1,5 @@
 """
-The main FireTasks for running automatic optimization loops are contained in this module.
+The FireTask for running automatic optimization loops are contained in this module.
 """
 
 import sys
@@ -14,43 +14,43 @@ __author__ = "Alexander Dunn"
 __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
 
-
 @explicit_serialize
 class OptTask(FireTaskBase):
     """
     A FireTask for running optimization loops automatically.
 
+    OptTask takes in and stores a vector 'z' which uniquely defines the input space and a scalar 'y' which is the
+    scoring metric. OptTask produces a new 'z' vector to minimize 'y' using information from all 'z' vectors and 'y'
+    scalars. Additionally, an 'x' vector of extra features can be used by OptTask to better optimize.
 
-    :param wf_creator: (function) returns a workflow based on the input of a unique vector, z.
+    Attributes:
+        wf_creator (function): returns a workflow based on a unique vector, z.
+        dimensions ([tuple]): each 2-tuple in the list defines the search space in (low, high) format.
+            For categorical dimensions, includes all possible categories as a list.
+            example: dimensions = [(1,100), (9.293, 18.2838) ("red, "blue", "green")].
+        get_x (string): the fully-qualified name of a function which, given a z vector, returns another vector x which
+            provides extra information to the machine learner. The features defined in x are not used to run the
+            workflow creator.
+            example: get_x = 'my_module.my_fun'
+            example: get_x = '/path/to/folder/containing/my_package.my_module.my_fun'
+        predictor (string): names a function which given a list of inputs, a list of outputs, and a dimensions space,
+            can return a new optimized input vector. Can specify either a skopt function or a custom function.
+            example: predictor = 'my_module.my_predictor'
+        wf_creator_args (dict): details the kwargs to be passed to the wf_creator function alongside the z vector
+            example:
+                If the wf_creator function is declared as
+                    wf_creator(z, param1=14, param2="glass")
+                The wf_creator_args should be
+                    {'param1':14, 'param2':'glass'}
+        duplicate_check (bool): If True, checks for duplicate guesss in discrete, finite spaces. (NOT currently 100%
+            working with concurrent workflows). Default is no duplicate check.
+        host (string): The name of the MongoDB host where the optimization data will be stored. The default is
+            'localhost'.
+        port (int): The number of the MongoDB port where the optimization data will be stored. The default is 27017.
+        name (string): The name of the MongoDB database where the optimization data will be stored.
+        opt_label (string): Names the collection of that the particular optinization's data will be stored in. Multiple
+            collections correspond to multiple independent optimization.
 
-    :param dimensions: (list of tuples) defines the search space in (low, high) format. For categorical dimensions,
-    includes all possible categories.
-        example: dimensions = [(1,100), (9.293, 18.2838) ("red, "blue", "green")].
-
-    :param get_x: (string) names a function which, given a z vector, returns another vector x which provides extra
-    information to the machine learner. The features defined in x are not used to run the workflow creator.
-        example: get_x = 'my_module.my_fun'
-
-    Strings including path names to directory folders can also be used. Simply append the module name and function name
-    in python "." format (e.g., mod.func) to the end of the path name (e.g., /Users/me/Documents/project).
-        example: get_x = '/path/to/module/mod.func'
-
-    :param predictor: (string) names a function which given a list of inputs, a list of outputs, and a dimensions space,
-     can return a new optimized input vector. Can specify either a skopt function or a custom function.
-        example: predictor = 'my_module.my_predictor'
-
-    :param wf_creator_args: (dict) details the kwargs to be passed to the wf_creator function alongside the z vector
-        example:
-        If the wf_creator function is declared as
-            wf_creator(z, param1=14, param2="glass")
-        The wf_creator_args should be
-            {'param1':14, 'param2':'glass'}
-
-    :param duplicate_check: (boolean) If True, checks for duplicate guesss in discrete, finite spaces. (NOT currently
-    working with concurrent workflows). Default is no duplicate check.
-
-    :param opt_label: (string) Describes the optimization being run. If multiple optimizations have been run, this
-    differentiates the runs so the data is not mixed together. The defaul is 'Unnamed'
     """
 
     _fw_name = "OptTask"
@@ -61,11 +61,14 @@ class OptTask(FireTaskBase):
     def _store(self, spec, update = False, id = None):
         """
         Stores and updates turboworks database files.
-
-        :param spec: (dict) a turboworks-generated spec (or sub-spec) to be stored in the turboworks db.
-        :param update: (boolean) whether to update the document (True) or insert a new one (False)
-        :param id: (ObjectId BSON object) the mongodb id object. if update == True, updates the document with this id.
-        :return: (ObjectId BSON object) the mongodb id object for the document inserted/updated.
+        
+        Args:
+            spec (dict): a turboworks-generated spec (or subset of a spec) to be stored in the turboworks db.
+            update (bool): whether to update the document (True) or insert a new one (False)
+            id (ObjectId): the PyMongo BSON id object. if update == True, updates the document with this id.
+            
+        Returns:
+            (ObjectId) the PyMongo BSON id object for the document inserted/updated.
         """
 
         if update == False:
@@ -77,10 +80,12 @@ class OptTask(FireTaskBase):
         """
         Takes a fireworks serialzed function handle and maps it to a function object.
 
-        :param fun: (String) a 'module.function' or '/path/to/mod.func' style string specifying the function
-        :return: (function) the function object defined by fun
+        Args:
+            fun (string): a 'module.function' or '/path/to/mod.func' style string specifying the function
+         
+        Returns:
+            (function) The function object defined by fun
         """
-
         #todo: merge with PyTask's deserialze code, move to fw utils
 
         toks = fun.rsplit(".", 1)
@@ -98,8 +103,11 @@ class OptTask(FireTaskBase):
         """
         Checks if the search space is totally discrete.
 
-        :param dims: (list of tuples) dimensions of the search space
-        :return: (boolean) whether the search space is totally discrete.
+        Args:
+            dims ([tuple]): dimensions of the search space
+            
+        Returns:
+            (bool) whether the search space is totally discrete.
         """
 
         for dim in dims:
@@ -110,23 +118,21 @@ class OptTask(FireTaskBase):
     def _calculate_discrete_space(self, dims):
         """
         Calculates all entries in a discrete space.
-        For example, if the dimensions are
 
-         [(1,2), ["red","blue"]]
+        Example:
 
-        _calculate_discrete_space will return all possible combinations of these dimensions' entries:
+            >>> dims = [(1,2), ["red","blue"]]
+            >>> space = _calculate_discrete_space(dims)
+            >>> space
+            [(1, 'red'), (1, 'blue'), (2, 'red'), (2, 'blue')]
 
-        [(1, 'red'), (1, 'blue'), (2, 'red'), (2, 'blue')]
+        Args:
+            dims ([tuple]): dimensions of the search space.
 
-        In duplicate checking for discrete spaces, the generated list will be narrowed down until no entries remain.
-
-        WARNING: Very large discrete spaces will cause a memory bomb. Typically a space of about 1,000 entries takes
-        0.005s to compute, but larger spaces can take much longer (or may just hog your RAM, be careful).
-
-        :param dims: (list of tuples) dimensions of the search space.
-        :return: (list of lists) all possible combinations inside the discrete space
-
+        Returns:
+            ([list]) all possible combinations inside the discrete space
         """
+
         total_dimspace = []
 
         for dim in dims:
@@ -136,7 +142,6 @@ class OptTask(FireTaskBase):
                 upper = dim[1]
                 dimspace = list(range(lower, upper + 1))
             elif type(dim[0]) in dtypes.floats:
-                # The chance of a random sample of identical float is nil
                 raise ValueError("The dimension is a float. The dimension space is infinite.")
             else:  # The dimension is a discrete finite string list
                 dimspace = dim
@@ -148,9 +153,12 @@ class OptTask(FireTaskBase):
         """
         Check for duplicates so that expensive workflow will not be needlessly rerun.
 
-        :param z: (list) input to be duplicate checked
-        :param Z_dim: (list of tuples) space in which to check for duplicate
-        :return: (list) updated input which is either the duplicate-checked input z or a randomly picked replacement
+        Args:
+            z (list): input to be duplicate checked
+            Z_dim ([tuples]): space in which to check for duplicate
+
+        Returns:
+            (list) updated input which is either the duplicate-checked input z or a randomly picked replacement
         """
 
         # todo: available_z should be stored per job, so it does not have to be created more than once.
@@ -175,13 +183,11 @@ class OptTask(FireTaskBase):
         """
         Creates some X dimensions so that the optimizer can run without the user specifing the X dimension range.
         Simply sets each dimension equal to the (lowest, highest) values of any x for that dimension in the database.
-
         If there is only one document in the database, it sets the dimension to slightly higher and lower values than
-        the x dimension value.
+        the x dimension value. For categorical dimensions, it includes all dimensions in X.
 
-        For categorical dimensions, it includes all dimensions in X.
-
-        :return: (list of tuples) a list of dimensions
+        Returns:
+            ([tuple]) a list of dimensions
         """
 
         X = [doc['x'] for doc in self.collection.find()]
@@ -229,12 +235,14 @@ class OptTask(FireTaskBase):
 
     def run_task(self, fw_spec):
         """
-        The fireworks' FireTask implementation of running the optimization loop.
+        FireTask implementation of running the optimization loop.
 
-        :param fw_spec: (dict) the firetask spec. Must contain a '_y' key with a float type field and must contain
-        a '_z' key containing a vector uniquely defining the search space.
+        Args:
+            fw_spec (dict): the firetask spec. Must contain a '_y' key with a float type field and must contain
+                a '_z' key containing a vector uniquely defining the search space.
 
-        :return: (FWAction object) a fireworks-interpretable object for creating a new, updated workflow.
+        Returns:
+            (FWAction)
         """
 
         z = fw_spec['_z']
@@ -262,7 +270,7 @@ class OptTask(FireTaskBase):
         get_x = self._deserialize_function(self['get_x']) if 'get_x' in self else lambda *args, **kwargs : []
         x = get_x(z)
 
-        # _store the data
+        # store the data
         id = self._store({'z':z, 'y':y, 'x':x}).inserted_id
 
         # gather all docs from the collection
