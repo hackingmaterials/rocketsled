@@ -31,10 +31,11 @@ git clone https://github.com/ardunn/turboworks.git
 cd turboworks
 pip install . -r requirements
 
+# Make sure Mongo DB's daemon is running
+mongod
 
 # Now lets run a minimization example
 cd turboworks_examples
-lpad reset
 python test_basic.py
 ~~~~
 
