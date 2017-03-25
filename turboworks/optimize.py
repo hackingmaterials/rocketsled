@@ -27,21 +27,17 @@ class OptTask(FireTaskBase):
         wf_creator (function): returns a workflow based on a unique vector, z.
         dimensions ([tuple]): each 2-tuple in the list defines the search space in (low, high) format.
             For categorical dimensions, includes all possible categories as a list.
-            example: dimensions = [(1,100), (9.293, 18.2838) ("red, "blue", "green")].
+            Example: dimensions = [(1,100), (9.293, 18.2838) ("red, "blue", "green")].
         get_x (string): the fully-qualified name of a function which, given a z vector, returns another vector x which
             provides extra information to the machine learner. The features defined in x are not used to run the
             workflow creator.
-            example: get_x = 'my_module.my_fun'
-            example: get_x = '/path/to/folder/containing/my_package.my_module.my_fun'
+            Examples: 
+                get_x = 'my_module.my_fun'
+                get_x = '/path/to/folder/containing/my_package.my_module.my_fun'
         predictor (string): names a function which given a list of inputs, a list of outputs, and a dimensions space,
             can return a new optimized input vector. Can specify either a skopt function or a custom function.
-            example: predictor = 'my_module.my_predictor'
+            Example: predictor = 'my_module.my_predictor'
         wf_creator_args (dict): details the kwargs to be passed to the wf_creator function alongside the z vector
-            example:
-                If the wf_creator function is declared as
-                    wf_creator(z, param1=14, param2="glass")
-                The wf_creator_args should be
-                    {'param1':14, 'param2':'glass'}
         duplicate_check (bool): If True, checks for duplicate guesss in discrete, finite spaces. (NOT currently 100%
             working with concurrent workflows). Default is no duplicate check.
         host (string): The name of the MongoDB host where the optimization data will be stored. The default is
@@ -50,7 +46,6 @@ class OptTask(FireTaskBase):
         name (string): The name of the MongoDB database where the optimization data will be stored.
         opt_label (string): Names the collection of that the particular optinization's data will be stored in. Multiple
             collections correspond to multiple independent optimization.
-
     """
 
     _fw_name = "OptTask"
