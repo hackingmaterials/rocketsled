@@ -157,7 +157,7 @@ class OptTask(FireTaskBase):
         """
 
         # todo: available_z should be stored per job, so it does not have to be created more than once.
-
+        # TODO: I would agree that a performance improvement is needed, e.g. by only computing the full discrete space as well as available z only once (-AJ)
         available_z = self._calculate_discrete_space(Z_dim)   # all possible choices in the discrete space
 
         for doc in self.collection.find():
@@ -239,7 +239,7 @@ class OptTask(FireTaskBase):
         Returns:
             (FWAction)
         """
-
+        # TODO: I am confused about the notation; usually we should use y (output) and X (all inputs, usually capital b/c it is a vector) in machine learning. The z is a bit confusing. I would suggest that z->x or z->X (I actually suggest lowercase so people don't get confused about is lower and upper case). Then your original x becomes x_added or x_user or something. (-AJ)
         z = fw_spec['_z']  # TODO: in retrospect, we should probably have this be fw_spec["_tbw_z"]. That way, all the Turboworks parameters are clearly labeled and separated from anything else the user wants to do (-AJ).
         y = fw_spec['_y']  # TODO: in retrospect, we should probably have this be fw_spec["_tbw_y"]. That way, all the Turboworks parameters are clearly labeled and separated from anything else the user wants to do (-AJ).
         Z_dims = [tuple(dim) for dim in self['dimensions']]  # TODO: I don't understand the point of this (-AJ)
@@ -276,6 +276,7 @@ class OptTask(FireTaskBase):
         Z_ext = []
         Y = []
         # TODO: depending on how big the docs are in the collection apart from x,y,z, you might get better performance using find({}, {"x": 1, "y": 1, "z": 1})  (-AJ)
+        # TODO: I would need to think whether the concurrency read is really done correctly (-AJ)
         for doc in self.collection.find():
             if all (k in doc for k in ('x','y','z')):  # concurrency read protection
                 Z_ext.append(doc['z'] + doc['x'])
@@ -294,7 +295,7 @@ class OptTask(FireTaskBase):
         else:
             try:
                 predictor_fun = self._deserialize_function(predictor)
-                z_total_new = predictor_fun(Z_ext, Y, Z_ext_dims)
+                z_total_new = predictor_fun(Z_ext, Y, Z_ext_dims)  #  TODO: later, you might want to add optional **args and **kwargs to this as well. For now I think it is fine as is. (-AJ)
 
             except Exception as E:
                 raise ValueError("The custom predictor function {} did not call correctly! \n {}".format(predictor,E))
