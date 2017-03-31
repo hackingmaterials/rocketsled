@@ -275,6 +275,7 @@ class OptTask(FireTaskBase):
         # gather all docs from the collection
         Z_ext = []
         Y = []
+        # TODO: depending on how big the docs are in the collection apart from x,y,z, you might get better performance using find({}, {"x": 1, "y": 1, "z": 1})  (-AJ)
         for doc in self.collection.find():
             if all (k in doc for k in ('x','y','z')):  # concurrency read protection
                 Z_ext.append(doc['z'] + doc['x'])
