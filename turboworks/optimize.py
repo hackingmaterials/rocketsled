@@ -27,7 +27,7 @@ class OptTask(FireTaskBase):
         wf_creator (function): returns a workflow based on a unique vector, z.
         dimensions ([tuple]): each 2-tuple in the list defines the search space in (low, high) format.
             For categorical dimensions, includes all possible categories as a list.
-            Example: dimensions = [(1,100), (9.293, 18.2838) ("red, "blue", "green")].
+            Example: dimensions = dim = [(1,100), (9.293, 18.2838), ("red", "blue", "green")].
         get_x (string): the fully-qualified name of a function which, given a z vector, returns another vector x which
             provides extra information to the machine learner. The features defined in x are not used to run the
             workflow creator.
