@@ -245,23 +245,27 @@ class OptTask(FireTaskBase):
         Z_dims = [tuple(dim) for dim in self['dimensions']]  # TODO: I don't understand the point of this (-AJ)
         wf_creator = self._deserialize_function(self['wf_creator'])
 
-        wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else {}
+        wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else {}  # TODO: call it "wf_creator_kwargs" if these are supposed to be keyword args. You can have another one called "wf_creator_args" which would be an array of **args. (-AJ)
         if not isinstance(wf_creator_args, dict):
             raise TypeError("wf_creator_args should be a dictonary of keyword arguments.")
 
         opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default'
         # TODO: if left empty, this should default to a string uniquely representing the fireworks workflow.
         # TODO: once integrated with Fireworks, default opt_label to _fw_name
+        # TODO: If I understand correctly, *all* workflows within one optimization experiment (e.g., perhaps 1000 workflows) should have the same opt_label. I would in advise against any kind of cute thing like defaulting to fw_name in that case. Try to use principle of least surprise. (-AJ)
 
         host = self['host'] if 'host' in self else 'localhost'
         port = self['port'] if 'port' in self else 27017
         name = self['name'] if 'name' in self else 'turboworks'
+
+        # TODO: for host, port, name, maybe talk to AJ. There should be two options: (i) the user sets these variables, in which case use those (already done in your solution). (ii) The user sends in a LaunchPad object to the Firework (ask AJ), in which case use the LaunchPad's fireworks db as the db. If neither of those, don't use localhost. Throw an error asking the user to specify the database using either of the two methods. (-AJ)
 
         mongo = MongoClient(host, port)
         db = getattr(mongo, name)
         self.collection = getattr(db, opt_label)
 
         # define the function which can fetch X
+        # TODO: it would be less confusing if you simply didn't call get_x() if the parameter wasn't set instead of defining the lambda function. e.g., x = self._deserialize_function(self['get_x']) if 'get_x' in self else []  (-AJ)
         get_x = self._deserialize_function(self['get_x']) if 'get_x' in self else lambda *args, **kwargs : []
         x = get_x(z)
 
