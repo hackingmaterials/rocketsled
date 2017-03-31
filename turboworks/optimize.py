@@ -239,6 +239,7 @@ class OptTask(FireTaskBase):
         Returns:
             (FWAction)
         """
+        # TODO: it would be great (and should be simple) if one could choose whether to minimize or maximize. I know you can do 1/y or something to turn min into an effective max, but there are reasons to not want to do that sometimes. (-AJ)
         # TODO: I am confused about the notation; usually we should use y (output) and X (all inputs, usually capital b/c it is a vector) in machine learning. The z is a bit confusing. I would suggest that z->x or z->X (I actually suggest lowercase so people don't get confused about is lower and upper case). Then your original x becomes x_added or x_user or something. (-AJ)
         z = fw_spec['_z']  # TODO: in retrospect, we should probably have this be fw_spec["_tbw_z"]. That way, all the Turboworks parameters are clearly labeled and separated from anything else the user wants to do (-AJ).
         y = fw_spec['_y']  # TODO: in retrospect, we should probably have this be fw_spec["_tbw_y"]. That way, all the Turboworks parameters are clearly labeled and separated from anything else the user wants to do (-AJ).
