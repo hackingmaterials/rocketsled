@@ -259,7 +259,7 @@ class OptTask(FireTaskBase):
         port = self['port'] if 'port' in self else 27017
         name = self['name'] if 'name' in self else 'turboworks'
 
-        # TODO: for host, port, name, maybe talk to AJ. There should be two options: (i) the user sets these variables, in which case use those (already done in your solution). (ii) The user sends in a LaunchPad object to the Firework (ask AJ), in which case use the LaunchPad's fireworks db as the db. If neither of those, don't use localhost. Throw an error asking the user to specify the database using either of the two methods. (-AJ)
+        # TODO: for host, port, name, maybe talk to AJ. There should be two options: (i) the user sets these variables, in which case use those (already done in your solution). (ii) The user sends in a LaunchPad object to the Firework (ask AJ), in which case use the LaunchPad's fireworks db as the db. If neither of those, don't use localhost. Throw an error asking the user to specify the database using either of the two methods. Maybe a third method is to use the normal "my_launchpad.yaml" etc. to also set the Turboworks db via an auto_load() style method. (-AJ)
 
         mongo = MongoClient(host, port)
         db = getattr(mongo, name)
