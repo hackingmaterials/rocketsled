@@ -240,9 +240,9 @@ class OptTask(FireTaskBase):
             (FWAction)
         """
 
-        z = fw_spec['_z']
-        y = fw_spec['_y']
-        Z_dims = [tuple(dim) for dim in self['dimensions']]
+        z = fw_spec['_z']  # TODO: in retrospect, we should probably have this be fw_spec["_tbw_z"]. That way, all the Turboworks parameters are clearly labeled and separated from anything else the user wants to do (-AJ).
+        y = fw_spec['_y']  # TODO: in retrospect, we should probably have this be fw_spec["_tbw_y"]. That way, all the Turboworks parameters are clearly labeled and separated from anything else the user wants to do (-AJ).
+        Z_dims = [tuple(dim) for dim in self['dimensions']]  # TODO: I don't understand the point of this (-AJ)
         wf_creator = self._deserialize_function(self['wf_creator'])
 
         wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else {}
