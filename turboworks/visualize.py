@@ -11,6 +11,7 @@ import subprocess
 
 # class Visualize(object):
 
+# TODO: I am not sure what this is or why it is needed (-AJ)
 def visualize(pause=1.0, threshold=None):
     pass
 
