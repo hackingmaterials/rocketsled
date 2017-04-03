@@ -27,7 +27,7 @@ class OptTask(FireTaskBase):
         wf_creator (function): returns a workflow based on a unique vector, z.
         dimensions ([tuple]): each 2-tuple in the list defines the search space in (low, high) format.
             For categorical dimensions, includes all possible categories as a list.
-            Example: dimensions = [(1,100), (9.293, 18.2838) ("red, "blue", "green")].
+            Example: dimensions = dim = [(1,100), (9.293, 18.2838), ("red", "blue", "green")].
         get_x (string): the fully-qualified name of a function which, given a z vector, returns another vector x which
             provides extra information to the machine learner. The features defined in x are not used to run the
             workflow creator.
@@ -157,7 +157,7 @@ class OptTask(FireTaskBase):
         """
 
         # todo: available_z should be stored per job, so it does not have to be created more than once.
-
+        # TODO: I would agree that a performance improvement is needed, e.g. by only computing the full discrete space as well as available z only once (-AJ)
         available_z = self._calculate_discrete_space(Z_dim)   # all possible choices in the discrete space
 
         for doc in self.collection.find():
@@ -239,29 +239,34 @@ class OptTask(FireTaskBase):
         Returns:
             (FWAction)
         """
-
-        z = fw_spec['_z']
-        y = fw_spec['_y']
-        Z_dims = [tuple(dim) for dim in self['dimensions']]
+        # TODO: it would be great (and should be simple) if one could choose whether to minimize or maximize. I know you can do 1/y or something to turn min into an effective max, but there are reasons to not want to do that sometimes. (-AJ)
+        # TODO: I am confused about the notation; usually we should use y (output) and X (all inputs, usually capital b/c it is a vector) in machine learning. The z is a bit confusing. I would suggest that z->x or z->X (I actually suggest lowercase so people don't get confused about is lower and upper case). Then your original x becomes x_added or x_user or something. (-AJ)
+        z = fw_spec['_z']  # TODO: in retrospect, we should probably have this be fw_spec["_tbw_z"]. That way, all the Turboworks parameters are clearly labeled and separated from anything else the user wants to do (-AJ).
+        y = fw_spec['_y']  # TODO: in retrospect, we should probably have this be fw_spec["_tbw_y"]. That way, all the Turboworks parameters are clearly labeled and separated from anything else the user wants to do (-AJ).
+        Z_dims = [tuple(dim) for dim in self['dimensions']]  # TODO: I don't understand the point of this (-AJ)
         wf_creator = self._deserialize_function(self['wf_creator'])
 
-        wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else {}
+        wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else {}  # TODO: call it "wf_creator_kwargs" if these are supposed to be keyword args. You can have another one called "wf_creator_args" which would be an array of **args. (-AJ)
         if not isinstance(wf_creator_args, dict):
             raise TypeError("wf_creator_args should be a dictonary of keyword arguments.")
 
         opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default'
         # TODO: if left empty, this should default to a string uniquely representing the fireworks workflow.
         # TODO: once integrated with Fireworks, default opt_label to _fw_name
+        # TODO: If I understand correctly, *all* workflows within one optimization experiment (e.g., perhaps 1000 workflows) should have the same opt_label. I would in advise against any kind of cute thing like defaulting to fw_name in that case. Try to use principle of least surprise. (-AJ)
 
         host = self['host'] if 'host' in self else 'localhost'
         port = self['port'] if 'port' in self else 27017
         name = self['name'] if 'name' in self else 'turboworks'
+
+        # TODO: for host, port, name, maybe talk to AJ. There should be two options: (i) the user sets these variables, in which case use those (already done in your solution). (ii) The user sends in a LaunchPad object to the Firework (ask AJ), in which case use the LaunchPad's fireworks db as the db. If neither of those, don't use localhost. Throw an error asking the user to specify the database using either of the two methods. Maybe a third method is to use the normal "my_launchpad.yaml" etc. to also set the Turboworks db via an auto_load() style method. (-AJ)
 
         mongo = MongoClient(host, port)
         db = getattr(mongo, name)
         self.collection = getattr(db, opt_label)
 
         # define the function which can fetch X
+        # TODO: it would be less confusing if you simply didn't call get_x() if the parameter wasn't set instead of defining the lambda function. e.g., x = self._deserialize_function(self['get_x']) if 'get_x' in self else []  (-AJ)
         get_x = self._deserialize_function(self['get_x']) if 'get_x' in self else lambda *args, **kwargs : []
         x = get_x(z)
 
@@ -271,6 +276,8 @@ class OptTask(FireTaskBase):
         # gather all docs from the collection
         Z_ext = []
         Y = []
+        # TODO: depending on how big the docs are in the collection apart from x,y,z, you might get better performance using find({}, {"x": 1, "y": 1, "z": 1})  (-AJ)
+        # TODO: I would need to think whether the concurrency read is really done correctly (-AJ)
         for doc in self.collection.find():
             if all (k in doc for k in ('x','y','z')):  # concurrency read protection
                 Z_ext.append(doc['z'] + doc['x'])
@@ -289,7 +296,7 @@ class OptTask(FireTaskBase):
         else:
             try:
                 predictor_fun = self._deserialize_function(predictor)
-                z_total_new = predictor_fun(Z_ext, Y, Z_ext_dims)
+                z_total_new = predictor_fun(Z_ext, Y, Z_ext_dims)  #  TODO: later, you might want to add optional **args and **kwargs to this as well. For now I think it is fine as is. (-AJ)
 
             except Exception as E:
                 raise ValueError("The custom predictor function {} did not call correctly! \n {}".format(predictor,E))
@@ -307,4 +314,5 @@ class OptTask(FireTaskBase):
         self._store({'z_new':z_new, 'x_new':x_new}, update=True, id=id)
 
         # return a new workflow
+        # TODO: the FWAction should store the data on the _id of the optimization database entry (using the update_spec arg), that way we can backtrack which Launch a particular optimization data point comes from a little more easily (we could also match _z I guess)  (-AJ)
         return FWAction(additions=wf_creator(z_new,**wf_creator_args))

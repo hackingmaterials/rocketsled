@@ -48,7 +48,8 @@ def random_guess(dimensions):
     return new_input
 
 
-
+# TODO: I think you should remove this method (-AJ). You can simply have 'z' be a unique index in the Mongo collection which will *guarantee* you don't have duplicates. Look at ensure_index() with unique=True
+# Let me know if you think this needs to be kept (-AJ)
 def find_dupes(host='localhost', port=27017, opt_label='opt_default'):
     """
     For testing and development. Finds duplicate 'z' entries in the optdb.
