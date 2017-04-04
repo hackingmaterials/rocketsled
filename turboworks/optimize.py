@@ -333,6 +333,6 @@ class OptTask(FireTaskBase):
         self._store({'z_new':z_new, 'x_new':x_new}, update=True, id=id)
 
         # return a new workflow
-        # TODO: the FWAction should store the data on the _id of the optimization database entry (using the update_spec arg), that way we can backtrack which Launch a particular optimization data point comes from a little more easily (we could also match _z I guess)  (-AJ)
-        return FWAction(additions=wf_creator(z_new, *wf_creator_args, **wf_creator_kwargs))
+        return FWAction(additions=wf_creator(z_new, *wf_creator_args, **wf_creator_kwargs),
+                        update_spec={'optimization_id':id})
 
