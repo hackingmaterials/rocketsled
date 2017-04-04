@@ -247,17 +247,11 @@ class OptTask(FireTaskBase):
         """
         # TODO: I am confused about the notation; usually we should use y (output) and X (all inputs, usually capital b/c it is a vector) in machine learning. The z is a bit confusing. I would suggest that z->x or z->X (I actually suggest lowercase so people don't get confused about is lower and upper case). Then your original x becomes x_added or x_user or something. (-AJ)
 
-        # TODO: z is the vector that uniquely defines the input space. Z is the list of all unique vectors that have been tried.
-        # TODO: x is the vector of extra features. X is the list of all extra feature vectors.
-        # TODO: y is an individual output. Y is the vector of all outputs
-
         z = fw_spec['_tw_z']
         y = fw_spec['_tw_y']
 
+        # type safety for dimensions to avoid cryptic skopt errors
         Z_dims = [tuple(dim) for dim in self['dimensions']]
-        # TODO: I don't understand the point of this (-AJ)
-        # TODO: skopt requires tuple form, this is in case dimensions are passed as a list (-ad)
-
 
         wf_creator = self._deserialize_function(self['wf_creator'])
 
@@ -307,7 +301,6 @@ class OptTask(FireTaskBase):
 
         # run machine learner on Z and X features
         predictor = 'forest_minimize' if not 'predictor' in self else self['predictor']
-
         if predictor in ['gbrt_minimize', 'random_guess', 'forest_minimize', 'gp_minimize']:
             import skopt
             z_total_new = getattr(skopt, predictor)(lambda x:0, Z_ext_dims, x0=Z_ext, y0=Y, n_calls=1,
