@@ -18,7 +18,7 @@ class BasicCalculateTask(FireTaskBase):
         C = fw_spec['C']
 
         score = A*B/C
-        output = {'_y': score}
+        output = {'_tw_y': score}
         return FWAction(update_spec=output)
 
 @explicit_serialize
@@ -36,5 +36,6 @@ class MixedCalculateTask(FireTaskBase):
         score += 30 if D == 'red' else 0
         score -= 20 if D == 'green' else 0
 
-        output = {'_y': score}
+
+        output = {'_tw_y': score}
         return FWAction(update_spec=output)

@@ -15,7 +15,7 @@ dims = [(1, 5), (1, 5), (1, 5)]
 # a workflow creator function which takes z and returns a workflow based on z
 def wf_creator(z):
 
-    spec = {'A':z[0], 'B':z[1], 'C':z[2], '_z':z}
+    spec = {'A':z[0], 'B':z[1], 'C':z[2], '_tw_z':z}
     Z_dim = dims
 
     firework1 = Firework([CalculateTask(), OptTask(wf_creator ='turboworks_examples.test_parallel.wf_creator',

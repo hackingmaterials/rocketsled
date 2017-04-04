@@ -14,12 +14,12 @@ from calculate_task import MixedCalculateTask as CalculateTask
 
 
 # use a wf_creator function with more arguments...
-def wf_creator(z, my_kwarg=1):
+def wf_creator(z, my_arg, my_kwarg=1):
 
-    fw1_spec = {'A': z[0], 'B': z[1], 'C': z[2], 'D':z[3], '_z': z}
+    fw1_spec = {'A': z[0], 'B': z[1], 'C': z[2], 'D':z[3], '_tw_z': z}
     fw1_dim = [(1,2),(1,2),(1,2), ("red", "green", "blue")]
 
-    # CalculateTask writes _y field to the spec internally.
+    # CalculateTask writes _tw_y field to the spec internally.
 
     firework1 = Firework([CalculateTask(),
                           OptTask(wf_creator='turboworks_examples.test_extras.wf_creator',
@@ -27,7 +27,9 @@ def wf_creator(z, my_kwarg=1):
                                   get_x='turboworks_examples.test_extras.get_x',
                                   # predictor='gp_minimize',  # use one of the 4 built-in optimizers
                                   predictor = 'turboworks_examples.test_extras.example_predictor',  # or your own
-                                  wf_creator_args={'my_kwarg': my_kwarg * 2},
+                                  max = True,
+                                  wf_creator_args = [my_arg * 3],
+                                  wf_creator_kwargs={'my_kwarg': my_kwarg * 2},
                                   duplicate_check=True,
                                   opt_label="opt_extras_example")],
                          spec=fw1_spec)
@@ -52,7 +54,7 @@ if __name__ == "__main__":
     TESTDB_NAME = 'turboworks'
     launchpad = LaunchPad(name=TESTDB_NAME)
     launchpad.reset(password=None, require_password=False)
-    launchpad.add_wf(wf_creator([1, 1, 2, "red"]))
+    launchpad.add_wf(wf_creator([1, 1, 2, "red"], 3, my_kwarg= 1))
 
 
     # if n_launches > 23 for this particular example, the search space will be exhausted and OptTask will throw

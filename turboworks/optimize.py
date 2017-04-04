@@ -4,6 +4,7 @@ The FireTask for running automatic optimization loops are contained in this modu
 
 import sys
 import itertools
+from bson.objectid import ObjectId
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction
@@ -37,7 +38,10 @@ class OptTask(FireTaskBase):
         predictor (string): names a function which given a list of inputs, a list of outputs, and a dimensions space,
             can return a new optimized input vector. Can specify either a skopt function or a custom function.
             Example: predictor = 'my_module.my_predictor'
-        wf_creator_args (dict): details the kwargs to be passed to the wf_creator function alongside the z vector
+        max (bool): Makes optimization tend toward maximum values instead of minimum ones.
+        wf_creator_args (list): details the positional args to be passed to the wf_creator function alongsize the z
+            vector
+        wf_creator_kwargs (dict): details the kwargs to be passed to the wf_creator function alongside the z vector
         duplicate_check (bool): If True, checks for duplicate guesss in discrete, finite spaces. (NOT currently 100%
             working with concurrent workflows). Default is no duplicate check.
         host (string): The name of the MongoDB host where the optimization data will be stored. The default is
@@ -50,7 +54,8 @@ class OptTask(FireTaskBase):
 
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
-    optional_params = ['get_x', 'predictor', 'wf_creator_args', 'duplicate_check', 'host', 'port', 'name', 'opt_label']
+    optional_params = ['get_x', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
+                       'host', 'port', 'name','opt_label']
 
 
     def _store(self, spec, update = False, id = None):
@@ -158,7 +163,7 @@ class OptTask(FireTaskBase):
 
         # todo: available_z should be stored per job, so it does not have to be created more than once.
         # TODO: I would agree that a performance improvement is needed, e.g. by only computing the full discrete space as well as available z only once (-AJ)
-        available_z = self._calculate_discrete_space(Z_dim)   # all possible choices in the discrete space
+        available_z = self._calculate_discrete_space(Z_dim) # all possible choices in the discrete space (expensive)
 
         for doc in self.collection.find():
             if tuple(doc['z']) in available_z:
@@ -166,6 +171,7 @@ class OptTask(FireTaskBase):
 
         if len(available_z) == 0:
             raise ValueError("The search space has been exhausted.")
+
 
         if z in available_z:
             return z
@@ -233,27 +239,38 @@ class OptTask(FireTaskBase):
         FireTask implementation of running the optimization loop.
 
         Args:
-            fw_spec (dict): the firetask spec. Must contain a '_y' key with a float type field and must contain
-                a '_z' key containing a vector uniquely defining the search space.
+            fw_spec (dict): the firetask spec. Must contain a '_tw_y' key with a float type field and must contain
+                a '_tw_z' key containing a vector uniquely defining the search space.
 
         Returns:
             (FWAction)
         """
-        # TODO: it would be great (and should be simple) if one could choose whether to minimize or maximize. I know you can do 1/y or something to turn min into an effective max, but there are reasons to not want to do that sometimes. (-AJ)
         # TODO: I am confused about the notation; usually we should use y (output) and X (all inputs, usually capital b/c it is a vector) in machine learning. The z is a bit confusing. I would suggest that z->x or z->X (I actually suggest lowercase so people don't get confused about is lower and upper case). Then your original x becomes x_added or x_user or something. (-AJ)
-        z = fw_spec['_z']  # TODO: in retrospect, we should probably have this be fw_spec["_tbw_z"]. That way, all the Turboworks parameters are clearly labeled and separated from anything else the user wants to do (-AJ).
-        y = fw_spec['_y']  # TODO: in retrospect, we should probably have this be fw_spec["_tbw_y"]. That way, all the Turboworks parameters are clearly labeled and separated from anything else the user wants to do (-AJ).
-        Z_dims = [tuple(dim) for dim in self['dimensions']]  # TODO: I don't understand the point of this (-AJ)
+
+        # TODO: z is the vector that uniquely defines the input space. Z is the list of all unique vectors that have been tried.
+        # TODO: x is the vector of extra features. X is the list of all extra feature vectors.
+        # TODO: y is an individual output. Y is the vector of all outputs
+
+        z = fw_spec['_tw_z']
+        y = fw_spec['_tw_y']
+
+        Z_dims = [tuple(dim) for dim in self['dimensions']]
+        # TODO: I don't understand the point of this (-AJ)
+        # TODO: skopt requires tuple form, this is in case dimensions are passed as a list (-ad)
+
+
         wf_creator = self._deserialize_function(self['wf_creator'])
 
-        wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else {}  # TODO: call it "wf_creator_kwargs" if these are supposed to be keyword args. You can have another one called "wf_creator_args" which would be an array of **args. (-AJ)
-        if not isinstance(wf_creator_args, dict):
-            raise TypeError("wf_creator_args should be a dictonary of keyword arguments.")
+        wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else []
+        if not isinstance(wf_creator_args, list) or isinstance(wf_creator_args, tuple):
+            raise TypeError("wf_creator_args should be a list/tuple of positional arguments")
+
+
+        wf_creator_kwargs = self['wf_creator_kwargs'] if 'wf_creator_kwargs' in self else {}
+        if not isinstance(wf_creator_kwargs, dict):
+            raise TypeError("wf_creator_kwargs should be a dictonary of keyword arguments.")
 
         opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default'
-        # TODO: if left empty, this should default to a string uniquely representing the fireworks workflow.
-        # TODO: once integrated with Fireworks, default opt_label to _fw_name
-        # TODO: If I understand correctly, *all* workflows within one optimization experiment (e.g., perhaps 1000 workflows) should have the same opt_label. I would in advise against any kind of cute thing like defaulting to fw_name in that case. Try to use principle of least surprise. (-AJ)
 
         host = self['host'] if 'host' in self else 'localhost'
         port = self['port'] if 'port' in self else 27017
@@ -265,10 +282,8 @@ class OptTask(FireTaskBase):
         db = getattr(mongo, name)
         self.collection = getattr(db, opt_label)
 
-        # define the function which can fetch X
-        # TODO: it would be less confusing if you simply didn't call get_x() if the parameter wasn't set instead of defining the lambda function. e.g., x = self._deserialize_function(self['get_x']) if 'get_x' in self else []  (-AJ)
-        get_x = self._deserialize_function(self['get_x']) if 'get_x' in self else lambda *args, **kwargs : []
-        x = get_x(z)
+        # fetch x
+        x = self._deserialize_function(self['get_x'])(z) if 'get_x' in self else []
 
         # store the data
         id = self._store({'z':z, 'y':y, 'x':x}).inserted_id
@@ -282,6 +297,10 @@ class OptTask(FireTaskBase):
             if all (k in doc for k in ('x','y','z')):  # concurrency read protection
                 Z_ext.append(doc['z'] + doc['x'])
                 Y.append(doc['y'])
+
+        # change Y vector if maximum is desired instead of minimum
+        max_on = self['max'] if 'max' in self else False
+        Y = [-1 * y if max_on else y for y in Y]
 
         # extend the dimensions to X features, so that X information can be used in optimization
         Z_ext_dims = Z_dims + self._X_dims if x != [] else Z_dims
@@ -315,4 +334,5 @@ class OptTask(FireTaskBase):
 
         # return a new workflow
         # TODO: the FWAction should store the data on the _id of the optimization database entry (using the update_spec arg), that way we can backtrack which Launch a particular optimization data point comes from a little more easily (we could also match _z I guess)  (-AJ)
-        return FWAction(additions=wf_creator(z_new,**wf_creator_args))
+        return FWAction(additions=wf_creator(z_new, *wf_creator_args, **wf_creator_kwargs))
+
