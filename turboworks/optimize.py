@@ -20,21 +20,22 @@ class OptTask(FireTaskBase):
     """
     A FireTask for running optimization loops automatically.
 
-    OptTask takes in and stores a vector 'z' which uniquely defines the input space and a scalar 'y' which is the
-    scoring metric. OptTask produces a new 'z' vector to minimize 'y' using information from all 'z' vectors and 'y'
-    scalars. Additionally, an 'x' vector of extra features can be used by OptTask to better optimize.
+    OptTask takes in and stores a vector 'x' which uniquely defines the input space and a scalar 'y' which is the
+    scoring metric. OptTask produces a new x vector to minimize y using information from all x vectors (X) and y
+    scalars (Y). Additionally, a z vector of extra features can be used by OptTask to better optimize, although new
+    values of z will be discarded.
 
     Attributes:
-        wf_creator (function): returns a workflow based on a unique vector, z.
+        wf_creator (function): returns a workflow based on a unique vector, x.
         dimensions ([tuple]): each 2-tuple in the list defines the search space in (low, high) format.
             For categorical dimensions, includes all possible categories as a list.
             Example: dimensions = dim = [(1,100), (9.293, 18.2838), ("red", "blue", "green")].
-        get_x (string): the fully-qualified name of a function which, given a z vector, returns another vector x which
-            provides extra information to the machine learner. The features defined in x are not used to run the
+        get_z (string): the fully-qualified name of a function which, given a x vector, returns another vector z which
+            provides extra information to the machine learner. The features defined in z are not used to run the
             workflow creator.
             Examples: 
-                get_x = 'my_module.my_fun'
-                get_x = '/path/to/folder/containing/my_package.my_module.my_fun'
+                get_z = 'my_module.my_fun'
+                get_z = '/path/to/folder/containing/my_package.my_module.my_fun'
         predictor (string): names a function which given a list of inputs, a list of outputs, and a dimensions space,
             can return a new optimized input vector. Can specify either a skopt function or a custom function.
             Example: predictor = 'my_module.my_predictor'
@@ -54,8 +55,8 @@ class OptTask(FireTaskBase):
 
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
-    optional_params = ['get_x', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
-                       'host', 'port', 'name','opt_label']
+    optional_params = ['get_z', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
+                       'host', 'port', 'name','opt_label', 'lpad']
 
 
     def _store(self, spec, update = False, id = None):
@@ -149,68 +150,68 @@ class OptTask(FireTaskBase):
 
         return [[x] for x in total_dimspace[0]] if len(dims)==1 else list(itertools.product(*total_dimspace))
 
-    def _dupe_check(self, z, Z_dim):
+    def _dupe_check(self, x, X_dim):
         """
         Check for duplicates so that expensive workflow will not be needlessly rerun.
 
         Args:
-            z (list): input to be duplicate checked
-            Z_dim ([tuples]): space in which to check for duplicate
+            x (list): input to be duplicate checked
+            X_dim ([tuples]): space in which to check for duplicate
 
         Returns:
             (list) updated input which is either the duplicate-checked input z or a randomly picked replacement
         """
 
-        # todo: available_z should be stored per job, so it does not have to be created more than once.
+        # todo: available_x should be stored per job, so it does not have to be created more than once.
         # TODO: I would agree that a performance improvement is needed, e.g. by only computing the full discrete space as well as available z only once (-AJ)
-        available_z = self._calculate_discrete_space(Z_dim) # all possible choices in the discrete space (expensive)
+        available_x = self._calculate_discrete_space(X_dim) # all possible choices in the discrete space (expensive)
 
         for doc in self.collection.find():
-            if tuple(doc['z']) in available_z:
-                available_z.remove(tuple(doc['z']))
+            if tuple(doc['x']) in available_x:
+                available_x.remove(tuple(doc['x']))
 
-        if len(available_z) == 0:
+        if len(available_x) == 0:
             raise ValueError("The search space has been exhausted.")
 
 
-        if z in available_z:
-            return z
+        if x in available_x:
+            return x
         else:
             import random
-            return random.choice(available_z)
+            return random.choice(available_x)
 
     @property
-    def _X_dims(self):
+    def _Z_dims(self):
         """
-        Creates some X dimensions so that the optimizer can run without the user specifing the X dimension range.
-        Simply sets each dimension equal to the (lowest, highest) values of any x for that dimension in the database.
+        Creates some Z dimensions so that the optimizer can run without the user specifing the Z dimension range.
+        Simply sets each dimension equal to the (lowest, highest) values of any z for that dimension in the database.
         If there is only one document in the database, it sets the dimension to slightly higher and lower values than
-        the x dimension value. For categorical dimensions, it includes all dimensions in X.
+        the z dimension value. For categorical dimensions, it includes all dimensions in Z.
 
         Returns:
             ([tuple]) a list of dimensions
         """
 
-        X = [doc['x'] for doc in self.collection.find()]
-        dims = [[x, x] for x in X[0]]
+        Z = [doc['z'] for doc in self.collection.find()]
+        dims = [[z, z] for z in Z[0]]
         check = dims
 
         cat_values = []
 
-        for x in X:
+        for z in Z:
             for i, dim in enumerate(dims):
-                if type(x[i]) in dtypes.others:
+                if type(z[i]) in dtypes.others:
                     # the dimension is categorical
-                    if x[i] not in cat_values:
-                        cat_values.append(x[i])
+                    if z[i] not in cat_values:
+                        cat_values.append(z[i])
                         dims[i] = cat_values
                 else:
-                    if x[i] < dim[0]:
+                    if z[i] < dim[0]:
                         # this value is the new minimum
-                        dims[i][0] = x[i]
-                    elif x[i] > dim[1]:
+                        dims[i][0] = z[i]
+                    elif z[i] > dim[1]:
                         # this value is the new maximum
-                        dims[i][1] = x[i]
+                        dims[i][1] = z[i]
                     else:
                         pass
 
@@ -218,7 +219,7 @@ class OptTask(FireTaskBase):
             for i, dim in enumerate(dims):
                 if type(dim[0]) in dtypes.numbers:
                     # invent some dimensions
-                    # the prediction coming from these dimensions will not be used anyway, since it is x
+                    # the prediction coming from these dimensions will not be used anyway, since it is z
                     if type(dim[0]) in dtypes.floats:
                         dim[0] = dim[0] - 0.05 * dim[0]
                         dim[1] = dim[1] + 0.05 * dim[1]
@@ -240,18 +241,16 @@ class OptTask(FireTaskBase):
 
         Args:
             fw_spec (dict): the firetask spec. Must contain a '_tw_y' key with a float type field and must contain
-                a '_tw_z' key containing a vector uniquely defining the search space.
+                a '_tw_x' key containing a vector uniquely defining the search space.
 
         Returns:
             (FWAction)
         """
-        # TODO: I am confused about the notation; usually we should use y (output) and X (all inputs, usually capital b/c it is a vector) in machine learning. The z is a bit confusing. I would suggest that z->x or z->X (I actually suggest lowercase so people don't get confused about is lower and upper case). Then your original x becomes x_added or x_user or something. (-AJ)
-
-        z = fw_spec['_tw_z']
+        x = fw_spec['_tw_x']
         y = fw_spec['_tw_y']
 
         # type safety for dimensions to avoid cryptic skopt errors
-        Z_dims = [tuple(dim) for dim in self['dimensions']]
+        X_dims = [tuple(dim) for dim in self['dimensions']]
 
         wf_creator = self._deserialize_function(self['wf_creator'])
 
@@ -276,20 +275,20 @@ class OptTask(FireTaskBase):
         db = getattr(mongo, name)
         self.collection = getattr(db, opt_label)
 
-        # fetch x
-        x = self._deserialize_function(self['get_x'])(z) if 'get_x' in self else []
+        # fetch z
+        z = self._deserialize_function(self['get_z'])(x) if 'get_z' in self else []
 
         # store the data
         id = self._store({'z':z, 'y':y, 'x':x}).inserted_id
 
         # gather all docs from the collection
-        Z_ext = []
+        X_tot = []   # the matrix to store all x and z data together
         Y = []
         # TODO: depending on how big the docs are in the collection apart from x,y,z, you might get better performance using find({}, {"x": 1, "y": 1, "z": 1})  (-AJ)
         # TODO: I would need to think whether the concurrency read is really done correctly (-AJ)
         for doc in self.collection.find():
             if all (k in doc for k in ('x','y','z')):  # concurrency read protection
-                Z_ext.append(doc['z'] + doc['x'])
+                X_tot.append(doc['x'] + doc['z'])
                 Y.append(doc['y'])
 
         # change Y vector if maximum is desired instead of minimum
@@ -297,35 +296,35 @@ class OptTask(FireTaskBase):
         Y = [-1 * y if max_on else y for y in Y]
 
         # extend the dimensions to X features, so that X information can be used in optimization
-        Z_ext_dims = Z_dims + self._X_dims if x != [] else Z_dims
+        X_tot_dims = X_dims + self._Z_dims if z != [] else X_dims
 
         # run machine learner on Z and X features
         predictor = 'forest_minimize' if not 'predictor' in self else self['predictor']
         if predictor in ['gbrt_minimize', 'random_guess', 'forest_minimize', 'gp_minimize']:
             import skopt
-            z_total_new = getattr(skopt, predictor)(lambda x:0, Z_ext_dims, x0=Z_ext, y0=Y, n_calls=1,
+            x_tot_new = getattr(skopt, predictor)(lambda x:0, X_tot_dims, x0=X_tot, y0=Y, n_calls=1,
                                                             n_random_starts=0).x_iters[-1]
         else:
             try:
                 predictor_fun = self._deserialize_function(predictor)
-                z_total_new = predictor_fun(Z_ext, Y, Z_ext_dims)  #  TODO: later, you might want to add optional **args and **kwargs to this as well. For now I think it is fine as is. (-AJ)
+                x_tot_new = predictor_fun(X_tot, Y, X_tot_dims)  #  TODO: later, you might want to add optional **args and **kwargs to this as well. For now I think it is fine as is. (-AJ)
 
             except Exception as E:
                 raise ValueError("The custom predictor function {} did not call correctly! \n {}".format(predictor,E))
 
         # separate 'predicted' X features from the new Z vector
-        z_new, x_new = z_total_new[:len(z)], z_total_new[len(z):]
+        x_new, z_new = x_tot_new[:len(x)], x_tot_new[len(x):]
 
         # duplicate checking. makes sure no repeat z vectors are inserted into the turboworks collection
         if 'duplicate_check' in self:
             if self['duplicate_check']:
-                if self._is_discrete(Z_dims):
-                    z_new = self._dupe_check(z, Z_dims)
-                    # do not worry about mismatch with x_new, as x_new is not used for any calculations
+                if self._is_discrete(X_dims):
+                    x_new = self._dupe_check(x, X_dims)
+                    # do not worry about mismatch with z_new, as z_new is not used for any calculations
 
         self._store({'z_new':z_new, 'x_new':x_new}, update=True, id=id)
 
         # return a new workflow
-        return FWAction(additions=wf_creator(z_new, *wf_creator_args, **wf_creator_kwargs),
+        return FWAction(additions=wf_creator(x_new, *wf_creator_args, **wf_creator_kwargs),
                         update_spec={'optimization_id':id})
 

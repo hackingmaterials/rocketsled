@@ -14,9 +14,9 @@ from calculate_task import MixedCalculateTask as CalculateTask
 
 
 # use a wf_creator function with more arguments...
-def wf_creator(z, my_arg, my_kwarg=1):
+def wf_creator(x, my_arg, my_kwarg=1):
 
-    fw1_spec = {'A': z[0], 'B': z[1], 'C': z[2], 'D':z[3], '_tw_z': z}
+    fw1_spec = {'A': x[0], 'B': x[1], 'C': x[2], 'D':x[3], '_tw_x': x}
     fw1_dim = [(1,2),(1,2),(1,2), ("red", "green", "blue")]
 
     # CalculateTask writes _tw_y field to the spec internally.
@@ -24,7 +24,7 @@ def wf_creator(z, my_arg, my_kwarg=1):
     firework1 = Firework([CalculateTask(),
                           OptTask(wf_creator='turboworks_examples.test_extras.wf_creator',
                                   dimensions=fw1_dim,
-                                  get_x='turboworks_examples.test_extras.get_x',
+                                  get_z='turboworks_examples.test_extras.get_z',
                                   # predictor='gp_minimize',  # use one of the 4 built-in optimizers
                                   predictor = 'turboworks_examples.test_extras.example_predictor',  # or your own
                                   max = True,
@@ -38,15 +38,15 @@ def wf_creator(z, my_arg, my_kwarg=1):
 
 
 # An optional function which returns extra information 'x' from unique vector 'z'
-def get_x(z):
-    return [z[0] * 2, z[2]**3]
+def get_z(x):
+    return [x[0] * 2, x[2] ** 3]
 
 # how an example custom optimization function could be used
 # replace the code inside example_predictor with your favorite optimizer
 
-def example_predictor(Z_ext, Y, Z_ext_dims):
+def example_predictor(X_tot, Y, X_tot_dims):
     # custom optimizer code goes here
-    return random_guess(Z_ext_dims)
+    return random_guess(X_tot_dims)
 
 
 if __name__ == "__main__":

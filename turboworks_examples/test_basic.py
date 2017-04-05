@@ -19,15 +19,15 @@ __email__ = "ardunn@lbl.gov"
 
 
 # a workflow creator function which takes z and returns a workflow based on z
-def wf_creator(z):
+def wf_creator(x):
 
-    spec = {'A':z[0], 'B':z[1], 'C':z[2], '_tw_z':z}
-    Z_dim = [(1, 5), (1, 5), (1, 5)]
+    spec = {'A':x[0], 'B':x[1], 'C':x[2], '_tw_x':x}
+    X_dim = [(1, 5), (1, 5), (1, 5)]
 
     # CalculateTask writes _tw_y field to the spec internally.
 
     firework1 = Firework([CalculateTask(), OptTask(wf_creator='turboworks_examples.test_basic.wf_creator',
-                                                   dimensions=Z_dim)], spec=spec)
+                                                   dimensions=X_dim)], spec=spec)
     return Workflow([firework1])
 
 
