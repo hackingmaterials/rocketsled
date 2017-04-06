@@ -27,7 +27,11 @@ def wf_creator(x):
     # CalculateTask writes _tw_y field to the spec internally.
 
     firework1 = Firework([CalculateTask(), OptTask(wf_creator='turboworks_examples.test_basic.wf_creator',
-                                                   dimensions=X_dim)], spec=spec)
+                                                   dimensions=X_dim,
+                                                   host='localhost',
+                                                   port=27017,
+                                                   name='turboworks'
+                                                   )], spec=spec)
     return Workflow([firework1])
 
 

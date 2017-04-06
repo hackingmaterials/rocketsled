@@ -10,6 +10,7 @@ from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction
 from pymongo import MongoClient
 from references import dtypes
+from fireworks import LaunchPad
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
@@ -265,11 +266,32 @@ class OptTask(FireTaskBase):
 
         opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default'
 
-        host = self['host'] if 'host' in self else 'localhost'
-        port = self['port'] if 'port' in self else 27017
-        name = self['name'] if 'name' in self else 'turboworks'
+        # determine which Mongodb will store optimization data
+        if any(k in self for k in ('host', 'port', 'name')):
+            if all(k in self for k in ('host', 'port', 'name')):
+                # the db is being defined with a host, port, and name.
+                host, port, name = [self[k] for k in ('host', 'port', 'name')]
+            else:
+                # one of host, port, or name has not been specified
+                raise AttributeError("Host, port, and name must all be specified!")
+        elif 'lpad' in self:
+            # the db is defined by a Firework's Launchpad object
+            lpad = self['lpad']
+            host, port, name = [lpad[k] for k in ('host', 'port', 'name')]
+        elif '_add_launchpad_and_fw_id' in fw_spec:
+            # the db is defined by fireworks placing an lpad object in the spec.
+            if fw_spec['_add_launchpad_and_fw_id']:
+                # host, port, name = [self.launchpad[k] for k in ('host', 'port', 'name')]
+                # host, port, name = [self.launchpad[k] for k in ('host', 'port', 'name')]
+                #todo: currently not working
+                pass
 
-        # TODO: for host, port, name, maybe talk to AJ. There should be two options: (i) the user sets these variables, in which case use those (already done in your solution). (ii) The user sends in a LaunchPad object to the Firework (ask AJ), in which case use the LaunchPad's fireworks db as the db. If neither of those, don't use localhost. Throw an error asking the user to specify the database using either of the two methods. Maybe a third method is to use the normal "my_launchpad.yaml" etc. to also set the Turboworks db via an auto_load() style method. (-AJ)
+        #todo: add my_launchpad.yaml option via Launchpad.auto_load()?
+        else:
+            raise AttributeError("The optimization database must be specified explicitly (with host, port, and name)"
+                                 " with a Launchpad object (lpad), or by setting _add_launchpad_and_fw_id to True on"
+                                 " the fw_spec.")
+
 
         mongo = MongoClient(host, port)
         db = getattr(mongo, name)

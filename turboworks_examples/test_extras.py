@@ -14,7 +14,7 @@ from calculate_task import MixedCalculateTask as CalculateTask
 
 
 # use a wf_creator function with more arguments...
-def wf_creator(x, my_arg, my_kwarg=1):
+def wf_creator(x, launchpad, my_arg, my_kwarg=1):
 
     fw1_spec = {'A': x[0], 'B': x[1], 'C': x[2], 'D':x[3], '_tw_x': x}
     fw1_dim = [(1,2),(1,2),(1,2), ("red", "green", "blue")]
@@ -27,8 +27,9 @@ def wf_creator(x, my_arg, my_kwarg=1):
                                   get_z='turboworks_examples.test_extras.get_z',
                                   # predictor='gp_minimize',  # use one of the 4 built-in optimizers
                                   predictor = 'turboworks_examples.test_extras.example_predictor',  # or your own
-                                  max = True,
-                                  wf_creator_args = [my_arg * 3],
+                                  max = True, # find the maximum value instead of the minimum
+                                  lpad = launchpad,
+                                  wf_creator_args = [launchpad, my_arg * 3],
                                   wf_creator_kwargs={'my_kwarg': my_kwarg * 2},
                                   duplicate_check=True,
                                   opt_label="opt_extras_example")],
@@ -54,7 +55,7 @@ if __name__ == "__main__":
     TESTDB_NAME = 'turboworks'
     launchpad = LaunchPad(name=TESTDB_NAME)
     launchpad.reset(password=None, require_password=False)
-    launchpad.add_wf(wf_creator([1, 1, 2, "red"], 3, my_kwarg= 1))
+    launchpad.add_wf(wf_creator([1, 1, 2, "red"], launchpad, 3, my_kwarg= 1))
 
 
     # if n_launches > 23 for this particular example, the search space will be exhausted and OptTask will throw

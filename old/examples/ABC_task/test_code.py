@@ -1,8 +1,8 @@
 from ABC_workflow_creator import workflow_creator
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import FWorker, LaunchPad
-from fireworks.core.rocket_launcher import launch_rocket
 from turboworks.optdb import OptDB
+from fireworks.core.rocket_launcher import launch_rocket
 import matplotlib.pyplot as plt
 
 """
