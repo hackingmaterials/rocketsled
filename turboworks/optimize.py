@@ -163,23 +163,23 @@ class OptTask(FireTaskBase):
             (list) updated input which is either the duplicate-checked input z or a randomly picked replacement
         """
 
-        # todo: available_x should be stored per job, so it does not have to be created more than once.
+        # todo: total_x should be stored per job, so it does not have to be created more than once.
         # TODO: I would agree that a performance improvement is needed, e.g. by only computing the full discrete space as well as available z only once (-AJ)
-        available_x = self._calculate_discrete_space(X_dim) # all possible choices in the discrete space (expensive)
+        total_x = self._calculate_discrete_space(X_dim) # all possible choices in the discrete space (expensive)
 
         for doc in self.collection.find():
-            if tuple(doc['x']) in available_x:
-                available_x.remove(tuple(doc['x']))
+            if tuple(doc['x']) in total_x:
+                total_x.remove(tuple(doc['x']))
 
-        if len(available_x) == 0:
+        if len(total_x) == 0:
             raise ValueError("The search space has been exhausted.")
 
 
-        if x in available_x:
+        if x in total_x:
             return x
         else:
             import random
-            return random.choice(available_x)
+            return random.choice(total_x)
 
     @property
     def _Z_dims(self):
@@ -292,8 +292,10 @@ class OptTask(FireTaskBase):
                                  " with a Launchpad object (lpad), or by setting _add_launchpad_and_fw_id to True on"
                                  " the fw_spec.")
 
+        # add mongo connection pool limit on threads
+        max_pool_size = 1 if 'duplicate_check' in self and self['duplicate_check'] else 100
 
-        mongo = MongoClient(host, port)
+        mongo = MongoClient(host, port, maxPoolSize=max_pool_size)
         db = getattr(mongo, name)
         self.collection = getattr(db, opt_label)
 

@@ -23,6 +23,7 @@ def wf_creator(x):
                                                    host='localhost',
                                                    port=27017,
                                                    name='turboworks',
+                                                   duplicate_check = True,
                                                    opt_label="opt_parallel")], spec=spec)
     return Workflow([firework1])
 
@@ -39,14 +40,15 @@ if __name__ == "__main__":
     launchpad = LaunchPad(name=TESTDB_NAME)
     launchpad.reset(password=None, require_password=False)
 
-    n_processes = 2
-    n_runs = 5
+    n_processes = 10
+    n_runs = 15
 
     load_parallel_wfs(n_processes)
 
     for i in range(n_runs):
         sh_output = os.system('rlaunch -l my_launchpad.yaml multi ' + str(n_processes) + ' --nlaunches 1')
         print(sh_output)
+
 
 
     # tear down database
