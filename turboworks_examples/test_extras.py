@@ -2,8 +2,9 @@
 Examples of using extra turboworks features.
 
 In this task, the calculation and optimization includes a categorical dimension, a function to fetch extra features
-(get_x), a custom predictor function, extra arguments to the workflow creator, duplicate checking enabled, and a custom
+(get_z), a custom predictor function, extra arguments to the workflow creator, duplicate checking enabled, and a custom
 storage location for the optimization data.
+Also, a demo of how to use the lpad kwarg to store optimization data based on a Firework's LaunchPad object.
 '''
 
 from fireworks.core.rocket_launcher import launch_rocket, rapidfire
@@ -38,7 +39,7 @@ def wf_creator(x, launchpad, my_arg, my_kwarg=1):
     return Workflow([firework1])
 
 
-# An optional function which returns extra information 'x' from unique vector 'z'
+# An optional function which returns extra information 'z' from unique vector 'x'
 def get_z(x):
     return [x[0] * 2, x[2] ** 3]
 

@@ -18,7 +18,7 @@ __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
 
 
-# a workflow creator function which takes z and returns a workflow based on z
+# a workflow creator function which takes x and returns a workflow based on x
 def wf_creator(x):
 
     spec = {'A':x[0], 'B':x[1], 'C':x[2], '_tw_x':x}
@@ -30,7 +30,7 @@ def wf_creator(x):
                                                    dimensions=X_dim,
                                                    host='localhost',
                                                    port=27017,
-                                                   name='turboworks'
+                                                   name='opt_default',
                                                    )], spec=spec)
     return Workflow([firework1])
 

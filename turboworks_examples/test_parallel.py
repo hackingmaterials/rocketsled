@@ -1,6 +1,5 @@
 """
 An example of running turboworks optimizations in parallel.
-Also, an alternative way to specify where to store optimization data with the '_add_launchpad_and_fw_id' field.
 """
 
 import os
@@ -13,15 +12,18 @@ from turboworks_examples.calculate_task import BasicCalculateTask as CalculateTa
 
 dims = [(1, 5), (1, 5), (1, 5)]
 
-# a workflow creator function which takes z and returns a workflow based on z
+# a workflow creator function which takes z and returns a workflow based on x
 def wf_creator(x):
 
-    spec = {'A':x[0], 'B':x[1], 'C':x[2], '_tw_x':x, '_add_launchpad_and_fw_id': True}
+    spec = {'A':x[0], 'B':x[1], 'C':x[2], '_tw_x':x,}
     Z_dim = dims
 
     firework1 = Firework([CalculateTask(), OptTask(wf_creator ='turboworks_examples.test_parallel.wf_creator',
                                                    dimensions=Z_dim,
-                                                   opt_label="parallel")], spec=spec)
+                                                   host='localhost',
+                                                   port=27017,
+                                                   name='turboworks',
+                                                   opt_label="opt_parallel")], spec=spec)
     return Workflow([firework1])
 
 

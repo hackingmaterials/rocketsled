@@ -282,8 +282,8 @@ class OptTask(FireTaskBase):
             # the db is defined by fireworks placing an lpad object in the spec.
             if fw_spec['_add_launchpad_and_fw_id']:
                 # host, port, name = [self.launchpad[k] for k in ('host', 'port', 'name')]
-                # host, port, name = [self.launchpad[k] for k in ('host', 'port', 'name')]
-                #todo: currently not working
+                host, port, name = [getattr(self.launchpad, k) for k in ('host', 'port', 'name')]
+                #todo: currently not working with multiprocessing objects!
                 pass
 
         #todo: add my_launchpad.yaml option via Launchpad.auto_load()?
