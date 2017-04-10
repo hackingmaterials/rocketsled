@@ -164,6 +164,8 @@ class OptTask(FireTaskBase):
 
         # todo: total_x should be stored per job, so it does not have to be created more than once.
         # TODO: I would agree that a performance improvement is needed, e.g. by only computing the full discrete space as well as available z only once (-AJ)
+
+        # todo: if the size of total_x starts to approach system RAM availability, big problem
         total_x = self._calculate_discrete_space(X_dim) # all possible choices in the discrete space (expensive)
 
         for doc in self.collection.find():
@@ -274,7 +276,7 @@ class OptTask(FireTaskBase):
                 # one of host, port, or name has not been specified
                 raise AttributeError("Host, port, and name must all be specified!")
         elif 'lpad' in self:
-            # the db is defined by a Firework's Launchpad object
+            # the db is defined by a Firework's serialized Launchpad object
             lpad = self['lpad']
             host, port, name = [lpad[k] for k in ('host', 'port', 'name')]
         elif '_add_launchpad_and_fw_id' in fw_spec:
