@@ -10,7 +10,6 @@ from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction
 from pymongo import MongoClient
 from references import dtypes
-from fireworks import LaunchPad
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
@@ -308,10 +307,8 @@ class OptTask(FireTaskBase):
         # gather all docs from the collection
         X_tot = []   # the matrix to store all x and z data together
         Y = []
-        # TODO: depending on how big the docs are in the collection apart from x,y,z, you might get better performance using find({}, {"x": 1, "y": 1, "z": 1})  (-AJ)
-        # TODO: I would need to think whether the concurrency read is really done correctly (-AJ)
-        for doc in self.collection.find():
-            if all (k in doc for k in ('x','y','z')):  # concurrency read protection
+        for doc in self.collection.find({}, projection = {'x':1, 'y':1, 'z':1}):
+            if all (k in doc for k in ('x','y','z')):  # basic concurrency read 'protection'
                 X_tot.append(doc['x'] + doc['z'])
                 Y.append(doc['y'])
 
