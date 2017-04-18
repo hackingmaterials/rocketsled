@@ -161,26 +161,50 @@ class OptTask(FireTaskBase):
         Returns:
             (list) updated input which is either the duplicate-checked input z or a randomly picked replacement
         """
+        n_random_tries = 5
 
-        # todo: total_x should be stored per job, so it does not have to be created more than once.
-        # TODO: I would agree that a performance improvement is needed, e.g. by only computing the full discrete space as well as available z only once (-AJ)
-
-        # todo: if the size of total_x starts to approach system RAM availability, big problem
-        total_x = self._calculate_discrete_space(X_dim) # all possible choices in the discrete space (expensive)
-
-        for doc in self.collection.find():
-            if tuple(doc['x']) in total_x:
-                total_x.remove(tuple(doc['x']))
-
-        if len(total_x) == 0:
-            raise ValueError("The search space has been exhausted.")
-
-
-        if x in total_x:
+        if self.collection.find({'x':x}).count() == 0:
+            # x is not in the collection
             return x
         else:
+            # x is already in the collection
             import random
-            return random.choice(total_x)
+
+            random_tries = 0
+            while True:
+                randx = []
+                for dim in X_dim:
+                    dim_type = type(dim[0])
+                    if dim_type in dtypes.discrete:
+                        if dim_type in dtypes.ints:
+                            randx.append(random.randint(dim[0], dim[1]))
+                        elif dim_type in dtypes.others:
+                            randx.append(random.choice(dim))
+                    else:
+                        raise TypeError("The dimension {} is not discrete. "
+                                        "The guess cannot be duplicate checked.".format(dim))
+                random_tries+=1
+
+                if randx != x and self.collection.find({'x':randx})==0:
+                    # randx is not in the collection, use it
+                    return randx
+                if random_tries == n_random_tries:
+                    break
+
+            # n_random_tries have been tried and its time to do an expensive duplicate check
+            total_x = self._calculate_discrete_space(X_dim)  # all possible choices in the discrete space (expensive)
+
+            for doc in self.collection.find():
+                if tuple(doc['x']) in total_x:
+                    total_x.remove(tuple(doc['x']))
+
+            if len(total_x) == 0:
+                raise ValueError("The search space has been exhausted.")
+
+            if x in total_x:
+                return x
+            else:
+                return random.choice(total_x)
 
     @property
     def _Z_dims(self):

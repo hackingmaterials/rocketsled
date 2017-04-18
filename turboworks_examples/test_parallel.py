@@ -5,7 +5,6 @@ An example of running turboworks optimizations in parallel.
 import os
 from fireworks import Workflow, Firework, LaunchPad
 from turboworks.optimize import OptTask
-from turboworks.optdb import OptDB
 from turboworks.utils import random_guess
 from turboworks_examples.calculate_task import BasicCalculateTask as CalculateTask
 
