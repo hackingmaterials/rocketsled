@@ -79,55 +79,6 @@ class OptTask(FireTaskBase):
         # type safety for dimensions to avoid cryptic skopt errors
         x_dims = [tuple(dim) for dim in self['dimensions']]
 
-        # TODO: move the wf_creator stuff down to the end. It's usually clearer to bring up things as you need them. e.g., code in the way you'd verbally explain the algorithm to someone
-        wf_creator = self._deserialize_function(self['wf_creator'])
-
-        wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else []
-        if not isinstance(wf_creator_args, list) or isinstance(wf_creator_args, tuple):
-            raise TypeError("wf_creator_args should be a list/tuple of positional arguments")
-
-
-        wf_creator_kwargs = self['wf_creator_kwargs'] if 'wf_creator_kwargs' in self else {}
-        if not isinstance(wf_creator_kwargs, dict):
-            raise TypeError("wf_creator_kwargs should be a dictonary of keyword arguments.")
-
-        opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default'
-
-        # TODO: this Mongodb part is kind of messy. Can you clean up? Also consider moving to a private function to keep run_task() a bit more focused on its business logic.
-        # determine which Mongodb will store optimization data
-        if any(k in self for k in ('host', 'port', 'name')):
-            if all(k in self for k in ('host', 'port', 'name')):
-                # the db is being defined with a host, port, and name.
-                host, port, name = [self[k] for k in ('host', 'port', 'name')]
-            else:
-                # one of host, port, or name has not been specified
-                raise AttributeError("Host, port, and name must all be specified!")
-        elif 'lpad' in self:
-            # the db is defined by a Firework's serialized Launchpad object
-            lpad = self['lpad']
-            host, port, name = [lpad[k] for k in ('host', 'port', 'name')]
-        elif '_add_launchpad_and_fw_id' in fw_spec:
-            # the db is defined by fireworks placing an lpad object in the spec.
-            if fw_spec['_add_launchpad_and_fw_id']:
-                # host, port, name = [self.launchpad[k] for k in ('host', 'port', 'name')]
-                host, port, name = [getattr(self.launchpad, k) for k in ('host', 'port', 'name')]
-                #todo: currently not working with multiprocessing objects!
-                pass
-
-        #todo: add my_launchpad.yaml option via Launchpad.auto_load()?
-        else:
-            raise AttributeError("The optimization database must be specified explicitly (with host, port, and name)"
-                                 " with a Launchpad object (lpad), or by setting _add_launchpad_and_fw_id to True on"
-                                 " the fw_spec.")
-
-        # add mongo connection pool limit on threads
-        # TODO: document why this is needed. Your comment above is essentially just a rehash of what the code says and doesn't add new information.
-        max_pool_size = 1 if 'duplicate_check' in self and self['duplicate_check'] else 100
-
-        mongo = MongoClient(host, port, maxPoolSize=max_pool_size)
-        db = getattr(mongo, name)
-        self.collection = getattr(db, opt_label)
-
         # fetch z
         # TODO: again there is no need to write a comment for what the code already tells you. A better comment: "fetch z (i.e., the additional attributes to x used for constructing the machine learning model)"
         z = self._deserialize_function(self['get_z'])(x) if 'get_z' in self else []
@@ -137,17 +88,18 @@ class OptTask(FireTaskBase):
         id = self._store({'z':z, 'y':y, 'x':x}).inserted_id
 
         # gather all docs from the collection
+        self._setup_db(fw_spec)
         X_tot = []   # the matrix to store all x and z columns together
-        Y = []  # TODO: prefer lowercase name y since this is a vector. See note below about a list comprehension to avoid problems.
+        y = []  # TODO: prefer lowercase name y since this is a vector. See note below about a list comprehension to avoid problems.
         for doc in self.collection.find({}, projection = {'x':1, 'y':1, 'z':1}):
             if all(k in doc for k in ('x','y','z')):  # basic concurrency read 'protection'
                 # TODO: explain why the above is concurrency protection? Will we be missing 'z' if not? If so, then perhaps just test for z. This makes the code clearer. If not I need explanation...
                 X_tot.append(doc['x'] + doc['z'])
-                Y.append(doc['y'])
+                y.append(doc['y'])
 
-        # change Y vector if maximum is desired instead of minimum
+        # change y vector if maximum is desired instead of minimum
         max_on = self['max'] if 'max' in self else False
-        Y = [-1 * y if max_on else y for y in Y]  # TODO: if you use lowercase Y for the varname, use a different internal variable here.
+        y = [-1 * yi if max_on else yi for yi in y]  # TODO: if you use lowercase y for the varname, use a different internal variable here.
 
         # extend the dimensions to X features, so that X information can be used in optimization
         X_tot_dims = x_dims + self._z_dims if z != [] else x_dims
@@ -158,12 +110,12 @@ class OptTask(FireTaskBase):
         if predictor in ['gbrt_minimize', 'random_guess', 'forest_minimize', 'gp_minimize']:
             import skopt
             # TODO: the line below is complicated. Split it up for clarity, maybe 2-4 lines. e.g. one line to get chosen predictor.
-            x_tot_new = getattr(skopt, predictor)(lambda x:0, X_tot_dims, x0=X_tot, y0=Y, n_calls=1,
+            x_tot_new = getattr(skopt, predictor)(lambda x:0, X_tot_dims, x0=X_tot, y0=y, n_calls=1,
                                                             n_random_starts=0).x_iters[-1]
         else:
             try:
                 predictor_fun = self._deserialize_function(predictor)
-                x_tot_new = predictor_fun(X_tot, Y, X_tot_dims)  #  TODO: later, you might want to add optional **args and **kwargs to this as well. For now I think it is fine as is. (-AJ)
+                x_tot_new = predictor_fun(X_tot, y, X_tot_dims)  #  TODO: later, you might want to add optional **args and **kwargs to this as well. For now I think it is fine as is. (-AJ)
 
             except Exception as E:
                 raise ValueError("The custom predictor function {} did not call correctly! \n {}".format(predictor,E))
@@ -179,6 +131,16 @@ class OptTask(FireTaskBase):
                     # do not worry about mismatch with z_new, as z_new is not used for any calculations
 
         self._store({'z_new':z_new, 'x_new':x_new}, update=True, id=id)
+
+        wf_creator = self._deserialize_function(self['wf_creator'])
+
+        wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else []
+        if not isinstance(wf_creator_args, list) or isinstance(wf_creator_args, tuple):
+            raise TypeError("wf_creator_args should be a list/tuple of positional arguments")
+
+        wf_creator_kwargs = self['wf_creator_kwargs'] if 'wf_creator_kwargs' in self else {}
+        if not isinstance(wf_creator_kwargs, dict):
+            raise TypeError("wf_creator_kwargs should be a dictonary of keyword arguments.")
 
         # return a new workflow
         return FWAction(additions=wf_creator(x_new, *wf_creator_args, **wf_creator_kwargs),
@@ -201,6 +163,50 @@ class OptTask(FireTaskBase):
             return self.collection.insert_one(spec)
         else:
             return self.collection.update({"_id": id}, {'$set': spec})
+
+    def _setup_db(self, fw_spec):
+        '''
+        Sets up a MongoDB database for storing optimization data.
+
+        Args:
+            fw_spec (dict):
+
+        Returns:
+            None
+        '''
+
+        opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default'
+        db_reqs = ('host', 'port', 'name')
+
+        # determine where Mondodb information will be stored
+        if any(k in self for k in db_reqs):
+            if all(k in self for k in db_reqs):
+                host, port, name = [self[k] for k in db_reqs]
+            else:
+                raise AttributeError("Host, port, and name must all be specified!")
+
+        elif 'lpad' in self:
+            lpad = self['lpad']
+            host, port, name = [lpad[k] for k in db_reqs]
+
+        # todo: currently not working with multiprocessing objects!
+        elif '_add_launchpad_and_fw_id' in fw_spec:
+            if fw_spec['_add_launchpad_and_fw_id']:
+                host, port, name = [getattr(self.launchpad, k) for k in db_reqs]
+
+        # todo: add my_launchpad.yaml option via Launchpad.auto_load()?
+        else:
+            raise AttributeError("The optimization database must be specified explicitly (with host, port, and name)"
+                                 " with a Launchpad object (lpad), or by setting _add_launchpad_and_fw_id to True on"
+                                 " the fw_spec.")
+
+        # add mongo connection pool limit on threads
+        # TODO: document why this is needed. Your comment above is essentially just a rehash of what the code says and doesn't add new information.
+        max_pool_size = 1 if 'duplicate_check' in self and self['duplicate_check'] else 100
+
+        mongo = MongoClient(host, port, maxPoolSize=max_pool_size)
+        db = getattr(mongo, name)
+        self.collection = getattr(db, opt_label)
 
     def _deserialize_function(self, fun):
         """
