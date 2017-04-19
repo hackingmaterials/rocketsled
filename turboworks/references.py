@@ -10,6 +10,9 @@ __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
 
 
+# TODO: I don't see the reason to have two separate 'utility'-type files, i.e. references.py and utils.py
+# Combine this and the utility function for random guesses into a single file. Or move this into optimize.py.
+
 class Dtypes(object):
     """
     Defines the datatypes available for optimization.
