@@ -23,7 +23,7 @@ class OptTask(FireTaskBase):
     """
     A FireTask for running optimization loops automatically.
 
-    OptTask takes in and stores a vector 'x' which uniquely defines the input space and a scalar 'y' which is the
+    OptTask takes in and stores a vector 'x' which uniquely defines the input space and a scalar 'yi' which is the
     scoring metric. OptTask produces a new x vector to minimize y using information from all x vectors (X) and y
     scalars (Y). Additionally, a z vector of extra features can be used by OptTask to better optimize, although new
     values of z will be discarded.
@@ -74,32 +74,29 @@ class OptTask(FireTaskBase):
             (FWAction)
         """
         x = fw_spec['_x_opt']
-        y = fw_spec['_y_opt']
+        yi = fw_spec['_y_opt']
 
         # type safety for dimensions to avoid cryptic skopt errors
         x_dims = [tuple(dim) for dim in self['dimensions']]
 
-        # fetch z
-        # TODO: again there is no need to write a comment for what the code already tells you. A better comment: "fetch z (i.e., the additional attributes to x used for constructing the machine learning model)"
+        # fetch additional attributes for constructing machine learning model by calling get_z, if it exists
         z = self._deserialize_function(self['get_z'])(x) if 'get_z' in self else []
 
-        # store the data
-        # TODO: The comment above is unnecessary. Please read this article! https://blog.codinghorror.com/code-tells-you-how-comments-tell-you-why/
-        id = self._store({'z':z, 'y':y, 'x':x}).inserted_id
+        id = self._store({'z':z, 'yi':yi, 'x':x}).inserted_id
 
         # gather all docs from the collection
         self._setup_db(fw_spec)
         X_tot = []   # the matrix to store all x and z columns together
         y = []  # TODO: prefer lowercase name y since this is a vector. See note below about a list comprehension to avoid problems.
-        for doc in self.collection.find({}, projection = {'x':1, 'y':1, 'z':1}):
-            if all(k in doc for k in ('x','y','z')):  # basic concurrency read 'protection'
+        for doc in self.collection.find({}, projection = {'x':1, 'yi':1, 'z':1}):
+            if all(k in doc for k in ('x','yi','z')):  # basic concurrency read 'protection'
                 # TODO: explain why the above is concurrency protection? Will we be missing 'z' if not? If so, then perhaps just test for z. This makes the code clearer. If not I need explanation...
                 X_tot.append(doc['x'] + doc['z'])
-                y.append(doc['y'])
+                y.append(doc['yi'])
 
         # change y vector if maximum is desired instead of minimum
         max_on = self['max'] if 'max' in self else False
-        y = [-1 * yi if max_on else yi for yi in y]  # TODO: if you use lowercase y for the varname, use a different internal variable here.
+        y = [-1 * yi if max_on else yi for yi in y]
 
         # extend the dimensions to X features, so that X information can be used in optimization
         X_tot_dims = x_dims + self._z_dims if z != [] else x_dims
@@ -109,9 +106,10 @@ class OptTask(FireTaskBase):
         predictor = 'forest_minimize' if not 'predictor' in self else self['predictor']
         if predictor in ['gbrt_minimize', 'random_guess', 'forest_minimize', 'gp_minimize']:
             import skopt
-            # TODO: the line below is complicated. Split it up for clarity, maybe 2-4 lines. e.g. one line to get chosen predictor.
-            x_tot_new = getattr(skopt, predictor)(lambda x:0, X_tot_dims, x0=X_tot, y0=y, n_calls=1,
-                                                            n_random_starts=0).x_iters[-1]
+            predictor_fun = getattr(skopt, predictor)
+            dummy_fun = lambda x:0
+            predictor_data = predictor_fun(dummy_fun, X_tot_dims, x0=X_tot, y0=y, n_calls=1, n_random_starts=0)
+            x_tot_new = predictor_data.x_iters[-1]
         else:
             try:
                 predictor_fun = self._deserialize_function(predictor)
@@ -179,20 +177,20 @@ class OptTask(FireTaskBase):
         db_reqs = ('host', 'port', 'name')
 
         # determine where Mondodb information will be stored
-        if any(k in self for k in db_reqs):
-            if all(k in self for k in db_reqs):
+        if any(req in self for req in db_reqs):
+            if all(req in self for req in db_reqs):
                 host, port, name = [self[k] for k in db_reqs]
             else:
                 raise AttributeError("Host, port, and name must all be specified!")
 
         elif 'lpad' in self:
             lpad = self['lpad']
-            host, port, name = [lpad[k] for k in db_reqs]
+            host, port, name = [lpad[req] for req in db_reqs]
 
         # todo: currently not working with multiprocessing objects!
         elif '_add_launchpad_and_fw_id' in fw_spec:
             if fw_spec['_add_launchpad_and_fw_id']:
-                host, port, name = [getattr(self.launchpad, k) for k in db_reqs]
+                host, port, name = [getattr(self.launchpad, req) for req in db_reqs]
 
         # todo: add my_launchpad.yaml option via Launchpad.auto_load()?
         else:
