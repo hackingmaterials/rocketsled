@@ -17,10 +17,10 @@ from calculate_task import MixedCalculateTask as CalculateTask
 # use a wf_creator function with more arguments...
 def wf_creator(x, launchpad, my_arg, my_kwarg=1):
 
-    fw1_spec = {'A': x[0], 'B': x[1], 'C': x[2], 'D':x[3], '_tw_x': x}
+    fw1_spec = {'A': x[0], 'B': x[1], 'C': x[2], 'D':x[3], '_x_opt': x}
     fw1_dim = [(1,2),(1,2),(1,2), ("red", "green", "blue")]
 
-    # CalculateTask writes _tw_y field to the spec internally.
+    # CalculateTask writes _y_opt field to the spec internally.
 
     firework1 = Firework([CalculateTask(),
                           OptTask(wf_creator='turboworks_examples.test_extras.wf_creator',

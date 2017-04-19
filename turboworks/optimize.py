@@ -53,220 +53,14 @@ class OptTask(FireTaskBase):
             'localhost'.
         port (int): The number of the MongoDB port where the optimization data will be stored. The default is 27017.
         name (string): The name of the MongoDB database where the optimization data will be stored.
+        lpad (LaunchPad): A Fireworks LaunchPad object.
         opt_label (string): Names the collection of that the particular optinization's data will be stored in. Multiple
             collections correspond to multiple independent optimization.
     """
-    # TODO: document lpad arg
-
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
     optional_params = ['get_z', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
                        'host', 'port', 'name','opt_label', 'lpad']
-
-    # TODO: I generally prefer to put public functions on top and private on bottom. Thus the user
-    # interface comes first.
-    def _store(self, spec, update=False, id=None):
-        """
-        Stores and updates turboworks database files.
-        
-        Args:
-            spec (dict): a turboworks-generated spec (or subset of a spec) to be stored in the turboworks db.
-            update (bool): whether to update the document (True) or insert a new one (False)
-            id (ObjectId): the PyMongo BSON id object. if update == True, updates the document with this id.
-            
-        Returns:
-            (ObjectId) the PyMongo BSON id object for the document inserted/updated.
-        """
-
-        if update == False:
-            return self.collection.insert_one(spec)
-        else:
-            return self.collection.update({"_id":id },{'$set' : spec})
-
-    def _deserialize_function(self, fun):
-        """
-        Takes a fireworks serialzed function handle and maps it to a function object.
-
-        Args:
-            fun (string): a 'module.function' or '/path/to/mod.func' style string specifying the function
-         
-        Returns:
-            (function) The function object defined by fun
-        """
-        #todo: merge with PyTask's deserialize code, move to fw utils
-
-        toks = fun.rsplit(".", 1)
-        modname, funcname = toks
-
-        if "/" in toks[0]:
-            path, modname = toks[0].rsplit("/", 1)
-            sys.path.append(path)
-
-        mod = __import__(str(modname), globals(), locals(), fromlist=[str(funcname)])
-        return getattr(mod, funcname)
-
-
-    def _is_discrete(self, dims):
-        """
-        Checks if the search space is totally discrete.
-
-        Args:
-            dims ([tuple]): dimensions of the search space
-            
-        Returns:
-            (bool) whether the search space is totally discrete.
-        """
-
-        for dim in dims:
-            if type(dim[0]) not in dtypes.discrete or type(dim[1]) not in dtypes.discrete:
-                return False
-        return True
-
-    def _calculate_discrete_space(self, dims):
-        """
-        Calculates all entries in a discrete space.
-
-        Example:
-
-            >>> dims = [(1,2), ["red","blue"]]
-            >>> space = _calculate_discrete_space(dims)
-            >>> space
-            [(1, 'red'), (1, 'blue'), (2, 'red'), (2, 'blue')]
-
-        Args:
-            dims ([tuple]): dimensions of the search space.
-
-        Returns:
-            ([list]) all possible combinations inside the discrete space
-        """
-
-        total_dimspace = []
-
-        for dim in dims:
-            if type(dim[0]) in dtypes.ints:
-                # Then the dimension is of the form (lower, upper)
-                lower = dim[0]
-                upper = dim[1]
-                dimspace = list(range(lower, upper + 1))
-            elif type(dim[0]) in dtypes.floats:
-                raise ValueError("The dimension is a float. The dimension space is infinite.")
-            else:  # The dimension is a discrete finite string list
-                dimspace = dim
-            total_dimspace.append(dimspace)
-
-        return [[x] for x in total_dimspace[0]] if len(dims)==1 else list(itertools.product(*total_dimspace))
-
-    def _dupe_check(self, x, X_dim):
-        # TODO: lowercase for X_dim -> x_dim
-        """
-        Check for duplicates so that expensive workflow will not be needlessly rerun.
-
-        Args:
-            x (list): input to be duplicate checked
-            X_dim ([tuples]): space in which to check for duplicate
-
-        Returns:
-            (list) updated input which is either the duplicate-checked input z or a randomly picked replacement
-        """
-        n_random_tries = 5
-
-        if self.collection.find({'x':x}).count() == 0:
-            # x is not in the collection
-            return x
-        else:
-            # x is already in the collection
-            import random
-
-            random_tries = 0
-            while True:
-                randx = []
-                for dim in X_dim:
-                    dim_type = type(dim[0])
-                    if dim_type in dtypes.discrete:
-                        if dim_type in dtypes.ints:
-                            randx.append(random.randint(dim[0], dim[1]))
-                        elif dim_type in dtypes.others:
-                            randx.append(random.choice(dim))
-                    else:
-                        raise TypeError("The dimension {} is not discrete. "
-                                        "The guess cannot be duplicate checked.".format(dim))
-                random_tries+=1
-
-                if randx != x and self.collection.find({'x':randx})==0:
-                    # randx is not in the collection, use it
-                    return randx
-                if random_tries == n_random_tries:
-                    break
-
-            # n_random_tries have been tried and its time to do an expensive duplicate check
-            total_x = self._calculate_discrete_space(X_dim)  # all possible choices in the discrete space (expensive)
-
-            for doc in self.collection.find():
-                if tuple(doc['x']) in total_x:
-                    total_x.remove(tuple(doc['x']))
-
-            if len(total_x) == 0:
-                raise ValueError("The search space has been exhausted.")
-
-            if x in total_x:
-                return x
-            else:
-                return random.choice(total_x)
-
-    @property
-    def _Z_dims(self):
-        """
-        Creates some Z dimensions so that the optimizer can run without the user specifing the Z dimension range.
-        Simply sets each dimension equal to the (lowest, highest) values of any z for that dimension in the database.
-        If there is only one document in the database, it sets the dimension to slightly higher and lower values than
-        the z dimension value. For categorical dimensions, it includes all dimensions in Z.
-
-        Returns:
-            ([tuple]) a list of dimensions
-        """
-
-        Z = [doc['z'] for doc in self.collection.find()]
-        dims = [[z, z] for z in Z[0]]
-        check = dims
-
-        cat_values = []
-
-        for z in Z:
-            for i, dim in enumerate(dims):
-                if type(z[i]) in dtypes.others:
-                    # the dimension is categorical
-                    if z[i] not in cat_values:
-                        cat_values.append(z[i])
-                        dims[i] = cat_values
-                else:
-                    if z[i] < dim[0]:
-                        # this value is the new minimum
-                        dims[i][0] = z[i]
-                    elif z[i] > dim[1]:
-                        # this value is the new maximum
-                        dims[i][1] = z[i]
-                    else:
-                        pass
-
-        if dims == check:  # there's only one document
-            for i, dim in enumerate(dims):
-                if type(dim[0]) in dtypes.numbers:
-                    # invent some dimensions
-                    # the prediction coming from these dimensions will not be used anyway, since it is z
-                    if type(dim[0]) in dtypes.floats:
-                        dim[0] = dim[0] - 0.05 * dim[0]
-                        dim[1] = dim[1] + 0.05 * dim[1]
-                    elif type(dim[0]) in dtypes.ints:
-                        dim[0] = dim[0] - 1
-                        dim[1] = dim[1] + 1
-
-                    if dim[0] > dim[1]:
-                        dim = [dim[1], dim[0]]
-
-                    dims[i] = dim
-
-        dims = [tuple(dim) for dim in dims]
-        return dims
 
     def run_task(self, fw_spec):
         """
@@ -279,11 +73,11 @@ class OptTask(FireTaskBase):
         Returns:
             (FWAction)
         """
-        x = fw_spec['_tw_x']  # TODO: let's change _tw_x to _x_opt. Reasons: not sure if we'll keep calling it turboworks. Also I prefer having the "noun" then "adjective'.
-        y = fw_spec['_tw_y']  # TODO: let's change _tw_x to _y_opt.
+        x = fw_spec['_x_opt']
+        y = fw_spec['_y_opt']
 
         # type safety for dimensions to avoid cryptic skopt errors
-        X_dims = [tuple(dim) for dim in self['dimensions']]  # TODO: rename to x_dims (lowercase). I think a good convention for your code is to keep lowercase for vectors and uppercase for matrices.
+        x_dims = [tuple(dim) for dim in self['dimensions']]
 
         # TODO: move the wf_creator stuff down to the end. It's usually clearer to bring up things as you need them. e.g., code in the way you'd verbally explain the algorithm to someone
         wf_creator = self._deserialize_function(self['wf_creator'])
@@ -356,8 +150,8 @@ class OptTask(FireTaskBase):
         Y = [-1 * y if max_on else y for y in Y]  # TODO: if you use lowercase Y for the varname, use a different internal variable here.
 
         # extend the dimensions to X features, so that X information can be used in optimization
-        X_tot_dims = X_dims + self._Z_dims if z != [] else X_dims
-        # TODO: !!I really don't understand why _Z_dims is needed. You are not optimizing over z, only x! Many combinations of z and x are anyway forbidden and should *not* be tested.  It might make a particular x look possibly good when it is not. This is an important point, please discuss w/me!!
+        X_tot_dims = x_dims + self._z_dims if z != [] else x_dims
+        # TODO: !!I really don't understand why _z_dims is needed. You are not optimizing over z, only x! Many combinations of z and x are anyway forbidden and should *not* be tested.  It might make a particular x look possibly good when it is not. This is an important point, please discuss w/me!!
 
         # run machine learner on Z and X features
         predictor = 'forest_minimize' if not 'predictor' in self else self['predictor']
@@ -380,8 +174,8 @@ class OptTask(FireTaskBase):
         # duplicate checking. makes sure no repeat z vectors are inserted into the turboworks collection
         if 'duplicate_check' in self:
             if self['duplicate_check']:
-                if self._is_discrete(X_dims):
-                    x_new = self._dupe_check(x, X_dims)
+                if self._is_discrete(x_dims):
+                    x_new = self._dupe_check(x, x_dims)
                     # do not worry about mismatch with z_new, as z_new is not used for any calculations
 
         self._store({'z_new':z_new, 'x_new':x_new}, update=True, id=id)
@@ -389,4 +183,206 @@ class OptTask(FireTaskBase):
         # return a new workflow
         return FWAction(additions=wf_creator(x_new, *wf_creator_args, **wf_creator_kwargs),
                         update_spec={'optimization_id':id})
+
+    def _store(self, spec, update=False, id=None):
+        """
+        Stores and updates turboworks database files.
+
+        Args:
+            spec (dict): a turboworks-generated spec (or subset of a spec) to be stored in the turboworks db.
+            update (bool): whether to update the document (True) or insert a new one (False)
+            id (ObjectId): the PyMongo BSON id object. if update == True, updates the document with this id.
+
+        Returns:
+            (ObjectId) the PyMongo BSON id object for the document inserted/updated.
+        """
+
+        if update == False:
+            return self.collection.insert_one(spec)
+        else:
+            return self.collection.update({"_id": id}, {'$set': spec})
+
+    def _deserialize_function(self, fun):
+        """
+        Takes a fireworks serialzed function handle and maps it to a function object.
+
+        Args:
+            fun (string): a 'module.function' or '/path/to/mod.func' style string specifying the function
+
+        Returns:
+            (function) The function object defined by fun
+        """
+        # todo: merge with PyTask's deserialize code, move to fw utils
+
+        toks = fun.rsplit(".", 1)
+        modname, funcname = toks
+
+        if "/" in toks[0]:
+            path, modname = toks[0].rsplit("/", 1)
+            sys.path.append(path)
+
+        mod = __import__(str(modname), globals(), locals(), fromlist=[str(funcname)])
+        return getattr(mod, funcname)
+
+    def _is_discrete(self, dims):
+        """
+        Checks if the search space is totally discrete.
+
+        Args:
+            dims ([tuple]): dimensions of the search space
+
+        Returns:
+            (bool) whether the search space is totally discrete.
+        """
+
+        for dim in dims:
+            if type(dim[0]) not in dtypes.discrete or type(dim[1]) not in dtypes.discrete:
+                return False
+        return True
+
+    def _calculate_discrete_space(self, dims):
+        """
+        Calculates all entries in a discrete space.
+
+        Example:
+
+            >>> dims = [(1,2), ["red","blue"]]
+            >>> space = _calculate_discrete_space(dims)
+            >>> space
+            [(1, 'red'), (1, 'blue'), (2, 'red'), (2, 'blue')]
+
+        Args:
+            dims ([tuple]): dimensions of the search space.
+
+        Returns:
+            ([list]) all possible combinations inside the discrete space
+        """
+
+        total_dimspace = []
+
+        for dim in dims:
+            if type(dim[0]) in dtypes.ints:
+                # Then the dimension is of the form (lower, upper)
+                lower = dim[0]
+                upper = dim[1]
+                dimspace = list(range(lower, upper + 1))
+            elif type(dim[0]) in dtypes.floats:
+                raise ValueError("The dimension is a float. The dimension space is infinite.")
+            else:  # The dimension is a discrete finite string list
+                dimspace = dim
+            total_dimspace.append(dimspace)
+
+        return [[x] for x in total_dimspace[0]] if len(dims) == 1 else list(itertools.product(*total_dimspace))
+
+    def _dupe_check(self, x, x_dim):
+        """
+        Check for duplicates so that expensive workflow will not be needlessly rerun.
+
+        Args:
+            x (list): input to be duplicate checked
+            x_dim ([tuples]): space in which to check for duplicate
+
+        Returns:
+            (list) updated input which is either the duplicate-checked input z or a randomly picked replacement
+        """
+        n_random_tries = 5
+
+        if self.collection.find({'x': x}).count() == 0:
+            # x is not in the collection
+            return x
+        else:
+            # x is already in the collection
+            import random
+
+            random_tries = 0
+            while True:
+                randx = []
+                for dim in x_dim:
+                    dim_type = type(dim[0])
+                    if dim_type in dtypes.discrete:
+                        if dim_type in dtypes.ints:
+                            randx.append(random.randint(dim[0], dim[1]))
+                        elif dim_type in dtypes.others:
+                            randx.append(random.choice(dim))
+                    else:
+                        raise TypeError("The dimension {} is not discrete. "
+                                        "The guess cannot be duplicate checked.".format(dim))
+                random_tries += 1
+
+                if randx != x and self.collection.find({'x': randx}) == 0:
+                    # randx is not in the collection, use it
+                    return randx
+                if random_tries == n_random_tries:
+                    break
+
+            # n_random_tries have been tried and its time to do an expensive duplicate check
+            total_x = self._calculate_discrete_space(
+                x_dim)  # all possible choices in the discrete space (expensive)
+
+            for doc in self.collection.find():
+                if tuple(doc['x']) in total_x:
+                    total_x.remove(tuple(doc['x']))
+
+            if len(total_x) == 0:
+                raise ValueError("The search space has been exhausted.")
+
+            if x in total_x:
+                return x
+            else:
+                return random.choice(total_x)
+
+    @property
+    def _z_dims(self):
+        """
+        Creates some z dimensions so that the optimizer can run without the user specifing the z dimension range.
+        Simply sets each dimension equal to the (lowest, highest) values of any z for that dimension in the database.
+        If there is only one document in the database, it sets the dimension to slightly higher and lower values than
+        the z dimension value. For categorical dimensions, it includes all dimensions in z.
+
+        Returns:
+            ([tuple]) a list of dimensions
+        """
+
+        Z = [doc['z'] for doc in self.collection.find()]
+        dims = [[z, z] for z in Z[0]]
+        check = dims
+
+        cat_values = []
+
+        for z in Z:
+            for i, dim in enumerate(dims):
+                if type(z[i]) in dtypes.others:
+                    # the dimension is categorical
+                    if z[i] not in cat_values:
+                        cat_values.append(z[i])
+                        dims[i] = cat_values
+                else:
+                    if z[i] < dim[0]:
+                        # this value is the new minimum
+                        dims[i][0] = z[i]
+                    elif z[i] > dim[1]:
+                        # this value is the new maximum
+                        dims[i][1] = z[i]
+                    else:
+                        pass
+
+        if dims == check:  # there's only one document
+            for i, dim in enumerate(dims):
+                if type(dim[0]) in dtypes.numbers:
+                    # invent some dimensions
+                    # the prediction coming from these dimensions will not be used anyway, since it is z
+                    if type(dim[0]) in dtypes.floats:
+                        dim[0] = dim[0] - 0.05 * dim[0]
+                        dim[1] = dim[1] + 0.05 * dim[1]
+                    elif type(dim[0]) in dtypes.ints:
+                        dim[0] = dim[0] - 1
+                        dim[1] = dim[1] + 1
+
+                        if dim[0] > dim[1]:
+                            dim = [dim[1], dim[0]]
+
+                        dims[i] = dim
+
+            dims = [tuple(dim) for dim in dims]
+            return dims
 
