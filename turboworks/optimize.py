@@ -73,6 +73,7 @@ class OptTask(FireTaskBase):
         Returns:
             (FWAction)
         """
+        self._setup_db(fw_spec)
         x = fw_spec['_x_opt']
         yi = fw_spec['_y_opt']
 
@@ -85,7 +86,6 @@ class OptTask(FireTaskBase):
         id = self._store({'z':z, 'yi':yi, 'x':x}).inserted_id
 
         # gather all docs from the collection
-        self._setup_db(fw_spec)
         X_tot = []   # the matrix to store all x and z columns together
         y = []  # TODO: prefer lowercase name y since this is a vector. See note below about a list comprehension to avoid problems.
         for doc in self.collection.find({}, projection = {'x':1, 'yi':1, 'z':1}):
@@ -167,7 +167,7 @@ class OptTask(FireTaskBase):
         Sets up a MongoDB database for storing optimization data.
 
         Args:
-            fw_spec (dict):
+            fw_spec (dict): The spec of the Firework which contains this Firetask.
 
         Returns:
             None

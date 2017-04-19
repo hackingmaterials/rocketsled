@@ -30,7 +30,7 @@ def wf_creator(x):
                                                    dimensions=X_dim,
                                                    host='localhost',
                                                    port=27017,
-                                                   name='opt_default',
+                                                   name='turboworks',
                                                    )], spec=spec)
     return Workflow([firework1])
 
