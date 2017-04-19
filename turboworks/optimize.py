@@ -67,8 +67,8 @@ class OptTask(FireTaskBase):
         FireTask implementation of running the optimization loop.
 
         Args:
-            fw_spec (dict): the firetask spec. Must contain a '_tw_y' key with a float type field and must contain
-                a '_tw_x' key containing a vector uniquely defining the search space.
+            fw_spec (dict): the firetask spec. Must contain a '_y_opt' key with a float type field and must contain
+                a '_x_opt' key containing a vector uniquely defining the search space.
 
         Returns:
             (FWAction)
