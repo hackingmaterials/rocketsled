@@ -45,7 +45,7 @@ if __name__ == "__main__":
     load_parallel_wfs(n_processes)
 
     for i in range(n_runs):
-        sh_output = os.system('rlaunch -l my_launchpad.yaml multi ' + str(n_processes) + ' --nlaunches 1')
+        sh_output = os.system('rlaunch -s -l my_launchpad.yaml multi ' + str(n_processes) + ' --nlaunches 1')
         print(sh_output)
 
 

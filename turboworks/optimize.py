@@ -3,13 +3,15 @@ The FireTask for running automatic optimization loops are contained in this modu
 """
 
 import sys
-import itertools
+from itertools import product
+from os import getpid
 from bson.objectid import ObjectId
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction
 from pymongo import MongoClient
 from references import dtypes
+from time import sleep
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
@@ -64,7 +66,7 @@ class OptTask(FireTaskBase):
 
     def run_task(self, fw_spec):
         """
-        FireTask implementation of running the optimization loop.
+        FireTask for running an optimization loop.
 
         Args:
             fw_spec (dict): the firetask spec. Must contain a '_y_opt' key with a float type field and must contain
@@ -73,76 +75,134 @@ class OptTask(FireTaskBase):
         Returns:
             (FWAction)
         """
+        SLEEPTIME = .001
+        MAX_RUNS = 1000
         self._setup_db(fw_spec)
         x = fw_spec['_x_opt']
         yi = fw_spec['_y_opt']
 
-        # type safety for dimensions to avoid cryptic skopt errors
-        x_dims = [tuple(dim) for dim in self['dimensions']]
+        pid = getpid()
 
-        # fetch additional attributes for constructing machine learning model by calling get_z, if it exists
-        z = self._deserialize_function(self['get_z'])(x) if 'get_z' in self else []
+        for run in range(2*MAX_RUNS):
+            manager_type = {'hold': {'$exists':1}, 'queue': {'$exists':1}}
+            manager_docs = self.collection.find(manager_type)
 
-        id = self._store({'z':z, 'yi':yi, 'x':x}).inserted_id
+            if manager_docs.count() == 0:
+                self.collection.insert_one({'hold':pid, 'queue':[]})
+            elif manager_docs.count() == 1:
+                manager = self.collection.find_one(manager_type)
+                manager_id = manager['_id']
+                hold = manager['hold']
 
-        # gather all docs from the collection
-        X_tot = []   # the matrix to store all x and z columns together
-        y = []  # TODO: prefer lowercase name y since this is a vector. See note below about a list comprehension to avoid problems.
-        for doc in self.collection.find({}, projection = {'x':1, 'yi':1, 'z':1}):
-            if all(k in doc for k in ('x','yi','z')):  # basic concurrency read 'protection'
-                # TODO: explain why the above is concurrency protection? Will we be missing 'z' if not? If so, then perhaps just test for z. This makes the code clearer. If not I need explanation...
-                X_tot.append(doc['x'] + doc['z'])
-                y.append(doc['yi'])
+                if hold is None:
+                    self.collection.find_one_and_update({'_id':manager_id}, {'$set':{'hold':pid}})
 
-        # change y vector if maximum is desired instead of minimum
-        max_on = self['max'] if 'max' in self else False
-        y = [-1 * yi if max_on else yi for yi in y]
+                elif hold != pid:
+                    if pid not in manager['queue']:
+                        new_queue = self.collection.find_one({'_id':manager_id})['queue']
+                        new_queue.append(pid)
+                        self.collection.find_one_and_update({'_id':manager_id}, {'$set':{'queue':new_queue}})
+                    else:
+                        sleep(SLEEPTIME)
 
-        # extend the dimensions to X features, so that X information can be used in optimization
-        X_tot_dims = x_dims + self._z_dims if z != [] else x_dims
-        # TODO: !!I really don't understand why _z_dims is needed. You are not optimizing over z, only x! Many combinations of z and x are anyway forbidden and should *not* be tested.  It might make a particular x look possibly good when it is not. This is an important point, please discuss w/me!!
+                elif hold == pid:
 
-        # run machine learner on Z and X features
-        predictor = 'forest_minimize' if not 'predictor' in self else self['predictor']
-        if predictor in ['gbrt_minimize', 'random_guess', 'forest_minimize', 'gp_minimize']:
-            import skopt
-            predictor_fun = getattr(skopt, predictor)
-            dummy_fun = lambda x:0
-            predictor_data = predictor_fun(dummy_fun, X_tot_dims, x0=X_tot, y0=y, n_calls=1, n_random_starts=0)
-            x_tot_new = predictor_data.x_iters[-1]
-        else:
-            try:
-                predictor_fun = self._deserialize_function(predictor)
-                x_tot_new = predictor_fun(X_tot, y, X_tot_dims)  #  TODO: later, you might want to add optional **args and **kwargs to this as well. For now I think it is fine as is. (-AJ)
+                    # type safety for dimensions to avoid cryptic skopt errors
+                    x_dims = [tuple(dim) for dim in self['dimensions']]
 
-            except Exception as E:
-                raise ValueError("The custom predictor function {} did not call correctly! \n {}".format(predictor,E))
+                    # fetch additional attributes for constructing machine learning model by calling get_z, if it exists
+                    z = self._deserialize_function(self['get_z'])(x) if 'get_z' in self else []
 
-        # separate 'predicted' X features from the new Z vector
-        x_new, z_new = x_tot_new[:len(x)], x_tot_new[len(x):]  # TODO: this is subject to revision based on my 'important' comment about optimizing over z
+                    # TODO: make sure _store does not store duplicates
+                    opt_id = self._store({'z': z, 'yi': yi, 'x': x}).inserted_id
 
-        # duplicate checking. makes sure no repeat z vectors are inserted into the turboworks collection
-        if 'duplicate_check' in self:
-            if self['duplicate_check']:
-                if self._is_discrete(x_dims):
-                    x_new = self._dupe_check(x, x_dims)
-                    # do not worry about mismatch with z_new, as z_new is not used for any calculations
+                    # gather all docs from the collection
+                    X_tot = []  # the matrix to store all x and z columns together
+                    y = []  # TODO: prefer lowercase name y since this is a vector. See note below about a list comprehension to avoid problems.
+                    for doc in self.collection.find({'x':{'$exists':1}, 'yi':{'$exists':1},'z':{'$exists':1}},
+                                                    projection={'x': 1, 'yi': 1, 'z': 1}):
+                        if all(k in doc for k in ('x', 'yi', 'z')):  # basic concurrency read 'protection'
+                            # TODO: explain why the above is concurrency protection? Will we be missing 'z' if not? If so, then perhaps just test for z. This makes the code clearer. If not I need explanation...
+                            X_tot.append(doc['x'] + doc['z'])
+                            y.append(doc['yi'])
 
-        self._store({'z_new':z_new, 'x_new':x_new}, update=True, id=id)
+                    # change y vector if maximum is desired instead of minimum
+                    max_on = self['max'] if 'max' in self else False
+                    y = [-1 * yi if max_on else yi for yi in y]
 
-        wf_creator = self._deserialize_function(self['wf_creator'])
+                    # extend the dimensions to X features, so that X information can be used in optimization
+                    X_tot_dims = x_dims + self._z_dims if z != [] else x_dims
+                    # TODO: !!I really don't understand why _z_dims is needed. You are not optimizing over z, only x! Many combinations of z and x are anyway forbidden and should *not* be tested.  It might make a particular x look possibly good when it is not. This is an important point, please discuss w/me!!
 
-        wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else []
-        if not isinstance(wf_creator_args, list) or isinstance(wf_creator_args, tuple):
-            raise TypeError("wf_creator_args should be a list/tuple of positional arguments")
+                    # run machine learner on Z and X features
+                    predictor = 'forest_minimize' if not 'predictor' in self else self['predictor']
+                    if predictor in ['gbrt_minimize', 'random_guess', 'forest_minimize', 'gp_minimize']:
+                        import skopt
+                        predictor_fun = getattr(skopt, predictor)
+                        predictor_data = predictor_fun(lambda x: 0, X_tot_dims, x0=X_tot, y0=y, n_calls=1,
+                                                       n_random_starts=0)
+                        x_tot_new = predictor_data.x_iters[-1]
+                    else:
+                        try:
+                            predictor_fun = self._deserialize_function(predictor)
+                            x_tot_new = predictor_fun(X_tot, y,
+                                                      X_tot_dims)  # TODO: later, you might want to add optional **args
+                            # and **kwargs to this as well. For now I think it is fine as is. (-AJ)
 
-        wf_creator_kwargs = self['wf_creator_kwargs'] if 'wf_creator_kwargs' in self else {}
-        if not isinstance(wf_creator_kwargs, dict):
-            raise TypeError("wf_creator_kwargs should be a dictonary of keyword arguments.")
+                        except Exception as E:
+                            raise ValueError(
+                                "The custom predictor function {} did not call correctly! \n {}".format(predictor, E))
 
-        # return a new workflow
-        return FWAction(additions=wf_creator(x_new, *wf_creator_args, **wf_creator_kwargs),
-                        update_spec={'optimization_id':id})
+                    # separate 'predicted' z features from the new x vector
+                    x_new, z_new = x_tot_new[:len(x)], x_tot_new[len(
+                        x):]  # TODO: this is subject to revision based on my 'important' comment about optimizing over z
+
+                    # makes sure no repeat x vectors are inserted into the turboworks collection
+                    if 'duplicate_check' in self:
+                        if self['duplicate_check']:
+                            if self._is_discrete(x_dims):
+                                x_new = self._dupe_check(x, x_dims)
+
+                    self._store({'z_new': z_new, 'x_new': x_new}, update=True, id=opt_id)
+
+                    # udpdate the queue so that the oldest waiting process becomes active and is removed from the queue
+                    queue =  self.collection.find_one({'_id':manager_id})['queue']
+
+                    print "process", pid, "is about to change the queue, currently", queue
+                    if queue == []:
+                        self.collection.find_one_and_update({'_id': manager_id}, {'$set': {'hold': None}})
+                    else:
+                        new_hold, new_queue = queue[0], queue[1:]
+                        self.collection.find_one_and_update({'_id': manager_id},
+                                                            {'$set': {'hold': new_hold, 'queue': new_queue}})
+
+                    # now that the queue is updated and the new guess has been calculated, start a new workflow
+                    wf_creator = self._deserialize_function(self['wf_creator'])
+
+                    wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else []
+                    if not isinstance(wf_creator_args, list) or isinstance(wf_creator_args, tuple):
+                        raise TypeError("wf_creator_args should be a list/tuple of positional arguments")
+
+                    wf_creator_kwargs = self['wf_creator_kwargs'] if 'wf_creator_kwargs' in self else {}
+                    if not isinstance(wf_creator_kwargs, dict):
+                        raise TypeError("wf_creator_kwargs should be a dictonary of keyword arguments.")
+
+                    return FWAction(additions=wf_creator(x_new, *wf_creator_args, **wf_creator_kwargs),
+                                    update_spec={'optimization_id': opt_id})
+
+            else:
+                raise Exception("More than one manager doc is in the collection! Remove all but one manager doc.")
+
+            if run == MAX_RUNS:
+                # an old process may be stuck on hold, so reset the manager and the queue/hold will repopulate
+                self.collection.find_one_and_update(manager_type, {'$set':{'hold': None,'queue':[]}})
+
+        raise Exception("The manager is still stuck after resetting. Make sure no stalled processes are"
+                        "in the queue.")
+
+
+
+
 
     def _store(self, spec, update=False, id=None):
         """
@@ -198,11 +258,7 @@ class OptTask(FireTaskBase):
                                  " with a Launchpad object (lpad), or by setting _add_launchpad_and_fw_id to True on"
                                  " the fw_spec.")
 
-        # add mongo connection pool limit on threads
-        # TODO: document why this is needed. Your comment above is essentially just a rehash of what the code says and doesn't add new information.
-        max_pool_size = 1 if 'duplicate_check' in self and self['duplicate_check'] else 100
-
-        mongo = MongoClient(host, port, maxPoolSize=max_pool_size)
+        mongo = MongoClient(host, port)
         db = getattr(mongo, name)
         self.collection = getattr(db, opt_label)
 
@@ -276,7 +332,7 @@ class OptTask(FireTaskBase):
                 dimspace = dim
             total_dimspace.append(dimspace)
 
-        return [[x] for x in total_dimspace[0]] if len(dims) == 1 else list(itertools.product(*total_dimspace))
+        return [[x] for x in total_dimspace[0]] if len(dims) == 1 else list(product(*total_dimspace))
 
     def _dupe_check(self, x, x_dim):
         """
@@ -323,7 +379,7 @@ class OptTask(FireTaskBase):
             total_x = self._calculate_discrete_space(
                 x_dim)  # all possible choices in the discrete space (expensive)
 
-            for doc in self.collection.find():
+            for doc in self.collection.find({'x':{'$exists':1}, 'yi':{'$exists':1},'z':{'$exists':1}}):
                 if tuple(doc['x']) in total_x:
                     total_x.remove(tuple(doc['x']))
 
@@ -347,7 +403,7 @@ class OptTask(FireTaskBase):
             ([tuple]) a list of dimensions
         """
 
-        Z = [doc['z'] for doc in self.collection.find()]
+        Z = [doc['z'] for doc in self.collection.find({'x':{'$exists':1}, 'yi':{'$exists':1},'z':{'$exists':1}})]
         dims = [[z, z] for z in Z[0]]
         check = dims
 

@@ -42,7 +42,6 @@ if __name__ == "__main__":
     launchpad.reset(password=None, require_password=False)
 
     # clean up tw database if necessary
-    # todo: should be integrated with launchpad.reset?
 
     launchpad.add_wf(wf_creator([5, 5, 2]))
 
