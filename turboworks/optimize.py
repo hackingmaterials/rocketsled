@@ -113,7 +113,6 @@ class OptTask(FireTaskBase):
                     # fetch additional attributes for constructing machine learning model by calling get_z, if it exists
                     z = self._deserialize_function(self['get_z'])(x) if 'get_z' in self else []
 
-                    # TODO: make sure _store does not store duplicates
                     opt_id = self._store({'z': z, 'yi': yi, 'x': x}).inserted_id
 
                     # gather all docs from the collection
@@ -168,7 +167,6 @@ class OptTask(FireTaskBase):
                     # udpdate the queue so that the oldest waiting process becomes active and is removed from the queue
                     queue =  self.collection.find_one({'_id':manager_id})['queue']
 
-                    print "process", pid, "is about to change the queue, currently", queue
                     if queue == []:
                         self.collection.find_one_and_update({'_id': manager_id}, {'$set': {'hold': None}})
                     else:
@@ -217,10 +215,16 @@ class OptTask(FireTaskBase):
             (ObjectId) the PyMongo BSON id object for the document inserted/updated.
         """
 
+
         if update == False:
+            if 'duplicate_check' in self:
+                if self['duplicate_check']:
+                    # prevents errors when initial guesses are already in the database
+                    x = spec['x']
+                    self.collection.find_one_and_update({'x':x}, {'$set':spec})
             return self.collection.insert_one(spec)
         else:
-            return self.collection.update({"_id": id}, {'$set': spec})
+            return self.collection.find_one_and_update({"_id": id}, {'$set': spec})
 
     def _setup_db(self, fw_spec):
         '''
