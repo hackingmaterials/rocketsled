@@ -62,7 +62,7 @@ class OptTask(FireTaskBase):
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
     optional_params = ['get_z', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
-                       'host', 'port', 'name','opt_label', 'lpad']
+                       'host', 'port', 'name', 'opt_label', 'lpad']
 
     def run_task(self, fw_spec):
         """
@@ -76,7 +76,7 @@ class OptTask(FireTaskBase):
             (FWAction)
         """
         SLEEPTIME = .001
-        MAX_RUNS = 1000
+        MAX_RUNS = 100000
         self._setup_db(fw_spec)
         x = fw_spec['_x_opt']
         yi = fw_spec['_y_opt']
@@ -189,14 +189,16 @@ class OptTask(FireTaskBase):
                                     update_spec={'optimization_id': opt_id})
 
             else:
-                raise Exception("More than one manager doc is in the collection! Remove all but one manager doc.")
+                # there is more than one manager document, so reset it
+                # todo: this can cause a loop where manager docs are being inserted/removed forever...should be improved
+                self.collection.delete_many(manager_type)
 
             if run == MAX_RUNS:
                 # an old process may be stuck on hold, so reset the manager and the queue/hold will repopulate
                 self.collection.find_one_and_update(manager_type, {'$set':{'hold': None,'queue':[]}})
 
         raise Exception("The manager is still stuck after resetting. Make sure no stalled processes are"
-                        "in the queue.")
+                        " in the queue.")
 
 
 
