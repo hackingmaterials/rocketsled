@@ -5,11 +5,10 @@ The FireTask for running automatic optimization loops are contained in this modu
 import sys
 from itertools import product
 from os import getpid
-from bson.objectid import ObjectId
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction
-from pymongo import MongoClient
+from pymongo import MongoClient, ReturnDocument
 from references import dtypes
 from time import sleep
 
@@ -17,8 +16,6 @@ __author__ = "Alexander Dunn"
 __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
 
-# TODO: go over this code with Pylint, there's a lot of minor cleanup to formatting / simplifying
-# expressions, etc. If you are using PyCharm it should be built-in and underline such issues.
 
 @explicit_serialize
 class OptTask(FireTaskBase):
@@ -75,15 +72,15 @@ class OptTask(FireTaskBase):
         Returns:
             (FWAction)
         """
-        SLEEPTIME = .001
-        MAX_RUNS = 100000
+        sleeptime = .001
+        max_runs = 100000
         self._setup_db(fw_spec)
         x = fw_spec['_x_opt']
         yi = fw_spec['_y_opt']
 
         pid = getpid()
 
-        for run in range(2*MAX_RUNS):
+        for run in range(2*max_runs):
             manager_type = {'hold': {'$exists':1}, 'queue': {'$exists':1}}
             manager_docs = self.collection.find(manager_type)
 
@@ -103,7 +100,7 @@ class OptTask(FireTaskBase):
                         new_queue.append(pid)
                         self.collection.find_one_and_update({'_id':manager_id}, {'$set':{'queue':new_queue}})
                     else:
-                        sleep(SLEEPTIME)
+                        sleep(sleeptime)
 
                 elif hold == pid:
 
@@ -113,7 +110,7 @@ class OptTask(FireTaskBase):
                     # fetch additional attributes for constructing machine learning model by calling get_z, if it exists
                     z = self._deserialize_function(self['get_z'])(x) if 'get_z' in self else []
 
-                    opt_id = self._store({'z': z, 'yi': yi, 'x': x}).inserted_id
+                    opt_id = self._store({'z': z, 'yi': yi, 'x': x})
 
                     # gather all docs from the collection
                     X_tot = []  # the matrix to store all x and z columns together
@@ -193,8 +190,10 @@ class OptTask(FireTaskBase):
                 # todo: this can cause a loop where manager docs are being inserted/removed forever...should be improved
                 self.collection.delete_many(manager_type)
 
-            if run == MAX_RUNS:
+            if run == max_runs:
                 # an old process may be stuck on hold, so reset the manager and the queue/hold will repopulate
+                # todo: this can cause concurrency problems if p1 is running ML and p2 times out, then 2+ processes
+                # todo: (cont.) can be accessing the db at one time
                 self.collection.find_one_and_update(manager_type, {'$set':{'hold': None,'queue':[]}})
 
         raise Exception("The manager is still stuck after resetting. Make sure no stalled processes are"
@@ -218,15 +217,21 @@ class OptTask(FireTaskBase):
         """
 
 
-        if update == False:
+        if update:
+
+            new_doc = self.collection.find_one_and_update({"_id": id}, {'$set': spec})
+            return new_doc['_id']
+
+        else:
             if 'duplicate_check' in self:
                 if self['duplicate_check']:
                     # prevents errors when initial guesses are already in the database
                     x = spec['x']
-                    self.collection.find_one_and_update({'x':x}, {'$set':spec})
-            return self.collection.insert_one(spec)
-        else:
-            return self.collection.find_one_and_update({"_id": id}, {'$set': spec})
+                    new_doc =  self.collection.find_one_and_replace({'x':x}, spec, upsert=True,
+                                                                    return_document= ReturnDocument.AFTER)
+                    return new_doc['_id']
+            else:
+                return self.collection.insert_one(spec).inserted_id
 
     def _setup_db(self, fw_spec):
         '''
