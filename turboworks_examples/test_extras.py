@@ -9,8 +9,7 @@ Also, a demo of how to use the lpad kwarg to store optimization data based on a 
 
 from fireworks.core.rocket_launcher import launch_rocket, rapidfire
 from fireworks import Workflow, Firework, LaunchPad
-from turboworks.optimize import OptTask
-from turboworks.utils import random_guess
+from turboworks.optimize import OptTask, random_guess
 from calculate_task import MixedCalculateTask as CalculateTask
 
 

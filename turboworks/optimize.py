@@ -9,12 +9,16 @@ from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction
 from pymongo import MongoClient, ReturnDocument
-from references import dtypes
 from time import sleep
+from numpy import sctypes
+from random import uniform, randint
+
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
+
+# todo: run pylint as per AJ's rec.s
 
 
 @explicit_serialize
@@ -87,24 +91,24 @@ class OptTask(FireTaskBase):
             manager_docs = self.collection.find(self.manager_format)
 
             if manager_docs.count() == 0:
-                self.collection.insert_one({'hold':pid, 'queue':[]})
+                self.collection.insert_one({'lock': pid, 'queue': []})
             elif manager_docs.count() == 1:
                 manager = self.collection.find_one(self.manager_format)
                 manager_id = manager['_id']
-                hold = manager['hold']
+                lock = manager['lock']
 
-                if hold is None:
-                    self.collection.find_one_and_update({'_id':manager_id}, {'$set':{'hold':pid}})
+                if lock is None:
+                    self.collection.find_one_and_update({'_id': manager_id}, {'$set': {'lock': pid}})
 
-                elif hold != pid:
+                elif lock != pid:
                     if pid not in manager['queue']:
-                        new_queue = self.collection.find_one({'_id':manager_id})['queue']
+                        new_queue = self.collection.find_one({'_id': manager_id})['queue']
                         new_queue.append(pid)
-                        self.collection.find_one_and_update({'_id':manager_id}, {'$set':{'queue':new_queue}})
+                        self.collection.find_one_and_update({'_id': manager_id}, {'$set': {'queue': new_queue}})
                     else:
                         sleep(sleeptime)
 
-                elif hold == pid:
+                elif lock == pid:
 
                     # type safety for dimensions to avoid cryptic skopt errors
                     x_dims = [tuple(dim) for dim in self['dimensions']]
@@ -130,8 +134,8 @@ class OptTask(FireTaskBase):
                     # TODO: !!I really don't understand why _z_dims is needed. You are not optimizing over z, only x! Many combinations of z and x are anyway forbidden and should *not* be tested.  It might make a particular x look possibly good when it is not. This is an important point, please discuss w/me!!
 
                     # run machine learner on Z and X features
-                    predictor = 'forest_minimize' if not 'predictor' in self else self['predictor']
-                    if predictor in ['gbrt_minimize', 'random_guess', 'forest_minimize', 'gp_minimize']:
+                    predictor = 'forest_minimize' if 'predictor' not in self else self['predictor']
+                    if predictor in ['gbrt_minimize', 'dummy_minimize', 'forest_minimize', 'gp_minimize']:
                         import skopt
                         predictor_fun = getattr(skopt, predictor)
                         predictor_data = predictor_fun(lambda x: 0, X_tot_dims, x0=X_tot, y0=y, n_calls=1,
@@ -140,35 +144,35 @@ class OptTask(FireTaskBase):
                     else:
                         try:
                             predictor_fun = self._deserialize_function(predictor)
-                            x_tot_new = predictor_fun(X_tot, y,
-                                                      X_tot_dims)  # TODO: later, you might want to add optional **args
-                            # and **kwargs to this as well. For now I think it is fine as is. (-AJ)
+                            # todo: add *args, **kwargs for custom predictor
+                            x_tot_new = predictor_fun(X_tot, y, X_tot_dims)
 
                         except Exception as E:
                             raise ValueError(
                                 "The custom predictor function {} did not call correctly! \n {}".format(predictor, E))
 
                     # separate 'predicted' z features from the new x vector
-                    x_new, z_new = x_tot_new[:len(x)], x_tot_new[len(
-                        x):]  # TODO: this is subject to revision based on my 'important' comment about optimizing over z
+                    # TODO: this is subject to revision based on my 'important' comment about optimizing over z
+                    x_new, z_new = x_tot_new[:len(x)], x_tot_new[len(x):]
 
                     # makes sure no repeat x vectors are inserted into the turboworks collection
                     if 'duplicate_check' in self:
                         if self['duplicate_check']:
+                            self.dtypes = Dtypes()
                             if self._is_discrete(x_dims):
                                 x_new = self._dupe_check(x, x_dims)
 
-                    self._store({'z_new': z_new, 'x_new': x_new}, update=True, id=opt_id)
+                    self._store({'z_new': z_new, 'x_new': x_new}, update=True, _id=opt_id)
 
                     # update the queue so that the oldest waiting process becomes active and is removed from the queue
-                    queue =  self.collection.find_one({'_id':manager_id})['queue']
+                    queue = self.collection.find_one({'_id': manager_id})['queue']
 
-                    if queue == []:
-                        self.collection.find_one_and_update({'_id': manager_id}, {'$set': {'hold': None}})
+                    if not queue:
+                        self.collection.find_one_and_update({'_id': manager_id}, {'$set': {'lock': None}})
                     else:
-                        new_hold, new_queue = queue[0], queue[1:]
+                        new_lock, new_queue = queue[0], queue[1:]
                         self.collection.find_one_and_update({'_id': manager_id},
-                                                            {'$set': {'hold': new_hold, 'queue': new_queue}})
+                                                            {'$set': {'lock': new_lock, 'queue': new_queue}})
 
                     # now that the queue is updated and the new guess has been calculated, start a new workflow
                     wf_creator = self._deserialize_function(self['wf_creator'])
@@ -185,21 +189,20 @@ class OptTask(FireTaskBase):
                                     update_spec={'optimization_id': opt_id})
 
             else:
-                # there is more than one manager document, so reset it
-                # todo: this can cause a loop where manager docs are being inserted/removed forever...should be improved
+                # there is more than one manager document, eliminate it to try again
                 self.collection.delete_many(self.manager_format)
 
-            if run in [max_runs*k for k in range(1,max_resets+1)]:
-                # an old process may be stuck on hold, so reset the manager and the queue/hold will repopulate
+            if run in [max_runs*k for k in range(1, max_resets+1)]:
+                # an old process may be stuck on lock, so reset the manager and the queue/lock will repopulate
                 # todo: this can cause concurrency problems if p1 is running ML code and p2 times out, then 2+ processes
                 # todo: (cont.) can be accessing the db at one time. should fix soon
-                self.collection.find_one_and_update(self.manager_format, {'$set':{'hold': None,'queue':[]}})
+                self.collection.find_one_and_update(self.manager_format, {'$set': {'lock': None,'queue': []}})
 
         raise Exception("The manager is still stuck after resetting. Make sure no stalled processes are"
                         " in the queue.")
 
     def _setup_db(self, fw_spec):
-        '''
+        """
         Sets up a MongoDB database for storing optimization data.
 
         Args:
@@ -207,7 +210,7 @@ class OptTask(FireTaskBase):
 
         Returns:
             None
-        '''
+        """
 
         opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default'
         db_reqs = ('host', 'port', 'name')
@@ -238,26 +241,24 @@ class OptTask(FireTaskBase):
         db = getattr(mongo, name)
         self.collection = getattr(db, opt_label)
 
-        self.opt_format = {'x':{'$exists':1}, 'yi':{'$exists':1},'z':{'$exists':1}}
-        self.manager_format = {'hold': {'$exists':1}, 'queue': {'$exists':1}}
+        self.opt_format = {'x': {'$exists': 1}, 'yi': {'$exists': 1}, 'z': {'$exists': 1}}
+        self.manager_format = {'lock': {'$exists': 1}, 'queue': {'$exists': 1}}
 
-    def _store(self, spec, update=False, id=None):
+    def _store(self, spec, update=False, _id=None):
         """
         Stores and updates turboworks database files.
 
         Args:
             spec (dict): a turboworks-generated spec (or subset of a spec) to be stored in the turboworks db.
             update (bool): whether to update the document (True) or insert a new one (False)
-            id (ObjectId): the PyMongo BSON id object. if update == True, updates the document with this id.
+            _id (ObjectId): the PyMongo BSON _id object. if update == True, updates the document with this id.
 
         Returns:
             (ObjectId) the PyMongo BSON id object for the document inserted/updated.
         """
 
-
         if update:
-
-            new_doc = self.collection.find_one_and_update({"_id": id}, {'$set': spec})
+            new_doc = self.collection.find_one_and_update({"_id": _id}, {'$set': spec})
             return new_doc['_id']
 
         else:
@@ -265,8 +266,10 @@ class OptTask(FireTaskBase):
                 if self['duplicate_check']:
                     # prevents errors when initial guesses are already in the database
                     x = spec['x']
-                    new_doc =  self.collection.find_one_and_replace({'x':x}, spec, upsert=True,
-                                                                    return_document= ReturnDocument.AFTER)
+                    new_doc = self.collection.find_one_and_replace({'x': x},
+                                                                   spec,
+                                                                   upsert=True,
+                                                                   return_document=ReturnDocument.AFTER)
                     return new_doc['_id']
             else:
                 return self.collection.insert_one(spec).inserted_id
@@ -305,23 +308,17 @@ class OptTask(FireTaskBase):
         """
 
         for dim in dims:
-            if type(dim[0]) not in dtypes.discrete or type(dim[1]) not in dtypes.discrete:
+            if type(dim[0]) not in self.dtypes.discrete or type(dim[1]) not in self.dtypes.discrete:
                 return False
         return True
 
     def _calculate_discrete_space(self, dims):
         """
-        Calculates all entries in a discrete space.
-
-        Example:
-
-            >>> dims = [(1,2), ["red","blue"]]
-            >>> space = _calculate_discrete_space(dims)
-            >>> space
-            [(1, 'red'), (1, 'blue'), (2, 'red'), (2, 'blue')]
+        Calculates a list of all possible entries of a discrete space from the dimensions of that space. 
 
         Args:
-            dims ([tuple]): dimensions of the search space.
+            dims ([tuple]): list of dimensions of the search space. Individual dimensions should be in (higher, lower)
+                form if integers, and should be a comprehensive list if categorical.
 
         Returns:
             ([list]) all possible combinations inside the discrete space
@@ -330,12 +327,12 @@ class OptTask(FireTaskBase):
         total_dimspace = []
 
         for dim in dims:
-            if type(dim[0]) in dtypes.ints:
+            if type(dim[0]) in self.dtypes.ints:
                 # Then the dimension is of the form (lower, upper)
                 lower = dim[0]
                 upper = dim[1]
                 dimspace = list(range(lower, upper + 1))
-            elif type(dim[0]) in dtypes.floats:
+            elif type(dim[0]) in self.dtypes.floats:
                 raise ValueError("The dimension is a float. The dimension space is infinite.")
             else:  # The dimension is a discrete finite string list
                 dimspace = dim
@@ -368,10 +365,10 @@ class OptTask(FireTaskBase):
                 randx = []
                 for dim in x_dim:
                     dim_type = type(dim[0])
-                    if dim_type in dtypes.discrete:
-                        if dim_type in dtypes.ints:
+                    if dim_type in self.dtypes.discrete:
+                        if dim_type in self.dtypes.ints:
                             randx.append(random.randint(dim[0], dim[1]))
-                        elif dim_type in dtypes.others:
+                        elif dim_type in self.dtypes.others:
                             randx.append(random.choice(dim))
                     else:
                         raise TypeError("The dimension {} is not discrete. "
@@ -385,8 +382,7 @@ class OptTask(FireTaskBase):
                     break
 
             # n_random_tries have been tried and its time to do an expensive duplicate check
-            total_x = self._calculate_discrete_space(
-                x_dim)  # all possible choices in the discrete space (expensive)
+            total_x = self._calculate_discrete_space(x_dim)
 
             for doc in self.collection.find(self.opt_format):
                 if tuple(doc['x']) in total_x:
@@ -420,7 +416,7 @@ class OptTask(FireTaskBase):
 
         for z in Z:
             for i, dim in enumerate(dims):
-                if type(z[i]) in dtypes.others:
+                if type(z[i]) in self.dtypes.others:
                     # the dimension is categorical
                     if z[i] not in cat_values:
                         cat_values.append(z[i])
@@ -437,13 +433,13 @@ class OptTask(FireTaskBase):
 
         if dims == check:  # there's only one document
             for i, dim in enumerate(dims):
-                if type(dim[0]) in dtypes.numbers:
+                if type(dim[0]) in self.dtypes.numbers:
                     # invent some dimensions
                     # the prediction coming from these dimensions will not be used anyway, since it is z
-                    if type(dim[0]) in dtypes.floats:
+                    if type(dim[0]) in self.dtypes.floats:
                         dim[0] = dim[0] - 0.05 * dim[0]
                         dim[1] = dim[1] + 0.05 * dim[1]
-                    elif type(dim[0]) in dtypes.ints:
+                    elif type(dim[0]) in self.dtypes.ints:
                         dim[0] = dim[0] - 1
                         dim[1] = dim[1] + 1
 
@@ -454,4 +450,58 @@ class OptTask(FireTaskBase):
 
             dims = [tuple(dim) for dim in dims]
             return dims
+
+
+class Dtypes(object):
+    """
+    Defines the datatypes available for optimization.
+    """
+
+    def __init__(self):
+        d = sctypes
+        self.ints = d['int'] + d['uint'] + [int]
+        self.floats = d['float'] + [float]
+        self.reals = self.ints + self.floats
+        self.complex = d['complex']
+        self.numbers = self.reals + self.complex
+        self.others = d['others']
+        self.discrete = self.ints + self.others
+        self.all = self.numbers + self.others
+
+
+def random_guess(dimensions):
+    """
+    Returns random new inputs based on the dimensions of the search space.
+    It works with float, integer, and categorical types
+
+    Args:
+        dimensions ([tuple]): defines the dimensions of each parameter
+            example: [(1,50),(-18.939,22.435),["red", "green" , "blue", "orange"]]
+
+    Returns:
+        new_input (list): randomly chosen next parameters in the search space
+            example: [12, 1.9383, "green"]
+    """
+
+    dtypes = Dtypes()
+    new_input = []
+
+    for dimset in dimensions:
+        upper = dimset[1]
+        lower = dimset[0]
+        if type(lower) in dtypes.ints:
+            new_param = randint(lower, upper)
+            new_input.append(new_param)
+        elif type(lower) in dtypes.floats:
+            new_param = uniform(lower, upper)
+            new_input.append(new_param)
+        elif type(lower) in dtypes.others:
+            domain_size = len(dimset)-1
+            new_param = randint(0,domain_size)
+            new_input.append(dimset[new_param])
+        else:
+            raise TypeError("The type {} is not supported by dummy opt as a categorical or "
+                            "numerical type".format(type(upper)))
+
+    return new_input
 
