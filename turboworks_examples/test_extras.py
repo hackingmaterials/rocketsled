@@ -31,7 +31,8 @@ def wf_creator(x, launchpad, my_arg, my_kwarg=1):
                                   wf_creator_args=[launchpad, my_arg * 3],
                                   wf_creator_kwargs={'my_kwarg': my_kwarg * 2},
                                   duplicate_check=True,
-                                  opt_label="opt_extras_example")],
+                                  opt_label="opt_extras_example",
+                                  retrain_interval=5)],
                          spec=fw1_spec)
 
     return Workflow([firework1])

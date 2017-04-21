@@ -57,11 +57,13 @@ class OptTask(FireTaskBase):
         lpad (LaunchPad): A Fireworks LaunchPad object.
         opt_label (string): Names the collection of that the particular optinization's data will be stored in. Multiple
             collections correspond to multiple independent optimization.
+        retrain_interval (int): The number of iterations to wait before retraining the expensive model. On iterations
+            where the model is not trained, a random guess is used. 
     """
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
     optional_params = ['get_z', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
-                       'host', 'port', 'name', 'opt_label', 'lpad']
+                       'host', 'port', 'name', 'opt_label', 'lpad', 'retrain_interval']
 
     def run_task(self, fw_spec):
         """
@@ -132,13 +134,24 @@ class OptTask(FireTaskBase):
                     # TODO: !!I really don't understand why _z_dims is needed. You are not optimizing over z, only x! Many combinations of z and x are anyway forbidden and should *not* be tested.  It might make a particular x look possibly good when it is not. This is an important point, please discuss w/me!!
 
                     # run machine learner on Z and X features
-                    predictor = 'forest_minimize' if 'predictor' not in self else self['predictor']
-                    if predictor in ['gbrt_minimize', 'dummy_minimize', 'forest_minimize', 'gp_minimize']:
+                    retrain_interval = self['retrain_interval'] if 'retrain_interval' in self else 1
+
+                    if self.collection.find(self.opt_format).count() % retrain_interval == 0:
+                        predictor = 'forest_minimize' if 'predictor' not in self else self['predictor']
+                        
+                    else:
+                        predictor = 'random_guess'
+
+                    if predictor in ['gbrt_minimize', 'forest_minimize', 'gp_minimize']:
                         import skopt
                         predictor_fun = getattr(skopt, predictor)
                         predictor_data = predictor_fun(lambda x: 0, X_tot_dims, x0=X_tot, y0=y, n_calls=1,
                                                        n_random_starts=0)
                         x_tot_new = predictor_data.x_iters[-1]
+
+                    elif predictor == 'random_guess':
+                        x_tot_new = random_guess(X_tot_dims)
+
                     else:
                         try:
                             predictor_fun = self._deserialize_function(predictor)
