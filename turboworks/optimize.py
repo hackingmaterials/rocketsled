@@ -18,8 +18,6 @@ __author__ = "Alexander Dunn"
 __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
 
-# todo: run pylint as per AJ's rec.s
-
 
 @explicit_serialize
 class OptTask(FireTaskBase):
@@ -190,7 +188,8 @@ class OptTask(FireTaskBase):
 
             else:
                 # there is more than one manager document, eliminate it to try again
-                self.collection.delete_many(self.manager_format)
+                # todo: this can wind up deleting all manager docs while another process is running ML code
+                self.collection.delete_one(self.manager_format)
 
             if run in [max_runs*k for k in range(1, max_resets+1)]:
                 # an old process may be stuck on lock, so reset the manager and the queue/lock will repopulate
@@ -407,10 +406,11 @@ class OptTask(FireTaskBase):
         Returns:
             ([tuple]) a list of dimensions
         """
-
+        self.dtypes = Dtypes()
         Z = [doc['z'] for doc in self.collection.find(self.opt_format)]
         dims = [[z, z] for z in Z[0]]
         check = dims
+
 
         cat_values = []
 
