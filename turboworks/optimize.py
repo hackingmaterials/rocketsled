@@ -72,22 +72,24 @@ class OptTask(FireTaskBase):
         Returns:
             (FWAction)
         """
-        sleeptime = .001
-        max_runs = 100000
+
         self._setup_db(fw_spec)
         x = fw_spec['_x_opt']
         yi = fw_spec['_y_opt']
 
+        # the pid identifies the process during parallel duplicate checking
         pid = getpid()
+        sleeptime = .001
+        max_runs = 10000
+        max_resets = 5
 
-        for run in range(2*max_runs):
-            manager_type = {'hold': {'$exists':1}, 'queue': {'$exists':1}}
-            manager_docs = self.collection.find(manager_type)
+        for run in range(max_resets*max_runs):
+            manager_docs = self.collection.find(self.manager_format)
 
             if manager_docs.count() == 0:
                 self.collection.insert_one({'hold':pid, 'queue':[]})
             elif manager_docs.count() == 1:
-                manager = self.collection.find_one(manager_type)
+                manager = self.collection.find_one(self.manager_format)
                 manager_id = manager['_id']
                 hold = manager['hold']
 
@@ -114,13 +116,10 @@ class OptTask(FireTaskBase):
 
                     # gather all docs from the collection
                     X_tot = []  # the matrix to store all x and z columns together
-                    y = []  # TODO: prefer lowercase name y since this is a vector. See note below about a list comprehension to avoid problems.
-                    for doc in self.collection.find({'x':{'$exists':1}, 'yi':{'$exists':1},'z':{'$exists':1}},
-                                                    projection={'x': 1, 'yi': 1, 'z': 1}):
-                        if all(k in doc for k in ('x', 'yi', 'z')):  # basic concurrency read 'protection'
-                            # TODO: explain why the above is concurrency protection? Will we be missing 'z' if not? If so, then perhaps just test for z. This makes the code clearer. If not I need explanation...
-                            X_tot.append(doc['x'] + doc['z'])
-                            y.append(doc['yi'])
+                    y = []
+                    for doc in self.collection.find(self.opt_format, projection={'x': 1, 'yi': 1, 'z': 1}):
+                        X_tot.append(doc['x'] + doc['z'])
+                        y.append(doc['yi'])
 
                     # change y vector if maximum is desired instead of minimum
                     max_on = self['max'] if 'max' in self else False
@@ -161,7 +160,7 @@ class OptTask(FireTaskBase):
 
                     self._store({'z_new': z_new, 'x_new': x_new}, update=True, id=opt_id)
 
-                    # udpdate the queue so that the oldest waiting process becomes active and is removed from the queue
+                    # update the queue so that the oldest waiting process becomes active and is removed from the queue
                     queue =  self.collection.find_one({'_id':manager_id})['queue']
 
                     if queue == []:
@@ -188,50 +187,16 @@ class OptTask(FireTaskBase):
             else:
                 # there is more than one manager document, so reset it
                 # todo: this can cause a loop where manager docs are being inserted/removed forever...should be improved
-                self.collection.delete_many(manager_type)
+                self.collection.delete_many(self.manager_format)
 
-            if run == max_runs:
+            if run in [max_runs*k for k in range(1,max_resets+1)]:
                 # an old process may be stuck on hold, so reset the manager and the queue/hold will repopulate
-                # todo: this can cause concurrency problems if p1 is running ML and p2 times out, then 2+ processes
-                # todo: (cont.) can be accessing the db at one time
-                self.collection.find_one_and_update(manager_type, {'$set':{'hold': None,'queue':[]}})
+                # todo: this can cause concurrency problems if p1 is running ML code and p2 times out, then 2+ processes
+                # todo: (cont.) can be accessing the db at one time. should fix soon
+                self.collection.find_one_and_update(self.manager_format, {'$set':{'hold': None,'queue':[]}})
 
         raise Exception("The manager is still stuck after resetting. Make sure no stalled processes are"
                         " in the queue.")
-
-
-
-
-
-    def _store(self, spec, update=False, id=None):
-        """
-        Stores and updates turboworks database files.
-
-        Args:
-            spec (dict): a turboworks-generated spec (or subset of a spec) to be stored in the turboworks db.
-            update (bool): whether to update the document (True) or insert a new one (False)
-            id (ObjectId): the PyMongo BSON id object. if update == True, updates the document with this id.
-
-        Returns:
-            (ObjectId) the PyMongo BSON id object for the document inserted/updated.
-        """
-
-
-        if update:
-
-            new_doc = self.collection.find_one_and_update({"_id": id}, {'$set': spec})
-            return new_doc['_id']
-
-        else:
-            if 'duplicate_check' in self:
-                if self['duplicate_check']:
-                    # prevents errors when initial guesses are already in the database
-                    x = spec['x']
-                    new_doc =  self.collection.find_one_and_replace({'x':x}, spec, upsert=True,
-                                                                    return_document= ReturnDocument.AFTER)
-                    return new_doc['_id']
-            else:
-                return self.collection.insert_one(spec).inserted_id
 
     def _setup_db(self, fw_spec):
         '''
@@ -272,6 +237,39 @@ class OptTask(FireTaskBase):
         mongo = MongoClient(host, port)
         db = getattr(mongo, name)
         self.collection = getattr(db, opt_label)
+
+        self.opt_format = {'x':{'$exists':1}, 'yi':{'$exists':1},'z':{'$exists':1}}
+        self.manager_format = {'hold': {'$exists':1}, 'queue': {'$exists':1}}
+
+    def _store(self, spec, update=False, id=None):
+        """
+        Stores and updates turboworks database files.
+
+        Args:
+            spec (dict): a turboworks-generated spec (or subset of a spec) to be stored in the turboworks db.
+            update (bool): whether to update the document (True) or insert a new one (False)
+            id (ObjectId): the PyMongo BSON id object. if update == True, updates the document with this id.
+
+        Returns:
+            (ObjectId) the PyMongo BSON id object for the document inserted/updated.
+        """
+
+
+        if update:
+
+            new_doc = self.collection.find_one_and_update({"_id": id}, {'$set': spec})
+            return new_doc['_id']
+
+        else:
+            if 'duplicate_check' in self:
+                if self['duplicate_check']:
+                    # prevents errors when initial guesses are already in the database
+                    x = spec['x']
+                    new_doc =  self.collection.find_one_and_replace({'x':x}, spec, upsert=True,
+                                                                    return_document= ReturnDocument.AFTER)
+                    return new_doc['_id']
+            else:
+                return self.collection.insert_one(spec).inserted_id
 
     def _deserialize_function(self, fun):
         """
@@ -390,7 +388,7 @@ class OptTask(FireTaskBase):
             total_x = self._calculate_discrete_space(
                 x_dim)  # all possible choices in the discrete space (expensive)
 
-            for doc in self.collection.find({'x':{'$exists':1}, 'yi':{'$exists':1},'z':{'$exists':1}}):
+            for doc in self.collection.find(self.opt_format):
                 if tuple(doc['x']) in total_x:
                     total_x.remove(tuple(doc['x']))
 
@@ -414,7 +412,7 @@ class OptTask(FireTaskBase):
             ([tuple]) a list of dimensions
         """
 
-        Z = [doc['z'] for doc in self.collection.find({'x':{'$exists':1}, 'yi':{'$exists':1},'z':{'$exists':1}})]
+        Z = [doc['z'] for doc in self.collection.find(self.opt_format)]
         dims = [[z, z] for z in Z[0]]
         check = dims
 
