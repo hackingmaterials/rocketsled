@@ -240,12 +240,12 @@ class OptTask(FireTaskBase):
 
         elif 'lpad' in self:
             lpad = self['lpad']
-            host, port, name = [lpad[req] for req in reqs]
+            host, port, name = [lpad[req] for req in db_reqs]
 
         # todo: currently not working with multiprocessing objects!
         elif '_add_launchpad_and_fw_id' in fw_spec:
             if fw_spec['_add_launchpad_and_fw_id']:
-                host, port, name = [getattr(self.launchpad, req) for req in reqs]
+                host, port, name = [getattr(self.launchpad, req) for req in db_reqs]
 
         # todo: add my_launchpad.yaml option via Launchpad.auto_load()?
         else:
