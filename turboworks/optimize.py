@@ -129,16 +129,19 @@ class OptTask(FireTaskBase):
                     max_on = self['max'] if 'max' in self else False
                     y = [-1 * yi if max_on else yi for yi in y]
 
-                    # extend the dimensions to X features, so that X information can be used in optimization
+                    # extend the dimensions to z features, so that Z information can be used in optimization
                     X_tot_dims = x_dims + self._z_dims if z != [] else x_dims
-                    # TODO: !!I really don't understand why _z_dims is needed. You are not optimizing over z, only x! Many combinations of z and x are anyway forbidden and should *not* be tested.  It might make a particular x look possibly good when it is not. This is an important point, please discuss w/me!!
+                    # todo: make sure z doesn't result in bad/forbidden x guesses
+                    # potential fix: get z for the predicted x and make sure it matches a good z? if there is a
+                    # mismatch between the two then discard the prediction
 
+                    #todo: add ability to exclude points with "exclude" field?
                     # run machine learner on Z and X features
                     retrain_interval = self['retrain_interval'] if 'retrain_interval' in self else 1
 
                     if self.collection.find(self.opt_format).count() % retrain_interval == 0:
                         predictor = 'forest_minimize' if 'predictor' not in self else self['predictor']
-                        
+
                     else:
                         predictor = 'random_guess'
 
@@ -226,22 +229,23 @@ class OptTask(FireTaskBase):
 
         opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default'
         db_reqs = ('host', 'port', 'name')
+        db_defined = [req in self for req in db_reqs]
 
         # determine where Mondodb information will be stored
-        if any(req in self for req in db_reqs):
-            if all(req in self for req in db_reqs):
-                host, port, name = [self[k] for k in db_reqs]
-            else:
-                raise AttributeError("Host, port, and name must all be specified!")
+        if all(db_defined):
+            host, port, name = [self[k] for k in db_reqs]
+
+        elif any(db_defined):
+            raise AttributeError("Host, port, and name must all be specified!")
 
         elif 'lpad' in self:
             lpad = self['lpad']
-            host, port, name = [lpad[req] for req in db_reqs]
+            host, port, name = [lpad[req] for req in reqs]
 
         # todo: currently not working with multiprocessing objects!
         elif '_add_launchpad_and_fw_id' in fw_spec:
             if fw_spec['_add_launchpad_and_fw_id']:
-                host, port, name = [getattr(self.launchpad, req) for req in db_reqs]
+                host, port, name = [getattr(self.launchpad, req) for req in reqs]
 
         # todo: add my_launchpad.yaml option via Launchpad.auto_load()?
         else:
