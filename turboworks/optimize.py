@@ -116,8 +116,6 @@ class OptTask(FireTaskBase):
                     # fetch additional attributes for constructing machine learning model by calling get_z, if it exists
                     z = self._deserialize_function(self['get_z'])(x) if 'get_z' in self else []
 
-                    opt_id = self._store({'z': z, 'yi': yi, 'x': x})
-
                     # gather all docs from the collection
                     X_tot = []  # the matrix to store all x and z columns together
                     y = []
@@ -176,7 +174,13 @@ class OptTask(FireTaskBase):
                             if self._is_discrete(x_dims):
                                 x_new = self._dupe_check(x, x_dims)
 
-                    self._store({'z_new': z_new, 'x_new': x_new}, update=True, _id=opt_id)
+                    # make sure a process has not timed out and changed the lock pid while this process
+                    # is computing the next guess
+                    # todo: can cause no predictions to be made if the timeout interval is too short.
+                    if self.collection.find_one(self.manager_format)['lock'] != pid:
+                        continue
+                    else:
+                        opt_id = self._store({'z': z, 'yi': yi, 'x': x, 'z_new': z_new, 'x_new': x_new})
 
                     # update the queue so that the oldest waiting process becomes active and is removed from the queue
                     queue = self.collection.find_one({'_id': manager_id})['queue']
@@ -209,9 +213,7 @@ class OptTask(FireTaskBase):
 
             if run in [max_runs*k for k in range(1, max_resets+1)]:
                 # an old process may be stuck on lock, so reset the manager and the queue/lock will repopulate
-                # todo: this can cause concurrency problems if p1 is running ML code and p2 times out, then 2+ processes
-                # todo: (cont.) can be accessing the db at one time. should fix soon
-                self.collection.find_one_and_update(self.manager_format, {'$set': {'lock': None,'queue': []}})
+                self.collection.find_one_and_update(self.manager_format, {'$set': {'lock': None, 'queue': []}})
 
         raise Exception("The manager is still stuck after resetting. Make sure no stalled processes are"
                         " in the queue.")
@@ -260,35 +262,29 @@ class OptTask(FireTaskBase):
         self.opt_format = {'x': {'$exists': 1}, 'yi': {'$exists': 1}, 'z': {'$exists': 1}}
         self.manager_format = {'lock': {'$exists': 1}, 'queue': {'$exists': 1}}
 
-    def _store(self, spec, update=False, _id=None):
+    def _store(self, spec):
         """
         Stores and updates turboworks database files.
 
         Args:
             spec (dict): a turboworks-generated spec (or subset of a spec) to be stored in the turboworks db.
-            update (bool): whether to update the document (True) or insert a new one (False)
-            _id (ObjectId): the PyMongo BSON _id object. if update == True, updates the document with this id.
 
         Returns:
             (ObjectId) the PyMongo BSON id object for the document inserted/updated.
         """
 
-        if update:
-            new_doc = self.collection.find_one_and_update({"_id": _id}, {'$set': spec})
-            return new_doc['_id']
-
+        if 'duplicate_check' in self:
+            if self['duplicate_check']:
+                # prevents errors when initial guesses are already in the database
+                x = spec['x']
+                new_doc = self.collection.find_one_and_replace({'x': x},
+                                                               spec,
+                                                               upsert=True,
+                                                               return_document=ReturnDocument.AFTER)
+                return new_doc['_id']
         else:
-            if 'duplicate_check' in self:
-                if self['duplicate_check']:
-                    # prevents errors when initial guesses are already in the database
-                    x = spec['x']
-                    new_doc = self.collection.find_one_and_replace({'x': x},
-                                                                   spec,
-                                                                   upsert=True,
-                                                                   return_document=ReturnDocument.AFTER)
-                    return new_doc['_id']
-            else:
-                return self.collection.insert_one(spec).inserted_id
+            return self.collection.insert_one(spec).inserted_id
+
 
     def _deserialize_function(self, fun):
         """
