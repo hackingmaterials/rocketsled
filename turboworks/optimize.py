@@ -130,11 +130,7 @@ class OptTask(FireTaskBase):
 
                     # extend the dimensions to z features, so that Z information can be used in optimization
                     X_tot_dims = x_dims + self._z_dims if z != [] else x_dims
-                    # todo: make sure z doesn't result in bad/forbidden x guesses
-                    # potential fix: get z for the predicted x and make sure it matches a good z? if there is a
-                    # mismatch between the two then discard the prediction
 
-                    #todo: add ability to exclude points with "exclude" field?
                     # run machine learner on Z and X features
                     retrain_interval = self['retrain_interval'] if 'retrain_interval' in self else 1
 
@@ -165,7 +161,6 @@ class OptTask(FireTaskBase):
                                 "The custom predictor function {} did not call correctly! \n {}".format(predictor, E))
 
                     # separate 'predicted' z features from the new x vector
-                    # TODO: this is subject to revision based on my 'important' comment about optimizing over z
                     x_new, z_new = x_tot_new[:len(x)], x_tot_new[len(x):]
 
                     if 'verify_z' in self:
@@ -173,7 +168,7 @@ class OptTask(FireTaskBase):
                             if 'get_z' in self:
                                 if not self._verify_z(x_new, z_new, self._deserialize_function(self['get_z'])):
                                     # z is not verified, abort the loop
-                                    # todo: this can cause timeouts
+                                    # todo: this can cause timeouts/inf loop!!
                                     continue
                             else:
                                 raise AttributeError("To verify the z guess, get_z must be specified.")
@@ -333,8 +328,8 @@ class OptTask(FireTaskBase):
             get_z (function): The deserialized function which can return a z from x. 
         
         Returns:
-            (bool):
-            
+            (bool): True indicates that the z was verified. False indicates that the predicted z was too different from
+                the real z associated with x_new, and that the new value of x is based on bad information. 
         """
 
         z_real = get_z(x_new)
