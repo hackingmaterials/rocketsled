@@ -59,11 +59,12 @@ class OptTask(FireTaskBase):
             collections correspond to multiple independent optimization.
         retrain_interval (int): The number of iterations to wait before retraining the expensive model. On iterations
             where the model is not trained, a random guess is used. 
+        verify_z (bool): if True, will verify that the predicted x guess is not based on a bad z prediction. 
     """
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
     optional_params = ['get_z', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
-                       'host', 'port', 'name', 'opt_label', 'lpad', 'retrain_interval']
+                       'host', 'port', 'name', 'opt_label', 'lpad', 'retrain_interval', 'verify_z']
 
     def run_task(self, fw_spec):
         """
@@ -166,6 +167,16 @@ class OptTask(FireTaskBase):
                     # separate 'predicted' z features from the new x vector
                     # TODO: this is subject to revision based on my 'important' comment about optimizing over z
                     x_new, z_new = x_tot_new[:len(x)], x_tot_new[len(x):]
+
+                    if 'verify_z' in self:
+                        if self['verify_z']:
+                            if 'get_z' in self:
+                                if not self._verify_z(x_new, z_new, self._deserialize_function(self['get_z'])):
+                                    # z is not verified, abort the loop
+                                    # todo: this can cause timeouts
+                                    continue
+                            else:
+                                raise AttributeError("To verify the z guess, get_z must be specified.")
 
                     # makes sure no repeat x vectors are inserted into the turboworks collection
                     if 'duplicate_check' in self:
@@ -307,6 +318,29 @@ class OptTask(FireTaskBase):
 
         mod = __import__(str(modname), globals(), locals(), fromlist=[str(funcname)])
         return getattr(mod, funcname)
+
+    def _verify_z(self, x_new, z_new, get_z):
+        """
+        Checks to make sure predicted x is not based on bad z information. 
+        
+        Using z information can help the machine learning algorithm make better predictions. However, z information
+        predicted with a new x guess can make the new x seem good when it is really not. This method checks to make 
+        sure the predicted z matches the predicted x's real z.
+        
+        Args:
+            x_new (list): The new x guess.
+            z_new (list): The predicted z associated with x_new. This may or may not match the true z associated with x_new.
+            get_z (function): The deserialized function which can return a z from x. 
+        
+        Returns:
+            (bool):
+            
+        """
+
+        z_real = get_z(x_new)
+        # todo: finish
+        pass
+
 
     def _is_discrete(self, dims):
         """
