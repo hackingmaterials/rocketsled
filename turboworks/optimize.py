@@ -110,6 +110,7 @@ class OptTask(FireTaskBase):
                         sleep(sleeptime)
 
                 elif lock == pid:
+                    #todo: move lock to just duplicate check function
 
                     # type safety for dimensions to avoid cryptic skopt errors
                     x_dims = [tuple(dim) for dim in self['dimensions']]
@@ -353,6 +354,7 @@ class OptTask(FireTaskBase):
                 return False
         return True
 
+    @staticmethod
     def _calculate_discrete_space(self, dims):
         """
         Calculates a list of all possible entries of a discrete space from the dimensions of that space. 
