@@ -12,6 +12,8 @@ from pymongo import MongoClient, ReturnDocument
 from time import sleep
 from numpy import sctypes
 from random import uniform, randint
+from turboworks.predictor import sk_predictor
+from sklearn.ensemble import RandomForestRegressor
 
 
 __author__ = "Alexander Dunn"
@@ -64,7 +66,7 @@ class OptTask(FireTaskBase):
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
     optional_params = ['get_z', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
-                       'host', 'port', 'name', 'opt_label', 'lpad', 'retrain_interval', 'verify_z']
+                       'host', 'port', 'name', 'opt_label', 'lpad', 'retrain_interval']
 
     def run_task(self, fw_spec):
         """
@@ -116,7 +118,8 @@ class OptTask(FireTaskBase):
                     x_dims = [tuple(dim) for dim in self['dimensions']]
 
                     # fetch additional attributes for constructing machine learning model by calling get_z, if it exists
-                    z = self._deserialize_function(self['get_z'])(x) if 'get_z' in self else []
+                    self.get_z = self._deserialize_function(self['get_z']) if 'get_z' in self else lambda x: []
+                    z = self.get_z(x)
 
                     # gather all docs from the collection
                     X_tot = []  # the matrix to store all x and z columns together
@@ -125,31 +128,40 @@ class OptTask(FireTaskBase):
                         X_tot.append(doc['x'] + doc['z'])
                         y.append(doc['yi'])
 
-                    # change y vector if maximum is desired instead of minimum
-                    max_on = self['max'] if 'max' in self else False
-                    y = [-1 * yi if max_on else yi for yi in y]
+                    # todo: spamming get_z with guesses can be prevented, but it would require this entire section be
+                    # todo: (cont.) inside the pid lock loop, hence locking the db for each training
+                    X_space = self._calculate_discrete_space(x_dims, float_discrete=True, n_float_points=100)
+                    X_space_new = [x for x in X_space if self.collection.find({'x': x}).count() == 0]
+                    X_tot_space = [x + self.get_z(x) for x in X_space_new]
 
                     # extend the dimensions to z features, so that Z information can be used in optimization
                     X_tot_dims = x_dims + self._z_dims if z != [] else x_dims
+
+                    # change y vector if maximum is desired instead of minimum
+                    max_on = self['max'] if 'max' in self else False
+                    y = [-1 * yi if max_on else yi for yi in y]
 
                     # run machine learner on Z and X features
                     retrain_interval = self['retrain_interval'] if 'retrain_interval' in self else 1
 
                     if self.collection.find(self.opt_format).count() % retrain_interval == 0:
-                        predictor = 'forest_minimize' if 'predictor' not in self else self['predictor']
-
+                        predictor = 'sk_predictor' if 'predictor' not in self else self['predictor']
                     else:
                         predictor = 'random_guess'
 
-                    if predictor in ['gbrt_minimize', 'forest_minimize', 'gp_minimize']:
+                    if predictor == 'sk_predictor':
+                        x_tot_new = sk_predictor(X_tot, y, X_tot_space, RandomForestRegressor())
+
+                    elif predictor == 'random_guess':
+                        x_tot_new = random_guess(X_tot_dims)
+
+                    elif predictor in ['gbrt_minimize', 'forest_minimize', 'gp_minimize']:
                         import skopt
+
                         predictor_fun = getattr(skopt, predictor)
                         predictor_data = predictor_fun(lambda x: 0, X_tot_dims, x0=X_tot, y0=y, n_calls=1,
                                                        n_random_starts=0)
                         x_tot_new = predictor_data.x_iters[-1]
-
-                    elif predictor == 'random_guess':
-                        x_tot_new = random_guess(X_tot_dims)
 
                     else:
                         try:
@@ -163,16 +175,6 @@ class OptTask(FireTaskBase):
 
                     # separate 'predicted' z features from the new x vector
                     x_new, z_new = x_tot_new[:len(x)], x_tot_new[len(x):]
-
-                    if 'verify_z' in self:
-                        if self['verify_z']:
-                            if 'get_z' in self:
-                                if not self._verify_z(x_new, z_new, self._deserialize_function(self['get_z'])):
-                                    # z is not verified, abort the loop
-                                    # todo: this can cause timeouts/inf loop!!
-                                    continue
-                            else:
-                                raise AttributeError("To verify the z guess, get_z must be specified.")
 
                     # makes sure no repeat x vectors are inserted into the turboworks collection
                     if 'duplicate_check' in self:
@@ -315,29 +317,6 @@ class OptTask(FireTaskBase):
         mod = __import__(str(modname), globals(), locals(), fromlist=[str(funcname)])
         return getattr(mod, funcname)
 
-    def _verify_z(self, x_new, z_new, get_z):
-        """
-        Checks to make sure predicted x is not based on bad z information. 
-        
-        Using z information can help the machine learning algorithm make better predictions. However, z information
-        predicted with a new x guess can make the new x seem good when it is really not. This method checks to make 
-        sure the predicted z matches the predicted x's real z.
-        
-        Args:
-            x_new (list): The new x guess.
-            z_new (list): The predicted z associated with x_new. This may or may not match the true z associated with x_new.
-            get_z (function): The deserialized function which can return a z from x. 
-        
-        Returns:
-            (bool): True indicates that the z was verified. False indicates that the predicted z was too different from
-                the real z associated with x_new, and that the new value of x is based on bad information. 
-        """
-
-        z_real = get_z(x_new)
-        # todo: finish
-        pass
-
-
     def _is_discrete(self, dims):
         """
         Checks if the search space is totally discrete.
@@ -354,8 +333,7 @@ class OptTask(FireTaskBase):
                 return False
         return True
 
-    @staticmethod
-    def _calculate_discrete_space(self, dims):
+    def _calculate_discrete_space(self, dims, float_discretization=False, n_float_points=100):
         """
         Calculates a list of all possible entries of a discrete space from the dimensions of that space. 
 
@@ -370,13 +348,17 @@ class OptTask(FireTaskBase):
         total_dimspace = []
 
         for dim in dims:
-            if type(dim[0]) in self.dtypes.ints:
+            lower = dim[0]
+            upper = dim[1]
+
+            if type(lower) in self.dtypes.ints:
                 # Then the dimension is of the form (lower, upper)
-                lower = dim[0]
-                upper = dim[1]
                 dimspace = list(range(lower, upper + 1))
-            elif type(dim[0]) in self.dtypes.floats:
-                raise ValueError("The dimension is a float. The dimension space is infinite.")
+            elif type(lower) in self.dtypes.floats:
+                if float_discretization:
+                    dimspace = [uniform(lower, upper) for i in range(n_float_points)]
+                else:
+                    raise ValueError("The dimension is a float. The dimension space is infinite.")
             else:  # The dimension is a discrete finite string list
                 dimspace = dim
             total_dimspace.append(dimspace)

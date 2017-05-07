@@ -8,7 +8,7 @@ def preprocess(X, dims):
     pass
 
 
-def predictor(X, y, space, model, n_points = 10000, minimize=True):
+def sk_predictor(X, y, space, model, n_points = 10000, minimize=True):
     """
     Scikit-learn compatible model for stepwise optimization. It uses a regressive predictor evaluated on all possible 
     remaining points in a discrete space. OptTask Z and X are abstracted.
