@@ -122,15 +122,16 @@ class OptTask(FireTaskBase):
                     z = self.get_z(x)
 
                     # gather all docs from the collection
-                    X_tot = []  # the matrix to store all x and z columns together
-                    y = []
+                    X_tot = [x + z]  # the matrix to store all x and z columns together
+                    y = [yi]
                     for doc in self.collection.find(self.opt_format, projection={'x': 1, 'yi': 1, 'z': 1}):
                         X_tot.append(doc['x'] + doc['z'])
                         y.append(doc['yi'])
 
                     # todo: spamming get_z with guesses can be prevented, but it would require this entire section be
                     # todo: (cont.) inside the pid lock loop, hence locking the db for each training
-                    X_space = self._calculate_discrete_space(x_dims, float_discrete=True, n_float_points=100)
+                    self.dtypes = Dtypes()
+                    X_space = self._calculate_discrete_space(x_dims, float_discretization=True, n_float_points=100)
                     X_space_new = [x for x in X_space if self.collection.find({'x': x}).count() == 0]
                     X_tot_space = [x + self.get_z(x) for x in X_space_new]
 
@@ -153,7 +154,7 @@ class OptTask(FireTaskBase):
                         x_tot_new = sk_predictor(X_tot, y, X_tot_space, RandomForestRegressor())
 
                     elif predictor == 'random_guess':
-                        x_tot_new = random_guess(X_tot_dims)
+                        x_tot_new = random_guess(X_tot_dims, self.dtypes)
 
                     elif predictor in ['gbrt_minimize', 'forest_minimize', 'gp_minimize']:
                         import skopt
@@ -179,7 +180,6 @@ class OptTask(FireTaskBase):
                     # makes sure no repeat x vectors are inserted into the turboworks collection
                     if 'duplicate_check' in self:
                         if self['duplicate_check']:
-                            self.dtypes = Dtypes()
                             if self._is_discrete(x_dims):
                                 x_new = self._dupe_check(x, x_dims)
 
@@ -363,7 +363,7 @@ class OptTask(FireTaskBase):
                 dimspace = dim
             total_dimspace.append(dimspace)
 
-        return [[x] for x in total_dimspace[0]] if len(dims) == 1 else list(product(*total_dimspace))
+        return [[x] for x in total_dimspace[0]] if len(dims) == 1 else [list(x) for x in product(*total_dimspace)]
 
     def _dupe_check(self, x, x_dim):
         """
@@ -400,7 +400,7 @@ class OptTask(FireTaskBase):
                                         "The guess cannot be duplicate checked.".format(dim))
                 random_tries += 1
 
-                if randx != x and self.collection.find({'x': randx}) == 0:
+                if randx != x and self.collection.find({'x': randx}).count() == 0:
                     # randx is not in the collection, use it
                     return randx
                 if random_tries == n_random_tries:
@@ -432,7 +432,6 @@ class OptTask(FireTaskBase):
         Returns:
             ([tuple]) a list of dimensions
         """
-        self.dtypes = Dtypes()
         Z = [doc['z'] for doc in self.collection.find(self.opt_format)]
         dims = [[z, z] for z in Z[0]]
         check = dims
@@ -495,7 +494,7 @@ class Dtypes(object):
         self.all = self.numbers + self.others
 
 
-def random_guess(dimensions):
+def random_guess(dimensions, dtypes):
     """
     Returns random new inputs based on the dimensions of the search space.
     It works with float, integer, and categorical types
@@ -509,7 +508,6 @@ def random_guess(dimensions):
             example: [12, 1.9383, "green"]
     """
 
-    dtypes = Dtypes()
     new_input = []
 
     for dimset in dimensions:
