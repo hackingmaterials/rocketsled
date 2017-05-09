@@ -13,6 +13,9 @@ from time import sleep
 from numpy import sctypes
 import random
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.neural_network import MLPRegressor
 
 
 __author__ = "Alexander Dunn"
@@ -161,7 +164,7 @@ class OptTask(FireTaskBase):
                     retrain_interval = self['retrain_interval'] if 'retrain_interval' in self else 1
 
                     if self.collection.find(self.opt_format).count() % retrain_interval == 0:
-                        predictor = 'sk_predictor' if 'predictor' not in self else self['predictor']
+                        predictor = 'RandomForestRegressor' if 'predictor' not in self else self['predictor']
                     else:
                         predictor = 'random_guess'
 
@@ -169,8 +172,24 @@ class OptTask(FireTaskBase):
                     predictor_kwargs = self['predictor_kwargs'] if 'predictor_kwargs' in self else {}
 
                     # todo: transition over to sk predictor only
-                    if predictor == 'sk_predictor':
-                        x_tot_new = self.sk_predictor(X_tot, y, X_tot_space, RandomForestRegressor())
+                    if predictor in ['RandomForestRegressor',
+                                     'GaussianProcessRegressor',
+                                     'LinearRegression',
+                                     'MLPRegressor']:
+
+                        if predictor == 'RandomForestRegressor':
+                            model = RandomForestRegressor
+                        elif predictor == 'GaussianProcessRegressor':
+                            model = GaussianProcessRegressor
+                        elif predictor == 'LinearRegression':
+                            model = LinearRegression
+                        elif predictor == 'MLPRegressor':
+                            model = MLPRegressor
+
+                        x_tot_new = self.sk_predictor(X_tot,
+                                                      y,
+                                                      X_tot_space,
+                                                      model(*predictor_args, **predictor_kwargs))
 
                     elif predictor == 'random_guess':
                         x_tot_new = random_guess(X_tot_dims, self.dtypes)
@@ -473,7 +492,6 @@ class OptTask(FireTaskBase):
         i = values.index(evaluator(values))
         return X_predict[i]
 
-    # todo: deprecate this
     @property
     def _z_dims(self):
         """
