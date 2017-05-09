@@ -11,8 +11,7 @@ from fireworks import FWAction
 from pymongo import MongoClient, ReturnDocument
 from time import sleep
 from numpy import sctypes
-from random import uniform, randint
-from turboworks.predictor import sk_predictor
+import random
 from sklearn.ensemble import RandomForestRegressor
 
 
@@ -66,7 +65,8 @@ class OptTask(FireTaskBase):
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
     optional_params = ['get_z', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
-                       'host', 'port', 'name', 'opt_label', 'lpad', 'retrain_interval']
+                       'host', 'port', 'name', 'opt_label', 'lpad', 'retrain_interval', 'predictor_args',
+                       'predictor_kwargs']
 
     def run_task(self, fw_spec):
         """
@@ -80,39 +80,50 @@ class OptTask(FireTaskBase):
             (FWAction)
         """
 
-        self._setup_db(fw_spec)
-        x = fw_spec['_x_opt']
-        yi = fw_spec['_y_opt']
-
         # the pid identifies the process during parallel duplicate checking
         pid = getpid()
         sleeptime = .001
         max_runs = 10000
         max_resets = 5
+        self._setup_db(fw_spec)
 
-        for run in range(max_resets*max_runs):
+        for run in range(max_resets * max_runs):
             manager_docs = self.collection.find(self.manager_format)
 
             if manager_docs.count() == 0:
                 self.collection.insert_one({'lock': pid, 'queue': []})
             elif manager_docs.count() == 1:
-                manager = self.collection.find_one(self.manager_format)
-                manager_id = manager['_id']
-                lock = manager['lock']
+
+                try:
+                    manager = self.collection.find_one(self.manager_format)
+                    manager_id = manager['_id']
+                    lock = manager['lock']
+
+                except:
+                    continue
 
                 if lock is None:
                     self.collection.find_one_and_update({'_id': manager_id}, {'$set': {'lock': pid}})
 
                 elif lock != pid:
                     if pid not in manager['queue']:
-                        new_queue = self.collection.find_one({'_id': manager_id})['queue']
-                        new_queue.append(pid)
-                        self.collection.find_one_and_update({'_id': manager_id}, {'$set': {'queue': new_queue}})
+
+                        # avoid bootup problems if manager docs are being deleted concurrently with this check
+                        try:
+                            new_queue = self.collection.find_one({'_id': manager_id})['queue']
+                            new_queue.append(pid)
+                            self.collection.find_one_and_update({'_id': manager_id}, {'$set': {'queue': new_queue}})
+
+                        except:
+                            continue
+
                     else:
                         sleep(sleeptime)
 
                 elif lock == pid:
-                    #todo: move lock to just duplicate check function
+
+                    x = fw_spec['_x_opt']
+                    yi = fw_spec['_y_opt']
 
                     # type safety for dimensions to avoid cryptic skopt errors
                     x_dims = [tuple(dim) for dim in self['dimensions']]
@@ -133,6 +144,10 @@ class OptTask(FireTaskBase):
                     self.dtypes = Dtypes()
                     X_space = self._calculate_discrete_space(x_dims, float_discretization=True, n_float_points=100)
                     X_space_new = [x for x in X_space if self.collection.find({'x': x}).count() == 0]
+
+                    if X_space_new == []:
+                        raise Exception("The discrete space has been searched exhaustively.")
+
                     X_tot_space = [x + self.get_z(x) for x in X_space_new]
 
                     # extend the dimensions to z features, so that Z information can be used in optimization
@@ -150,8 +165,12 @@ class OptTask(FireTaskBase):
                     else:
                         predictor = 'random_guess'
 
+                    predictor_args = self['predictor_args'] if 'predictor_args' in self else []
+                    predictor_kwargs = self['predictor_kwargs'] if 'predictor_kwargs' in self else {}
+
+                    # todo: transition over to sk predictor only
                     if predictor == 'sk_predictor':
-                        x_tot_new = sk_predictor(X_tot, y, X_tot_space, RandomForestRegressor())
+                        x_tot_new = self.sk_predictor(X_tot, y, X_tot_space, RandomForestRegressor())
 
                     elif predictor == 'random_guess':
                         x_tot_new = random_guess(X_tot_dims, self.dtypes)
@@ -167,8 +186,8 @@ class OptTask(FireTaskBase):
                     else:
                         try:
                             predictor_fun = self._deserialize_function(predictor)
-                            # todo: add *args, **kwargs for custom predictor
-                            x_tot_new = predictor_fun(X_tot, y, X_tot_dims)
+                            x_tot_new = predictor_fun(X_tot, y, X_tot_dims, X_tot_space, *predictor_args,
+                                                      **predictor_kwargs)
 
                         except Exception as E:
                             raise ValueError(
@@ -181,11 +200,11 @@ class OptTask(FireTaskBase):
                     if 'duplicate_check' in self:
                         if self['duplicate_check']:
                             if self._is_discrete(x_dims):
+                                #todo: deprecate _dupe_check
                                 x_new = self._dupe_check(x, x_dims)
 
                     # make sure a process has not timed out and changed the lock pid while this process
                     # is computing the next guess
-                    # todo: can cause no predictions to be made if the timeout interval is too short.
                     if self.collection.find_one(self.manager_format)['lock'] != pid:
                         continue
                     else:
@@ -217,15 +236,15 @@ class OptTask(FireTaskBase):
 
             else:
                 # there is more than one manager document, eliminate it to try again
-                # todo: this can wind up deleting all manager docs while another process is running ML code
                 self.collection.delete_one(self.manager_format)
 
-            if run in [max_runs*k for k in range(1, max_resets+1)]:
+            if run in [max_runs*k for k in range(1, max_resets)]:
                 # an old process may be stuck on lock, so reset the manager and the queue/lock will repopulate
                 self.collection.find_one_and_update(self.manager_format, {'$set': {'lock': None, 'queue': []}})
 
-        raise Exception("The manager is still stuck after resetting. Make sure no stalled processes are"
-                        " in the queue.")
+            elif run == max_runs*max_resets:
+                raise Exception("The manager is still stuck after resetting. Make sure no stalled processes are"
+                            " in the queue.")
 
     def _setup_db(self, fw_spec):
         """
@@ -285,6 +304,7 @@ class OptTask(FireTaskBase):
         if 'duplicate_check' in self:
             if self['duplicate_check']:
                 # prevents errors when initial guesses are already in the database
+
                 x = spec['x']
                 new_doc = self.collection.find_one_and_replace({'x': x},
                                                                spec,
@@ -356,7 +376,7 @@ class OptTask(FireTaskBase):
                 dimspace = list(range(lower, upper + 1))
             elif type(lower) in self.dtypes.floats:
                 if float_discretization:
-                    dimspace = [uniform(lower, upper) for i in range(n_float_points)]
+                    dimspace = [random.uniform(lower, upper) for i in range(n_float_points)]
                 else:
                     raise ValueError("The dimension is a float. The dimension space is infinite.")
             else:  # The dimension is a discrete finite string list
@@ -376,15 +396,14 @@ class OptTask(FireTaskBase):
         Returns:
             (list) updated input which is either the duplicate-checked input z or a randomly picked replacement
         """
-        n_random_tries = 5
+        n_random_tries = 10
 
         if self.collection.find({'x': x}).count() == 0:
             # x is not in the collection
             return x
+
         else:
             # x is already in the collection
-            import random
-
             random_tries = 0
             while True:
                 randx = []
@@ -407,11 +426,12 @@ class OptTask(FireTaskBase):
                     break
 
             # n_random_tries have been tried and its time to do an expensive duplicate check
+
             total_x = self._calculate_discrete_space(x_dim)
 
             for doc in self.collection.find(self.opt_format):
-                if tuple(doc['x']) in total_x:
-                    total_x.remove(tuple(doc['x']))
+                if doc['x'] in total_x:
+                    total_x.remove(doc['x'])
 
             if len(total_x) == 0:
                 raise ValueError("The search space has been exhausted.")
@@ -421,6 +441,39 @@ class OptTask(FireTaskBase):
             else:
                 return random.choice(total_x)
 
+    def _sk_predictor(self, X, y, space, model, n_points=10000, minimize=True):
+        """
+        Scikit-learn compatible model for stepwise optimization. It uses a regressive predictor evaluated on all possible 
+        remaining points in a discrete space. OptTask Z and X are abstracted.
+
+        Args:
+            X ([list]): List of vectors containing input training data.
+            y (list): List of scalars containing output training data.
+            space ([list]): List of vectors containing all possible inputs. Should be preprocessed before being passed to
+                predictor function.
+            model (sklearn model): The regressor used for predicting the next best guess.
+            n_points (int): The number of points in space to predict over.
+            minimize (bool): Makes predictor return the guess which maximizes the predicted objective function output.
+                Else maximizes the predicted objective function output.  
+
+        Returns:
+            (list) A vector which is predicted to minimize (or maximize) the objective function. This vector contains 
+                extra 'z' features which will need to be discarded in postprocessing. However, 'x' and 'z' information
+                is guaranteed to match. 
+
+        """
+
+        # todo: currently only working with integer/float dimensions
+
+        n_points = len(space) if n_points > len(space) else n_points
+        X_predict = random.sample(space, n_points)
+        model.fit(X, y)
+        values = model.predict(X_predict).tolist()
+        evaluator = min if minimize else max
+        i = values.index(evaluator(values))
+        return X_predict[i]
+
+    # todo: deprecate this
     @property
     def _z_dims(self):
         """
@@ -494,7 +547,7 @@ class Dtypes(object):
         self.all = self.numbers + self.others
 
 
-def random_guess(dimensions, dtypes):
+def random_guess(dimensions, dtypes=Dtypes()):
     """
     Returns random new inputs based on the dimensions of the search space.
     It works with float, integer, and categorical types
@@ -504,28 +557,28 @@ def random_guess(dimensions, dtypes):
             example: [(1,50),(-18.939,22.435),["red", "green" , "blue", "orange"]]
 
     Returns:
-        new_input (list): randomly chosen next parameters in the search space
+        random_vector (list): randomly chosen next parameters in the search space
             example: [12, 1.9383, "green"]
     """
 
-    new_input = []
+    random_vector = []
 
     for dimset in dimensions:
         upper = dimset[1]
         lower = dimset[0]
         if type(lower) in dtypes.ints:
-            new_param = randint(lower, upper)
-            new_input.append(new_param)
+            new_param = random.randint(lower, upper)
+            random_vector.append(new_param)
         elif type(lower) in dtypes.floats:
-            new_param = uniform(lower, upper)
-            new_input.append(new_param)
+            new_param = random.uniform(lower, upper)
+            random_vector.append(new_param)
         elif type(lower) in dtypes.others:
             domain_size = len(dimset)-1
-            new_param = randint(0,domain_size)
-            new_input.append(dimset[new_param])
+            new_param = random.randint(0,domain_size)
+            random_vector.append(dimset[new_param])
         else:
             raise TypeError("The type {} is not supported by dummy opt as a categorical or "
                             "numerical type".format(type(upper)))
 
-    return new_input
+    return random_vector
 
