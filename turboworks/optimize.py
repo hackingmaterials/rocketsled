@@ -131,7 +131,7 @@ class OptTask(FireTaskBase):
                     x_dims = [tuple(dim) for dim in self['dimensions']]
 
                     # fetch additional attributes for constructing machine learning model by calling get_z, if it exists
-                    self.get_z = self._deserialize_function(self['get_z']) if 'get_z' in self else lambda x: []
+                    self.get_z = self._deserialize(self['get_z']) if 'get_z' in self else lambda x: []
                     z = self.get_z(x)
 
                     # gather all docs from the collection
@@ -144,7 +144,7 @@ class OptTask(FireTaskBase):
                     # todo: spamming get_z with guesses can be prevented, but it would require this entire section be
                     # todo: (cont.) inside the pid lock loop, hence locking the db for each training
                     self.dtypes = Dtypes()
-                    X_space = self._calculate_discrete_space(x_dims, float_discretization=True, n_float_points=100)
+                    X_space = self._discretize_space(x_dims, float_discretization=True, n_float_points=100)
                     X_space_new = [x for x in X_space if self.collection.find({'x': x}).count() == 0]
 
                     if X_space_new == []:
@@ -175,7 +175,6 @@ class OptTask(FireTaskBase):
                     predictor_args = self['predictor_args'] if 'predictor_args' in self else []
                     predictor_kwargs = self['predictor_kwargs'] if 'predictor_kwargs' in self else {}
 
-                    # todo: transition over to sk predictor only
                     if predictor in self.predictors:
 
                         if predictor == 'RandomForestRegressor':
@@ -192,14 +191,12 @@ class OptTask(FireTaskBase):
                                                       X_tot_space,
                                                       model(*predictor_args, **predictor_kwargs))
 
-                        print x_tot_new
-
                     elif predictor == 'random_guess':
                         x_tot_new = random_guess(X_tot_dims, self.dtypes)
 
                     else:
                         try:
-                            predictor_fun = self._deserialize_function(predictor)
+                            predictor_fun = self._deserialize(predictor)
                             x_tot_new = predictor_fun(X_tot, y, X_tot_dims, X_tot_space, *predictor_args,
                                                       **predictor_kwargs)
 
@@ -231,7 +228,7 @@ class OptTask(FireTaskBase):
                         self.collection.find_one_and_update({'_id': manager_id},
                                                             {'$set': {'lock': new_lock, 'queue': new_queue}})
 
-                    wf_creator = self._deserialize_function(self['wf_creator'])
+                    wf_creator = self._deserialize(self['wf_creator'])
 
                     wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else []
                     if not isinstance(wf_creator_args, list) or isinstance(wf_creator_args, tuple):
@@ -330,8 +327,7 @@ class OptTask(FireTaskBase):
         else:
             return self.collection.insert_one(spec).inserted_id
 
-
-    def _deserialize_function(self, fun):
+    def _deserialize(self, fun):
         """
         Takes a fireworks serialzed function handle and maps it to a function object.
 
@@ -369,7 +365,7 @@ class OptTask(FireTaskBase):
                 return False
         return True
 
-    def _calculate_discrete_space(self, dims, float_discretization=False, n_float_points=100):
+    def _discretize_space(self, dims, float_discretization=False, n_float_points=100):
         """
         Calculates a list of all possible entries of a discrete space from the dimensions of that space. 
 
@@ -440,7 +436,7 @@ class OptTask(FireTaskBase):
                     return randx
 
             # n_random_tries have been tried and its time to do an expensive duplicate check
-            total_x = self._calculate_discrete_space(x_dim)
+            total_x = self._discretize_space(x_dim)
 
             for doc in self.collection.find(self.opt_format):
                 if doc['x'] in total_x:
@@ -499,7 +495,7 @@ class OptTask(FireTaskBase):
         """
         Z = [doc['z'] for doc in self.collection.find(self.opt_format)]
         dims = [[z, z] for z in Z[0]]
-        check = dims
+        single_doc = dims
 
 
         cat_values = []
@@ -521,7 +517,7 @@ class OptTask(FireTaskBase):
                     else:
                         pass
 
-        if dims == check:  # there's only one document
+        if dims == single_doc:  # there's only one document
             for i, dim in enumerate(dims):
                 if type(dim[0]) in self.dtypes.numbers:
                     # invent some dimensions
@@ -585,7 +581,7 @@ def random_guess(dimensions, dtypes=Dtypes()):
             random_vector.append(new_param)
         elif type(lower) in dtypes.others:
             domain_size = len(dimset)-1
-            new_param = random.randint(0,domain_size)
+            new_param = random.randint(0, domain_size)
             random_vector.append(dimset[new_param])
         else:
             raise TypeError("The type {} is not supported by dummy opt as a categorical or "
