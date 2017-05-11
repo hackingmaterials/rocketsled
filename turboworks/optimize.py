@@ -16,6 +16,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.neural_network import MLPRegressor
+from sklearn.svm import SVR
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
@@ -165,7 +166,8 @@ class OptTask(FireTaskBase):
                     self.predictors = ['RandomForestRegressor',
                                        'GaussianProcessRegressor',
                                        'LinearRegression',
-                                       'MLPRegressor']
+                                       'MLPRegressor',
+                                       'SVR']
 
                     if self.collection.find(self.opt_format).count() % retrain_interval == 0:
                         predictor = 'RandomForestRegressor' if 'predictor' not in self else self['predictor']
@@ -185,6 +187,8 @@ class OptTask(FireTaskBase):
                             model = LinearRegression
                         elif predictor == 'MLPRegressor':
                             model = MLPRegressor
+                        elif predictor == 'SVR':
+                            model = SVR
 
                         x_tot_new = self._predict(X_tot,
                                                       y,
