@@ -284,7 +284,12 @@ class OptTask(FireTaskBase):
         # todo: currently not working with multiprocessing objects!
         elif '_add_launchpad_and_fw_id' in fw_spec:
             if fw_spec['_add_launchpad_and_fw_id']:
-                host, port, name = [getattr(self.launchpad, req) for req in db_reqs]
+                try:
+                    host, port, name = [getattr(self.launchpad, req) for req in db_reqs]
+
+                except AttributeError:
+                    # launchpad tried to get attributes of a multiprocessing proxy object.
+                    raise Exception("_add_launchpad_and_fw_id is currently not working with parallel workflows.")
 
         # todo: add my_launchpad.yaml option via Launchpad.auto_load()?
         else:
@@ -396,7 +401,7 @@ class OptTask(FireTaskBase):
 
     def _dupe_check(self, x, x_dim):
         """
-        Check for duplicates so that expensive workflow will not be needlessly rerun.
+        Check for duplicates in custom predictors so that expensive workflow will not be needlessly rerun.
 
         Args:
             x (list): input to be duplicate checked
@@ -413,8 +418,8 @@ class OptTask(FireTaskBase):
 
         else:
             # x is already in the collection
-            random_tries = 0
-            while True:
+            random_try = 0
+            while random_try <= n_random_tries:
                 randx = []
                 for dim in x_dim:
                     dim_type = type(dim[0])
@@ -426,16 +431,13 @@ class OptTask(FireTaskBase):
                     else:
                         raise TypeError("The dimension {} is not discrete. "
                                         "The guess cannot be duplicate checked.".format(dim))
-                random_tries += 1
+                random_try += 1
 
                 if randx != x and self.collection.find({'x': randx}).count() == 0:
                     # randx is not in the collection, use it
                     return randx
-                if random_tries == n_random_tries:
-                    break
 
             # n_random_tries have been tried and its time to do an expensive duplicate check
-
             total_x = self._calculate_discrete_space(x_dim)
 
             for doc in self.collection.find(self.opt_format):
@@ -521,7 +523,6 @@ class OptTask(FireTaskBase):
             for i, dim in enumerate(dims):
                 if type(dim[0]) in self.dtypes.numbers:
                     # invent some dimensions
-                    # the prediction coming from these dimensions will not be used anyway, since it is z
                     if type(dim[0]) in self.dtypes.floats:
                         dim[0] = dim[0] - 0.05 * dim[0]
                         dim[1] = dim[1] + 0.05 * dim[1]
