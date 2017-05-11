@@ -163,6 +163,11 @@ class OptTask(FireTaskBase):
                     # run machine learner on Z and X features
                     retrain_interval = self['retrain_interval'] if 'retrain_interval' in self else 1
 
+                    self.predictors = ['RandomForestRegressor',
+                                       'GaussianProcessRegressor',
+                                       'LinearRegression',
+                                       'MLPRegressor']
+
                     if self.collection.find(self.opt_format).count() % retrain_interval == 0:
                         predictor = 'RandomForestRegressor' if 'predictor' not in self else self['predictor']
                     else:
@@ -172,10 +177,7 @@ class OptTask(FireTaskBase):
                     predictor_kwargs = self['predictor_kwargs'] if 'predictor_kwargs' in self else {}
 
                     # todo: transition over to sk predictor only
-                    if predictor in ['RandomForestRegressor',
-                                     'GaussianProcessRegressor',
-                                     'LinearRegression',
-                                     'MLPRegressor']:
+                    if predictor in self.predictors:
 
                         if predictor == 'RandomForestRegressor':
                             model = RandomForestRegressor
@@ -186,21 +188,15 @@ class OptTask(FireTaskBase):
                         elif predictor == 'MLPRegressor':
                             model = MLPRegressor
 
-                        x_tot_new = self.sk_predictor(X_tot,
+                        x_tot_new = self._predict(X_tot,
                                                       y,
                                                       X_tot_space,
                                                       model(*predictor_args, **predictor_kwargs))
 
+                        print x_tot_new
+
                     elif predictor == 'random_guess':
                         x_tot_new = random_guess(X_tot_dims, self.dtypes)
-
-                    elif predictor in ['gbrt_minimize', 'forest_minimize', 'gp_minimize']:
-                        import skopt
-
-                        predictor_fun = getattr(skopt, predictor)
-                        predictor_data = predictor_fun(lambda x: 0, X_tot_dims, x0=X_tot, y0=y, n_calls=1,
-                                                       n_random_starts=0)
-                        x_tot_new = predictor_data.x_iters[-1]
 
                     else:
                         try:
@@ -215,11 +211,10 @@ class OptTask(FireTaskBase):
                     # separate 'predicted' z features from the new x vector
                     x_new, z_new = x_tot_new[:len(x)], x_tot_new[len(x):]
 
-                    # makes sure no repeat x vectors are inserted into the turboworks collection
-                    if 'duplicate_check' in self:
+                    # duplicate checking for custom optimizer functions
+                    if 'duplicate_check' in self and predictor not in self.predictors:
                         if self['duplicate_check']:
                             if self._is_discrete(x_dims):
-                                #todo: deprecate _dupe_check
                                 x_new = self._dupe_check(x, x_dims)
 
                     # make sure a process has not timed out and changed the lock pid while this process
@@ -229,9 +224,7 @@ class OptTask(FireTaskBase):
                     else:
                         opt_id = self._store({'z': z, 'yi': yi, 'x': x, 'z_new': z_new, 'x_new': x_new})
 
-                    # update the queue so that the oldest waiting process becomes active and is removed from the queue
                     queue = self.collection.find_one({'_id': manager_id})['queue']
-
                     if not queue:
                         self.collection.find_one_and_update({'_id': manager_id}, {'$set': {'lock': None}})
                     else:
@@ -239,7 +232,6 @@ class OptTask(FireTaskBase):
                         self.collection.find_one_and_update({'_id': manager_id},
                                                             {'$set': {'lock': new_lock, 'queue': new_queue}})
 
-                    # now that the queue is updated and the new guess has been calculated, start a new workflow
                     wf_creator = self._deserialize_function(self['wf_creator'])
 
                     wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else []
@@ -254,11 +246,9 @@ class OptTask(FireTaskBase):
                                     update_spec={'optimization_id': opt_id})
 
             else:
-                # there is more than one manager document, eliminate it to try again
                 self.collection.delete_one(self.manager_format)
 
             if run in [max_runs*k for k in range(1, max_resets)]:
-                # an old process may be stuck on lock, so reset the manager and the queue/lock will repopulate
                 self.collection.find_one_and_update(self.manager_format, {'$set': {'lock': None, 'queue': []}})
 
             elif run == max_runs*max_resets:
@@ -460,7 +450,7 @@ class OptTask(FireTaskBase):
             else:
                 return random.choice(total_x)
 
-    def _sk_predictor(self, X, y, space, model, n_points=10000, minimize=True):
+    def _predict(self, X, y, space, model, n_points=10000, minimize=True):
         """
         Scikit-learn compatible model for stepwise optimization. It uses a regressive predictor evaluated on all possible 
         remaining points in a discrete space. OptTask Z and X are abstracted.
