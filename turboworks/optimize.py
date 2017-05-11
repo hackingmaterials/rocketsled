@@ -152,9 +152,6 @@ class OptTask(FireTaskBase):
 
                     X_space_total = [x + self.get_z(x) for x in X_space_new]
 
-                    # extend the dimensions to z features, so that Z information can be used in optimization
-                    X_dims_total = x_dims + self._z_dims if z != [] else x_dims
-
                     # change y vector if maximum is desired instead of minimum
                     max_on = self['max'] if 'max' in self else False
                     y = [-1 * yi if max_on else yi for yi in y]
@@ -195,12 +192,13 @@ class OptTask(FireTaskBase):
                                                   model(*predictor_args, **predictor_kwargs))
 
                     elif predictor == 'random_guess':
-                        x_tot_new = random_guess(X_dims_total, self.dtypes)
+                        x_new = random_guess(x_dims, self.dtypes)
+                        x_tot_new = x_new + self.get_z(x_new)
 
                     else:
                         try:
                             predictor_fun = self._deserialize(predictor)
-                            x_tot_new = predictor_fun(X_tot, y, X_dims_total, X_space_total, *predictor_args,
+                            x_tot_new = predictor_fun(X_tot, y, X_space_total, *predictor_args,
                                                       **predictor_kwargs)
 
                         except Exception as E:
@@ -486,60 +484,6 @@ class OptTask(FireTaskBase):
 
     def _preprocess(self, X):
         pass
-
-    @property
-    def _z_dims(self):
-        """
-        Creates some z dimensions so that the optimizer can run without the user specifing the z dimension range.
-        Simply sets each dimension equal to the (lowest, highest) values of any z for that dimension in the database.
-        If there is only one document in the database, it sets the dimension to slightly higher and lower values than
-        the z dimension value. For categorical dimensions, it includes all dimensions in z.
-
-        Returns:
-            ([tuple]) a list of dimensions
-        """
-        Z = [doc['z'] for doc in self.collection.find(self.opt_format)]
-        dims = [[z, z] for z in Z[0]]
-        single_doc = dims
-
-
-        cat_values = []
-
-        for z in Z:
-            for i, dim in enumerate(dims):
-                if type(z[i]) in self.dtypes.others:
-                    # the dimension is categorical
-                    if z[i] not in cat_values:
-                        cat_values.append(z[i])
-                        dims[i] = cat_values
-                else:
-                    if z[i] < dim[0]:
-                        # this value is the new minimum
-                        dims[i][0] = z[i]
-                    elif z[i] > dim[1]:
-                        # this value is the new maximum
-                        dims[i][1] = z[i]
-                    else:
-                        pass
-
-        if dims == single_doc:  # there's only one document
-            for i, dim in enumerate(dims):
-                if type(dim[0]) in self.dtypes.numbers:
-                    # invent some dimensions
-                    if type(dim[0]) in self.dtypes.floats:
-                        dim[0] = dim[0] - 0.05 * dim[0]
-                        dim[1] = dim[1] + 0.05 * dim[1]
-                    elif type(dim[0]) in self.dtypes.ints:
-                        dim[0] = dim[0] - 1
-                        dim[1] = dim[1] + 1
-
-                        if dim[0] > dim[1]:
-                            dim = [dim[1], dim[0]]
-
-                        dims[i] = dim
-
-            dims = [tuple(dim) for dim in dims]
-            return dims
 
 class Dtypes(object):
     """

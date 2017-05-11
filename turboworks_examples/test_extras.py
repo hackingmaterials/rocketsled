@@ -11,6 +11,7 @@ from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
 from turboworks.optimize import OptTask, random_guess
 from calculate_task import MixedCalculateTask as CalculateTask
+import random
 
 
 # use a wf_creator function with more arguments...
@@ -45,9 +46,9 @@ def get_z(x):
 # how an example custom optimization function could be used
 # replace the code inside example_predictor with your favorite optimizer
 
-def example_predictor(X_tot, Y, X_tot_dims):
+def example_predictor(X_tot, y, X_space_total):
     # custom optimizer code goes here
-    return random_guess(X_tot_dims)
+    return random.choice(X_space_total)
 
 
 if __name__ == "__main__":
