@@ -102,7 +102,7 @@ class OptTask(FireTaskBase):
                     manager_id = manager['_id']
                     lock = manager['lock']
 
-                except:
+                except KeyError:
                     continue
 
                 if lock is None:
@@ -117,7 +117,7 @@ class OptTask(FireTaskBase):
                             new_queue.append(pid)
                             self.collection.find_one_and_update({'_id': manager_id}, {'$set': {'queue': new_queue}})
 
-                        except:
+                        except KeyError:
                             continue
 
                     else:
@@ -132,7 +132,7 @@ class OptTask(FireTaskBase):
                     x_dims = [tuple(dim) for dim in self['dimensions']]
 
                     # fetch additional attributes for constructing machine learning model by calling get_z, if it exists
-                    self.get_z = self._deserialize(self['get_z']) if 'get_z' in self else lambda x: []
+                    self.get_z = self._deserialize(self['get_z']) if 'get_z' in self else lambda input_vector: []
                     z = self.get_z(x)
 
                     # gather all docs from the collection
@@ -148,13 +148,12 @@ class OptTask(FireTaskBase):
                     X_space = self._discretize_space(x_dims, float_discretization=True, n_float_points=100)
                     X_space_new = [x for x in X_space if self.collection.find({'x': x}).count() == 0]
 
-                    if X_space_new == []:
-                        raise Exception("The discrete space has been searched exhaustively.")
+                    if not X_space_new: raise Exception("The discrete space has been searched exhaustively.")
 
-                    X_tot_space = [x + self.get_z(x) for x in X_space_new]
+                    X_space_total = [x + self.get_z(x) for x in X_space_new]
 
                     # extend the dimensions to z features, so that Z information can be used in optimization
-                    X_tot_dims = x_dims + self._z_dims if z != [] else x_dims
+                    X_dims_total = x_dims + self._z_dims if z != [] else x_dims
 
                     # change y vector if maximum is desired instead of minimum
                     max_on = self['max'] if 'max' in self else False
@@ -191,17 +190,17 @@ class OptTask(FireTaskBase):
                             model = SVR
 
                         x_tot_new = self._predict(X_tot,
-                                                      y,
-                                                      X_tot_space,
-                                                      model(*predictor_args, **predictor_kwargs))
+                                                  y,
+                                                  X_space_total,
+                                                  model(*predictor_args, **predictor_kwargs))
 
                     elif predictor == 'random_guess':
-                        x_tot_new = random_guess(X_tot_dims, self.dtypes)
+                        x_tot_new = random_guess(X_dims_total, self.dtypes)
 
                     else:
                         try:
                             predictor_fun = self._deserialize(predictor)
-                            x_tot_new = predictor_fun(X_tot, y, X_tot_dims, X_tot_space, *predictor_args,
+                            x_tot_new = predictor_fun(X_tot, y, X_dims_total, X_space_total, *predictor_args,
                                                       **predictor_kwargs)
 
                         except Exception as E:
@@ -270,7 +269,6 @@ class OptTask(FireTaskBase):
         db_reqs = ('host', 'port', 'name')
         db_defined = [req in self for req in db_reqs]
 
-        # determine where Mondodb information will be stored
         if all(db_defined):
             host, port, name = [self[k] for k in db_reqs]
 
@@ -486,6 +484,9 @@ class OptTask(FireTaskBase):
         i = values.index(evaluator(values))
         return X_predict[i]
 
+    def _preprocess(self, X):
+        pass
+
     @property
     def _z_dims(self):
         """
@@ -539,7 +540,6 @@ class OptTask(FireTaskBase):
 
             dims = [tuple(dim) for dim in dims]
             return dims
-
 
 class Dtypes(object):
     """
