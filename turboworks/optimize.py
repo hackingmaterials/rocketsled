@@ -102,7 +102,7 @@ class OptTask(FireTaskBase):
                     manager_id = manager['_id']
                     lock = manager['lock']
 
-                except KeyError:
+                except TypeError:
                     continue
 
                 if lock is None:
@@ -117,7 +117,7 @@ class OptTask(FireTaskBase):
                             new_queue.append(pid)
                             self.collection.find_one_and_update({'_id': manager_id}, {'$set': {'queue': new_queue}})
 
-                        except KeyError:
+                        except TypeError:
                             continue
 
                     else:
@@ -136,21 +136,21 @@ class OptTask(FireTaskBase):
                     z = self.get_z(x)
 
                     # gather all docs from the collection
-                    X_tot = [x + z]  # the matrix to store all x and z columns together
+                    XZ = [x + z]  # the matrix to store all x and z columns together
                     y = [yi]
                     for doc in self.collection.find(self.opt_format, projection={'x': 1, 'yi': 1, 'z': 1}):
-                        X_tot.append(doc['x'] + doc['z'])
+                        XZ.append(doc['x'] + doc['z'])
                         y.append(doc['yi'])
 
                     # todo: spamming get_z with guesses can be prevented, but it would require this entire section be
                     # todo: (cont.) inside the pid lock loop, hence locking the db for each training
                     self.dtypes = Dtypes()
                     X_space = self._discretize_space(x_dims, float_discretization=True, n_float_points=100)
-                    X_space_new = [x for x in X_space if self.collection.find({'x': x}).count() == 0]
+                    X_unexplored = [x for x in X_space if self.collection.find({'x': x}).count() == 0]
 
-                    if not X_space_new: raise Exception("The discrete space has been searched exhaustively.")
+                    if not X_unexplored: raise Exception("The discrete space has been searched exhaustively.")
 
-                    X_space_total = [x + self.get_z(x) for x in X_space_new]
+                    XZ_unexplored = [x + self.get_z(x) for x in X_unexplored]
 
                     # change y vector if maximum is desired instead of minimum
                     max_on = self['max'] if 'max' in self else False
@@ -186,19 +186,19 @@ class OptTask(FireTaskBase):
                         elif predictor == 'SVR':
                             model = SVR
 
-                        x_tot_new = self._predict(X_tot,
+                        xz_new = self._predict(XZ,
                                                   y,
-                                                  X_space_total,
+                                                  XZ_unexplored,
                                                   model(*predictor_args, **predictor_kwargs))
 
                     elif predictor == 'random_guess':
                         x_new = random_guess(x_dims, self.dtypes)
-                        x_tot_new = x_new + self.get_z(x_new)
+                        xz_new = x_new + self.get_z(x_new)
 
                     else:
                         try:
                             predictor_fun = self._deserialize(predictor)
-                            x_tot_new = predictor_fun(X_tot, y, X_space_total, *predictor_args,
+                            xz_new = predictor_fun(XZ, y, XZ_unexplored, *predictor_args,
                                                       **predictor_kwargs)
 
                         except Exception as E:
@@ -206,7 +206,7 @@ class OptTask(FireTaskBase):
                                 "The custom predictor function {} did not call correctly! \n {}".format(predictor, E))
 
                     # separate 'predicted' z features from the new x vector
-                    x_new, z_new = x_tot_new[:len(x)], x_tot_new[len(x):]
+                    x_new, z_new = xz_new[:len(x)], xz_new[len(x):]
 
                     # duplicate checking for custom optimizer functions
                     if 'duplicate_check' in self and predictor not in self.predictors:
