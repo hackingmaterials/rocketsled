@@ -7,7 +7,7 @@ from itertools import product
 from os import getpid
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
-from fireworks import FWAction
+from fireworks import FWAction, LaunchPad
 from pymongo import MongoClient, ReturnDocument
 from time import sleep
 from numpy import sctypes
@@ -16,7 +16,6 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.neural_network import MLPRegressor
-
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
@@ -281,7 +280,6 @@ class OptTask(FireTaskBase):
             lpad = self['lpad']
             host, port, name = [lpad[req] for req in db_reqs]
 
-        # todo: currently not working with multiprocessing objects!
         elif '_add_launchpad_and_fw_id' in fw_spec:
             if fw_spec['_add_launchpad_and_fw_id']:
                 try:
@@ -289,13 +287,17 @@ class OptTask(FireTaskBase):
 
                 except AttributeError:
                     # launchpad tried to get attributes of a multiprocessing proxy object.
-                    raise Exception("_add_launchpad_and_fw_id is currently not working with parallel workflows.")
+                    raise Exception("_add_launchpad_and_fw_id is currently working with parallel workflows.")
 
-        # todo: add my_launchpad.yaml option via Launchpad.auto_load()?
         else:
-            raise AttributeError("The optimization database must be specified explicitly (with host, port, and name)"
-                                 " with a Launchpad object (lpad), or by setting _add_launchpad_and_fw_id to True on"
-                                 " the fw_spec.")
+            try:
+                host, port, name = [getattr(LaunchPad.auto_load(), req) for req in db_reqs]
+
+            except AttributeError:
+                # auto_load did not return any launchpad object, so nothing was defined.
+                raise AttributeError("The optimization database must be specified explicitly (with host, port, and"
+                                 " name), with Launchpad object (lpad), by setting _add_launchpad_and_fw_id to True in"
+                                 " the fw_spec, or by defining LAUNCHPAD_LOC in fw_config.py for LaunchPad.auto_load()")
 
         mongo = MongoClient(host, port)
         db = getattr(mongo, name)
