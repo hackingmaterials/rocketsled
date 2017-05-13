@@ -71,6 +71,9 @@ class OptTask(FireTaskBase):
                        'host', 'port', 'name', 'opt_label', 'lpad', 'retrain_interval', 'predictor_args',
                        'predictor_kwargs']
 
+    # todo: update documentation
+    # todo: add onehotencoding
+
     def run_task(self, fw_spec):
         """
         FireTask for running an optimization loop.
