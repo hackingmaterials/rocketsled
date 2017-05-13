@@ -17,6 +17,8 @@ from sklearn.linear_model import LinearRegression
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.svm import SVR
+from sklearn.preprocessing import LabelBinarizer
+import numpy as np
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
@@ -485,8 +487,74 @@ class OptTask(FireTaskBase):
         i = values.index(evaluator(values))
         return X_predict[i]
 
-    def _preprocess(self, X):
-        pass
+    def _preprocess(self, X, dims):
+        self._n_cats = 0
+        self._bin_info = []
+
+        for i, dim in enumerate(dims):
+            if type(dim[0]) in self.dtypes.others:
+
+                cats = [0] * len(X)
+                for j, x in enumerate(X):
+                    cats[j] = x[i - self._n_cats]
+
+                forward_map = {k: v for v, k in enumerate(dim)}
+
+                try:
+                    # Python 2.x
+                    inverse_map = {v: k for k, v in forward_map.iteritems()}
+
+                except:
+                    # Python 3.x
+                    inverse_map = {v: k for k, v in forward_map.items()}
+
+                lb = LabelBinarizer()
+                binary = lb.fit_transform([forward_map[v] for v in dim])
+
+                # print "forward transform input", [forward_map[v] for v in dim]
+                # print "forward transform output", binary
+                #
+                # print "inverse transformed", lb.inverse_transform(np.asarray([binary[0]]))
+
+                for j, x in enumerate(X):
+                    x.remove(x[i - self._n_cats])
+                    x += list(binary[j])
+
+                dim_info = {'original_index': i,
+                            'lb': lb,
+                            'inv_map': inverse_map,
+                            'binary_len': len(binary[0])
+                            }
+
+                self._bin_info.append(dim_info)
+
+                self._n_cats += 1
+
+        return X
+
+    def _postprocess(self, new_x, dims):
+
+        cat_index = 0
+        original_len = len(dims)
+
+        for dim_info in self._bin_info:
+            i = dim_info['original_index']
+            binary_len = dim_info['binary_len']
+            start = original_len - self._n_cats + cat_index
+            end = start + binary_len + cat_index
+            binary = new_x[start:end]
+
+            lb = dim_info['lb']
+
+            inverse_map = dim_info['inv_map']
+            int_value = lb.inverse_transform(np.asarray([binary]))[0]
+            cat_value = inverse_map[int_value]
+            new_x.insert(i, cat_value)
+
+            cat_index += 1
+
+        return new_x[0:original_len]
+
 
 class Dtypes(object):
     """
