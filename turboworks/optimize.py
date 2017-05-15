@@ -1,8 +1,9 @@
 """
-The FireTask for running automatic optimization loops are contained in this module.
+The FireTask for running automatic optimization loops.
 """
 
 import sys
+import random
 from itertools import product
 from os import getpid
 from fireworks.utilities.fw_utilities import explicit_serialize
@@ -11,14 +12,13 @@ from fireworks import FWAction, LaunchPad
 from pymongo import MongoClient, ReturnDocument
 from time import sleep
 from numpy import sctypes
-import random
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.svm import SVR
 from sklearn.preprocessing import LabelBinarizer
-import numpy as np
+from numpy import asarray
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
@@ -40,6 +40,7 @@ class OptTask(FireTaskBase):
         dimensions ([tuple]): each 2-tuple in the list defines the search space in (low, high) format.
             For categorical dimensions, includes all possible categories as a list.
             Example: dimensions = dim = [(1,100), (9.293, 18.2838), ("red", "blue", "green")].
+            
     Optional args:
         get_z (string): the fully-qualified name of a function which, given a x vector, returns another vector z which
             provides extra information to the machine learner. The features defined in z are not used to run the
@@ -48,29 +49,44 @@ class OptTask(FireTaskBase):
                 get_z = 'my_module.my_fun'
                 get_z = '/path/to/folder/containing/my_package.my_module.my_fun'
         predictor (string): names a function which given a list of inputs, a list of outputs, and a dimensions space,
-            can return a new optimized input vector. Can specify either a skopt function or a custom function.
-            Example: predictor = 'my_module.my_predictor'
+            can return a new optimized input vector. Can specify from a list of sklearn regressors or a custom function.
+            Included sklearn predictors are:
+                'LinearRegression'
+                'RandomForestRegressor'
+                'GaussianProcessRegressor'
+                'MLPRegressor'
+                'SVR'
+            Defaults to 'RandomForestRegressor'
+            Example builtin predictor: predictor = 'SVR'
+            Example custom predictor: predictor = 'my_module.my_predictor'
         max (bool): Makes optimization tend toward maximum values instead of minimum ones.
-        wf_creator_args (list): details the positional args to be passed to the wf_creator function alongsize the z
-            vector
+        wf_creator_args (list): the positional args to be passed to the wf_creator function alongsize the z vector
         wf_creator_kwargs (dict): details the kwargs to be passed to the wf_creator function alongside the z vector
-        duplicate_check (bool): If True, checks for duplicate guesss in discrete, finite spaces. (NOT currently 100%
-            working with concurrent workflows). Default is no duplicate check.
-        host (string): The name of the MongoDB host where the optimization data will be stored. The default is
-            'localhost'.
-        port (int): The number of the MongoDB port where the optimization data will be stored. The default is 27017.
+        duplicate_check (bool): If True, checks for duplicate guesss in discrete, finite spaces. Default is no 
+            duplicate check.
+        host (string): The name of the MongoDB host where the optimization data will be stored.
+        port (int): The number of the MongoDB port where the optimization data will be stored.
         name (string): The name of the MongoDB database where the optimization data will be stored.
         lpad (LaunchPad): A Fireworks LaunchPad object.
         opt_label (string): Names the collection of that the particular optinization's data will be stored in. Multiple
-            collections correspond to multiple independent optimization.
+            collections correspond to multiple independent optimizations.
         retrain_interval (int): The number of iterations to wait before retraining the expensive model. On iterations
             where the model is not trained, a random guess is used. 
-        verify_z (bool): if True, will verify that the predicted x guess is not based on a bad z prediction. 
+        n_points (int): The number of points to be searched in the search space when choosing the next best point.
+            Choosing more points to search may increase the effectiveness of the optimization. The default is 10000
+            points. 
+        predictor_args (list): the positional args to be passed to the model along with a list of points to be searched.
+            For sklearn-based predictors included in OptTask, these positional args are passed to the init method of
+            the chosen model. For custom predictors, these are passed to the chosen predictor function alongside the 
+            searched guesses, the output from searched guesses, and an unsearched space to be used with optimization.
+        predictor_kwargs (dict): the kwargs to be passed to the model. Similar to predictor_args.
+        encode_categorical (bool): If True, preprocesses categorical data (strings) to one-hot encoded binary arrays for
+            use with custom predictor functions. Default False. 
     """
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
     optional_params = ['get_z', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
-                       'host', 'port', 'name', 'opt_label', 'lpad', 'retrain_interval', 'n_points', 'predictor_args',
+                       'host', 'port', 'name', 'lpad', 'opt_label', 'retrain_interval', 'n_points', 'predictor_args',
                        'predictor_kwargs', 'encode_categorical']
 
     # todo: update documentation
@@ -84,7 +100,7 @@ class OptTask(FireTaskBase):
                 a '_x_opt' key containing a vector uniquely defining the search space.
 
         Returns:
-            (FWAction)
+            (FWAction) A workflow based on the workflow creator and a new, optimized guess. 
         """
 
         # the pid identifies the process during parallel duplicate checking
@@ -315,6 +331,21 @@ class OptTask(FireTaskBase):
         self.manager_format = {'lock': {'$exists': 1}, 'queue': {'$exists': 1}}
 
     def _check_dims(self, dims):
+        """
+        Ensure the dimensions are in the correct format for the optimzation. 
+        
+        Dimensions should be a list or tuple
+        of lists or tuples each defining the search space in one dimension. The datatypes used inside each dimension's 
+        definition should be NumPy compatible datatypes. Numerical dimensions (floats and ints) should take the form (upper, lower). Categorical dimensions should be 
+        an exhaustive list/tuple such as ['red', 'green', 'blue'].
+        
+        Args:
+            dims (list): The dimensions of the search space. 
+
+        Returns:
+            None
+
+        """
 
         dims_types = [list, tuple]
 
@@ -393,14 +424,19 @@ class OptTask(FireTaskBase):
 
     def _discretize_space(self, dims, n_points = None, discrete_floats=False, n_floats=100):
         """
-        Calculates a list of n_points possible entries of a discrete space from the dimensions of that space. 
+        Create a list of points for searching during optimization. 
 
         Args:
-            dims ([tuple]): list of dimensions of the search space. Individual dimensions should be in (higher, lower)
+            dims ([tuple]): dimensions of the search space. Individual dimensions should be in (higher, lower)
                 form if integers, and should be a comprehensive list if categorical.
+            n_points (int): number of points to search. If None, uses all possible points in the search space.
+            discrete_floats (bool): If true, converts floating point (continuous) dimensions into discrete dimensions 
+                by randomly sampling points between the dimension's (upper, lower) boundaries. If this is set to False, 
+                and there is a continuous dimension, a list of all possible points in the space can't be calculated. 
+            n_floats (int): Number of floating points to sample from continuous dimensions when discrete_float is True.
 
         Returns:
-            ([list]) all possible combinations inside the discrete space
+            ([list]) Points of the search space. 
         """
 
         total_dimspace = []
@@ -431,8 +467,12 @@ class OptTask(FireTaskBase):
 
     def _predict(self, X, y, space, model, minimize=True):
         """
-        Scikit-learn compatible model for stepwise optimization. It uses a regressive predictor evaluated on all possible 
-        remaining points in a discrete space. OptTask Z and X are abstracted.
+        Scikit-learn compatible model for stepwise optimization. It uses a regressive predictor evaluated on
+        remaining points in a discrete space.
+        
+        Since sklearn modules cannot deal with categorical data, categorical data is preprocessed by _preprocess before
+        being passed to _predict, and predicted x vectors are postprocessed by _postprocess to convert to the original 
+        categorical dimensions.
 
         Args:
             X ([list]): List of vectors containing input training data.
@@ -445,9 +485,7 @@ class OptTask(FireTaskBase):
                 Else maximizes the predicted objective function output.  
 
         Returns:
-            (list) A vector which is predicted to minimize (or maximize) the objective function. This vector contains 
-                extra 'z' features which will need to be discarded in postprocessing. However, 'x' and 'z' information
-                is guaranteed to match. 
+            (list) A vector which is predicted to minimize (or maximize) the objective function.
 
         """
         model.fit(X, y)
@@ -457,7 +495,20 @@ class OptTask(FireTaskBase):
         return space[i]
 
     def _preprocess(self, X, dims):
+        """
+        Transforms data containing categorical information to "one-hot" encoded data, since sklearn cannot process 
+        categorical data on its own.
+        
+        Args:
+            X ([list]): The search space, possibly containing categorical dimensions.
+            dims: The dimensions of the search space. Used to define all possible choices for categorical dimensions
+                so that categories are properly encoded.
 
+        Returns:
+            X ([list]): "One-hot" encoded forms of X data containing categorical dimensions. Search spaces which are 
+                completely numerical are unchanged. 
+
+        """
         self._n_cats = 0
         self._bin_info = []
 
@@ -486,10 +537,21 @@ class OptTask(FireTaskBase):
         return X
 
     def _postprocess(self, new_x, dims):
+        """
+        Convert a "one-hot" encoded point (the predicted guess) back to the original categorical dimensions. 
+        
+        Args:
+            new_x (list): The "one-hot" encoded new x vector predicted by the predictor.
+            dims ([list]): The dimensions of the search space.
+
+        Returns:
+            categorical_new_x (list): The new_x vector in categorical dimensions. 
+
+        """
 
         original_len = len(dims)
         static_len = original_len - self._n_cats
-        exported_new_x = []
+        categorical_new_x = []
         cat_index = 0
         tot_bin_len = 0
 
@@ -505,24 +567,26 @@ class OptTask(FireTaskBase):
                 end = start + binary_len
                 binary = new_x[start:end]
 
-                int_value = lb.inverse_transform(np.asarray([binary]))[0]
+                int_value = lb.inverse_transform(asarray([binary]))[0]
                 cat_value = inverse_map[int_value]
-                exported_new_x.append(cat_value)
+                categorical_new_x.append(cat_value)
 
                 cat_index += 1
                 tot_bin_len += binary_len
 
             else:
-                exported_new_x.append(new_x[i - cat_index])
+                categorical_new_x.append(new_x[i - cat_index])
 
-        return exported_new_x
+        return categorical_new_x
 
     def _z_dims(self, XZ_unexplored, x_length):
         """
-        Prepare dims to use in preprocessing for categorical dimensions
+        Prepare dims to use in preprocessing for categorical dimensions. Gathers a list of possible dimensions from 
+        stored and current z vectors. Not actually used for creating a list of possible search points, only for
+        helping to convert possible search points from categorical to integer/float. 
         
         Returns:
-            ([tuple]) a list of dimensions
+            ([tuple]) dimensions for the z space
         """
 
         Z_unexplored = [z[x_length:] for z in XZ_unexplored]
