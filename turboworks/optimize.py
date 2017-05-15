@@ -133,8 +133,8 @@ class OptTask(FireTaskBase):
                     yi = fw_spec['_y_opt']
                     self.dtypes = Dtypes()
 
-                    # type safety for dimensions to avoid cryptic skopt errors
-                    x_dims = [tuple(dim) for dim in self['dimensions']]
+                    x_dims = self['dimensions']
+                    self._check_dims(x_dims)
 
                     # fetch additional attributes for constructing machine learning model by calling get_z, if it exists
                     self.get_z = self._deserialize(self['get_z']) if 'get_z' in self else lambda input_vector: []
@@ -313,6 +313,22 @@ class OptTask(FireTaskBase):
 
         self.opt_format = {'x': {'$exists': 1}, 'yi': {'$exists': 1}, 'z': {'$exists': 1}}
         self.manager_format = {'lock': {'$exists': 1}, 'queue': {'$exists': 1}}
+
+    def _check_dims(self, dims):
+
+        dims_types = [list, tuple]
+
+        if type(dims) not in dims_types:
+            raise TypeError("The dimensions must be a list or tuple.")
+
+        for dim in dims:
+            if type(dim) not in dims_types:
+                raise TypeError("The dimension {} must be a list or tuple.".format(dim))
+
+            for entry in dim:
+                if type(entry) not in self.dtypes.all:
+                    raise TypeError("The entry {} in dimension {} cannot be used with OptTask."
+                                    "A list of acceptable datatypes is {}".format(entry, dim, self.dtypes.all))
 
     def _store(self, spec):
         """
