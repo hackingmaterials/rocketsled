@@ -151,7 +151,7 @@ class OptTask(FireTaskBase):
                     # todo: spamming get_z with guesses can be prevented, but it would require this entire section be
                     # todo: (cont.) inside the pid lock loop, hence locking the db for each training
                     X_space = self._discretize_space(x_dims, float_discretization=True, n_float_points=100)
-                    X_unexplored = [x for x in X_space if self.collection.find({'x': x}).count() == 0]
+                    X_unexplored = [xi for xi in X_space if self.collection.find({'x': xi}).count() == 0 and xi != x]
 
                     if not X_unexplored: raise Exception("The discrete space has been searched exhaustively.")
 
@@ -191,9 +191,6 @@ class OptTask(FireTaskBase):
                             model = MLPRegressor
                         elif predictor == 'SVR':
                             model = SVR
-
-                        print "XZ", XZ
-                        print "XZ_unexplored", XZ_unexplored
 
                         XZ = self._preprocess(XZ, xz_dims)
                         XZ_unexplored = self._preprocess(XZ_unexplored, xz_dims)

@@ -18,12 +18,15 @@ def wf_creator(x):
                                   duplicate_check=True,
                                   opt_label="opt_categorical")],
                          spec=fw1_spec)
-
     return Workflow([firework1])
 
 
 def get_z(x):
-    return [x[0]**2, x[0] * x[1]]
+    if x[1] == 1:
+        cat = "tiger"
+    else:
+        cat = "lion"
+    return [x[0]**2, cat]
 
 
 if __name__ == "__main__":
