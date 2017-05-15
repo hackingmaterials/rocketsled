@@ -488,6 +488,7 @@ class OptTask(FireTaskBase):
         return X_predict[i]
 
     def _preprocess(self, X, dims):
+        
         self._n_cats = 0
         self._bin_info = []
 
@@ -499,61 +500,53 @@ class OptTask(FireTaskBase):
                     cats[j] = x[i - self._n_cats]
 
                 forward_map = {k: v for v, k in enumerate(dim)}
-
-                try:
-                    # Python 2.x
-                    inverse_map = {v: k for k, v in forward_map.iteritems()}
-
-                except:
-                    # Python 3.x
-                    inverse_map = {v: k for k, v in forward_map.items()}
+                inverse_map = {v: k for k, v in forward_map.items()}
 
                 lb = LabelBinarizer()
-                binary = lb.fit_transform([forward_map[v] for v in dim])
-
-                # print "forward transform input", [forward_map[v] for v in dim]
-                # print "forward transform output", binary
-                #
-                # print "inverse transformed", lb.inverse_transform(np.asarray([binary[0]]))
+                lb.fit([forward_map[v] for v in dim])
+                binary = lb.transform([forward_map[v] for v in cats])
 
                 for j, x in enumerate(X):
-                    x.remove(x[i - self._n_cats])
+                    del (x[i - self._n_cats])
                     x += list(binary[j])
 
-                dim_info = {'original_index': i,
-                            'lb': lb,
-                            'inv_map': inverse_map,
-                            'binary_len': len(binary[0])
-                            }
-
+                dim_info = {'lb': lb, 'inverse_map': inverse_map, 'binary_len': len(binary[0])}
                 self._bin_info.append(dim_info)
-
                 self._n_cats += 1
 
         return X
 
     def _postprocess(self, new_x, dims):
 
-        cat_index = 0
         original_len = len(dims)
+        static_len = original_len - self._n_cats
+        exported_new_x = []
+        cat_index = 0
+        tot_bin_len = 0
 
-        for dim_info in self._bin_info:
-            i = dim_info['original_index']
-            binary_len = dim_info['binary_len']
-            start = original_len - self._n_cats + cat_index
-            end = start + binary_len + cat_index
-            binary = new_x[start:end]
+        for i, dim in enumerate(dims):
+            if type(dim[0]) in self.dtypes.others:
+                dim_info = self._bin_info[cat_index]
 
-            lb = dim_info['lb']
+                binary_len = dim_info['binary_len']
+                lb = dim_info['lb']
+                inverse_map = dim_info['inverse_map']
 
-            inverse_map = dim_info['inv_map']
-            int_value = lb.inverse_transform(np.asarray([binary]))[0]
-            cat_value = inverse_map[int_value]
-            new_x.insert(i, cat_value)
+                start = static_len + tot_bin_len
+                end = start + binary_len
+                binary = new_x[start:end]
 
-            cat_index += 1
+                int_value = lb.inverse_transform(np.asarray([binary]))[0]
+                cat_value = inverse_map[int_value]
+                exported_new_x.append(cat_value)
 
-        return new_x[0:original_len]
+                cat_index += 1
+                tot_bin_len += binary_len
+
+            else:
+                exported_new_x.append(new_x[i - cat_index])
+
+        return exported_new_x
 
 
 class Dtypes(object):
