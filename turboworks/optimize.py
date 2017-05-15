@@ -131,14 +131,15 @@ class OptTask(FireTaskBase):
 
                     x = fw_spec['_x_opt']
                     yi = fw_spec['_y_opt']
+                    self.dtypes = Dtypes()
 
                     # type safety for dimensions to avoid cryptic skopt errors
                     x_dims = [tuple(dim) for dim in self['dimensions']]
-                    xz_dims = x_dims + self._z_dims
 
                     # fetch additional attributes for constructing machine learning model by calling get_z, if it exists
                     self.get_z = self._deserialize(self['get_z']) if 'get_z' in self else lambda input_vector: []
                     z = self.get_z(x)
+
 
                     # gather all docs from the collection
                     XZ = [x + z]  # the matrix to store all x and z columns together
@@ -149,13 +150,13 @@ class OptTask(FireTaskBase):
 
                     # todo: spamming get_z with guesses can be prevented, but it would require this entire section be
                     # todo: (cont.) inside the pid lock loop, hence locking the db for each training
-                    self.dtypes = Dtypes()
                     X_space = self._discretize_space(x_dims, float_discretization=True, n_float_points=100)
                     X_unexplored = [x for x in X_space if self.collection.find({'x': x}).count() == 0]
 
                     if not X_unexplored: raise Exception("The discrete space has been searched exhaustively.")
 
-                    XZ_unexplored = [x + self.get_z(x) for x in X_unexplored]
+                    XZ_unexplored = [xi + self.get_z(xi) for xi in X_unexplored]
+                    xz_dims = x_dims + self._z_dims(XZ_unexplored, len(x))
 
                     # change y vector if maximum is desired instead of minimum
                     max_on = self['max'] if 'max' in self else False
@@ -191,7 +192,11 @@ class OptTask(FireTaskBase):
                         elif predictor == 'SVR':
                             model = SVR
 
+                        print "XZ", XZ
+                        print "XZ_unexplored", XZ_unexplored
+
                         XZ = self._preprocess(XZ, xz_dims)
+                        XZ_unexplored = self._preprocess(XZ_unexplored, xz_dims)
                         xz_onehot = self._predict(XZ, y, XZ_unexplored, model(*pred_args, **pred_kwargs))
                         xz_new = self._postprocess(xz_onehot, xz_dims)
 
@@ -201,7 +206,6 @@ class OptTask(FireTaskBase):
                         xz_new = x_new + self.get_z(x_new)
 
                     else:
-
                         if 'encode_categorical' in self:
                             if self['encode_categorical']:
                                 XZ = self._preprocess(XZ, xz_dims)
@@ -549,15 +553,18 @@ class OptTask(FireTaskBase):
 
         return exported_new_x
 
-    @property
-    def _z_dims(self):
+    def _z_dims(self, XZ_unexplored, x_length):
         """
         Prepare dims to use in preprocessing for categorical dimensions
         
         Returns:
             ([tuple]) a list of dimensions
         """
-        Z = [doc['z'] for doc in self.collection.find(self.opt_format)]
+
+        Z_unexplored = [z[x_length:] for z in XZ_unexplored]
+        Z_explored = [doc['z'] for doc in self.collection.find(self.opt_format)]
+        Z = Z_explored + Z_unexplored
+
         dims = [(z, z) for z in Z[0]]
 
         for i, dim in enumerate(dims):
