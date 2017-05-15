@@ -236,9 +236,9 @@ class OptTask(FireTaskBase):
                     if not queue:
                         self.collection.find_one_and_update({'_id': manager_id}, {'$set': {'lock': None}})
                     else:
-                        new_lock, new_queue = queue[0], queue[1:]
+                        new_lock = queue.pop(0)
                         self.collection.find_one_and_update({'_id': manager_id},
-                                                            {'$set': {'lock': new_lock, 'queue': new_queue}})
+                                                            {'$set': {'lock': new_lock, 'queue': queue}})
 
                     wf_creator = self._deserialize(self['wf_creator'])
 
