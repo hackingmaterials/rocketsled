@@ -59,9 +59,9 @@ if __name__ == "__main__":
     launchpad.add_wf(wf_creator([1, 1, 2, "red"], launchpad, 3, my_kwarg=1))
 
 
-    # if n_launches > 23 for this particular example, the search space will be exhausted and OptTask will throw
+    # if n_launches > 24 for this particular example, the search space will be exhausted and OptTask will throw
     # an exception
-    rapidfire(launchpad, nlaunches=23, sleep_time=0)
+    rapidfire(launchpad, nlaunches=25, sleep_time=0)
 
     # tear down database
     # launchpad.connection.drop_database(TESTDB_NAME)

@@ -70,7 +70,7 @@ class OptTask(FireTaskBase):
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
     optional_params = ['get_z', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
-                       'host', 'port', 'name', 'opt_label', 'lpad', 'retrain_interval', 'predictor_args',
+                       'host', 'port', 'name', 'opt_label', 'lpad', 'retrain_interval', 'n_points', 'predictor_args',
                        'predictor_kwargs', 'encode_categorical']
 
     # todo: update documentation
@@ -140,9 +140,8 @@ class OptTask(FireTaskBase):
                     self.get_z = self._deserialize(self['get_z']) if 'get_z' in self else lambda input_vector: []
                     z = self.get_z(x)
 
-
-                    # gather all docs from the collection
-                    XZ = [x + z]  # the matrix to store all x and z columns together
+                    # compound the additional attributes to the unique vectors to feed into machine learning
+                    XZ = [x + z]
                     y = [yi]
                     for doc in self.collection.find(self.opt_format, projection={'x': 1, 'yi': 1, 'z': 1}):
                         XZ.append(doc['x'] + doc['z'])
@@ -150,7 +149,8 @@ class OptTask(FireTaskBase):
 
                     # todo: spamming get_z with guesses can be prevented, but it would require this entire section be
                     # todo: (cont.) inside the pid lock loop, hence locking the db for each training
-                    X_space = self._discretize_space(x_dims, float_discretization=True, n_float_points=100)
+                    n_points = self['n_points'] if 'n_points' in self else 10000
+                    X_space = self._discretize_space(x_dims, n_points=n_points, discrete_floats=True, n_floats=100)
                     X_unexplored = [xi for xi in X_space if self.collection.find({'x': xi}).count() == 0 and xi != x]
 
                     if not X_unexplored: raise Exception("The discrete space has been searched exhaustively.")
@@ -164,6 +164,7 @@ class OptTask(FireTaskBase):
 
                     # run machine learner on Z and X features
                     retrain_interval = self['retrain_interval'] if 'retrain_interval' in self else 1
+                    encode_categorical = self['encode_categorical'] if 'encode_categorical' in self else False
 
                     self.predictors = ['RandomForestRegressor',
                                        'GaussianProcessRegressor',
@@ -197,15 +198,14 @@ class OptTask(FireTaskBase):
                         xz_onehot = self._predict(XZ, y, XZ_unexplored, model(*pred_args, **pred_kwargs))
                         xz_new = self._postprocess(xz_onehot, xz_dims)
 
-
                     elif predictor == 'random_guess':
                         x_new = random_guess(x_dims, self.dtypes)
                         xz_new = x_new + self.get_z(x_new)
 
                     else:
-                        if 'encode_categorical' in self:
-                            if self['encode_categorical']:
-                                XZ = self._preprocess(XZ, xz_dims)
+                        if encode_categorical:
+                            XZ = self._preprocess(XZ, xz_dims)
+                            XZ_unexplored = self._preprocess(XZ_unexplored, xz_dims)
 
                         try:
                             predictor_fun = self._deserialize(predictor)
@@ -222,7 +222,8 @@ class OptTask(FireTaskBase):
                     if 'duplicate_check' in self and predictor not in self.predictors:
                         if self['duplicate_check']:
                             if self._is_discrete(x_dims):
-                                x_new = self._dupe_check(x, x_dims)
+                                x_new = random.choice(X_unexplored)
+                                z_new = self.get_z(x_new)
 
                     # make sure a process has not timed out and changed the lock pid while this process
                     # is computing the next guess
@@ -327,7 +328,6 @@ class OptTask(FireTaskBase):
         if 'duplicate_check' in self:
             if self['duplicate_check']:
                 # prevents errors when initial guesses are already in the database
-
                 x = spec['x']
                 new_doc = self.collection.find_one_and_replace({'x': x},
                                                                spec,
@@ -375,9 +375,9 @@ class OptTask(FireTaskBase):
                 return False
         return True
 
-    def _discretize_space(self, dims, float_discretization=False, n_float_points=100):
+    def _discretize_space(self, dims, n_points = None, discrete_floats=False, n_floats=100):
         """
-        Calculates a list of all possible entries of a discrete space from the dimensions of that space. 
+        Calculates a list of n_points possible entries of a discrete space from the dimensions of that space. 
 
         Args:
             dims ([tuple]): list of dimensions of the search space. Individual dimensions should be in (higher, lower)
@@ -397,70 +397,23 @@ class OptTask(FireTaskBase):
                 # Then the dimension is of the form (lower, upper)
                 dimspace = list(range(lower, upper + 1))
             elif type(lower) in self.dtypes.floats:
-                if float_discretization:
-                    dimspace = [random.uniform(lower, upper) for i in range(n_float_points)]
+                if discrete_floats:
+                    dimspace = [random.uniform(lower, upper) for i in range(n_floats)]
                 else:
                     raise ValueError("The dimension is a float. The dimension space is infinite.")
             else:  # The dimension is a discrete finite string list
                 dimspace = dim
             total_dimspace.append(dimspace)
 
-        return [[x] for x in total_dimspace[0]] if len(dims) == 1 else [list(x) for x in product(*total_dimspace)]
+        space = [[x] for x in total_dimspace[0]] if len(dims) == 1 else [list(x) for x in product(*total_dimspace)]
 
-    def _dupe_check(self, x, x_dim):
-        """
-        Check for duplicates in custom predictors so that expensive workflow will not be needlessly rerun.
-
-        Args:
-            x (list): input to be duplicate checked
-            x_dim ([tuples]): space in which to check for duplicate
-
-        Returns:
-            (list) updated input which is either the duplicate-checked input z or a randomly picked replacement
-        """
-        n_random_tries = 10
-
-        if self.collection.find({'x': x}).count() == 0:
-            # x is not in the collection
-            return x
-
+        if not n_points:
+            return space
         else:
-            # x is already in the collection
-            random_try = 0
-            while random_try <= n_random_tries:
-                randx = []
-                for dim in x_dim:
-                    dim_type = type(dim[0])
-                    if dim_type in self.dtypes.discrete:
-                        if dim_type in self.dtypes.ints:
-                            randx.append(random.randint(dim[0], dim[1]))
-                        elif dim_type in self.dtypes.others:
-                            randx.append(random.choice(dim))
-                    else:
-                        raise TypeError("The dimension {} is not discrete. "
-                                        "The guess cannot be duplicate checked.".format(dim))
-                random_try += 1
+            n_points = len(space) if n_points > len(space) else n_points
+            return random.sample(space, n_points)
 
-                if randx != x and self.collection.find({'x': randx}).count() == 0:
-                    # randx is not in the collection, use it
-                    return randx
-
-            # n_random_tries have been tried and its time to do an expensive duplicate check
-            total_x = self._discretize_space(x_dim)
-
-            for doc in self.collection.find(self.opt_format):
-                if doc['x'] in total_x:
-                    total_x.remove(doc['x'])
-
-            if len(total_x) == 0:
-                raise ValueError("The search space has been exhausted.")
-
-            if x in total_x:
-                return x
-            else:
-                return random.choice(total_x)
-
-    def _predict(self, X, y, space, model, n_points=10000, minimize=True):
+    def _predict(self, X, y, space, model, minimize=True):
         """
         Scikit-learn compatible model for stepwise optimization. It uses a regressive predictor evaluated on all possible 
         remaining points in a discrete space. OptTask Z and X are abstracted.
@@ -481,13 +434,11 @@ class OptTask(FireTaskBase):
                 is guaranteed to match. 
 
         """
-        n_points = len(space) if n_points > len(space) else n_points
-        X_predict = random.sample(space, n_points)
         model.fit(X, y)
-        values = model.predict(X_predict).tolist()
+        values = model.predict(space).tolist()
         evaluator = min if minimize else max
         i = values.index(evaluator(values))
-        return X_predict[i]
+        return space[i]
 
     def _preprocess(self, X, dims):
 
