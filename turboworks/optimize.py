@@ -71,10 +71,9 @@ class OptTask(FireTaskBase):
     required_params = ['wf_creator', 'dimensions']
     optional_params = ['get_z', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
                        'host', 'port', 'name', 'opt_label', 'lpad', 'retrain_interval', 'predictor_args',
-                       'predictor_kwargs']
+                       'predictor_kwargs', 'encode_categorical']
 
     # todo: update documentation
-    # todo: add onehotencoding
 
     def run_task(self, fw_spec):
         """
@@ -135,6 +134,7 @@ class OptTask(FireTaskBase):
 
                     # type safety for dimensions to avoid cryptic skopt errors
                     x_dims = [tuple(dim) for dim in self['dimensions']]
+                    xz_dims = x_dims + self._z_dims
 
                     # fetch additional attributes for constructing machine learning model by calling get_z, if it exists
                     self.get_z = self._deserialize(self['get_z']) if 'get_z' in self else lambda input_vector: []
@@ -175,8 +175,8 @@ class OptTask(FireTaskBase):
                     else:
                         predictor = 'random_guess'
 
-                    predictor_args = self['predictor_args'] if 'predictor_args' in self else []
-                    predictor_kwargs = self['predictor_kwargs'] if 'predictor_kwargs' in self else {}
+                    pred_args = self['predictor_args'] if 'predictor_args' in self else []
+                    pred_kwargs = self['predictor_kwargs'] if 'predictor_kwargs' in self else {}
 
                     if predictor in self.predictors:
 
@@ -191,22 +191,24 @@ class OptTask(FireTaskBase):
                         elif predictor == 'SVR':
                             model = SVR
 
-                        XZ_transform = self._preprocess(XZ, x_dims)
-                        xz_transform = self._predict(XZ_transform,
-                                                     y,
-                                                     XZ_unexplored,
-                                                     model(*predictor_args, **predictor_kwargs))
-                        xz_new = self._postprocess(xz_transform, x_dims)
-                        
+                        XZ = self._preprocess(XZ, xz_dims)
+                        xz_onehot = self._predict(XZ, y, XZ_unexplored, model(*pred_args, **pred_kwargs))
+                        xz_new = self._postprocess(xz_onehot, xz_dims)
+
 
                     elif predictor == 'random_guess':
                         x_new = random_guess(x_dims, self.dtypes)
                         xz_new = x_new + self.get_z(x_new)
 
                     else:
+
+                        if 'encode_categorical' in self:
+                            if self['encode_categorical']:
+                                XZ = self._preprocess(XZ, xz_dims)
+
                         try:
                             predictor_fun = self._deserialize(predictor)
-                            xz_new = predictor_fun(XZ, y, XZ_unexplored, *predictor_args, **predictor_kwargs)
+                            xz_new = predictor_fun(XZ, y, XZ_unexplored, *pred_args, **pred_kwargs)
 
                         except Exception as E:
                             raise ValueError(
@@ -478,9 +480,6 @@ class OptTask(FireTaskBase):
                 is guaranteed to match. 
 
         """
-
-        # todo: currently only working with integer/float dimensions
-
         n_points = len(space) if n_points > len(space) else n_points
         X_predict = random.sample(space, n_points)
         model.fit(X, y)
@@ -549,6 +548,27 @@ class OptTask(FireTaskBase):
                 exported_new_x.append(new_x[i - cat_index])
 
         return exported_new_x
+
+    @property
+    def _z_dims(self):
+        """
+        Prepare dims to use in preprocessing for categorical dimensions
+        
+        Returns:
+            ([tuple]) a list of dimensions
+        """
+        Z = [doc['z'] for doc in self.collection.find(self.opt_format)]
+        dims = [(z, z) for z in Z[0]]
+
+        for i, dim in enumerate(dims):
+            cat_values = []
+            for z in Z:
+                if type(z[i]) in self.dtypes.others:
+                    # the dimension is categorical
+                    if z[i] not in cat_values:
+                        cat_values.append(z[i])
+                        dims[i] = cat_values
+        return dims
 
 
 class Dtypes(object):
