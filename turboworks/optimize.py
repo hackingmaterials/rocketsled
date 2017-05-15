@@ -191,10 +191,13 @@ class OptTask(FireTaskBase):
                         elif predictor == 'SVR':
                             model = SVR
 
-                        xz_new = self._predict(XZ,
-                                                  y,
-                                                  XZ_unexplored,
-                                                  model(*predictor_args, **predictor_kwargs))
+                        XZ_transform = self._preprocess(XZ, x_dims)
+                        xz_transform = self._predict(XZ_transform,
+                                                     y,
+                                                     XZ_unexplored,
+                                                     model(*predictor_args, **predictor_kwargs))
+                        xz_new = self._postprocess(xz_transform, x_dims)
+                        
 
                     elif predictor == 'random_guess':
                         x_new = random_guess(x_dims, self.dtypes)
@@ -203,8 +206,7 @@ class OptTask(FireTaskBase):
                     else:
                         try:
                             predictor_fun = self._deserialize(predictor)
-                            xz_new = predictor_fun(XZ, y, XZ_unexplored, *predictor_args,
-                                                      **predictor_kwargs)
+                            xz_new = predictor_fun(XZ, y, XZ_unexplored, *predictor_args, **predictor_kwargs)
 
                         except Exception as E:
                             raise ValueError(
@@ -488,7 +490,7 @@ class OptTask(FireTaskBase):
         return X_predict[i]
 
     def _preprocess(self, X, dims):
-        
+
         self._n_cats = 0
         self._bin_info = []
 
