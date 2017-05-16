@@ -49,7 +49,8 @@ class OptTask(FireTaskBase):
                 get_z = 'my_module.my_fun'
                 get_z = '/path/to/folder/containing/my_package.my_module.my_fun'
         predictor (string): names a function which given a list of inputs, a list of outputs, and a dimensions space,
-            can return a new optimized input vector. Can specify from a list of sklearn regressors or a custom function.
+            and a machine learning regressor can return a new optimized input vector. Can specify from a list of 
+            sklearn regressors or a custom function.
             Included sklearn predictors are:
                 'LinearRegression'
                 'RandomForestRegressor'
@@ -68,7 +69,7 @@ class OptTask(FireTaskBase):
         port (int): The number of the MongoDB port where the optimization data will be stored.
         name (string): The name of the MongoDB database where the optimization data will be stored.
         lpad (LaunchPad): A Fireworks LaunchPad object.
-        opt_label (string): Names the collection of that the particular optinization's data will be stored in. Multiple
+        opt_label (string): Names the collection of that the particular optimization's data will be stored in. Multiple
             collections correspond to multiple independent optimizations.
         retrain_interval (int): The number of iterations to wait before retraining the expensive model. On iterations
             where the model is not trained, a random guess is used. 
@@ -82,14 +83,24 @@ class OptTask(FireTaskBase):
         predictor_kwargs (dict): the kwargs to be passed to the model. Similar to predictor_args.
         encode_categorical (bool): If True, preprocesses categorical data (strings) to one-hot encoded binary arrays for
             use with custom predictor functions. Default False. 
+            
+    Attributes:
+        collection (MongoDB collection): The collection to store the optimization data.
+        manager_format (dict/MongoDB query syntax): The document format which details how the manager (for parallel
+            optimizations) are managed.
+        opt_format (dict/MongoDB query syntax): The document format which details how the optimization data (on a per
+            optimization loop basis) is stored. 
+        dtypes (Dtypes): Object containing the datatypes available for optimization.
+        predictors ([str]): Built in sklearn regressors available for optimization with OptTask.
+        launchpad (LaunchPad): The Fireworks LaunchPad object which determines where workflow data is stored.
+        _n_cats (int): The number of categorical dimensions.
+        _encoding_info (dict): Data for converting between one-hot encoded data and categorical data.
     """
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
     optional_params = ['get_z', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
                        'host', 'port', 'name', 'lpad', 'opt_label', 'retrain_interval', 'n_points', 'predictor_args',
                        'predictor_kwargs', 'encode_categorical']
-
-    # todo: update documentation
 
     def run_task(self, fw_spec):
         """
@@ -163,13 +174,12 @@ class OptTask(FireTaskBase):
                         XZ.append(doc['x'] + doc['z'])
                         y.append(doc['yi'])
 
-                    # todo: spamming get_z with guesses can be prevented, but it would require this entire section be
-                    # todo: (cont.) inside the pid lock loop, hence locking the db for each training
                     n_points = self['n_points'] if 'n_points' in self else 10000
                     X_space = self._discretize_space(x_dims, n_points=n_points, discrete_floats=True, n_floats=100)
                     X_unexplored = [xi for xi in X_space if self.collection.find({'x': xi}).count() == 0 and xi != x]
 
-                    if not X_unexplored: raise Exception("The discrete space has been searched exhaustively.")
+                    if not X_unexplored:
+                        raise Exception("The discrete space has been searched exhaustively.")
 
                     XZ_unexplored = [xi + self.get_z(xi) for xi in X_unexplored]
                     xz_dims = x_dims + self._z_dims(XZ_unexplored, len(x))
@@ -276,8 +286,8 @@ class OptTask(FireTaskBase):
                 self.collection.find_one_and_update(self.manager_format, {'$set': {'lock': None, 'queue': []}})
 
             elif run == max_runs*max_resets:
-                raise Exception("The manager is still stuck after resetting. Make sure no stalled processes are"
-                            " in the queue.")
+                raise Exception("The manager is still stuck after resetting. Make sure no stalled processes are in the "
+                                "queue.")
 
     def _setup_db(self, fw_spec):
         """
@@ -422,7 +432,7 @@ class OptTask(FireTaskBase):
                 return False
         return True
 
-    def _discretize_space(self, dims, n_points = None, discrete_floats=False, n_floats=100):
+    def _discretize_space(self, dims, n_points=None, discrete_floats=False, n_floats=100):
         """
         Create a list of points for searching during optimization. 
 
@@ -510,7 +520,7 @@ class OptTask(FireTaskBase):
 
         """
         self._n_cats = 0
-        self._bin_info = []
+        self._encoding_info = []
 
         for i, dim in enumerate(dims):
             if type(dim[0]) in self.dtypes.others:
@@ -531,7 +541,7 @@ class OptTask(FireTaskBase):
                     x += list(binary[j])
 
                 dim_info = {'lb': lb, 'inverse_map': inverse_map, 'binary_len': len(binary[0])}
-                self._bin_info.append(dim_info)
+                self._encoding_info.append(dim_info)
                 self._n_cats += 1
 
         return X
@@ -557,7 +567,7 @@ class OptTask(FireTaskBase):
 
         for i, dim in enumerate(dims):
             if type(dim[0]) in self.dtypes.others:
-                dim_info = self._bin_info[cat_index]
+                dim_info = self._encoding_info[cat_index]
 
                 binary_len = dim_info['binary_len']
                 lb = dim_info['lb']
