@@ -184,10 +184,6 @@ class OptTask(FireTaskBase):
                     XZ_unexplored = [xi + self.get_z(xi) for xi in X_unexplored]
                     xz_dims = x_dims + self._z_dims(XZ_unexplored, len(x))
 
-                    # change y vector if maximum is desired instead of minimum
-                    max_on = self['max'] if 'max' in self else False
-                    y = [-1 * yi if max_on else yi for yi in y]
-
                     # run machine learner on Z and X features
                     retrain_interval = self['retrain_interval'] if 'retrain_interval' in self else 1
                     encode_categorical = self['encode_categorical'] if 'encode_categorical' in self else False
@@ -219,9 +215,10 @@ class OptTask(FireTaskBase):
                         elif predictor == 'SVR':
                             model = SVR
 
+                        maximize = self['max'] if 'max' in self else False
                         XZ = self._preprocess(XZ, xz_dims)
                         XZ_unexplored = self._preprocess(XZ_unexplored, xz_dims)
-                        xz_onehot = self._predict(XZ, y, XZ_unexplored, model(*pred_args, **pred_kwargs))
+                        xz_onehot = self._predict(XZ, y, XZ_unexplored, model(*pred_args, **pred_kwargs), maximize)
                         xz_new = self._postprocess(xz_onehot, xz_dims)
 
                     elif predictor == 'random_guess':
@@ -432,7 +429,7 @@ class OptTask(FireTaskBase):
                 return False
         return True
 
-    def _discretize_space(self, dims, n_points=None, discrete_floats=False, n_floats=100):
+    def _discretize_space(self, dims, n_points=None, discrete_floats=False, n_floats=10):
         """
         Create a list of points for searching during optimization. 
 
@@ -475,7 +472,7 @@ class OptTask(FireTaskBase):
             n_points = len(space) if n_points > len(space) else n_points
             return random.sample(space, n_points)
 
-    def _predict(self, X, y, space, model, minimize=True):
+    def _predict(self, X, y, space, model, maximize):
         """
         Scikit-learn compatible model for stepwise optimization. It uses a regressive predictor evaluated on
         remaining points in a discrete space.
@@ -487,12 +484,13 @@ class OptTask(FireTaskBase):
         Args:
             X ([list]): List of vectors containing input training data.
             y (list): List of scalars containing output training data.
-            space ([list]): List of vectors containing all possible inputs. Should be preprocessed before being passed to
+            space ([list]): List of vectors containing all possible inputs. Should be preprocessed before being 
+            passed to
                 predictor function.
             model (sklearn model): The regressor used for predicting the next best guess.
             n_points (int): The number of points in space to predict over.
-            minimize (bool): Makes predictor return the guess which maximizes the predicted objective function output.
-                Else maximizes the predicted objective function output.  
+            maximize (bool): Makes predictor return the guess which maximizes the predicted objective function output.
+                Else minmizes the predicted objective function output.  
 
         Returns:
             (list) A vector which is predicted to minimize (or maximize) the objective function.
@@ -500,7 +498,7 @@ class OptTask(FireTaskBase):
         """
         model.fit(X, y)
         values = model.predict(space).tolist()
-        evaluator = min if minimize else max
+        evaluator = max if maximize else min
         i = values.index(evaluator(values))
         return space[i]
 
