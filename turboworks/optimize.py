@@ -12,7 +12,7 @@ from fireworks import FWAction, LaunchPad
 from pymongo import MongoClient, ReturnDocument
 from time import sleep
 from numpy import sctypes
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, BaggingRegressor, GradientBoostingRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.neural_network import MLPRegressor
@@ -54,6 +54,9 @@ class OptTask(FireTaskBase):
             Included sklearn predictors are:
                 'LinearRegression'
                 'RandomForestRegressor'
+                'AdaBoostRegressor'
+                'BaggingRegressor'
+                'GradientBoostingRegressor'
                 'GaussianProcessRegressor'
                 'MLPRegressor'
                 'SVR'
@@ -189,6 +192,9 @@ class OptTask(FireTaskBase):
                     encode_categorical = self['encode_categorical'] if 'encode_categorical' in self else False
 
                     self.predictors = ['RandomForestRegressor',
+                                       'AdaBoostRegressor',
+                                       'BaggingRegressor',
+                                       'GradientBoostingRegressor',
                                        'GaussianProcessRegressor',
                                        'LinearRegression',
                                        'MLPRegressor',
@@ -206,6 +212,12 @@ class OptTask(FireTaskBase):
 
                         if predictor == 'RandomForestRegressor':
                             model = RandomForestRegressor
+                        elif predictor == 'AdaBoostRegressor':
+                            model = AdaBoostRegressor
+                        elif predictor == 'BaggingRegressor':
+                            model = BaggingRegressor
+                        elif predictor == 'GradientBoostingRegressor':
+                            model = GradientBoostingRegressor
                         elif predictor == 'GaussianProcessRegressor':
                             model = GaussianProcessRegressor
                         elif predictor == 'LinearRegression':
@@ -214,6 +226,8 @@ class OptTask(FireTaskBase):
                             model = MLPRegressor
                         elif predictor == 'SVR':
                             model = SVR
+                        else:
+                            raise NameError("{} was in the predictor list but did not have a model!".format(predictor))
 
                         maximize = self['max'] if 'max' in self else False
                         XZ = self._preprocess(XZ, xz_dims)
@@ -232,11 +246,11 @@ class OptTask(FireTaskBase):
 
                         try:
                             predictor_fun = self._deserialize(predictor)
-                            xz_new = predictor_fun(XZ, y, XZ_unexplored, *pred_args, **pred_kwargs)
 
-                        except Exception as E:
-                            raise ValueError(
-                                "The custom predictor function {} did not call correctly! \n {}".format(predictor, E))
+                        except ImportError as E:
+                            raise NameError("The custom predictor {} didnt import correctly!\n{}".format(predictor, E))
+
+                        xz_new = predictor_fun(XZ, y, XZ_unexplored, *pred_args, **pred_kwargs)
 
                     # separate 'predicted' z features from the new x vector
                     x_new, z_new = xz_new[:len(x)], xz_new[len(x):]
