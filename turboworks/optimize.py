@@ -499,7 +499,8 @@ class OptTask(FireTaskBase):
         model.fit(X, y)
         values = model.predict(space).tolist()
         evaluator = max if maximize else min
-        i = values.index(evaluator(values))
+        min_or_max = evaluator(values)
+        i = values.index(min_or_max)
         return space[i]
 
     def _preprocess(self, X, dims):
