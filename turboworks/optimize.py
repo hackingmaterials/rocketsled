@@ -1,24 +1,22 @@
 """
 The FireTask for running automatic optimization loops.
 """
-
 import sys
 import random
 from itertools import product
 from os import getpid
-from fireworks.utilities.fw_utilities import explicit_serialize
-from fireworks.core.firework import FireTaskBase
-from fireworks import FWAction, LaunchPad
-from pymongo import MongoClient, ReturnDocument
 from time import sleep
-from numpy import sctypes
+from pymongo import MongoClient, ReturnDocument
+from numpy import sctypes, asarray
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, BaggingRegressor, GradientBoostingRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.svm import SVR
 from sklearn.preprocessing import LabelBinarizer
-from numpy import asarray
+from fireworks.utilities.fw_utilities import explicit_serialize
+from fireworks.core.firework import FireTaskBase
+from fireworks import FWAction, LaunchPad
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
@@ -104,6 +102,9 @@ class OptTask(FireTaskBase):
     optional_params = ['get_z', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
                        'host', 'port', 'name', 'lpad', 'opt_label', 'retrain_interval', 'n_points', 'predictor_args',
                        'predictor_kwargs', 'encode_categorical']
+
+
+    #todo: add param to substitute dimensions with list of space (ie for discontinuous search spaces)
 
     def run_task(self, fw_spec):
         """
