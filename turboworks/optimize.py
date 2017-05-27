@@ -74,9 +74,13 @@ class OptTask(FireTaskBase):
             collections correspond to multiple independent optimizations.
         retrain_interval (int): The number of iterations to wait before retraining the expensive model. On iterations
             where the model is not trained, a random guess is used. 
-        n_points (int): The number of points to be searched in the search space when choosing the next best point.
-            Choosing more points to search may increase the effectiveness of the optimization. The default is 10000
-            points. 
+        n_search_points (int): The number of points to be searched in the search space when choosing the next best
+            point. Choosing more points to search may increase the effectiveness of the optimization. The default is
+            1000 points. 
+        n_train_points (int): The number of already explored points to be chosen for training. Default is 1000. All
+            available points can be used for training by setting train_points to any number greater than the entire
+            search space size (e.g., 100,000,000).
+        space ([list]): A list of all possible search points. This should be used to search discontinuous spaces.
         predictor_args (list): the positional args to be passed to the model along with a list of points to be searched.
             For sklearn-based predictors included in OptTask, these positional args are passed to the init method of
             the chosen model. For custom predictors, these are passed to the chosen predictor function alongside the 
@@ -87,14 +91,17 @@ class OptTask(FireTaskBase):
             
     Attributes:
         collection (MongoDB collection): The collection to store the optimization data.
-        manager_format (dict/MongoDB query syntax): The document format which details how the manager (for parallel
-            optimizations) are managed.
-        explored_format (dict/MongoDB query syntax): The document format which details how the optimization data (on 
-        a per
-            optimization loop basis) is stored. 
         dtypes (Dtypes): Object containing the datatypes available for optimization.
         predictors ([str]): Built in sklearn regressors available for optimization with OptTask.
         launchpad (LaunchPad): The Fireworks LaunchPad object which determines where workflow data is stored.
+        _manager_format (dict/MongoDB query syntax): The document format which details how the manager (for parallel
+            optimizations) are managed.
+        _explored_format (dict/MongoDB query syntax): The document format which details how the optimization data (on 
+            a per optimization loop basis) is stored for explored points. 
+        _unexplored_inclusive_format (dict/MongoDB query syntax): The document format which details how optimization
+            data is stored for unexplored points including the current point.
+        _unexplored_noninclusive_format (dict/MongoDB query syntax): Similar to unexplored_inclusive_format but not
+            including the current guess.
         _n_cats (int): The number of categorical dimensions.
         _encoding_info (dict): Data for converting between one-hot encoded data and categorical data.
     """
@@ -105,7 +112,6 @@ class OptTask(FireTaskBase):
                        'n_search_points', 'space', 'predictor_args', 'predictor_kwargs', 'encode_categorical']
 
 
-    #todo: add docs for search_points, train_points, new class attrs (uninclusive format etc), space
     #todo: fix parallel duplicate checking, stuff is not working right
 
     def run_task(self, fw_spec):
@@ -128,14 +134,14 @@ class OptTask(FireTaskBase):
         self._setup_db(fw_spec)
 
         for run in range(max_resets * max_runs):
-            manager_docs = self.collection.find(self.manager_format)
+            manager_docs = self.collection.find(self._manager_format)
 
             if manager_docs.count() == 0:
                 self.collection.insert_one({'lock': pid, 'queue': []})
             elif manager_docs.count() == 1:
 
                 try:
-                    manager = self.collection.find_one(self.manager_format)
+                    manager = self.collection.find_one(self._manager_format)
                     manager_id = manager['_id']
                     lock = manager['lock']
 
@@ -175,8 +181,8 @@ class OptTask(FireTaskBase):
 
                     train_points = self['n_train_points'] if 'n_train_points' in self else 1000
                     search_points = self['n_search_points'] if 'n_search_points' in self else 1000
-                    explored_docs = self.collection.find(self.explored_format, limit=train_points)
-                    unexplored_docs = self.collection.find(self.unexplored_noninclusive_format, limit=search_points)
+                    explored_docs = self.collection.find(self._explored_format, limit=train_points)
+                    unexplored_docs = self.collection.find(self._unexplored_noninclusive_format, limit=search_points)
 
                     # if no comprehensive list has been made, insert some unexplored docs
                     if unexplored_docs.count() == 0:
@@ -184,7 +190,7 @@ class OptTask(FireTaskBase):
                         X_space = self['space'] if 'space' in self else self._discretize_space(x_dims,
                                                                                                discrete_floats=True)
 
-                        if self.collection.find_one(self.manager_format)['lock'] != pid:
+                        if self.collection.find_one(self._manager_format)['lock'] != pid:
                             continue
                         else:
                             for xi in X_space:
@@ -192,7 +198,7 @@ class OptTask(FireTaskBase):
                                 if self.collection.find({'x': xj}).count() == 0 and xj != x:
                                     self._store({'x': xj, 'z': self.get_z(xj)})
 
-                        unexplored_docs = self.collection.find(self.unexplored_inclusive_format, limit=search_points)
+                        unexplored_docs = self.collection.find(self._unexplored_inclusive_format, limit=search_points)
 
                         # there are no more unexplored points in the entire space
                         if unexplored_docs.count() == 0:
@@ -210,6 +216,7 @@ class OptTask(FireTaskBase):
                         y.append(doc['yi'])
 
 
+                    print "process ", pid, "sees X_explored as", XZ
                     XZ_unexplored = [doc['x'] + doc['z'] for doc in unexplored_docs]
                     xz_dims = x_dims + self._z_dims(XZ_unexplored, len(x))
 
@@ -226,7 +233,7 @@ class OptTask(FireTaskBase):
                                        'MLPRegressor',
                                        'SVR']
 
-                    if self.collection.find(self.explored_format).count() % retrain_interval == 0:
+                    if self.collection.find(self._explored_format).count() % retrain_interval == 0:
                         predictor = 'RandomForestRegressor' if 'predictor' not in self else self['predictor']
                     else:
                         predictor = 'random_guess'
@@ -293,7 +300,7 @@ class OptTask(FireTaskBase):
 
                     # make sure a process has not timed out and changed the lock pid while this process
                     # is computing the next guess
-                    if self.collection.find_one(self.manager_format)['lock'] != pid:
+                    if self.collection.find_one(self._manager_format)['lock'] != pid:
                         continue
                     else:
                         opt_id = self._store({'z': z, 'yi': yi, 'x': x, 'z_new': z_new, 'x_new': x_new})
@@ -320,10 +327,10 @@ class OptTask(FireTaskBase):
                                     update_spec={'optimization_id': opt_id})
 
             else:
-                self.collection.delete_one(self.manager_format)
+                self.collection.delete_one(self._manager_format)
 
             if run in [max_runs*k for k in range(1, max_resets)]:
-                self.collection.find_one_and_update(self.manager_format, {'$set': {'lock': None, 'queue': []}})
+                self.collection.find_one_and_update(self._manager_format, {'$set': {'lock': None, 'queue': []}})
 
             elif run == max_runs*max_resets:
                 raise Exception("The manager is still stuck after resetting. Make sure no stalled processes are in the "
@@ -378,11 +385,11 @@ class OptTask(FireTaskBase):
         self.collection = getattr(db, opt_label)
 
         x = fw_spec['_x_opt']
-        self.explored_format = {'x': {'$exists': 1}, 'yi': {'$exists': 1}}
-        self.unexplored_inclusive_format = {'x': {'$exists': 1}, 'yi': {'$exists': 0}}
-        self.unexplored_noninclusive_format = {'x': {'$ne': x, '$exists': 1},
+        self._explored_format = {'x': {'$exists': 1}, 'yi': {'$exists': 1}}
+        self._unexplored_inclusive_format = {'x': {'$exists': 1}, 'yi': {'$exists': 0}}
+        self._unexplored_noninclusive_format = {'x': {'$ne': x, '$exists': 1},
                                                'yi': {'$exists': 0}}
-        self.manager_format = {'lock': {'$exists': 1}, 'queue': {'$exists': 1}}
+        self._manager_format = {'lock': {'$exists': 1}, 'queue': {'$exists': 1}}
 
     def _check_dims(self, dims):
         """
@@ -429,6 +436,7 @@ class OptTask(FireTaskBase):
         # prevents errors when initial guesses are already in the database
 
         x = spec['x']
+        print "upserting", x
         new_doc = self.collection.find_one_and_replace({'x': x},
                                                        spec,
                                                        upsert=True,
@@ -640,7 +648,7 @@ class OptTask(FireTaskBase):
         """
 
         Z_unexplored = [z[x_length:] for z in XZ_unexplored]
-        Z_explored = [doc['z'] for doc in self.collection.find(self.explored_format)]
+        Z_explored = [doc['z'] for doc in self.collection.find(self._explored_format)]
         Z = Z_explored + Z_unexplored
 
         if not Z:
