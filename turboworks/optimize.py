@@ -89,7 +89,8 @@ class OptTask(FireTaskBase):
         collection (MongoDB collection): The collection to store the optimization data.
         manager_format (dict/MongoDB query syntax): The document format which details how the manager (for parallel
             optimizations) are managed.
-        opt_format (dict/MongoDB query syntax): The document format which details how the optimization data (on a per
+        explored_format (dict/MongoDB query syntax): The document format which details how the optimization data (on 
+        a per
             optimization loop basis) is stored. 
         dtypes (Dtypes): Object containing the datatypes available for optimization.
         predictors ([str]): Built in sklearn regressors available for optimization with OptTask.
@@ -100,11 +101,14 @@ class OptTask(FireTaskBase):
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
     optional_params = ['get_z', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
-                       'host', 'port', 'name', 'lpad', 'opt_label', 'retrain_interval', 'n_points', 'predictor_args',
-                       'predictor_kwargs', 'encode_categorical']
+                       'host', 'port', 'name', 'lpad', 'opt_label', 'retrain_interval', 'train_points',
+                       'search_points', 'predictor_args', 'predictor_kwargs', 'encode_categorical']
 
 
+    #todo: add docs for search_points, train_points, new class attrs (uninclusive format etc)
     #todo: add param to substitute dimensions with list of space (ie for discontinuous search spaces)
+    #todo: this should replace _discetize_space in these cases
+    #todo: fix parallel duplicate checking, stuff is not working right
 
     def run_task(self, fw_spec):
         """
@@ -171,21 +175,37 @@ class OptTask(FireTaskBase):
                     self.get_z = self._deserialize(self['get_z']) if 'get_z' in self else lambda input_vector: []
                     z = self.get_z(x)
 
+                    train_points = self['train_points'] if 'train_points' in self else 1000
+                    search_points = self['search_points'] if 'search_points' in self else 1000
+                    explored_docs = self.collection.find(self.explored_format, limit=train_points)
+                    unexplored_docs = self.collection.find(self.unexplored_noninclusive_format, limit=search_points)
+
+                    # if no comprehensive list has been made, insert some unexplored docs
+                    if unexplored_docs.count() == 0:
+
+                        X_space = self._discretize_space(x_dims, discrete_floats=True)
+                        for xi in X_space:
+                            if self.collection.find({'x': xi}).count() == 0 and xi != x:
+                                self._store({'x': xi, 'z': self.get_z(xi)})
+
+                        unexplored_docs = self.collection.find(self.unexplored_inclusive_format, limit=search_points)
+
+                        # there are no more unexplored points in the entire space
+                        if unexplored_docs.count() == 0:
+                            if self._is_discrete(x_dims):
+                                raise Exception("The discrete space has been searched exhaustively.")
+                            else:
+                                raise TypeError("A comprehensive list of points was exhausted but the dimensions are"
+                                                "not discrete.")
+
                     # compound the additional attributes to the unique vectors to feed into machine learning
                     XZ = [x + z]
                     y = [yi]
-                    for doc in self.collection.find(self.opt_format, projection={'x': 1, 'yi': 1, 'z': 1}):
+                    for doc in explored_docs:
                         XZ.append(doc['x'] + doc['z'])
                         y.append(doc['yi'])
 
-                    n_points = self['n_points'] if 'n_points' in self else 10000
-                    X_space = self._discretize_space(x_dims, n_points=n_points, discrete_floats=True, n_floats=100)
-                    X_unexplored = [xi for xi in X_space if self.collection.find({'x': xi}).count() == 0 and xi != x]
-
-                    if not X_unexplored:
-                        raise Exception("The discrete space has been searched exhaustively.")
-
-                    XZ_unexplored = [xi + self.get_z(xi) for xi in X_unexplored]
+                    XZ_unexplored = [doc['x'] + doc['z'] for doc in unexplored_docs]
                     xz_dims = x_dims + self._z_dims(XZ_unexplored, len(x))
 
                     # run machine learner on Z and X features
@@ -201,7 +221,7 @@ class OptTask(FireTaskBase):
                                        'MLPRegressor',
                                        'SVR']
 
-                    if self.collection.find(self.opt_format).count() % retrain_interval == 0:
+                    if self.collection.find(self.explored_format).count() % retrain_interval == 0:
                         predictor = 'RandomForestRegressor' if 'predictor' not in self else self['predictor']
                     else:
                         predictor = 'random_guess'
@@ -253,15 +273,19 @@ class OptTask(FireTaskBase):
 
                         xz_new = predictor_fun(XZ, y, XZ_unexplored, *pred_args, **pred_kwargs)
 
-                    # separate 'predicted' z features from the new x vector
-                    x_new, z_new = xz_new[:len(x)], xz_new[len(x):]
-
                     # duplicate checking for custom optimizer functions
                     if 'duplicate_check' in self and predictor not in self.predictors:
                         if self['duplicate_check']:
                             if self._is_discrete(x_dims):
-                                x_new = random.choice(X_unexplored)
-                                z_new = self.get_z(x_new)
+                                x_new = xz_new[:len(x)]
+                                X_explored = [xz[:len(x)] for xz in XZ]
+                                # test only for x, not xz because custom predicted z may not be accounted for
+                                if x_new in X_explored:
+                                    xz_new = random.choice(XZ_unexplored)
+
+
+                    # separate 'predicted' z features from the new x vector
+                    x_new, z_new = xz_new[:len(x)], xz_new[len(x):]
 
                     # make sure a process has not timed out and changed the lock pid while this process
                     # is computing the next guess
@@ -349,7 +373,11 @@ class OptTask(FireTaskBase):
         db = getattr(mongo, name)
         self.collection = getattr(db, opt_label)
 
-        self.opt_format = {'x': {'$exists': 1}, 'yi': {'$exists': 1}, 'z': {'$exists': 1}}
+        x = fw_spec['_x_opt']
+        self.explored_format = {'x': {'$exists': 1}, 'yi': {'$exists': 1}}
+        self.unexplored_inclusive_format = {'x': {'$exists': 1}, 'yi': {'$exists': 0}}
+        self.unexplored_noninclusive_format = {'x': {'$ne': x, '$exists': 1},
+                                               'yi': {'$exists': 0}}
         self.manager_format = {'lock': {'$exists': 1}, 'queue': {'$exists': 1}}
 
     def _check_dims(self, dims):
@@ -394,17 +422,13 @@ class OptTask(FireTaskBase):
             (ObjectId) the PyMongo BSON id object for the document inserted/updated.
         """
 
-        if 'duplicate_check' in self:
-            if self['duplicate_check']:
-                # prevents errors when initial guesses are already in the database
-                x = spec['x']
-                new_doc = self.collection.find_one_and_replace({'x': x},
-                                                               spec,
-                                                               upsert=True,
-                                                               return_document=ReturnDocument.AFTER)
-                return new_doc['_id']
-        else:
-            return self.collection.insert_one(spec).inserted_id
+        # prevents errors when initial guesses are already in the database
+        x = spec['x']
+        new_doc = self.collection.find_one_and_replace({'x': x},
+                                                       spec,
+                                                       upsert=True,
+                                                       return_document=ReturnDocument.AFTER)
+        return new_doc['_id']
 
     def _deserialize(self, fun):
         """
@@ -444,7 +468,7 @@ class OptTask(FireTaskBase):
                 return False
         return True
 
-    def _discretize_space(self, dims, n_points=None, discrete_floats=False, n_floats=10):
+    def _discretize_space(self, dims, n_points=None, discrete_floats=False, n_floats=100):
         """
         Create a list of points for searching during optimization. 
 
@@ -479,7 +503,8 @@ class OptTask(FireTaskBase):
                 dimspace = dim
             total_dimspace.append(dimspace)
 
-        space = [[x] for x in total_dimspace[0]] if len(dims) == 1 else [list(x) for x in product(*total_dimspace)]
+        #todo: prevent ram hogging by splitting up space into chunks or making this into a generator
+        space = [[xi] for xi in total_dimspace[0]] if len(dims) == 1 else [list(xi) for xi in product(*total_dimspace)]
 
         if not n_points:
             return space
@@ -614,8 +639,11 @@ class OptTask(FireTaskBase):
         """
 
         Z_unexplored = [z[x_length:] for z in XZ_unexplored]
-        Z_explored = [doc['z'] for doc in self.collection.find(self.opt_format)]
+        Z_explored = [doc['z'] for doc in self.collection.find(self.explored_format)]
         Z = Z_explored + Z_unexplored
+
+        if not Z:
+            return []
 
         dims = [(z, z) for z in Z[0]]
 
