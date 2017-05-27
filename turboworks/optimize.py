@@ -185,8 +185,9 @@ class OptTask(FireTaskBase):
 
                         X_space = self._discretize_space(x_dims, discrete_floats=True)
                         for xi in X_space:
-                            if self.collection.find({'x': xi}).count() == 0 and xi != x:
-                                self._store({'x': xi, 'z': self.get_z(xi)})
+                            xj = list(xi)
+                            if self.collection.find({'x': xj}).count() == 0 and xj != x:
+                                self._store({'x': xj, 'z': self.get_z(xj)})
 
                         unexplored_docs = self.collection.find(self.unexplored_inclusive_format, limit=search_points)
 
@@ -504,13 +505,9 @@ class OptTask(FireTaskBase):
             total_dimspace.append(dimspace)
 
         #todo: prevent ram hogging by splitting up space into chunks or making this into a generator
-        space = [[xi] for xi in total_dimspace[0]] if len(dims) == 1 else [list(xi) for xi in product(*total_dimspace)]
+        space = [[xi] for xi in total_dimspace[0]] if len(dims) == 1 else product(*total_dimspace)
 
-        if not n_points:
-            return space
-        else:
-            n_points = len(space) if n_points > len(space) else n_points
-            return random.sample(space, n_points)
+        return space
 
     def _predict(self, X, y, space, model, maximize):
         """
