@@ -82,8 +82,8 @@ def wf_creator(x, predictor, get_z, lpad):
                                 wf_creator_args=[predictor, get_z, lpad],
                                 max=True,
                                 opt_label='test_perovskites',
-                                search_points=1000,
-                                train_points=1000)],
+                                n_search_points=1000,
+                                n_train_points=1000)],
                         spec=spec)
     return Workflow([firework])
 

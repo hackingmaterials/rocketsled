@@ -101,13 +101,11 @@ class OptTask(FireTaskBase):
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
     optional_params = ['get_z', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
-                       'host', 'port', 'name', 'lpad', 'opt_label', 'retrain_interval', 'train_points',
-                       'search_points', 'predictor_args', 'predictor_kwargs', 'encode_categorical']
+                       'host', 'port', 'name', 'lpad', 'opt_label', 'retrain_interval', 'n_train_points',
+                       'n_search_points', 'space', 'predictor_args', 'predictor_kwargs', 'encode_categorical']
 
 
-    #todo: add docs for search_points, train_points, new class attrs (uninclusive format etc)
-    #todo: add param to substitute dimensions with list of space (ie for discontinuous search spaces)
-    #todo: this should replace _discetize_space in these cases
+    #todo: add docs for search_points, train_points, new class attrs (uninclusive format etc), space
     #todo: fix parallel duplicate checking, stuff is not working right
 
     def run_task(self, fw_spec):
@@ -124,9 +122,9 @@ class OptTask(FireTaskBase):
 
         # the pid identifies the process during parallel duplicate checking
         pid = getpid()
-        sleeptime = .001
-        max_runs = 10000
-        max_resets = 5
+        sleeptime = .01
+        max_runs = 1000
+        max_resets = 10
         self._setup_db(fw_spec)
 
         for run in range(max_resets * max_runs):
@@ -175,19 +173,24 @@ class OptTask(FireTaskBase):
                     self.get_z = self._deserialize(self['get_z']) if 'get_z' in self else lambda input_vector: []
                     z = self.get_z(x)
 
-                    train_points = self['train_points'] if 'train_points' in self else 1000
-                    search_points = self['search_points'] if 'search_points' in self else 1000
+                    train_points = self['n_train_points'] if 'n_train_points' in self else 1000
+                    search_points = self['n_search_points'] if 'n_search_points' in self else 1000
                     explored_docs = self.collection.find(self.explored_format, limit=train_points)
                     unexplored_docs = self.collection.find(self.unexplored_noninclusive_format, limit=search_points)
 
                     # if no comprehensive list has been made, insert some unexplored docs
                     if unexplored_docs.count() == 0:
 
-                        X_space = self._discretize_space(x_dims, discrete_floats=True)
-                        for xi in X_space:
-                            xj = list(xi)
-                            if self.collection.find({'x': xj}).count() == 0 and xj != x:
-                                self._store({'x': xj, 'z': self.get_z(xj)})
+                        X_space = self['space'] if 'space' in self else self._discretize_space(x_dims,
+                                                                                               discrete_floats=True)
+
+                        if self.collection.find_one(self.manager_format)['lock'] != pid:
+                            continue
+                        else:
+                            for xi in X_space:
+                                xj = list(xi)
+                                if self.collection.find({'x': xj}).count() == 0 and xj != x:
+                                    self._store({'x': xj, 'z': self.get_z(xj)})
 
                         unexplored_docs = self.collection.find(self.unexplored_inclusive_format, limit=search_points)
 
@@ -205,6 +208,7 @@ class OptTask(FireTaskBase):
                     for doc in explored_docs:
                         XZ.append(doc['x'] + doc['z'])
                         y.append(doc['yi'])
+
 
                     XZ_unexplored = [doc['x'] + doc['z'] for doc in unexplored_docs]
                     xz_dims = x_dims + self._z_dims(XZ_unexplored, len(x))
@@ -283,7 +287,6 @@ class OptTask(FireTaskBase):
                                 # test only for x, not xz because custom predicted z may not be accounted for
                                 if x_new in X_explored:
                                     xz_new = random.choice(XZ_unexplored)
-
 
                     # separate 'predicted' z features from the new x vector
                     x_new, z_new = xz_new[:len(x)], xz_new[len(x):]
@@ -424,6 +427,7 @@ class OptTask(FireTaskBase):
         """
 
         # prevents errors when initial guesses are already in the database
+
         x = spec['x']
         new_doc = self.collection.find_one_and_replace({'x': x},
                                                        spec,
