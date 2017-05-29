@@ -1,8 +1,9 @@
 from fireworks.core.rocket_launcher import launch_rocket
 from fireworks import Workflow, Firework, LaunchPad, FireTaskBase, FWAction
 from fireworks.utilities.fw_utilities import explicit_serialize
-from turboworks.optimize import OptTask
+from turboworks.optimize import OptTask, random_guess
 from pymongo import MongoClient
+from matminer.data_retrieval.retrieve_MP import MPDataRetrieval
 import pandas as pd
 import numpy as np
 import pickle
@@ -67,10 +68,10 @@ class EvaluateFitnessTask(FireTaskBase):
         output = {'_y_opt': score}
         return FWAction(update_spec=output)
 
+dim = [(0, 51), (0, 51), (0, 6)]
 
 def wf_creator(x, predictor, get_z, lpad):
     spec = {'A': x[0], 'B': x[1], 'C': x[2], '_x_opt': x}
-    dim = [(0, 51), (0, 51), (0, 6)]
 
     firework = Firework([EvaluateFitnessTask(),
                         OptTask(wf_creator='turboworks_examples.test_perovskites.wf_creator',
@@ -88,8 +89,8 @@ def wf_creator(x, predictor, get_z, lpad):
     return Workflow([firework])
 
 
+# api_key = "ya1iJA4H8O6TLGut"
 # def get_z(x):
-#     a =
 
 
 if __name__ =="__main__":
@@ -110,7 +111,7 @@ if __name__ =="__main__":
 
         launchpad = LaunchPad(name=TESTDB_NAME)
         launchpad.reset(password=None, require_password=False)
-        launchpad.add_wf(wf_creator([1, 1, 1], predictor, get_z, launchpad))
+        launchpad.add_wf(wf_creator(random_guess(dim), predictor, get_z, launchpad))
 
         y = []
         x = range(n_iterations)
@@ -122,10 +123,10 @@ if __name__ =="__main__":
         Y.append(y)
         launchpad.connection.drop_database(TESTDB_NAME)
 
-    mean = np.mean(Y, axis=0)
-    std = np.std(Y, axis=0)
-    lower = [mean[i] - std[i] for i in range(len(mean))]
-    upper = [mean[i] + std[i] for i in range(len(mean))]
+    # mean = np.mean(Y, axis=0)
+    # std = np.std(Y, axis=0)
+    # lower = [mean[i] - std[i] for i in range(len(mean))]
+    # upper = [mean[i] + std[i] for i in range(len(mean))]
 
-    data = {'mean': mean, 'lower': lower, 'upper': upper}
+    data = {'Y': Y}
     pickle.dump(data, open(filename, 'w'))
