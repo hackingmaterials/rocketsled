@@ -112,7 +112,8 @@ class OptTask(FireTaskBase):
                        'n_search_points', 'space', 'predictor_args', 'predictor_kwargs', 'encode_categorical']
 
 
-    #todo: fix parallel duplicate checking, stuff is not working right
+    #todo: random sample for explored and unexplored
+    #todo: ++readability
 
     def run_task(self, fw_spec):
         """
@@ -170,6 +171,10 @@ class OptTask(FireTaskBase):
 
                     x = fw_spec['_x_opt']
                     yi = fw_spec['_y_opt']
+
+                    # release reservation on this document in case of failure or end of workflow
+                    # prevents aggregation of reserved documents
+                    self.collection.find_one_and_update({'x': x}, {'$set': {'yi': yi}})
                     self.dtypes = Dtypes()
 
                     x_dims = self['dimensions']
@@ -190,13 +195,10 @@ class OptTask(FireTaskBase):
                         X_space = self['space'] if 'space' in self else self._discretize_space(x_dims,
                                                                                                discrete_floats=True)
 
-                        if self.collection.find_one(self._manager_format)['lock'] != pid:
-                            continue
-                        else:
-                            for xi in X_space:
-                                xj = list(xi)
-                                if self.collection.find({'x': xj}).count() == 0 and xj != x:
-                                    self._store({'x': xj, 'z': self.get_z(xj)})
+                        for xi in X_space:
+                            xj = list(xi)
+                            if self.collection.find({'x': xj}).count() == 0 and xj != x:
+                                self._store({'x': xj, 'z': self.get_z(xj)})
 
                         unexplored_docs = self.collection.find(self._unexplored_inclusive_format, limit=search_points)
 
@@ -209,16 +211,14 @@ class OptTask(FireTaskBase):
                                                 "not discrete.")
 
                     # compound the additional attributes to the unique vectors to feed into machine learning
-                    XZ = [x + z]
-                    y = [yi]
-                    for doc in explored_docs:
-                        XZ.append(doc['x'] + doc['z'])
-                        y.append(doc['yi'])
-
-
-                    print "process ", pid, "sees X_explored as", XZ
                     XZ_unexplored = [doc['x'] + doc['z'] for doc in unexplored_docs]
                     xz_dims = x_dims + self._z_dims(XZ_unexplored, len(x))
+
+                    y = [yi]
+                    XZ_explored = [x + z]
+                    for doc in explored_docs:
+                        XZ_explored.append(doc['x'] + doc['z'])
+                        y.append(doc['yi'])
 
                     # run machine learner on Z and X features
                     retrain_interval = self['retrain_interval'] if 'retrain_interval' in self else 1
@@ -263,18 +263,18 @@ class OptTask(FireTaskBase):
                             raise NameError("{} was in the predictor list but did not have a model!".format(predictor))
 
                         maximize = self['max'] if 'max' in self else False
-                        XZ = self._preprocess(XZ, xz_dims)
+                        XZ_explored = self._preprocess(XZ_explored, xz_dims)
                         XZ_unexplored = self._preprocess(XZ_unexplored, xz_dims)
-                        xz_onehot = self._predict(XZ, y, XZ_unexplored, model(*pred_args, **pred_kwargs), maximize)
+                        xz_onehot = self._predict(XZ_explored, y, XZ_unexplored, model(*pred_args, **pred_kwargs), maximize)
                         xz_new = self._postprocess(xz_onehot, xz_dims)
 
                     elif predictor == 'random_guess':
                         x_new = random_guess(x_dims, self.dtypes)
-                        xz_new = x_new + self.get_z(x_new)
+                        xz_new = x_new + self.collection.find({'x': x_new})['z']
 
                     else:
                         if encode_categorical:
-                            XZ = self._preprocess(XZ, xz_dims)
+                            XZ_explored = self._preprocess(XZ_explored, xz_dims)
                             XZ_unexplored = self._preprocess(XZ_unexplored, xz_dims)
 
                         try:
@@ -283,14 +283,14 @@ class OptTask(FireTaskBase):
                         except ImportError as E:
                             raise NameError("The custom predictor {} didnt import correctly!\n{}".format(predictor, E))
 
-                        xz_new = predictor_fun(XZ, y, XZ_unexplored, *pred_args, **pred_kwargs)
+                        xz_new = predictor_fun(XZ_explored, y, XZ_unexplored, *pred_args, **pred_kwargs)
 
                     # duplicate checking for custom optimizer functions
                     if 'duplicate_check' in self and predictor not in self.predictors:
                         if self['duplicate_check']:
                             if self._is_discrete(x_dims):
                                 x_new = xz_new[:len(x)]
-                                X_explored = [xz[:len(x)] for xz in XZ]
+                                X_explored = [xz[:len(x)] for xz in XZ_explored]
                                 # test only for x, not xz because custom predicted z may not be accounted for
                                 if x_new in X_explored:
                                     xz_new = random.choice(XZ_unexplored)
@@ -300,10 +300,18 @@ class OptTask(FireTaskBase):
 
                     # make sure a process has not timed out and changed the lock pid while this process
                     # is computing the next guess
-                    if self.collection.find_one(self._manager_format)['lock'] != pid:
+                    try:
+                        if self.collection.find_one(self._manager_format)['lock'] != pid:
+                            continue
+                        else:
+                            opt_id = self._store({'z': z, 'yi': yi, 'x': x, 'z_new': z_new, 'x_new': x_new})
+
+                            # reserve the new x prevent to prevent parallel processes from registering it as unexplored
+                            # since the next iteration of this process will be exploring it
+                            self.collection.find_one_and_update({'x': x_new}, {'$set': {'yi': []}})
+
+                    except TypeError:
                         continue
-                    else:
-                        opt_id = self._store({'z': z, 'yi': yi, 'x': x, 'z_new': z_new, 'x_new': x_new})
 
                     queue = self.collection.find_one({'_id': manager_id})['queue']
                     if not queue:
@@ -333,8 +341,8 @@ class OptTask(FireTaskBase):
                 self.collection.find_one_and_update(self._manager_format, {'$set': {'lock': None, 'queue': []}})
 
             elif run == max_runs*max_resets:
-                raise Exception("The manager is still stuck after resetting. Make sure no stalled processes are in the "
-                                "queue.")
+                raise StandardError("The manager is still stuck after resetting. Make sure no stalled processes are in"
+                                    " the queue.")
 
     def _setup_db(self, fw_spec):
         """
@@ -385,10 +393,9 @@ class OptTask(FireTaskBase):
         self.collection = getattr(db, opt_label)
 
         x = fw_spec['_x_opt']
-        self._explored_format = {'x': {'$exists': 1}, 'yi': {'$exists': 1}}
+        self._explored_format = {'x': {'$exists': 1}, 'yi': {'$ne': [], '$exists': 1}, 'z': {'$exists': 1}}
         self._unexplored_inclusive_format = {'x': {'$exists': 1}, 'yi': {'$exists': 0}}
-        self._unexplored_noninclusive_format = {'x': {'$ne': x, '$exists': 1},
-                                               'yi': {'$exists': 0}}
+        self._unexplored_noninclusive_format = {'x': {'$ne': x, '$exists': 1}, 'yi': {'$exists': 0}}
         self._manager_format = {'lock': {'$exists': 1}, 'queue': {'$exists': 1}}
 
     def _check_dims(self, dims):
@@ -424,7 +431,7 @@ class OptTask(FireTaskBase):
 
     def _store(self, spec):
         """
-        Stores and updates turboworks database files.
+        Stores and updates turboworks database files and prevents parallel initial guesses. 
 
         Args:
             spec (dict): a turboworks-generated spec (or subset of a spec) to be stored in the turboworks db.
@@ -432,12 +439,7 @@ class OptTask(FireTaskBase):
         Returns:
             (ObjectId) the PyMongo BSON id object for the document inserted/updated.
         """
-
-        # prevents errors when initial guesses are already in the database
-
-        x = spec['x']
-        print "upserting", x
-        new_doc = self.collection.find_one_and_replace({'x': x},
+        new_doc = self.collection.find_one_and_replace({'x': spec['x']},
                                                        spec,
                                                        upsert=True,
                                                        return_document=ReturnDocument.AFTER)
@@ -481,7 +483,7 @@ class OptTask(FireTaskBase):
                 return False
         return True
 
-    def _discretize_space(self, dims, n_points=None, discrete_floats=False, n_floats=100):
+    def _discretize_space(self, dims, discrete_floats=False, n_floats=100):
         """
         Create a list of points for searching during optimization. 
 
@@ -516,7 +518,6 @@ class OptTask(FireTaskBase):
                 dimspace = dim
             total_dimspace.append(dimspace)
 
-        #todo: prevent ram hogging by splitting up space into chunks or making this into a generator
         space = [[xi] for xi in total_dimspace[0]] if len(dims) == 1 else product(*total_dimspace)
 
         return space
