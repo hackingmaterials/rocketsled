@@ -87,6 +87,8 @@ class OptTask(FireTaskBase):
             the chosen model. For custom predictors, these are passed to the chosen predictor function alongside the 
             searched guesses, the output from searched guesses, and an unsearched space to be used with optimization.
         predictor_kwargs (dict): the kwargs to be passed to the model. Similar to predictor_args.
+        get_z_args (list): the positional arguments to be passed to the get_z function alongside x
+        get_z_kwargs (dict): the kwargs to be passed to the get_z function alongside x
         encode_categorical (bool): If True, preprocesses categorical data (strings) to one-hot encoded binary arrays for
             use with custom predictor functions. Default False. 
             
@@ -111,7 +113,7 @@ class OptTask(FireTaskBase):
     optional_params = ['get_z', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
                        'host', 'port', 'name', 'lpad', 'opt_label', 'retrain_interval', 'n_train_points',
                        'n_search_points', 'n_generation_points', 'space', 'predictor_args', 'predictor_kwargs',
-                       'encode_categorical']
+                       'get_z_args', 'get_z_kwargs', 'encode_categorical']
 
 
     #todo: random sample for explored and unexplored?
@@ -184,7 +186,9 @@ class OptTask(FireTaskBase):
 
                     # fetch additional attributes for constructing machine learning model by calling get_z, if it exists
                     self.get_z = self._deserialize(self['get_z']) if 'get_z' in self else lambda input_vector: []
-                    z = self.get_z(x)
+                    get_z_args = self['get_z_args'] if 'get_z_args' in self else []
+                    get_z_kwargs = self['get_z_kwargs'] if 'get_z_kwargs' in self else {}
+                    z = self.get_z(x, *get_z_args, **get_z_kwargs)
 
                     train_points = self['n_train_points'] if 'n_train_points' in self else 1000
                     search_points = self['n_search_points'] if 'n_search_points' in self else 1000
@@ -205,7 +209,7 @@ class OptTask(FireTaskBase):
                             xj = list(xi)
                             if self.collection.find({'x': xj}).count() == 0 and xj != x:
                                 if stored_docs < generation_points:
-                                    self._store({'x': xj, 'z': self.get_z(xj)})
+                                    self._store({'x': xj, 'z': self.get_z(xj, *get_z_args, **get_z_kwargs)})
                                     stored_docs += 1
                                 else:
                                     break
@@ -295,7 +299,7 @@ class OptTask(FireTaskBase):
                         xz_new = predictor_fun(XZ_explored, y, XZ_unexplored, *pred_args, **pred_kwargs)
 
                     # duplicate checking for custom optimizer functions
-                    if 'duplicate_check' in self and predictor not in self.predictors:
+                    if 'duplicate_check' in self and predictor not in self.predictors and predictor != 'random_guess':
                         if self['duplicate_check']:
                             if self._is_discrete(x_dims):
                                 x_new = xz_new[:len(x)]
@@ -512,7 +516,7 @@ class OptTask(FireTaskBase):
         total_dimspace = []
 
         for dim in dims:
-            if len(dim) == 2:
+            if len(dim) == 2 and isinstance(dim, tuple):
                 lower = dim[0]
                 upper = dim[1]
 
@@ -680,7 +684,6 @@ class OptTask(FireTaskBase):
                         dims[i] = cat_values
         return dims
 
-
 class Dtypes(object):
     """
     Defines the datatypes available for optimization.
@@ -697,3 +700,37 @@ class Dtypes(object):
         self.discrete = self.ints + self.others
         self.all = self.numbers + self.others
 
+def random_guess(dimensions, dtypes=Dtypes()):
+    """
+    Returns random new inputs based on the dimensions of the search space.
+    It works with float, integer, and categorical types
+
+    Args:
+        dimensions ([tuple]): defines the dimensions of each parameter
+            example: [(1,50),(-18.939,22.435),["red", "green" , "blue", "orange"]]
+
+    Returns:
+        random_vector (list): randomly chosen next parameters in the search space
+            example: [12, 1.9383, "green"]
+    """
+
+    random_vector = []
+
+    for dimset in dimensions:
+        upper = dimset[1]
+        lower = dimset[0]
+        if type(lower) in dtypes.ints:
+            new_param = random.randint(lower, upper)
+            random_vector.append(new_param)
+        elif type(lower) in dtypes.floats:
+            new_param = random.uniform(lower, upper)
+            random_vector.append(new_param)
+        elif type(lower) in dtypes.others:
+            domain_size = len(dimset)-1
+            new_param = random.randint(0, domain_size)
+            random_vector.append(dimset[new_param])
+        else:
+            raise TypeError("The type {} is not supported by dummy opt as a categorical or "
+                            "numerical type".format(type(upper)))
+
+    return random_vector
