@@ -78,6 +78,9 @@ class OptTask(FireTaskBase):
         n_train_points (int): The number of already explored points to be chosen for training. Default is 1000. All
             available points can be used for training by setting train_points to any number greater than the entire
             search space size (e.g., 100,000,000).
+        n_generation_points (int): The number of points to be generated and stored the database during creation of the
+            search space. Use this if your search space is gigantic, otherwise OptTask will try to store a huge 
+            search space in your database!
         space ([list]): A list of all possible search points. This should be used to search discontinuous spaces.
         predictor_args (list): the positional args to be passed to the model along with a list of points to be searched.
             For sklearn-based predictors included in OptTask, these positional args are passed to the init method of
@@ -107,11 +110,12 @@ class OptTask(FireTaskBase):
     required_params = ['wf_creator', 'dimensions']
     optional_params = ['get_z', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
                        'host', 'port', 'name', 'lpad', 'opt_label', 'retrain_interval', 'n_train_points',
-                       'n_search_points', 'space', 'predictor_args', 'predictor_kwargs', 'encode_categorical']
+                       'n_search_points', 'n_generation_points', 'space', 'predictor_args', 'predictor_kwargs',
+                       'encode_categorical']
 
 
     #todo: random sample for explored and unexplored?
-    #todo: ++readability
+    #todo: ++readability?
 
     def run_task(self, fw_spec):
         """
@@ -193,10 +197,18 @@ class OptTask(FireTaskBase):
                         X_space = self['space'] if 'space' in self else self._discretize_space(x_dims,
                                                                                                discrete_floats=True)
 
+                        # prevent a huge discrete space from being stored initially in db (can be very slow!)
+                        generation_points = self['n_generation_points'] if 'n_generation_points' in self else 20000
+                        stored_docs = 0
+                        
                         for xi in X_space:
                             xj = list(xi)
                             if self.collection.find({'x': xj}).count() == 0 and xj != x:
-                                self._store({'x': xj, 'z': self.get_z(xj)})
+                                if stored_docs < generation_points:
+                                    self._store({'x': xj, 'z': self.get_z(xj)})
+                                    stored_docs += 1
+                                else:
+                                    break
 
                         unexplored_docs = self.collection.find(self._unexplored_inclusive_format, limit=search_points)
 
