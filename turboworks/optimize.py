@@ -533,6 +533,7 @@ class OptTask(FireTaskBase):
             else:
                 dimspace = dim
 
+            dimspace = random.shuffle(dimspace)
             total_dimspace.append(dimspace)
 
         space = [[xi] for xi in total_dimspace[0]] if len(dims) == 1 else product(*total_dimspace)
