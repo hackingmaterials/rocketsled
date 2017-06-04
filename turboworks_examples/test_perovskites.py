@@ -11,7 +11,7 @@ import numpy as np
 import pickle
 
 
-# 20 light splitters in terms of atomic number
+# 20 solar water splitter perovskite candidates in terms of atomic number
 good_cands_ls = [(3, 23, 0), (11, 51, 0), (12, 73, 1), (20, 32, 0), (20, 50, 0), (20, 73, 1), (38, 32, 0), (38, 50, 0),
                  (38, 73, 1), (39, 73, 2), (47, 41, 0), (50, 22, 0), (55, 41, 0), (56, 31, 4), (56, 49, 4), (56, 50, 0),
                  (56, 73, 1), (57, 22, 1), (57, 73, 2), (82, 31, 4)]
@@ -28,8 +28,7 @@ ab_names = ['Li', 'Be', 'B', 'Na', 'Mg', 'Al', 'Si', 'K', 'Ca', 'Sc', 'Ti', 'V',
 c_names = ['O3', 'O2N', 'ON2', 'N3', 'O2F', 'OFN', 'O2S']
 
 # Atomic
-ab_atomic =[3, 4, 5, 11, 12, 13, 14, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 37, 38, 39, 40, 41, 42,
-            44, 45, 46, 47, 48, 49, 50, 51, 52, 55, 56, 57, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83]
+ab_atomic2 = [Element(name).Z for name in ab_names]
 c_atomic = list(range(7))
 
 # Mendeleev number
@@ -93,8 +92,7 @@ def wf_creator(x, predictor, get_z, lpad):
                                 max=True,
                                 opt_label='test_perovskites',
                                 n_search_points=1000,
-                                n_train_points=1000,
-                                n_generation_points=5555)],
+                                n_train_points=1000)],
                         spec=spec)
     return Workflow([firework])
 
@@ -117,9 +115,9 @@ if __name__ =="__main__":
     TESTDB_NAME = 'perovskites1'
     predictor = 'RandomForestRegressor'
     get_z = 'turboworks_examples.test_perovskites.get_z'
-    n_iterations = 1000
-    n_runs = 2
-    filename = 'perovskites_{}_noz_{}iters_{}runs.p'.format(predictor, n_iterations, n_runs)
+    n_iterations = 5000
+    n_runs = 20
+    filename = 'perovskites_{}_withz_{}iters_{}runs.p'.format(predictor, n_iterations, n_runs)
 
     conn = MongoClient('localhost', 27017)
     db = getattr(conn, TESTDB_NAME)
@@ -142,5 +140,4 @@ if __name__ =="__main__":
         Y.append(y)
         launchpad.connection.drop_database(TESTDB_NAME)
 
-    data = {'Y': Y}
-    pickle.dump(data, open(filename, 'w'))
+    pickle.dump(Y, open(filename, 'w'))
