@@ -92,7 +92,8 @@ def wf_creator(x, predictor, get_z, lpad):
                                 max=True,
                                 opt_label='test_perovskites',
                                 n_search_points=1000,
-                                n_train_points=1000)],
+                                n_train_points=1000,
+                                n_generation_points=1000)],
                         spec=spec)
     return Workflow([firework])
 
@@ -105,17 +106,16 @@ def get_z(x):
     means = [np.mean(k) for k in conglomerate]
     stds = [np.std(k) for k in conglomerate]
     ranges = [np.ptp(k) for k in conglomerate]
-
     z = means + stds + ranges
     return z
 
 
 if __name__ =="__main__":
 
-    TESTDB_NAME = 'perovskites1'
+    TESTDB_NAME = 'perovskites4'
     predictor = 'RandomForestRegressor'
     get_z = 'turboworks_examples.test_perovskites.get_z'
-    n_iterations = 5000
+    n_iterations = 500
     n_runs = 20
     filename = 'perovskites_{}_withz_{}iters_{}runs.p'.format(predictor, n_iterations, n_runs)
 

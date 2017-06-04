@@ -116,7 +116,6 @@ class OptTask(FireTaskBase):
                        'get_z_args', 'get_z_kwargs', 'encode_categorical']
 
 
-    #todo: random sample for explored and unexplored?
     #todo: ++readability?
 
     def run_task(self, fw_spec):
