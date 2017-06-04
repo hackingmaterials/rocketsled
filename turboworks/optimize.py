@@ -26,12 +26,10 @@ __email__ = "ardunn@lbl.gov"
 @explicit_serialize
 class OptTask(FireTaskBase):
     """
-    A FireTask for running optimization loops automatically.
+    A FireTask for automatically running optimization loops and storing optimization data for complex workflows.
 
-    OptTask takes in and stores a vector 'x' which uniquely defines the input space and a scalar 'yi' which is the
-    scoring metric. OptTask produces a new x vector to minimize y using information from all x vectors (X) and y
-    scalars (Y). Additionally, a z vector of extra features can be used by OptTask to better optimize, although new
-    values of z will be discarded.
+    OptTask takes in x and yi (input/output of current guess), gathers X (previous guesses input) and y (previous
+    guesses output), and predicts the next best guess. 
 
     Required args:
         wf_creator (function): returns a workflow based on a unique vector, x.
@@ -112,7 +110,7 @@ class OptTask(FireTaskBase):
                        'n_search_points', 'space', 'predictor_args', 'predictor_kwargs', 'encode_categorical']
 
 
-    #todo: random sample for explored and unexplored
+    #todo: random sample for explored and unexplored?
     #todo: ++readability
 
     def run_task(self, fw_spec):
@@ -135,11 +133,11 @@ class OptTask(FireTaskBase):
         self._setup_db(fw_spec)
 
         for run in range(max_resets * max_runs):
-            manager_docs = self.collection.find(self._manager_format)
+            managers = self.collection.find(self._manager_format)
 
-            if manager_docs.count() == 0:
+            if managers.count() == 0:
                 self.collection.insert_one({'lock': pid, 'queue': []})
-            elif manager_docs.count() == 1:
+            elif managers.count() == 1:
 
                 try:
                     manager = self.collection.find_one(self._manager_format)
