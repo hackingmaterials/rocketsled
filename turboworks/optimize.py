@@ -512,19 +512,23 @@ class OptTask(FireTaskBase):
         total_dimspace = []
 
         for dim in dims:
-            lower = dim[0]
-            upper = dim[1]
+            if len(dim) == 2:
+                lower = dim[0]
+                upper = dim[1]
 
-            if type(lower) in self.dtypes.ints:
-                # Then the dimension is of the form (lower, upper)
-                dimspace = list(range(lower, upper + 1))
-            elif type(lower) in self.dtypes.floats:
-                if discrete_floats:
-                    dimspace = [random.uniform(lower, upper) for i in range(n_floats)]
-                else:
-                    raise ValueError("The dimension is a float. The dimension space is infinite.")
-            else:  # The dimension is a discrete finite string list
+                if type(lower) in self.dtypes.ints:
+                    # Then the dimension is of the form (lower, upper)
+                    dimspace = list(range(lower, upper + 1))
+                elif type(lower) in self.dtypes.floats:
+                    if discrete_floats:
+                        dimspace = [random.uniform(lower, upper) for i in range(n_floats)]
+                    else:
+                        raise ValueError("The dimension is a float. The dimension space is infinite.")
+                else:  # The dimension is a discrete finite string list
+                    dimspace = dim
+            else:
                 dimspace = dim
+
             total_dimspace.append(dimspace)
 
         space = [[xi] for xi in total_dimspace[0]] if len(dims) == 1 else product(*total_dimspace)
