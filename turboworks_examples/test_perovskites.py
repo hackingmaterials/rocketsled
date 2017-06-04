@@ -142,10 +142,5 @@ if __name__ =="__main__":
         Y.append(y)
         launchpad.connection.drop_database(TESTDB_NAME)
 
-    # mean = np.mean(Y, axis=0)
-    # std = np.std(Y, axis=0)
-    # lower = [mean[i] - std[i] for i in range(len(mean))]
-    # upper = [mean[i] + std[i] for i in range(len(mean))]
-
     data = {'Y': Y}
     pickle.dump(data, open(filename, 'w'))
