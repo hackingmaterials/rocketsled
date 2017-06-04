@@ -200,7 +200,7 @@ class OptTask(FireTaskBase):
                         # prevent a huge discrete space from being stored initially in db (can be very slow!)
                         generation_points = self['n_generation_points'] if 'n_generation_points' in self else 20000
                         stored_docs = 0
-                        
+
                         for xi in X_space:
                             xj = list(xi)
                             if self.collection.find({'x': xj}).count() == 0 and xj != x:
