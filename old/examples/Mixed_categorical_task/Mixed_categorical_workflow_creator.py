@@ -1,7 +1,7 @@
 from fireworks import Firework, Workflow
 
 from Mixed_categorical_task import MixedCategoricalTask
-from old.optimize_task import SKOptimizeTask, DummyOptimizeTask
+from old.assorted.optimize_task import SKOptimizeTask, DummyOptimizeTask
 
 """
 This file specifies a function that creates a workflow to:

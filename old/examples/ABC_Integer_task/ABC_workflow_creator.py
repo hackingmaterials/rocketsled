@@ -1,7 +1,7 @@
 from fireworks import Firework, Workflow
 
 from ABC_task import ABCtask
-from old.optimize_task import SKOptimizeTask, DummyOptimizeTask, COMBOptomizeTask
+from old.assorted.optimize_task import SKOptimizeTask, DummyOptimizeTask, COMBOptomizeTask
 
 """
 This file specifies a function that creates a workflow to:

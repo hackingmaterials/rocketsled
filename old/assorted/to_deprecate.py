@@ -2,12 +2,12 @@ import os
 import sys
 from contextlib import contextmanager
 
-import numpy as np
-
 import combo
-from old.gp_opt import gp_minimize
+import numpy as np
 from turboworks.discrete import calculate_discrete_space, duplicate_check
 from turboworks.utils import random_guess
+
+from old.assorted.gp_opt import gp_minimize
 
 
 class Utility(object):

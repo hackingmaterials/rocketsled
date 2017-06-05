@@ -2,9 +2,9 @@ import math
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-from old.gp_opt import gp_minimize
 from turboworks.utils import random_guess
+
+from old.assorted.gp_opt import gp_minimize
 
 
 def branin(x):

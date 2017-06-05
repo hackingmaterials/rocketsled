@@ -1,11 +1,11 @@
 from fireworks import Firework, LaunchPad, FWAction, FireTaskBase, Workflow
 from fireworks.core.rocket_launcher import launch_rocket
 from fireworks.utilities.fw_utilities import explicit_serialize
-
-from old.optimize_task import OptimizeTask, AutoOptimizeTask
 from old.reference import ref_dict, ref_dict2
 from turboworks.optdb import OptDB
 from turboworks.utils import random_guess
+
+from old.assorted.optimize_task import OptimizeTask, AutoOptimizeTask
 
 
 @explicit_serialize
