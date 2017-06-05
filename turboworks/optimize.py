@@ -515,7 +515,7 @@ class OptTask(FireTaskBase):
         total_dimspace = []
 
         for dim in dims:
-            if len(dim) == 2 and isinstance(dim, tuple):
+            if len(dim) == 2:
                 lower = dim[0]
                 upper = dim[1]
 
@@ -527,14 +527,13 @@ class OptTask(FireTaskBase):
                         dimspace = [random.uniform(lower, upper) for i in range(n_floats)]
                     else:
                         raise ValueError("The dimension is a float. The dimension space is infinite.")
-                else:  # The dimension is a discrete finite string list
+                else:  # The dimension is a discrete finite string list of two entries
                     dimspace = dim
-            else:
+            else: # the dimension is a list of categories or discrete integer/float entries
                 dimspace = dim
 
-            dimspace = random.shuffle(dimspace)
+            random.shuffle(dimspace)
             total_dimspace.append(dimspace)
-
         space = [[xi] for xi in total_dimspace[0]] if len(dims) == 1 else product(*total_dimspace)
 
         return space

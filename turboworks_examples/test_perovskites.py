@@ -112,7 +112,7 @@ def get_z(x):
 
 if __name__ =="__main__":
 
-    TESTDB_NAME = 'perovskites4'
+    TESTDB_NAME = 'perovskites1'
     predictor = 'RandomForestRegressor'
     get_z = 'turboworks_examples.test_perovskites.get_z'
     n_iterations = 500
