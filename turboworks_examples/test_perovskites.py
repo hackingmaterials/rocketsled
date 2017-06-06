@@ -4,7 +4,7 @@ from fireworks.utilities.fw_utilities import explicit_serialize
 from turboworks.optimize import OptTask, random_guess
 from pymongo import MongoClient
 from matminer.descriptors.composition_features import get_pymatgen_descriptor
-from pymatgen import Composition,  Element
+from pymatgen import Element
 import pandas as pd
 import numpy as np
 import pickle
@@ -120,8 +120,8 @@ if __name__ =="__main__":
     predictor = 'RandomForestRegressor'
     get_z = 'turboworks_examples.test_perovskites.get_z'
     # n_iterations = 5000
-    n_cands = 10
-    n_runs = 10
+    n_cands = 20
+    n_runs = 20
     # filename = 'perovskites_{}_withz_{}iters_{}runs.p'.format(predictor, n_iterations, n_runs)
     filename = 'perovskites_{}_withz_{}cands_{}runs.p'.format(predictor, n_cands, n_runs)
 

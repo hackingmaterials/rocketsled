@@ -33,7 +33,7 @@ def addtofig_iterationwise(ulm, color, label, length=None, single=False, alphamu
         mean = ulm[0:length]
     else:
         if not length:
-            length = len(ulm['mean']) - 1
+            length = len(ulm['mean'])
         upper = ulm['upper'][0:length]
         lower = ulm['lower'][0:length]
         mean = ulm['mean'][0:length]
