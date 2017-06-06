@@ -84,14 +84,15 @@ def wf_creator(x, predictor, get_z, lpad):
                         OptTask(wf_creator='turboworks_examples.test_perovskites.wf_creator',
                                 dimensions=dim,
                                 lpad=lpad,
-                                # get_z=get_z,
+                                get_z=get_z,
                                 predictor=predictor,
                                 duplicate_check=True,
                                 wf_creator_args=[predictor, get_z, lpad],
                                 max=True,
                                 opt_label='test_perovskites',
                                 n_search_points=20000,
-                                n_train_points=20000)],
+                                n_train_points=20000,
+                                n_generation_points=1000)],
                         spec=spec)
     return Workflow([firework])
 
@@ -115,24 +116,24 @@ if __name__ =="__main__":
     # using just electroneg features ...eneg
     # using just average ionic radius features ...air
 
-    TESTDB_NAME = 'rfrnoz'
+    TESTDB_NAME = 'wiz'
     predictor = 'RandomForestRegressor'
     get_z = 'turboworks_examples.test_perovskites.get_z'
     # n_iterations = 5000
     n_cands = 10
     n_runs = 10
     # filename = 'perovskites_{}_withz_{}iters_{}runs.p'.format(predictor, n_iterations, n_runs)
-    filename = 'perovskites_{}_noz_{}cands_{}runs.p'.format(predictor, n_cands, n_runs)
-
-
-    conn = MongoClient('localhost', 27017)
-    db = getattr(conn, TESTDB_NAME)
-    collection = db.test_perovskites
+    filename = 'perovskites_{}_withz_{}cands_{}runs.p'.format(predictor, n_cands, n_runs)
 
     Y = []
     for i in range(n_runs):
+        rundb = TESTDB_NAME + "_{}".format(i)
 
-        launchpad = LaunchPad(name=TESTDB_NAME)
+        conn = MongoClient('localhost', 27017)
+        db = getattr(conn, rundb)
+        collection = db.test_perovskites
+
+        launchpad = LaunchPad(name=rundb)
         launchpad.reset(password=None, require_password=False)
         launchpad.add_wf(wf_creator(random_guess(dim), predictor, get_z, launchpad))
 
@@ -144,6 +145,8 @@ if __name__ =="__main__":
             launch_rocket(launchpad)
             cands = collection.find({'yi':30.0}).count()
             y.append(cands)
+
+        pickle.dump(y, open(filename + "_{}".format(i), 'w'))
 
         Y.append(y)
         launchpad.connection.drop_database(TESTDB_NAME)
