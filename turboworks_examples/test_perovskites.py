@@ -84,15 +84,14 @@ def wf_creator(x, predictor, get_z, lpad):
                         OptTask(wf_creator='turboworks_examples.test_perovskites.wf_creator',
                                 dimensions=dim,
                                 lpad=lpad,
-                                get_z=get_z,
+                                # get_z=get_z,
                                 predictor=predictor,
                                 duplicate_check=True,
                                 wf_creator_args=[predictor, get_z, lpad],
                                 max=True,
                                 opt_label='test_perovskites',
                                 n_search_points=20000,
-                                n_train_points=20000,
-                                n_generation_points=1000)],
+                                n_train_points=20000)],
                         spec=spec)
     return Workflow([firework])
 
@@ -116,14 +115,14 @@ if __name__ =="__main__":
     # using just electroneg features ...eneg
     # using just average ionic radius features ...air
 
-    TESTDB_NAME = 'wiz'
+    TESTDB_NAME = 'noz'
     predictor = 'RandomForestRegressor'
     get_z = 'turboworks_examples.test_perovskites.get_z'
     # n_iterations = 5000
     n_cands = 20
     n_runs = 20
     # filename = 'perovskites_{}_withz_{}iters_{}runs.p'.format(predictor, n_iterations, n_runs)
-    filename = 'perovskites_{}_withz_{}cands_{}runs.p'.format(predictor, n_cands, n_runs)
+    filename = 'perovskites_{}_noz_{}cands_{}runs.p'.format(predictor, n_cands, n_runs)
 
     Y = []
     for i in range(n_runs):

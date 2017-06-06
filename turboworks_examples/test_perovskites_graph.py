@@ -15,7 +15,7 @@ ran = [0, 763.46, 1682.28, 2685.18, 3536.56, 4604.58, 5920.56, 6555.42, 7667.04,
 
 def addtofig(ulm, color, label, length=None):
     if not length:
-        length = len(ulm['mean']) - 1
+        length = len(ulm['mean'])
 
     upper = ulm['upper'][0:length]
     lower = ulm['lower'][0:length]
@@ -34,9 +34,9 @@ def addtofig_iterationwise(ulm, color, label, length=None, single=False, alphamu
     else:
         if not length:
             length = len(ulm['mean'])
-        upper = ulm['upper'][0:length]
-        lower = ulm['lower'][0:length]
-        mean = ulm['mean'][0:length]
+        upper = ulm['upper'][:length]
+        lower = ulm['lower'][:length]
+        mean = ulm['mean'][:length]
 
     y = range(len(mean))
     pyplot.plot(mean, y, color=color, marker='o', linewidth=2.5, label=label, alpha=alphamult)
@@ -64,7 +64,7 @@ def get_stats_iterationwise(Y):
                 i.append(j)
         I.append(i)
 
-    minlen = 20
+    minlen = 21
     for i in I:
         if len(i) < minlen:
             minlen = len(i)
@@ -92,17 +92,21 @@ def depickle(file):
     return pickle.load(open(file, 'rb'))
 
 if __name__=="__main__":
-    rfwithz_Y = depickle('perovskites_RandomForestRegressor_withz_2000iters_5runs.p')
-    rfnoz_Y = depickle('perovskites_RandomForestRegressor_noz_2000iters_5runs.p')
-    rfnoz_stats = get_stats_iterationwise(rfnoz_Y)
-    rfwithz_stats = get_stats_iterationwise(rfwithz_Y)
+    # rfwithz_Y = depickle('perovskites_RandomForestRegressor_withz_2000iters_5runs.p')
+    # rfnoz_Y = depickle('perovskites_RandomForestRegressor_noz_2000iters_5runs.p')
 
-    addtofig_iterationwise(rfnoz_stats, 'slategrey', 'RF without z')
-    addtofig_iterationwise(rfwithz_stats, 'dodgerblue', 'RF with z')
-    addtofig_iterationwise(ch, 'orange', 'Chemical Rules', single=True, length=14)
-    addtofig_iterationwise(ran, 'red', 'Random Search', single=True, length=14)
+    rfnoz_Y = []
+    # for i in range(6):
+    #     rfnoz_Y.append(depickle('perovskites_RandomForestRegressor_noz_20cands_20runs.p_{}'.format(i)))
+    # rfnoz_stats = get_stats_iterationwise(rfnoz_Y)
+    # rfwithz_stats = get_stats_iterationwise(rfwithz_Y)
 
-    pyplot.xlim(0, 1500)
+    # addtofig_iterationwise(rfnoz_stats, 'slategrey', 'RF without z')
+    # addtofig_iterationwise(rfwithz_stats, 'dodgerblue', 'RF with z')
+    addtofig_iterationwise(ch, 'orange', 'Chemical Rules', single=True)
+    addtofig_iterationwise(ran, 'red', 'Random Search', single=True)
+
+    pyplot.xlim(0, 4000)
 
     pyplot.legend(loc='upper right', prop={'size':8})
     pyplot.xlabel("Iteration")

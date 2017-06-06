@@ -44,9 +44,8 @@ class OptTask(FireTaskBase):
             Examples: 
                 get_z = 'my_module.my_fun'
                 get_z = '/path/to/folder/containing/my_package.my_module.my_fun'
-        predictor (string): names a function which given a list of inputs, a list of outputs, and a dimensions space,
-            and a machine learning regressor can return a new optimized input vector. Can specify from a list of 
-            sklearn regressors or a custom function.
+        predictor (string): names a function which given a list of explored points and unexplored points, returns an 
+            optimized guess. 
             Included sklearn predictors are:
                 'LinearRegression'
                 'RandomForestRegressor'
