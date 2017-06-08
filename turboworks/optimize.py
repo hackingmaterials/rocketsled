@@ -113,9 +113,8 @@ class OptTask(FireTaskBase):
                        'host', 'port', 'name', 'lpad', 'opt_label', 'retrain_interval', 'n_train_points',
                        'n_search_points', 'n_generation_points', 'space', 'predictor_args', 'predictor_kwargs',
                        'get_z_args', 'get_z_kwargs', 'encode_categorical']
-
-
-    #todo: ++readability?
+    # todo: ++readability?
+    # todo: PEP8
 
     def run_task(self, fw_spec):
         """
@@ -186,7 +185,12 @@ class OptTask(FireTaskBase):
                     self.get_z = self._deserialize(self['get_z']) if 'get_z' in self else lambda input_vector: []
                     get_z_args = self['get_z_args'] if 'get_z_args' in self else []
                     get_z_kwargs = self['get_z_kwargs'] if 'get_z_kwargs' in self else {}
-                    z = self.get_z(x, *get_z_args, **get_z_kwargs)
+
+                    # Prevent calling get_z for the current guess if already exists in database
+                    if self.collection.find({'x': x, 'z': {'$exists': 1}}).count() == 0:
+                        z = self.get_z(x, *get_z_args, **get_z_kwargs)
+                    else:
+                        z = self.collection.find_one({'x': x, 'z': {'$exists': 1}})['z']
 
                     train_points = self['n_train_points'] if 'n_train_points' in self else 1000
                     search_points = self['n_search_points'] if 'n_search_points' in self else 1000
@@ -196,8 +200,8 @@ class OptTask(FireTaskBase):
                     # if no comprehensive list has been made, insert some unexplored docs
                     if unexplored_docs.count() == 0:
 
-                        X_space = self['space'] if 'space' in self else self._discretize_space(x_dims,
-                                                                                               discrete_floats=True)
+                        X_space = self['space'] if 'space' in self and self['space'] else \
+                            self._discretize_space(x_dims, discrete_floats=True)
 
                         # prevent a huge discrete space from being stored initially in db (can be very slow!)
                         generation_points = self['n_generation_points'] if 'n_generation_points' in self else 20000
@@ -395,9 +399,10 @@ class OptTask(FireTaskBase):
 
             except AttributeError:
                 # auto_load did not return any launchpad object, so nothing was defined.
-                raise AttributeError("The optimization database must be specified explicitly (with host, port, and"
-                                 " name), with Launchpad object (lpad), by setting _add_launchpad_and_fw_id to True in"
-                                 " the fw_spec, or by defining LAUNCHPAD_LOC in fw_config.py for LaunchPad.auto_load()")
+                raise AttributeError("The optimization database must be specified explicitly (with host, port, and "
+                                     "name), with Launchpad object (lpad), by setting _add_launchpad_and_fw_id to True "
+                                     "in the fw_spec, or by defining LAUNCHPAD_LOC in fw_config.py for "
+                                     "LaunchPad.auto_load()")
 
         mongo = MongoClient(host, port)
         db = getattr(mongo, name)
@@ -423,9 +428,7 @@ class OptTask(FireTaskBase):
 
         Returns:
             None
-
         """
-
         dims_types = [list, tuple]
 
         if type(dims) not in dims_types:
@@ -553,7 +556,6 @@ class OptTask(FireTaskBase):
             passed to
                 predictor function.
             model (sklearn model): The regressor used for predicting the next best guess.
-            n_points (int): The number of points in space to predict over.
             maximize (bool): Makes predictor return the guess which maximizes the predicted objective function output.
                 Else minmizes the predicted objective function output.  
 
@@ -681,6 +683,7 @@ class OptTask(FireTaskBase):
                         cat_values.append(z[i])
                         dims[i] = cat_values
         return dims
+
 
 class Dtypes(object):
     """
