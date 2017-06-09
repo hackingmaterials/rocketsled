@@ -3,6 +3,7 @@ The FireTask for running automatic optimization loops.
 """
 import sys
 import random
+import pickle
 from itertools import product
 from os import getpid
 from time import sleep
@@ -80,7 +81,8 @@ class OptTask(FireTaskBase):
         n_generation_points (int): The number of points to be generated and stored the database during creation of the
             search space. Use this if your search space is gigantic, otherwise OptTask will try to store a huge 
             search space in your database!
-        space ([list]): A list of all possible search points. This should be used to search discontinuous spaces.
+        space (str): The fully specified path of a pickle file containing a list of all possible searchable vectors.
+            For example '/Users/myuser/myfolder/myspace.p'. When loaded, this space should be a list of tuples. 
         predictor_args (list): the positional args to be passed to the model along with a list of points to be searched.
             For sklearn-based predictors included in OptTask, these positional args are passed to the init method of
             the chosen model. For custom predictors, these are passed to the chosen predictor function alongside the 
@@ -200,8 +202,13 @@ class OptTask(FireTaskBase):
                     # if no comprehensive list has been made, insert some unexplored docs
                     if unexplored_docs.count() == 0:
 
-                        X_space = self['space'] if 'space' in self and self['space'] else \
-                            self._discretize_space(x_dims, discrete_floats=True)
+                        if 'space' in self:
+                            if self['space']:
+                                X_space = pickle.load(open(self['space'], 'rb'))
+                            else:
+                                X_space = self._discretize_space(x_dims, discrete_floats=True)
+                        else:
+                            X_space = self._discretize_space(x_dims, discrete_floats=True)
 
                         # prevent a huge discrete space from being stored initially in db (can be very slow!)
                         generation_points = self['n_generation_points'] if 'n_generation_points' in self else 20000
