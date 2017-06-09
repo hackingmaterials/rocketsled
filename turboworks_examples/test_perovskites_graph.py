@@ -2,6 +2,7 @@ from matplotlib import pyplot
 import pickle
 import numpy as np
 from random import randint
+import numpy
 
 
 # reference lists:
@@ -26,7 +27,7 @@ def addtofig(ulm, color, label, length=None):
     pyplot.plot(x, upper, color=color, linewidth=0.5, alpha=0.3)
     pyplot.fill_between(x, lower, upper, color=color, alpha=0.13)
 
-def addtofig_iterationwise(ulm, color, label, length=None, single=False, alphamult=1.0):
+def addtofig_iterationwise(ulm, color, label, length=None, single=False, alphamult=1.0, **kwargs):
     if single:
         if not length:
             length = len(ulm)
@@ -39,7 +40,7 @@ def addtofig_iterationwise(ulm, color, label, length=None, single=False, alphamu
         mean = ulm['mean'][:length]
 
     y = range(len(mean))
-    pyplot.plot(mean, y, color=color, marker='o', linewidth=2.5, label=label, alpha=alphamult)
+    pyplot.plot(mean, y, color=color, marker='o', linewidth=2.0, label=label, alpha=alphamult, **kwargs)
 
     if not single:
         pyplot.plot(lower, y, color=color, linewidth=0.5, alpha=0.3)
@@ -47,6 +48,13 @@ def addtofig_iterationwise(ulm, color, label, length=None, single=False, alphamu
         pyplot.fill_betweenx(y, lower, upper, color=color, alpha=0.13)
 
 def get_stats(Y):
+    minlen = 18920
+    for y in Y:
+        if len(y) < minlen:
+            minlen = len(y)
+
+    Y = [y[:minlen] for y in Y]
+
     mean = np.mean(Y, axis=0)
     std = np.std(Y, axis=0)
     lower = [mean[i] - std[i] for i in range(len(mean))]
@@ -81,36 +89,43 @@ def get_stats_iterationwise(Y):
     upper = [mean[i] + std[i] for i in range(len(mean))]
     return {'mean': mean, 'lower': lower, 'upper': upper}
 
-def addtofig_individuals(Y, color, label):
+def addtofig_individuals(Y, label, color=None):
     for k, y in enumerate(Y):
         rfwithz = get_stats_iterationwise([y])
-        addtofig_iterationwise(rfwithz['mean'], color, label + ' {}'.format(k+1), single=True,
-                               alphamult=float(k)/10+0.2)
+        if color:
+            addtofig_iterationwise(rfwithz['mean'], color, label + ' {}'.format(k+1), single=True,
+                                   alphamult=float(k)/10+0.12)
+        else:
+            addtofig_iterationwise(rfwithz['mean'], color=numpy.random.rand(3,),
+                                   label=label + ' {}'.format(k + 1), single=True)
 
 
 def depickle(file):
     return pickle.load(open(file, 'rb'))
 
 if __name__=="__main__":
-    # rfwithz_Y = depickle('perovskites_RandomForestRegressor_withz_2000iters_5runs.p')
-    # rfnoz_Y = depickle('perovskites_RandomForestRegressor_noz_2000iters_5runs.p')
+    rfwithz_Y = depickle('perovskites_RandomForestRegressor_withz_20cands_20runs.p')
+    rfnoz_Y = depickle('perovskites_RandomForestRegressor_noz_20cands_20runs.p')
 
-    rfnoz_Y = []
-    # for i in range(6):
-    #     rfnoz_Y.append(depickle('perovskites_RandomForestRegressor_noz_20cands_20runs.p_{}'.format(i)))
-    # rfnoz_stats = get_stats_iterationwise(rfnoz_Y)
-    # rfwithz_stats = get_stats_iterationwise(rfwithz_Y)
+    rfnoz_stats = get_stats_iterationwise(rfnoz_Y)
+    rfwithz_stats = get_stats_iterationwise(rfwithz_Y)
 
-    # addtofig_iterationwise(rfnoz_stats, 'slategrey', 'RF without z')
-    # addtofig_iterationwise(rfwithz_stats, 'dodgerblue', 'RF with z')
+    print rfnoz_stats['mean'][-1]
+    print rfwithz_stats['mean'][-1]
+
+    # addtofig_individuals(rfwithz_Y, '', color=None)
+    # addtofig_individuals(rfwithz_Y, 'rf', color='dodgerblue')
+    # addtofig_individuals(rfnoz_Y, 'rf', color='slategrey')
+    # addtofig_iterationwise(rfnoz_stats, 'green', 'RF without z')
+    addtofig_iterationwise(rfwithz_stats, 'dodgerblue', 'RF with z')
     addtofig_iterationwise(ch, 'orange', 'Chemical Rules', single=True)
-    addtofig_iterationwise(ran, 'red', 'Random Search', single=True)
+    addtofig_iterationwise(ran, 'black', 'Random Search', single=True, markersize=0.1)
 
-    pyplot.xlim(0, 4000)
+    pyplot.xlim(0, 4200)
 
-    pyplot.legend(loc='upper right', prop={'size':8})
-    pyplot.xlabel("Iteration")
-    pyplot.ylabel("Light Splitter Candidates Found")
-    pyplot.title("Comparison of Predictors for Finding Light Splitting Perovskites")
+    pyplot.legend(loc='right', prop={'size':8})
+    pyplot.xlabel("Calculations")
+    pyplot.ylabel("Candidates Found")
+    pyplot.title("Comparison of Predictors for Finding Solar Water Splitting Perovskites")
     # pyplot.savefig("{}_withoutz_max.png".format(predictor))
     pyplot.show()
