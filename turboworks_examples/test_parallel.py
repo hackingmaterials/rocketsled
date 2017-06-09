@@ -41,6 +41,8 @@ if __name__ == "__main__":
     n_processes = 10
     n_runs = 15
 
+    # Should throw an 'Exhausted' error when n_processes*n_runs > 125 (the total space size)
+
     load_parallel_wfs(n_processes)
 
     for i in range(n_runs):
