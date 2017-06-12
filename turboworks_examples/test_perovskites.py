@@ -110,25 +110,37 @@ def wf_creator(x, predictor, get_z, lpad, space, chemical_rules=False):
 def get_z(x, chemical_rules=False):
     descriptors = ['X', 'average_ionic_radius']
     a, b, c = mend_to_name(x[0], x[1], x[2])
-    name = a + b + c
-    conglomerate = [get_pymatgen_descriptor(name, d) for d in descriptors]
-    means = [np.mean(k) for k in conglomerate]
-    stds = [np.std(k) for k in conglomerate]
-    ranges = [np.ptp(k) for k in conglomerate]
+    # name = a + b + c
+    # conglomerate = [get_pymatgen_descriptor(name, d) for d in descriptors]
+    # means = [np.mean(k) for k in conglomerate]
+    # stds = [np.std(k) for k in conglomerate]
+    # ranges = [np.ptp(k) for k in conglomerate]
+    # z = means + stds + ranges + gs_dev
+    z = []
+
+    for d in descriptors:
+        ab_attrs = [getattr(Element(el), d) for el in (a, b)]
+        c_attrs = get_pymatgen_descriptor(c, d)
+
+        for attrs_set in [ab_attrs, c_attrs]:
+            z.append(np.mean(attrs_set))
+            z.append(np.ptp(attrs_set))
+            z.append(np.std(attrs_set))
+
 
     # Chemical rules
     # gs_rank = [space_noex.index(tuple(x))] if chemical_rules else []
     rx = np.mean(get_pymatgen_descriptor(c, 'average_ionic_radius'))
     ra = Element(a).average_ionic_radius
     rb = Element(b).average_ionic_radius
-    gs_dev = [abs(1 - (ra + rx)/(2 ** 0.5 * (rb + rx)))] if chemical_rules else None
+    gs_dev = abs(1 - (ra + rx)/(2 ** 0.5 * (rb + rx))) if chemical_rules else None
+    z.append(gs_dev)
 
-    z = means + stds + ranges + gs_dev
     return z
 
 if __name__ =="__main__":
 
-    TESTDB_NAME = 'wex_norank'
+    TESTDB_NAME = 'newz'
     predictor = 'RandomForestRegressor'
     get_z = 'turboworks_examples.test_perovskites.get_z'
     n_cands = 20
