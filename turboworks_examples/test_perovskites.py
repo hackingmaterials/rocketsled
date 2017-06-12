@@ -115,13 +115,20 @@ def get_z(x, chemical_rules=False):
     means = [np.mean(k) for k in conglomerate]
     stds = [np.std(k) for k in conglomerate]
     ranges = [np.ptp(k) for k in conglomerate]
-    gs_rank = [space_noex.index(tuple(x))] if chemical_rules else []
-    z = means + stds + ranges + gs_rank
+
+    # Chemical rules
+    # gs_rank = [space_noex.index(tuple(x))] if chemical_rules else []
+    rx = np.mean(get_pymatgen_descriptor(c, 'average_ionic_radius'))
+    ra = Element(a).average_ionic_radius
+    rb = Element(b).average_ionic_radius
+    gs_dev = [abs(1 - (ra + rx)/(2 ** 0.5 * (rb + rx)))] if chemical_rules else None
+
+    z = means + stds + ranges + gs_dev
     return z
 
 if __name__ =="__main__":
 
-    TESTDB_NAME = 'wex'
+    TESTDB_NAME = 'wex_norank'
     predictor = 'RandomForestRegressor'
     get_z = 'turboworks_examples.test_perovskites.get_z'
     n_cands = 20

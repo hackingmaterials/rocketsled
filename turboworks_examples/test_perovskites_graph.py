@@ -67,6 +67,11 @@ def get_stats_iterationwise(Y):
     I = []
     for y in Y:
         i = [0]
+
+        # if the very first guess was a good candidate
+        if y[0] != 0:
+            y = [0] + y
+
         for j, yi in enumerate(y):
             if j!=0 and yi > y[j-1] and yi < maxcands:
                 i.append(j)
@@ -106,19 +111,23 @@ def depickle(file):
 if __name__=="__main__":
     rfwithz_Y = depickle('perovskites_RandomForestRegressor_withz_20cands_20runs.p')
     rfnoz_Y = depickle('perovskites_RandomForestRegressor_noz_20cands_20runs.p')
+    rfwex_Y = depickle('perovskites_RandomForestRegressor_wex_20cands_20runs.p')
 
-    rfnoz_stats = get_stats_iterationwise(rfnoz_Y)
+    # rfnoz_stats = get_stats_iterationwise(rfnoz_Y)
     rfwithz_stats = get_stats_iterationwise(rfwithz_Y)
+    rfwex_stats = get_stats_iterationwise(rfwex_Y)
 
-    print rfnoz_stats['mean'][-1]
+    # print rfnoz_stats['mean'][-1]
     print rfwithz_stats['mean'][-1]
+    print rfwex_stats['mean'][-1]
 
     # addtofig_individuals(rfwithz_Y, '', color=None)
     # addtofig_individuals(rfwithz_Y, 'rf', color='dodgerblue')
     # addtofig_individuals(rfnoz_Y, 'rf', color='slategrey')
+    addtofig_iterationwise(rfwex_stats, 'purple', 'RF with z, exclusions, and ranking')
     # addtofig_iterationwise(rfnoz_stats, 'green', 'RF without z')
-    addtofig_iterationwise(rfwithz_stats, 'dodgerblue', 'RF with z')
-    addtofig_iterationwise(ch, 'orange', 'Chemical Rules', single=True)
+    # addtofig_iterationwise(rfwithz_stats, 'dodgerblue', 'RF with z')
+    # addtofig_iterationwise(ch, 'orange', 'Chemical Rules', single=True)
     addtofig_iterationwise(ran, 'black', 'Random Search', single=True, markersize=0.1)
 
     pyplot.xlim(0, 4200)
