@@ -127,9 +127,10 @@ def get_z(x, chemical_rules=False):
             z.append(np.ptp(attrs_set))
             z.append(np.std(attrs_set))
 
+    z += [Element(a).max_oxidation_state, Element(a).min_oxidation_state]
+    z += [Element(b).max_oxidation_state, Element(b).min_oxidation_state]
 
     # Chemical rules
-    # gs_rank = [space_noex.index(tuple(x))] if chemical_rules else []
     rx = np.mean(get_pymatgen_descriptor(c, 'average_ionic_radius'))
     ra = Element(a).average_ionic_radius
     rb = Element(b).average_ionic_radius
@@ -140,7 +141,7 @@ def get_z(x, chemical_rules=False):
 
 if __name__ =="__main__":
 
-    TESTDB_NAME = 'newz'
+    TESTDB_NAME = 'oxstates'
     predictor = 'RandomForestRegressor'
     get_z = 'turboworks_examples.test_perovskites.get_z'
     n_cands = 20

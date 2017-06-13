@@ -113,22 +113,27 @@ if __name__=="__main__":
     rfnoz_Y = depickle('perovskites_RandomForestRegressor_noz_20cands_20runs.p')
     rfwex_Y = depickle('perovskites_RandomForestRegressor_wex_20cands_20runs.p')
     rfwex_norank_Y = depickle('perovskites_RandomForestRegressor_wex_norank_20cands_20runs.p')
+    rfwex_newz_Y  = depickle('perovskites_RandomForestRegressor_newz_20cands_20runs.p')
 
-    # rfnoz_stats = get_stats_iterationwise(rfnoz_Y)
+    rfnoz_stats = get_stats_iterationwise(rfnoz_Y)
     rfwithz_stats = get_stats_iterationwise(rfwithz_Y)
     rfwex_stats = get_stats_iterationwise(rfwex_Y)
     rfwex_norank_stats = get_stats_iterationwise(rfwex_norank_Y)
+    rfwex_newz_stats = get_stats_iterationwise(rfwex_newz_Y)
 
     # print rfnoz_stats['mean'][-1]
     print rfwithz_stats['mean'][-1]
     print rfwex_stats['mean'][-1]
     print rfwex_norank_stats['mean'][-1]
+    print rfwex_newz_stats['mean'][-1]
+
 
     # addtofig_individuals(rfwithz_Y, '', color=None)
     # addtofig_individuals(rfwithz_Y, 'rf', color='dodgerblue')
     # addtofig_individuals(rfnoz_Y, 'rf', color='slategrey')
-    addtofig_iterationwise(rfwex_norank_stats, 'green', 'RF with z, GS dev.')
-    addtofig_iterationwise(rfwex_stats, 'purple', 'RF with z, GS rank')
+    addtofig_iterationwise(rfwex_newz_stats, 'dodgerblue', 'RF with new z')
+    addtofig_iterationwise(rfwex_norank_stats, 'green', 'RF with z')
+    # addtofig_iterationwise(rfwex_stats, 'purple', 'RF with z, GS rank')
     # addtofig_iterationwise(rfnoz_stats, 'green', 'RF without z')
     # addtofig_iterationwise(rfwithz_stats, 'dodgerblue', 'RF with z')
     # addtofig_iterationwise(ch, 'orange', 'Chemical Rules', single=True)
