@@ -42,7 +42,8 @@ c_mendrank = [4, 3, 2, 1, 6, 5, 0]
 perovskites = pd.read_csv('unc.csv')
 
 # dim = [(0, 51), (0, 51), (0, 6)]
-dim = [ab_mend, ab_mend, c_mend]
+# todo: use categorical anions
+dim = [ab_mend, ab_mend, c_names]
 
 # Defining search space with exclusions
 # exclusions = pickle.load(open('excluded_compounds.p', 'rb'))  # in atomic
@@ -52,12 +53,11 @@ dim = [ab_mend, ab_mend, c_mend]
 #     if x not in exclusions:
 #         a_mend = ab_mend[ab_atomic.index(x[0])]
 #         b_mend = ab_mend[ab_atomic.index(x[1])]
-#         # todo: try categorical for anion
-#         c_mendi = c_mendrank[c_atomic.index(x[2])]
+#         c_mendi = c_names[c_atomic.index(x[2])]
 #         space_noex.append((a_mend, b_mend, c_mendi))
-# pickle.dump(space_noex, open('space_gs_mend_included.p', 'wb'))
+# pickle.dump(space_noex, open('space_gs_cat_included.p', 'wb'))
 
-space_noex = pickle.load(open('space_gs_mend_included.p', 'rb'))
+space_noex = pickle.load(open('space_gs_cat_included.p', 'rb'))
 
 
 def mend_to_name(a_mr, b_mr, c_mr):
@@ -65,10 +65,11 @@ def mend_to_name(a_mr, b_mr, c_mr):
     a_i = ab_mend.index(a_mr)
     b_i = ab_mend.index(b_mr)
     # todo: try categorical for anion
-    c_i = c_mendrank.index(c_mr)
+    # c_i = c_mendrank.index(c_mr)
     a = ab_names[a_i]
     b = ab_names[b_i]
-    c = c_names[c_i]
+    # c = c_names[c_i]
+    c = c_mr
     return a, b, c
 
 @explicit_serialize
@@ -146,7 +147,7 @@ def get_z(x, chemical_rules=False):
 
 if __name__ =="__main__":
 
-    TESTDB_NAME = 'mend'
+    TESTDB_NAME = 'cat'
     predictor = 'RandomForestRegressor'
     get_z = 'turboworks_examples.test_perovskites.get_z'
     n_cands = 20
@@ -165,7 +166,7 @@ if __name__ =="__main__":
         launchpad = LaunchPad(name=rundb)
         launchpad.reset(password=None, require_password=False)
         launchpad.add_wf(wf_creator(random.choice(space_noex), predictor, get_z, launchpad,
-                                    filedir + '/space_gs_mend_included.p',
+                                    filedir + '/space_gs_cat_included.p',
                                     chemical_rules=True))
 
         y = []
