@@ -13,6 +13,7 @@ ch = [0, 129, 157, 256, 271, 431, 512, 586, 603, 972, 981, 1100, 1165, 1216, 123
 # 50 run average of random guessing
 ran = [0, 763.46, 1682.28, 2685.18, 3536.56, 4604.58, 5920.56, 6555.42, 7667.04, 8412.74, 9228.02, 10016.54, 10796.92,
            11655.7, 12701.22, 13784.92, 14490.68, 15392.34, 16295.12, 17094.34, 18045.58]
+ran2 = [901.4*i for i in range(21)]
 
 def addtofig(ulm, color, label, length=None):
     if not length:
@@ -114,33 +115,43 @@ if __name__=="__main__":
     rfwex_Y = depickle('perovskites_RandomForestRegressor_wex_20cands_20runs.p')
     rfwex_norank_Y = depickle('perovskites_RandomForestRegressor_wex_norank_20cands_20runs.p')
     rfwex_newz_Y  = depickle('perovskites_RandomForestRegressor_newz_20cands_20runs.p')
+    rfwex_ox_Y = depickle('perovskites_RandomForestRegressor_oxstates_20cands_20runs.p')
+    rfwex_tuning_Y = depickle('perovskites_RandomForestRegressor_tuning_20cands_20runs.p')
 
     rfnoz_stats = get_stats_iterationwise(rfnoz_Y)
     rfwithz_stats = get_stats_iterationwise(rfwithz_Y)
     rfwex_stats = get_stats_iterationwise(rfwex_Y)
     rfwex_norank_stats = get_stats_iterationwise(rfwex_norank_Y)
     rfwex_newz_stats = get_stats_iterationwise(rfwex_newz_Y)
+    rfwex_ox_stats = get_stats_iterationwise(rfwex_ox_Y)
+    rfwex_tuning_stats = get_stats_iterationwise(rfwex_tuning_Y)
+
 
     # print rfnoz_stats['mean'][-1]
     print rfwithz_stats['mean'][-1]
     print rfwex_stats['mean'][-1]
     print rfwex_norank_stats['mean'][-1]
     print rfwex_newz_stats['mean'][-1]
+    print rfwex_ox_stats['mean'][-1]
+    print rfwex_tuning_stats['mean'][-1]
 
 
     # addtofig_individuals(rfwithz_Y, '', color=None)
     # addtofig_individuals(rfwithz_Y, 'rf', color='dodgerblue')
     # addtofig_individuals(rfnoz_Y, 'rf', color='slategrey')
-    addtofig_iterationwise(rfwex_newz_stats, 'dodgerblue', 'RF with new z')
-    addtofig_iterationwise(rfwex_norank_stats, 'green', 'RF with z')
+    addtofig_iterationwise(rfwex_ox_stats, 'orange', 'RF with ox states')
+    # addtofig_iterationwise(rfwex_newz_stats, 'dodgerblue', 'RF with new z')
+    # addtofig_iterationwise(rfwex_norank_stats, 'green', 'RF with z')
+    # addtofig_iterationwise(rfwex_tuning_stats, 'green', 'RF with 150 trees')
     # addtofig_iterationwise(rfwex_stats, 'purple', 'RF with z, GS rank')
     # addtofig_iterationwise(rfnoz_stats, 'green', 'RF without z')
     # addtofig_iterationwise(rfwithz_stats, 'dodgerblue', 'RF with z')
     # addtofig_iterationwise(ch, 'orange', 'Chemical Rules', single=True)
-    addtofig_iterationwise(ran, 'black', 'Random Search', single=True, markersize=0.1)
+    addtofig_iterationwise(ran2, 'black', 'Random Search', single=True, markersize=0.1)
 
-    pyplot.xlim(0, 4200)
+    # pyplot.xlim(0, 4200)
 
+    pyplot.yticks(range(21))
     pyplot.legend(loc='right', prop={'size':8})
     pyplot.xlabel("Calculations")
     pyplot.ylabel("Candidates Found")

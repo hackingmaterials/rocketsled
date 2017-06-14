@@ -30,8 +30,8 @@ ab_atomic = [Element(name).Z for name in ab_names]
 c_atomic = list(range(7))
 
 # Mendeleev number
-ab_mend = [Element(name).mendeleev_no for name in ab_names]
-c_mend = [np.sum(get_pymatgen_descriptor(anion, 'mendeleev_no')) for anion in c_names]
+ab_mend = [int(Element(name).mendeleev_no) for name in ab_names]
+c_mend = [int(np.sum(get_pymatgen_descriptor(anion, 'mendeleev_no'))) for anion in c_names]
 
 # Mendeleev rank
 ab_mendrank = [sorted(ab_mend).index(i) for i in ab_mend]
@@ -40,28 +40,29 @@ c_mendrank = [4, 3, 2, 1, 6, 5, 0]
 # Corrected and relevant perovskite data
 perovskites = pd.read_csv('unc.csv')
 
-dim = [(0, 51), (0, 51), (0, 6)]
-
+# dim = [(0, 51), (0, 51), (0, 6)]
+dim = [ab_mend, ab_mend, c_mend]
 
 # Defining search space with exclusions
-    # exclusions = pickle.load(open('excluded_compounds.p', 'rb'))  # in atomic
-    # gs_ranking = pickle.load(open('goldschmidt_rank.p', 'rb'))  # in atomic
-    # space_noex = []
-    # for x in gs_ranking:
-    #     if x not in exclusions:
-    #         a_mend = ab_mendrank[ab_atomic.index(x[0])]
-    #         b_mend = ab_mendrank[ab_atomic.index(x[1])]
-    #         c_mend = c_mendrank[c_atomic.index(x[2])]
-    #         space_noex.append((a_mend, b_mend, c_mend))
-    # pickle.dump(space_noex, open('space_gs_ranked_included.p', 'wb'))
-space_noex = pickle.load(open('space_gs_ranked_included.p', 'rb'))
+# exclusions = pickle.load(open('excluded_compounds.p', 'rb'))  # in atomic
+# gs_ranking = pickle.load(open('goldschmidt_rank.p', 'rb'))  # in atomic
+# space_noex = []
+# for x in gs_ranking:
+#     if x not in exclusions:
+#         a_mend = ab_mend[ab_atomic.index(x[0])]
+#         b_mend = ab_mend[ab_atomic.index(x[1])]
+#         c_mendi = c_mend[c_atomic.index(x[2])]
+#         space_noex.append((a_mend, b_mend, c_mendi))
+# pickle.dump(space_noex, open('space_gs_mend_included.p', 'wb'))
+
+space_noex = pickle.load(open('space_gs_mend_included.p', 'rb'))
 
 
 def mend_to_name(a_mr, b_mr, c_mr):
-    # go from mendeleev rank to name
-    a_i = ab_mendrank.index(a_mr)
-    b_i = ab_mendrank.index(b_mr)
-    c_i = c_mendrank.index(c_mr)
+    # go from mendeleev to name
+    a_i = ab_mend.index(a_mr)
+    b_i = ab_mend.index(b_mr)
+    c_i = c_mend.index(c_mr)
     a = ab_names[a_i]
     b = ab_names[b_i]
     c = c_names[c_i]
@@ -100,7 +101,7 @@ def wf_creator(x, predictor, get_z, lpad, space, chemical_rules=False):
                                 wf_creator_kwargs={'chemical_rules': chemical_rules},
                                 get_z_kwargs = {'chemical_rules': chemical_rules},
                                 max=True,
-                                space= space if chemical_rules else None,
+                                space=space if chemical_rules else None,
                                 opt_label='test_perovskites',
                                 n_search_points=20000,
                                 n_train_points=20000)],
@@ -115,10 +116,10 @@ def get_z(x, chemical_rules=False):
     # means = [np.mean(k) for k in conglomerate]
     # stds = [np.std(k) for k in conglomerate]
     # ranges = [np.ptp(k) for k in conglomerate]
-    # z = means + stds + ranges + gs_dev
+    # z = means + stds + ranges
     z = []
 
-    for d in descriptors:
+    for d in descriptors[:1]:
         ab_attrs = [getattr(Element(el), d) for el in (a, b)]
         c_attrs = get_pymatgen_descriptor(c, d)
 
@@ -134,14 +135,15 @@ def get_z(x, chemical_rules=False):
     rx = np.mean(get_pymatgen_descriptor(c, 'average_ionic_radius'))
     ra = Element(a).average_ionic_radius
     rb = Element(b).average_ionic_radius
-    gs_dev = abs(1 - (ra + rx)/(2 ** 0.5 * (rb + rx))) if chemical_rules else None
-    z.append(gs_dev)
+    gs_dev = abs(1 - (ra + rx)/(2 ** 0.5 * (rb + rx)))
+    if chemical_rules:
+        z.append(gs_dev)
 
     return z
 
 if __name__ =="__main__":
 
-    TESTDB_NAME = 'oxstates'
+    TESTDB_NAME = 'mend'
     predictor = 'RandomForestRegressor'
     get_z = 'turboworks_examples.test_perovskites.get_z'
     n_cands = 20
@@ -160,7 +162,7 @@ if __name__ =="__main__":
         launchpad.reset(password=None, require_password=False)
         launchpad.add_wf(wf_creator(random.choice(space_noex), predictor, get_z, launchpad,
                                     '/Users/alexdunn/TURBOWORKS/turboworks/turboworks_examples/'
-                                    'space_gs_ranked_included.p',
+                                    'space_gs_mend_included.p',
                                     chemical_rules=True))
 
         y = []
