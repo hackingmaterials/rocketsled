@@ -52,7 +52,8 @@ dim = [ab_mend, ab_mend, c_mend]
 #     if x not in exclusions:
 #         a_mend = ab_mend[ab_atomic.index(x[0])]
 #         b_mend = ab_mend[ab_atomic.index(x[1])]
-#         c_mendi = c_mend[c_atomic.index(x[2])]
+#         # todo: try categorical for anion
+#         c_mendi = c_mendrank[c_atomic.index(x[2])]
 #         space_noex.append((a_mend, b_mend, c_mendi))
 # pickle.dump(space_noex, open('space_gs_mend_included.p', 'wb'))
 
@@ -63,7 +64,8 @@ def mend_to_name(a_mr, b_mr, c_mr):
     # go from mendeleev to name
     a_i = ab_mend.index(a_mr)
     b_i = ab_mend.index(b_mr)
-    c_i = c_mend.index(c_mr)
+    # todo: try categorical for anion
+    c_i = c_mendrank.index(c_mr)
     a = ab_names[a_i]
     b = ab_names[b_i]
     c = c_names[c_i]
@@ -75,12 +77,12 @@ class EvaluateFitnessTask(FireTaskBase):
 
     def run_task(self, fw_spec):
 
-        # mendeleev ranked params
+        # mendeleev params
         a_mr = fw_spec['A']
         b_mr = fw_spec['B']
         c_mr = fw_spec['C']
 
-        # convert from mendeleev rank and score compound
+        # convert from mendeleev and score compound
         a, b, c = mend_to_name(a_mr, b_mr, c_mr)
 
         data = perovskites.loc[(perovskites['A'] == a) & (perovskites['B'] == b) & (perovskites['anion'] == c)]
