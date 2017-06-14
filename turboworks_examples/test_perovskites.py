@@ -9,6 +9,7 @@ from pymatgen import Element
 import pandas as pd
 import numpy as np
 import pickle
+import os
 
 # 20 solar water splitter perovskite candidates in terms of atomic number
 good_cands_ls = [(3, 23, 0), (11, 51, 0), (12, 73, 1), (20, 32, 0), (20, 50, 0), (20, 73, 1), (38, 32, 0),
@@ -157,12 +158,12 @@ if __name__ =="__main__":
         conn = MongoClient('localhost', 27017)
         db = getattr(conn, rundb)
         collection = db.test_perovskites
+        filedir = os.path.dirname(os.path.realpath(__file__))
 
         launchpad = LaunchPad(name=rundb)
         launchpad.reset(password=None, require_password=False)
         launchpad.add_wf(wf_creator(random.choice(space_noex), predictor, get_z, launchpad,
-                                    '/Users/alexdunn/TURBOWORKS/turboworks/turboworks_examples/'
-                                    'space_gs_mend_included.p',
+                                    filedir + '/space_gs_mend_included.p',
                                     chemical_rules=True))
 
         y = []
