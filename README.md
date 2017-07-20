@@ -15,7 +15,7 @@ only once in an entire workflow. It's up to you.
 
 
 ### Where can I learn more?
-To learn more about FireWorks, see the [official documentation] (https://fireworks.readthedocs.io/en/latest/)
+To learn more about FireWorks, see the [official documentation] (https://hackingmaterials.lbl.gov/fireworks/)
 
 ## Requirements:
 - Python 2 or 3
