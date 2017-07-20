@@ -23,6 +23,10 @@ __author__ = "Alexander Dunn"
 __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
 
+# TODO: @ardunn - In retrain_interval, why use a random guess? That's nuts. The idea here was to use the previously trained model to guess (say) the second best solution, the third best solution, etc. If this is too complicated, then I would just remove the parameter. There is already n_search_points and n_train_points to make things go faster if needed. You could repurpose this parameter to be something just for doing a random guess every once in a while (e.g., once every 10 iterations) to help balance exploration and exploitation. - AJ
+# TODO: @ardunn - The default for n_train_points should be None, which would signify to use all the already-explored points to build the model. It is clunky to have to set this to some arbitrary large number. - AJ
+# TODO: @ardunn - docs for n_generation points is unclear. - AJ
+# TODO: @ardunn - there is just a lot of parameters documented here. Suggest some reorganization (e.g., put related parameters next to one another) and also suggest more comprehensive docs outside the code, i.e., in the official Turboworks docs.
 
 @explicit_serialize
 class OptTask(FireTaskBase):
@@ -34,7 +38,7 @@ class OptTask(FireTaskBase):
 
     Required args:
         wf_creator (function): returns a workflow based on a unique vector, x.
-        dimensions ([tuple]): each 2-tuple in the list defines the search space in (low, high) format.
+        dimensions ([tuple]): each 2-tuple in the list defines one dimension in the search space in (low, high) format.
             For categorical dimensions, includes all possible categories as a list.
             Example: dimensions = dim = [(1,100), (9.293, 18.2838), ("red", "blue", "green")].
             
@@ -59,10 +63,10 @@ class OptTask(FireTaskBase):
             Defaults to 'RandomForestRegressor'
             Example builtin predictor: predictor = 'SVR'
             Example custom predictor: predictor = 'my_module.my_predictor'
-        max (bool): Makes optimization tend toward maximum values instead of minimum ones.
-        wf_creator_args (list): the positional args to be passed to the wf_creator function alongsize the z vector
-        wf_creator_kwargs (dict): details the kwargs to be passed to the wf_creator function alongside the z vector
-        duplicate_check (bool): If True, checks for duplicate guesss in discrete, finite spaces. Default is no 
+        max (bool): If true, makes optimization tend toward maximum values instead of minimum ones.
+        wf_creator_args (list): the positional args to be passed to the wf_creator function alongsize the new x vector
+        wf_creator_kwargs (dict): details the kwargs to be passed to the wf_creator function alongside the new x vector
+        duplicate_check (bool): If True, checks for duplicate guess in discrete, finite spaces. Default is no
             duplicate check.
         host (string): The name of the MongoDB host where the optimization data will be stored.
         port (int): The number of the MongoDB port where the optimization data will be stored.
@@ -137,6 +141,8 @@ class OptTask(FireTaskBase):
         max_resets = 10
         self._setup_db(fw_spec)
 
+        # TODO: @ardunn - explain in general terms what is going on. e.g., the first one will set up a manager that handles locking. Subsequent runs will create/remove locks in this manager.  - AJ
+
         for run in range(max_resets * max_runs):
             managers = self.collection.find(self._manager_format)
 
@@ -145,11 +151,11 @@ class OptTask(FireTaskBase):
             elif managers.count() == 1:
 
                 try:
-                    manager = self.collection.find_one(self._manager_format)
+                    manager = self.collection.find_one(self._manager_format)  # TODO: @ardunn - this is essentially a repeat of the query above. Can you re-use that result for managers?  - AJ
                     manager_id = manager['_id']
                     lock = manager['lock']
 
-                except TypeError:
+                except TypeError:  # TODO: @ardunn - add a comment here saying what this try-except-continue is for...  - AJ
                     continue
 
                 if lock is None:
@@ -162,9 +168,9 @@ class OptTask(FireTaskBase):
                         try:
                             new_queue = self.collection.find_one({'_id': manager_id})['queue']
                             new_queue.append(pid)
-                            self.collection.find_one_and_update({'_id': manager_id}, {'$set': {'queue': new_queue}})
+                            self.collection.find_one_and_update({'_id': manager_id}, {'$set': {'queue': new_queue}})  # @ardunn - use the $push command instead of $set and do this in one line instead of 3  - AJ
 
-                        except TypeError:
+                        except TypeError:  # TODO: @ardunn - add a comment here saying what this try-except-continue is for...  - AJ
                             continue
 
                     else:
@@ -173,8 +179,9 @@ class OptTask(FireTaskBase):
                 elif lock == pid:
 
                     x = fw_spec['_x_opt']
-                    yi = fw_spec['_y_opt']
+                    yi = fw_spec['_y_opt']  # TODO: @ardunn - not sure why it's called yi (i.e., what is the "i"?)  - AJ
 
+                    # TODO: @ardunn - I don't understand the comment below - AJ
                     # release reservation on this document in case of failure or end of workflow
                     # prevents aggregation of reserved documents
                     self.collection.find_one_and_update({'x': x}, {'$set': {'yi': yi}})
@@ -188,16 +195,17 @@ class OptTask(FireTaskBase):
                     get_z_args = self['get_z_args'] if 'get_z_args' in self else []
                     get_z_kwargs = self['get_z_kwargs'] if 'get_z_kwargs' in self else {}
 
+                    # TODO: @ardunn I think you should skip the DB check. 99.9% of the time, "z" should not already exist and it'll be faster to skip the database check. In the 0.01% of the time that 'x' and 'z' already exist, it won't be so bad to just call get_z again. - AJ
                     # Prevent calling get_z for the current guess if already exists in database
                     if self.collection.find({'x': x, 'z': {'$exists': 1}}).count() == 0:
                         z = self.get_z(x, *get_z_args, **get_z_kwargs)
                     else:
                         z = self.collection.find_one({'x': x, 'z': {'$exists': 1}})['z']
 
-                    train_points = self['n_train_points'] if 'n_train_points' in self else 1000
+                    train_points = self['n_train_points'] if 'n_train_points' in self else 1000  # TODO: @ardunn - put these variable definitions (including default values) at top of function. Same with other similar params. - AJ
                     search_points = self['n_search_points'] if 'n_search_points' in self else 1000
-                    explored_docs = self.collection.find(self._explored_format, limit=train_points)
-                    unexplored_docs = self.collection.find(self._unexplored_noninclusive_format, limit=search_points)
+                    explored_docs = self.collection.find(self._explored_format, limit=train_points)  # TODO: @ardunn - ideally you want a random selection for the limit. Look up how to do this in Mongo so you don't always get the same records back. - AJ
+                    unexplored_docs = self.collection.find(self._unexplored_noninclusive_format, limit=search_points)  # TODO: @ardunn - ideally you want a random selection for the limit. Look up how to do this in Mongo so you don't always get the same records back. - AJ
 
                     # if no comprehensive list has been made, insert some unexplored docs
                     if unexplored_docs.count() == 0:
@@ -211,7 +219,7 @@ class OptTask(FireTaskBase):
                             X_space = self._discretize_space(x_dims, discrete_floats=True)
 
                         # prevent a huge discrete space from being stored initially in db (can be very slow!)
-                        generation_points = self['n_generation_points'] if 'n_generation_points' in self else 20000
+                        generation_points = self['n_generation_points'] if 'n_generation_points' in self else 20000  # TODO: @ardunn - is "n_generation_points" the amount of unexplored points that are generated at one time (but we may run the generation multiple times, or is it the maximum number of points that can possibly be explored by TurboWorks?  - AJ
                         stored_docs = 0
 
                         for xi in X_space:
@@ -233,7 +241,7 @@ class OptTask(FireTaskBase):
                                 raise TypeError("A comprehensive list of points was exhausted but the dimensions are"
                                                 "not discrete.")
 
-                    # compound the additional attributes to the unique vectors to feed into machine learning
+                    # append the additional attributes to the unique vectors to feed into machine learning
                     XZ_unexplored = [doc['x'] + doc['z'] for doc in unexplored_docs]
                     xz_dims = x_dims + self._z_dims(XZ_unexplored, len(x))
 
@@ -295,7 +303,7 @@ class OptTask(FireTaskBase):
                         xz_new = random.choice(XZ_unexplored)
 
                     else:
-                        if encode_categorical:
+                        if encode_categorical:  # TODO: why is encode_categorical used for custom predictors but not the default ones?  - AJ
                             XZ_explored = self._preprocess(XZ_explored, xz_dims)
                             XZ_unexplored = self._preprocess(XZ_unexplored, xz_dims)
 
@@ -330,7 +338,7 @@ class OptTask(FireTaskBase):
 
                             # reserve the new x prevent to prevent parallel processes from registering it as unexplored
                             # since the next iteration of this process will be exploring it
-                            self.collection.find_one_and_update({'x': x_new}, {'$set': {'yi': []}})
+                            self.collection.find_one_and_update({'x': x_new}, {'$set': {'yi': []}})  # TODO: @ardunn - confirm that some other process did not run the desired x and have an actual yi in the database. Otherwise you might overwrite an actual value with nothing. - AJ
 
                     except TypeError:
                         continue
@@ -377,6 +385,8 @@ class OptTask(FireTaskBase):
             None
         """
 
+        # TODO: @ardunn - doesn't look like this process will work with password-protected LaunchPad. Most people have their FWS databases password-protected.  - AJ
+
         opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default'
         db_reqs = ('host', 'port', 'name')
         db_defined = [req in self for req in db_reqs]
@@ -398,7 +408,7 @@ class OptTask(FireTaskBase):
 
                 except AttributeError:
                     # launchpad tried to get attributes of a multiprocessing proxy object.
-                    raise Exception("_add_launchpad_and_fw_id is currently working with parallel workflows.")
+                    raise Exception("_add_launchpad_and_fw_id is currently working with parallel workflows.")  # TODO: @ardunn - is this still an issue? - AJ
 
         else:
             try:
@@ -409,12 +419,14 @@ class OptTask(FireTaskBase):
                 raise AttributeError("The optimization database must be specified explicitly (with host, port, and "
                                      "name), with Launchpad object (lpad), by setting _add_launchpad_and_fw_id to True "
                                      "in the fw_spec, or by defining LAUNCHPAD_LOC in fw_config.py for "
-                                     "LaunchPad.auto_load()")
+                                     "LaunchPad.auto_load()")  # TODO: @ardunn - LAUNCHPAD_LOC is typically not set through fw_config.py (that requires modifying FWS source code), it's set through a config file: https://hackingmaterials.lbl.gov/fireworks/config_tutorial.html  - AJ
 
         mongo = MongoClient(host, port)
         db = getattr(mongo, name)
         self.collection = getattr(db, opt_label)
 
+        # TODO: @ardunn - put the below in a different function, e.g. "set_queries"(?) Or just put in root level of run_task  - AJ
+        # TODO: @ardunn - document what these queries are better. Also, instead of "format" maybe call it "query", e.g. self._explored_query  - AJ
         x = fw_spec['_x_opt']
         self._explored_format = {'x': {'$exists': 1}, 'yi': {'$ne': [], '$exists': 1}, 'z': {'$exists': 1}}
         self._unexplored_inclusive_format = {'x': {'$exists': 1}, 'yi': {'$exists': 0}}
@@ -423,7 +435,7 @@ class OptTask(FireTaskBase):
 
     def _check_dims(self, dims):
         """
-        Ensure the dimensions are in the correct format for the optimzation. 
+        Ensure the dimensions are in the correct format for the optimization.
         
         Dimensions should be a list or tuple
         of lists or tuples each defining the search space in one dimension. The datatypes used inside each dimension's 
