@@ -21,17 +21,19 @@ __email__ = "ardunn@lbl.gov"
 # a workflow creator function which takes x and returns a workflow based on x
 def wf_creator(x):
 
-    spec = {'A':x[0], 'B':x[1], 'C':x[2], '_tw_x':x}
+    spec = {'A':x[0], 'B':x[1], 'C':x[2], '_x_opt':x}
     X_dim = [(1, 5), (1, 5), (1, 5)]
 
-    # CalculateTask writes _tw_y field to the spec internally.
+    # CalculateTask writes _y_opt field to the spec internally.
 
-    firework1 = Firework([CalculateTask(), OptTask(wf_creator='turboworks_examples.test_basic.wf_creator',
-                                                   dimensions=X_dim,
-                                                   host='localhost',
-                                                   port=27017,
-                                                   name='opt_default',
-                                                   )], spec=spec)
+    firework1 = Firework([CalculateTask(),
+                          OptTask(wf_creator='turboworks_examples.test_basic.wf_creator',
+                                  dimensions=X_dim,
+                                  host='localhost',
+                                  port=27017,
+                                  name='turboworks')],
+                          spec=spec)
+
     return Workflow([firework1])
 
 
@@ -42,7 +44,6 @@ if __name__ == "__main__":
     launchpad.reset(password=None, require_password=False)
 
     # clean up tw database if necessary
-    # todo: should be integrated with launchpad.reset?
 
     launchpad.add_wf(wf_creator([5, 5, 2]))
 

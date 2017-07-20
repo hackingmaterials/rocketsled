@@ -10,4 +10,6 @@ __email__ = "ardunn@lbl.gov"
 __all__ = ("calculate_task.py",
            "test_basic.py",
            "test_extras.py",
-           "test_parallel.py")
+           "test_parallel.py",
+           "test_categorical.py",
+           "test_zfeatures.py")
