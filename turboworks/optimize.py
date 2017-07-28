@@ -119,8 +119,6 @@ class OptTask(FireTaskBase):
                        'host', 'port', 'name', 'lpad', 'opt_label', 'retrain_interval', 'n_train_points',
                        'n_search_points', 'n_generation_points', 'space', 'predictor_args', 'predictor_kwargs',
                        'get_z_args', 'get_z_kwargs', 'encode_categorical']
-    # todo: ++readability?
-    # todo: PEP8
 
     def run_task(self, fw_spec):
         """
@@ -141,7 +139,15 @@ class OptTask(FireTaskBase):
         max_resets = 10
         self._setup_db(fw_spec)
 
-        # TODO: @ardunn - explain in general terms what is going on. e.g., the first one will set up a manager that handles locking. Subsequent runs will create/remove locks in this manager.  - AJ
+        # Todo: make n_generation points create new points every time
+
+        # Running stepwise optimization for concurrent processes requires a manual 'lock' on the optimization database
+        # to prevent duplicate guesses. The first process sets up a manager document which handles locking and queuing
+        # processes by PID. The single, active process in the lock is free to access optimization data; the queue of the
+        # manager holds parallel process PIDs waiting to access the db. When the active process finishes, it removes
+        # itself from the lock and moves the first queue PID into the lock, allowing the next process to begin
+        # optimization. Each process continually tries to either queue itself of place itself into the lock if not
+        # already active.
 
         for run in range(max_resets * max_runs):
             managers = self.collection.find(self._manager_format)
@@ -151,7 +157,7 @@ class OptTask(FireTaskBase):
             elif managers.count() == 1:
 
                 try:
-                    manager = self.collection.find_one(self._manager_format)  # TODO: @ardunn - this is essentially a repeat of the query above. Can you re-use that result for managers?  - AJ
+                    manager = self.collection.find_one(self._manager_format)
                     manager_id = manager['_id']
                     lock = manager['lock']
 
@@ -181,9 +187,9 @@ class OptTask(FireTaskBase):
                     x = fw_spec['_x_opt']
                     yi = fw_spec['_y_opt']  # TODO: @ardunn - not sure why it's called yi (i.e., what is the "i"?)  - AJ
 
-                    # TODO: @ardunn - I don't understand the comment below - AJ
-                    # release reservation on this document in case of failure or end of workflow
-                    # prevents aggregation of reserved documents
+                    # If process A suggests a certain guess and runs it, process 2 may suggest the same guess while
+                    # process A is running its new workflow. Therefore, process A must reserve the guess.
+                    # Line below releases reservation on this document in case of workflow failure or end of workflow.
                     self.collection.find_one_and_update({'x': x}, {'$set': {'yi': yi}})
                     self.dtypes = Dtypes()
 
