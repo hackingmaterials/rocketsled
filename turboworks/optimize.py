@@ -154,7 +154,7 @@ class OptTask(FireTaskBase):
                 self.collection.insert_one({'lock': pid, 'queue': []})
             elif managers.count() == 1:
 
-                # avoid bootup problems if manager docs are being deleted concurrently with this check
+                # avoid bootup problems if manager lock is being deleted concurrently with this check
                 try:
                     manager = self.collection.find_one(self._manager_query)
                     manager_id = manager['_id']
@@ -169,7 +169,7 @@ class OptTask(FireTaskBase):
                 elif lock != pid:
                     if pid not in manager['queue']:
 
-                        # avoid bootup problems if manager docs are being deleted concurrently with this check
+                        # avoid bootup problems if manager queue is being deleted concurrently with this check
                         try:
                             self.collection.find_one_and_update({'_id': manager_id}, {'$push': {'queue': pid}})
 
@@ -241,7 +241,7 @@ class OptTask(FireTaskBase):
                         X_unexplored = []
                         for xi in X_space:
                             xj = list(xi)
-                            if self.collection.find({'x': xj, 'y': {'$exists': 1}}).count() == 0 and xj != x:
+                            if self.collection.find({'x': xj}).count() == 0 and xj != x:
                                 X_unexplored.append(xj)
                                 
                                 if len(X_unexplored) == search_points:
@@ -250,7 +250,7 @@ class OptTask(FireTaskBase):
                         XZ_unexplored = [xi + self.get_z(xi) for xi in X_unexplored]
 
                     # there are no more unexplored points in the entire space
-                    if len(XZ_unexplored) <= 1:
+                    if len(XZ_unexplored) < 1:
                         if self._is_discrete(x_dims):
                             raise Exception("The discrete space has been searched exhaustively.")
                         else:
@@ -349,7 +349,12 @@ class OptTask(FireTaskBase):
 
                             # reserve the new x prevent to prevent parallel processes from registering it as unexplored
                             # since the next iteration of this process will be exploring it
-                            self.collection.find_one_and_update({'x': x_new}, {'$set': {'y': []}})  # TODO: @ardunn - confirm that some other process did not run the desired x and have an actual y in the database. Otherwise you might overwrite an actual value with nothing. - AJ
+
+                            if self.collection.find({'x': x_new, 'y': {'$exists': 1, '$ne': []}}).count() != 0:
+                                self.collection.find_one_and_update({'x': x_new}, {'$set': {'y': []}})
+                            else:
+                                raise ValueError(
+                                    "The predictor suggested a guess which has already been tried: {}".format(x_new))
 
                     except TypeError:
                         continue
@@ -396,16 +401,17 @@ class OptTask(FireTaskBase):
             None
         """
 
-        # TODO: @ardunn - doesn't look like this process will work with password-protected LaunchPad. Most people have their FWS databases password-protected.  - AJ
-
         opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default'
         db_reqs = ('host', 'port', 'name')
-        db_defined = [req in self for req in db_reqs]
+        db_def = [req in self for req in db_reqs]
 
-        if all(db_defined):
+        # allowing kwargs to be passed to MongoClient (e.g., username, password, SSL info, maxPoolSize)
+        db_extras = self['db_extras'] if 'db_extras' in self else {}
+
+        if all(db_def):
             host, port, name = [self[k] for k in db_reqs]
 
-        elif any(db_defined):
+        elif any(db_def):
             raise AttributeError("Host, port, and name must all be specified!")
 
         elif 'lpad' in self:
@@ -427,7 +433,9 @@ class OptTask(FireTaskBase):
                                      "in the fw_spec, or by defining LAUNCHPAD_LOC in fw_config.py for "
                                      "LaunchPad.auto_load()")  # TODO: @ardunn - LAUNCHPAD_LOC is typically not set through fw_config.py (that requires modifying FWS source code), it's set through a config file: https://hackingmaterials.lbl.gov/fireworks/config_tutorial.html  - AJ
 
-        mongo = MongoClient(host, port)
+
+
+        mongo = MongoClient(host, port, **db_extras)
         db = getattr(mongo, name)
         self.collection = getattr(db, opt_label)
 

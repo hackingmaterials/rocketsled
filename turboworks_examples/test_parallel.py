@@ -39,7 +39,7 @@ if __name__ == "__main__":
     launchpad.reset(password=None, require_password=False)
 
     n_processes = 10
-    n_runs = 3
+    n_runs = 15
 
     # Should throw an 'Exhausted' error when n_processes*n_runs > 125 (the total space size)
 
