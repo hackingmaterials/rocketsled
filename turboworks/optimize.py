@@ -347,11 +347,11 @@ class OptTask(FireTaskBase):
                         else:
                             opt_id = self._store({'z': z, 'y': y, 'x': x, 'z_new': z_new, 'x_new': x_new})
 
-                            # reserve the new x prevent to prevent parallel processes from registering it as unexplored
-                            # since the next iteration of this process will be exploring it
-
-                            if self.collection.find({'x': x_new, 'y': {'$exists': 1, '$ne': []}}).count() != 0:
-                                self.collection.find_one_and_update({'x': x_new}, {'$set': {'y': []}})
+                            # ensure previously computed workflow results are not overwritten by concurrent predictions
+                            if self.collection.find({'x': x_new, 'y': {'$exists': 1, '$ne': []}}).count() == 0:
+                                # reserve the new x prevent to prevent parallel processes from registering it as
+                                # unexplored, since the next iteration of this process will be exploring it
+                                self.collection.find_one_and_replace({'x': x_new}, {'x': x_new, 'y': []}, upsert=True)
                             else:
                                 raise ValueError(
                                     "The predictor suggested a guess which has already been tried: {}".format(x_new))
