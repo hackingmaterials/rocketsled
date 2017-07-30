@@ -202,7 +202,6 @@ class OptTask(FireTaskBase):
                     train_points = self['n_train_points'] if 'n_train_points' in self else 1000  # TODO: @ardunn - put these variable definitions (including default values) at top of function. Same with other similar params. - AJ
                     search_points = self['n_search_points'] if 'n_search_points' in self else 1000
                     explored_docs = self.collection.find(self._explored_query, limit=train_points)  # TODO: @ardunn - ideally you want a random selection for the limit. Look up how to do this in Mongo so you don't always get the same records back. - AJ
-                    persistent_search = self['persistent_search'] if 'persistent_search' in self else False
 
                     Y = [y]
                     XZ_explored = [x + z]
@@ -210,44 +209,19 @@ class OptTask(FireTaskBase):
                         XZ_explored.append(doc['x'] + doc['z'])
                         Y.append(doc['y'])
 
-                    if persistent_search:
-                        unexplored_docs = self.collection.find(self._unexplored_noninclusive_query, limit=search_points)  # TODO: @ardunn - ideally you want a random selection for the limit. Look up how to do this in Mongo so you don't always get the same records back. - AJ
+                    X_space = self._discretize_space(x_dims, discrete_floats=True)
+                    X_unexplored = []
+                    for xi in X_space:
+                        xj = list(xi)
+                        if self.collection.find({'x': xj, 'y':{'$ne': 'reserved'}}).count() == 0 and xj != x:
+                            X_unexplored.append(xj)
 
-                        # if no comprehensive list has been made, insert some unexplored docs
-                        if unexplored_docs.count() == 0:
+                            if len(X_unexplored) == search_points:
+                                break
 
-                            X_space = self._discretize_space(x_dims, discrete_floats=True)
-                
-                            # prevent a huge discrete space from being stored initially in db (can be very slow!)
-                            generation_points = self['n_generation_points'] if 'n_generation_points' in self else 20000  # TODO: @ardunn - is "n_generation_points" the amount of unexplored points that are generated at one time (but we may run the generation multiple times, or is it the maximum number of points that can possibly be explored by TurboWorks?  - AJ
-                            stored_docs = 0
+                    XZ_unexplored = [xi + self.get_z(xi, *get_z_args, **get_z_kwargs) for xi in X_unexplored]
 
-                            for xi in X_space:
-                                xj = list(xi)
-                                if self.collection.find({'x': xj}).count() == 0 and xj != x:
-                                    if stored_docs < generation_points:
-                                        self._store({'x': xj, 'z': self.get_z(xj, *get_z_args, **get_z_kwargs)})
-                                        stored_docs += 1
-                                    else:
-                                        break
 
-                            unexplored_docs = self.collection.find(self._unexplored_inclusive_query, limit=search_points)
-
-                        # append the additional attributes to the unique vectors to feed into machine learning
-                        XZ_unexplored = [doc['x'] + doc['z'] for doc in unexplored_docs]
-
-                    else:
-                        X_space = self._discretize_space(x_dims, discrete_floats=True)
-                        X_unexplored = []
-                        for xi in X_space:
-                            xj = list(xi)
-                            if self.collection.find({'x': xj}).count() == 0 and xj != x:
-                                X_unexplored.append(xj)
-                                
-                                if len(X_unexplored) == search_points:
-                                    break
-                        
-                        XZ_unexplored = [xi + self.get_z(xi) for xi in X_unexplored]
 
                     # there are no more unexplored points in the entire space
                     if len(XZ_unexplored) < 1:
@@ -345,13 +319,19 @@ class OptTask(FireTaskBase):
                         if self.collection.find_one(self._manager_query)['lock'] != pid:
                             continue
                         else:
-                            opt_id = self._store({'z': z, 'y': y, 'x': x, 'z_new': z_new, 'x_new': x_new})
+                            index = self.collection.find({'y': {'$exists': 1, '$ne': 'reserved'}}).count()
+                            opt_id = self._store({'z': z,
+                                                  'y': y,
+                                                  'x': x,
+                                                  'index': 1 if index==0 else index})
 
                             # ensure previously computed workflow results are not overwritten by concurrent predictions
-                            if self.collection.find({'x': x_new, 'y': {'$exists': 1, '$ne': []}}).count() == 0:
+                            if self.collection.find({'x': x_new, 'y': {'$exists': 1, '$ne': 'reserved'}}).count() == 0:
                                 # reserve the new x prevent to prevent parallel processes from registering it as
                                 # unexplored, since the next iteration of this process will be exploring it
-                                self.collection.find_one_and_replace({'x': x_new}, {'x': x_new, 'y': []}, upsert=True)
+                                self.collection.find_one_and_replace({'x': x_new},
+                                                                     {'x': x_new, 'y': 'reserved'},
+                                                                     upsert=True)
                             else:
                                 raise ValueError(
                                     "The predictor suggested a guess which has already been tried: {}".format(x_new))
@@ -455,7 +435,7 @@ class OptTask(FireTaskBase):
         x = fw_spec['_x_opt']
 
         # points for which a workflow has already been run
-        self._explored_query = {'x': {'$exists': 1}, 'yi': {'$ne': [], '$exists': 1}, 'z': {'$exists': 1}}
+        self._explored_query = {'x': {'$exists': 1}, 'yi': {'$ne': 'reserved', '$exists': 1}, 'z': {'$exists': 1}}
 
         # points for which a workflow has not already been run, including the current point (already run)
         self._unexplored_inclusive_query = {'x': {'$exists': 1}, 'yi': {'$exists': 0}}
