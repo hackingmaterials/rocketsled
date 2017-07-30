@@ -25,7 +25,6 @@ __email__ = "ardunn@lbl.gov"
 
 # TODO: @ardunn - In retrain_interval, why use a random guess? That's nuts. The idea here was to use the previously trained model to guess (say) the second best solution, the third best solution, etc. If this is too complicated, then I would just remove the parameter. There is already n_search_points and n_train_points to make things go faster if needed. You could repurpose this parameter to be something just for doing a random guess every once in a while (e.g., once every 10 iterations) to help balance exploration and exploitation. - AJ
 # TODO: @ardunn - The default for n_train_points should be None, which would signify to use all the already-explored points to build the model. It is clunky to have to set this to some arbitrary large number. - AJ
-# TODO: @ardunn - docs for n_generation points is unclear. - AJ
 # TODO: @ardunn - there is just a lot of parameters documented here. Suggest some reorganization (e.g., put related parameters next to one another) and also suggest more comprehensive docs outside the code, i.e., in the official Turboworks docs.
 
 @explicit_serialize
@@ -114,6 +113,8 @@ class OptTask(FireTaskBase):
     """
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
+
+    #todo: change these attrs
     optional_params = ['get_z', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
                        'host', 'port', 'name', 'lpad', 'opt_label', 'retrain_interval', 'n_train_points',
                        'n_search_points', 'n_generation_points', 'space', 'predictor_args', 'predictor_kwargs',
@@ -221,8 +222,6 @@ class OptTask(FireTaskBase):
 
                     XZ_unexplored = [xi + self.get_z(xi, *get_z_args, **get_z_kwargs) for xi in X_unexplored]
 
-
-
                     # there are no more unexplored points in the entire space
                     if len(XZ_unexplored) < 1:
                         if self._is_discrete(x_dims):
@@ -234,6 +233,8 @@ class OptTask(FireTaskBase):
                     xz_dims = x_dims + self._z_dims(XZ_unexplored, len(x))
 
                     # run machine learner on Z and X features
+
+                    #todo: do docs for random_interval
                     random_interval = self['random_interval'] if 'random_interval' in self else None
                     encode_categorical = self['encode_categorical'] if 'encode_categorical' in self else False
 
@@ -319,11 +320,11 @@ class OptTask(FireTaskBase):
                         if self.collection.find_one(self._manager_query)['lock'] != pid:
                             continue
                         else:
-                            index = self.collection.find({'y': {'$exists': 1, '$ne': 'reserved'}}).count()
                             opt_id = self._store({'z': z,
                                                   'y': y,
                                                   'x': x,
-                                                  'index': 1 if index==0 else index})
+                                                  'z_new': z_new,
+                                                  'x_new': x_new})
 
                             # ensure previously computed workflow results are not overwritten by concurrent predictions
                             if self.collection.find({'x': x_new, 'y': {'$exists': 1, '$ne': 'reserved'}}).count() == 0:
@@ -385,6 +386,7 @@ class OptTask(FireTaskBase):
         db_reqs = ('host', 'port', 'name')
         db_def = [req in self for req in db_reqs]
 
+        #todo: add db_extras to docs
         # allowing kwargs to be passed to MongoClient (e.g., username, password, SSL info, maxPoolSize)
         db_extras = self['db_extras'] if 'db_extras' in self else {}
 
