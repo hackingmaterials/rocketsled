@@ -202,6 +202,7 @@ class OptTask(FireTaskBase):
 
                     train_points = self['n_train_points'] if 'n_train_points' in self else 1000  # TODO: @ardunn - put these variable definitions (including default values) at top of function. Same with other similar params. - AJ
                     search_points = self['n_search_points'] if 'n_search_points' in self else 1000
+
                     explored_docs = self.collection.find(self._explored_query, limit=train_points)  # TODO: @ardunn - ideally you want a random selection for the limit. Look up how to do this in Mongo so you don't always get the same records back. - AJ
 
                     Y = [y]
@@ -324,12 +325,15 @@ class OptTask(FireTaskBase):
                                                   'y': y,
                                                   'x': x,
                                                   'z_new': z_new,
-                                                  'x_new': x_new})
+                                                  'x_new': x_new,})
+                            index = self.collection.find(self._explored_query).count()
+
+                            self.collection.find_one_and_update({'x': x}, {'$set': {'index': index}})
 
                             # ensure previously computed workflow results are not overwritten by concurrent predictions
                             if self.collection.find({'x': x_new, 'y': {'$exists': 1, '$ne': 'reserved'}}).count() == 0:
-                                # reserve the new x prevent to prevent parallel processes from registering it as
-                                # unexplored, since the next iteration of this process will be exploring it
+                                # reserve the new x to prevent parallel processes from registering it as unexplored,
+                                # since the next iteration of this process will be exploring it
                                 self.collection.find_one_and_replace({'x': x_new},
                                                                      {'x': x_new, 'y': 'reserved'},
                                                                      upsert=True)
@@ -437,13 +441,13 @@ class OptTask(FireTaskBase):
         x = fw_spec['_x_opt']
 
         # points for which a workflow has already been run
-        self._explored_query = {'x': {'$exists': 1}, 'yi': {'$ne': 'reserved', '$exists': 1}, 'z': {'$exists': 1}}
+        self._explored_query = {'x': {'$exists': 1}, 'y': {'$exists': 1}, 'z': {'$exists': 1}}
 
         # points for which a workflow has not already been run, including the current point (already run)
-        self._unexplored_inclusive_query = {'x': {'$exists': 1}, 'yi': {'$exists': 0}}
+        self._unexplored_inclusive_query = {'x': {'$exists': 1}, 'y': {'$exists': 0}}
 
         # points for which a workflow has not already been run, not including the current point
-        self._unexplored_noninclusive_query = {'x': {'$ne': x, '$exists': 1}, 'yi': {'$exists': 0}}
+        self._unexplored_noninclusive_query = {'x': {'$ne': x, '$exists': 1}, 'y': {'$exists': 0}}
 
         # the query format for the manager document
         self._manager_query = {'lock': {'$exists': 1}, 'queue': {'$exists': 1}}
