@@ -45,8 +45,6 @@ if __name__ == "__main__":
 
     load_parallel_wfs(n_processes)
 
-    print os.system('which python')
-
     for i in range(n_runs):
         sh_output = os.system('rlaunch -s multi ' + str(n_processes) + ' --nlaunches 1')
         print(sh_output)

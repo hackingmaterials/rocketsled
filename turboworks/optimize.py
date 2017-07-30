@@ -79,9 +79,8 @@ class OptTask(FireTaskBase):
         n_search_points (int): The number of points to be searched in the search space when choosing the next best
             point. Choosing more points to search may increase the effectiveness of the optimization. The default is
             1000 points. 
-        n_train_points (int): The number of already explored points to be chosen for training. Default is 1000. All
-            available points can be used for training by setting train_points to any number greater than the entire
-            search space size (e.g., 100,000,000).
+        n_train_points (int): The number of already explored points to be chosen for training. Default is None, meaning
+            all available points will be used for training. Reduce the number of points to decrease training times.
         n_generation_points (int): The number of points to be generated and stored the database during creation of the
             search space. Use this if your search space is gigantic, otherwise OptTask will try to store a huge 
             search space in your database!
@@ -157,12 +156,13 @@ class OptTask(FireTaskBase):
                 self.collection.insert_one({'lock': pid, 'queue': []})
             elif managers.count() == 1:
 
+                # avoid bootup problems if manager docs are being deleted concurrently with this check
                 try:
                     manager = self.collection.find_one(self._manager_query)
                     manager_id = manager['_id']
                     lock = manager['lock']
 
-                except TypeError:  # TODO: @ardunn - add a comment here saying what this try-except-continue is for...  - AJ
+                except TypeError:
                     continue
 
                 if lock is None:
@@ -173,11 +173,9 @@ class OptTask(FireTaskBase):
 
                         # avoid bootup problems if manager docs are being deleted concurrently with this check
                         try:
-                            new_queue = self.collection.find_one({'_id': manager_id})['queue']
-                            new_queue.append(pid)
-                            self.collection.find_one_and_update({'_id': manager_id}, {'$set': {'queue': new_queue}})  # @ardunn - use the $push command instead of $set and do this in one line instead of 3  - AJ
+                            self.collection.find_one_and_update({'_id': manager_id}, {'$push': {'queue': manager_id}})
 
-                        except TypeError:  # TODO: @ardunn - add a comment here saying what this try-except-continue is for...  - AJ
+                        except TypeError:
                             continue
 
                     else:
@@ -186,12 +184,12 @@ class OptTask(FireTaskBase):
                 elif lock == pid:
 
                     x = fw_spec['_x_opt']
-                    yi = fw_spec['_y_opt']  # TODO: @ardunn - not sure why it's called yi (i.e., what is the "i"?)  - AJ
+                    y = fw_spec['_y_opt']
 
-                    # If process A suggests a certain guess and runs it, process 2 may suggest the same guess while
+                    # If process A suggests a certain guess and runs it, process B may suggest the same guess while
                     # process A is running its new workflow. Therefore, process A must reserve the guess.
                     # Line below releases reservation on this document in case of workflow failure or end of workflow.
-                    self.collection.find_one_and_update({'x': x}, {'$set': {'yi': yi}})
+                    self.collection.find_one_and_update({'x': x}, {'$set': {'y': y}})
                     self.dtypes = Dtypes()
 
                     x_dims = self['dimensions']
@@ -201,65 +199,70 @@ class OptTask(FireTaskBase):
                     self.get_z = self._deserialize(self['get_z']) if 'get_z' in self else lambda input_vector: []
                     get_z_args = self['get_z_args'] if 'get_z_args' in self else []
                     get_z_kwargs = self['get_z_kwargs'] if 'get_z_kwargs' in self else {}
-
-                    # TODO: @ardunn I think you should skip the DB check. 99.9% of the time, "z" should not already exist and it'll be faster to skip the database check. In the 0.01% of the time that 'x' and 'z' already exist, it won't be so bad to just call get_z again. - AJ
-                    # Prevent calling get_z for the current guess if already exists in database
-                    if self.collection.find({'x': x, 'z': {'$exists': 1}}).count() == 0:
-                        z = self.get_z(x, *get_z_args, **get_z_kwargs)
-                    else:
-                        z = self.collection.find_one({'x': x, 'z': {'$exists': 1}})['z']
+                    z = self.get_z(x, *get_z_args, **get_z_kwargs)
 
                     train_points = self['n_train_points'] if 'n_train_points' in self else 1000  # TODO: @ardunn - put these variable definitions (including default values) at top of function. Same with other similar params. - AJ
                     search_points = self['n_search_points'] if 'n_search_points' in self else 1000
                     explored_docs = self.collection.find(self._explored_query, limit=train_points)  # TODO: @ardunn - ideally you want a random selection for the limit. Look up how to do this in Mongo so you don't always get the same records back. - AJ
-                    unexplored_docs = self.collection.find(self._unexplored_noninclusive_query, limit=search_points)  # TODO: @ardunn - ideally you want a random selection for the limit. Look up how to do this in Mongo so you don't always get the same records back. - AJ
+                    persistent_search = self['persistent_search'] if 'persistent_search' in self else False
 
-                    # if no comprehensive list has been made, insert some unexplored docs
-                    if unexplored_docs.count() == 0:
-
-                        if 'space' in self:
-                            if self['space']:
-                                X_space = pickle.load(open(self['space'], 'rb'))
-                            else:
-                                X_space = self._discretize_space(x_dims, discrete_floats=True)
-                        else:
-                            X_space = self._discretize_space(x_dims, discrete_floats=True)
-
-                        # prevent a huge discrete space from being stored initially in db (can be very slow!)
-                        generation_points = self['n_generation_points'] if 'n_generation_points' in self else 20000  # TODO: @ardunn - is "n_generation_points" the amount of unexplored points that are generated at one time (but we may run the generation multiple times, or is it the maximum number of points that can possibly be explored by TurboWorks?  - AJ
-                        stored_docs = 0
-
-                        for xi in X_space:
-                            xj = list(xi)
-                            if self.collection.find({'x': xj}).count() == 0 and xj != x:
-                                if stored_docs < generation_points:
-                                    self._store({'x': xj, 'z': self.get_z(xj, *get_z_args, **get_z_kwargs)})
-                                    stored_docs += 1
-                                else:
-                                    break
-
-                        unexplored_docs = self.collection.find(self._unexplored_inclusive_query, limit=search_points)
-
-                        # there are no more unexplored points in the entire space
-                        if unexplored_docs.count() == 0:
-                            if self._is_discrete(x_dims):
-                                raise Exception("The discrete space has been searched exhaustively.")
-                            else:
-                                raise TypeError("A comprehensive list of points was exhausted but the dimensions are"
-                                                "not discrete.")
-
-                    # append the additional attributes to the unique vectors to feed into machine learning
-                    XZ_unexplored = [doc['x'] + doc['z'] for doc in unexplored_docs]
-                    xz_dims = x_dims + self._z_dims(XZ_unexplored, len(x))
-
-                    y = [yi]
+                    Y = [y]
                     XZ_explored = [x + z]
                     for doc in explored_docs:
                         XZ_explored.append(doc['x'] + doc['z'])
-                        y.append(doc['yi'])
+                        Y.append(doc['y'])
+
+                    if persistent_search:
+                        unexplored_docs = self.collection.find(self._unexplored_noninclusive_query, limit=search_points)  # TODO: @ardunn - ideally you want a random selection for the limit. Look up how to do this in Mongo so you don't always get the same records back. - AJ
+
+                        # if no comprehensive list has been made, insert some unexplored docs
+                        if unexplored_docs.count() == 0:
+
+                            X_space = self._discretize_space(x_dims, discrete_floats=True)
+                
+                            # prevent a huge discrete space from being stored initially in db (can be very slow!)
+                            generation_points = self['n_generation_points'] if 'n_generation_points' in self else 20000  # TODO: @ardunn - is "n_generation_points" the amount of unexplored points that are generated at one time (but we may run the generation multiple times, or is it the maximum number of points that can possibly be explored by TurboWorks?  - AJ
+                            stored_docs = 0
+
+                            for xi in X_space:
+                                xj = list(xi)
+                                if self.collection.find({'x': xj}).count() == 0 and xj != x:
+                                    if stored_docs < generation_points:
+                                        self._store({'x': xj, 'z': self.get_z(xj, *get_z_args, **get_z_kwargs)})
+                                        stored_docs += 1
+                                    else:
+                                        break
+
+                            unexplored_docs = self.collection.find(self._unexplored_inclusive_query, limit=search_points)
+
+                            # there are no more unexplored points in the entire space
+                            if unexplored_docs.count() == 0:
+                                if self._is_discrete(x_dims):
+                                    raise Exception("The discrete space has been searched exhaustively.")
+                                else:
+                                    raise TypeError("A comprehensive list of points was exhausted but the dimensions are"
+                                                    "not discrete.")
+
+                        # append the additional attributes to the unique vectors to feed into machine learning
+                        XZ_unexplored = [doc['x'] + doc['z'] for doc in unexplored_docs]
+
+                    else:
+                        X_space = self._discretize_space(x_dims, discrete_floats=True)
+                        X_unexplored = []
+                        for xi in X_space:
+                            xj = list(xi)
+                            if self.collection.find({'x': xj, 'y': {'$exists': 1}}).count() == 0 and xj != x:
+                                X_unexplored.append(xj)
+                                
+                                if len(X_unexplored) == search_points:
+                                    break
+                        
+                        XZ_unexplored = [xi + self.get_z(xi) for xi in X_unexplored]
+
+                    xz_dims = x_dims + self._z_dims(XZ_unexplored, len(x))
 
                     # run machine learner on Z and X features
-                    retrain_interval = self['retrain_interval'] if 'retrain_interval' in self else 1
+                    random_interval = self['random_interval'] if 'random_interval' in self else None
                     encode_categorical = self['encode_categorical'] if 'encode_categorical' in self else False
 
                     self.predictors = ['RandomForestRegressor',
@@ -271,10 +274,11 @@ class OptTask(FireTaskBase):
                                        'MLPRegressor',
                                        'SVR']
 
-                    if self.collection.find(self._explored_query).count() % retrain_interval == 0:
-                        predictor = 'RandomForestRegressor' if 'predictor' not in self else self['predictor']
-                    else:
-                        predictor = 'random_guess'
+                    predictor = 'RandomForestRegressor' if 'predictor' not in self else self['predictor']
+
+                    if random_interval:
+                        if self.collection.find(self._explored_query).count() % random_interval == 0:
+                            predictor = 'random_guess'
 
                     pred_args = self['predictor_args'] if 'predictor_args' in self else []
                     pred_kwargs = self['predictor_kwargs'] if 'predictor_kwargs' in self else {}
@@ -303,14 +307,16 @@ class OptTask(FireTaskBase):
                         maximize = self['max'] if 'max' in self else False
                         XZ_explored = self._preprocess(XZ_explored, xz_dims)
                         XZ_unexplored = self._preprocess(XZ_unexplored, xz_dims)
-                        xz_onehot = self._predict(XZ_explored, y, XZ_unexplored, model(*pred_args, **pred_kwargs), maximize)
+                        xz_onehot = self._predict(XZ_explored, Y, XZ_unexplored, model(*pred_args, **pred_kwargs), maximize)
                         xz_new = self._postprocess(xz_onehot, xz_dims)
 
                     elif predictor == 'random_guess':
                         xz_new = random.choice(XZ_unexplored)
 
                     else:
-                        if encode_categorical:  # TODO: why is encode_categorical used for custom predictors but not the default ones?  - AJ
+                        # If using a custom predictor, automatically convert categorical info to one-hot encoded ints
+                        # Can be used when a custom predictor cannot use categorical info
+                        if encode_categorical: 
                             XZ_explored = self._preprocess(XZ_explored, xz_dims)
                             XZ_unexplored = self._preprocess(XZ_unexplored, xz_dims)
 
@@ -320,7 +326,7 @@ class OptTask(FireTaskBase):
                         except ImportError as E:
                             raise NameError("The custom predictor {} didnt import correctly!\n{}".format(predictor, E))
 
-                        xz_new = predictor_fun(XZ_explored, y, XZ_unexplored, *pred_args, **pred_kwargs)
+                        xz_new = predictor_fun(XZ_explored, Y, XZ_unexplored, *pred_args, **pred_kwargs)
 
                     # duplicate checking for custom optimizer functions
                     if 'duplicate_check' in self and predictor not in self.predictors and predictor != 'random_guess':
@@ -341,11 +347,11 @@ class OptTask(FireTaskBase):
                         if self.collection.find_one(self._manager_query)['lock'] != pid:
                             continue
                         else:
-                            opt_id = self._store({'z': z, 'yi': yi, 'x': x, 'z_new': z_new, 'x_new': x_new})
+                            opt_id = self._store({'z': z, 'y': y, 'x': x, 'z_new': z_new, 'x_new': x_new})
 
                             # reserve the new x prevent to prevent parallel processes from registering it as unexplored
                             # since the next iteration of this process will be exploring it
-                            self.collection.find_one_and_update({'x': x_new}, {'$set': {'yi': []}})  # TODO: @ardunn - confirm that some other process did not run the desired x and have an actual yi in the database. Otherwise you might overwrite an actual value with nothing. - AJ
+                            self.collection.find_one_and_update({'x': x_new}, {'$set': {'y': []}})  # TODO: @ardunn - confirm that some other process did not run the desired x and have an actual y in the database. Otherwise you might overwrite an actual value with nothing. - AJ
 
                     except TypeError:
                         continue
@@ -410,12 +416,7 @@ class OptTask(FireTaskBase):
 
         elif '_add_launchpad_and_fw_id' in fw_spec:
             if fw_spec['_add_launchpad_and_fw_id']:
-                try:
-                    host, port, name = [getattr(self.launchpad, req) for req in db_reqs]
-
-                except AttributeError:
-                    # launchpad tried to get attributes of a multiprocessing proxy object.
-                    raise Exception("_add_launchpad_and_fw_id is currently working with parallel workflows.")  # TODO: @ardunn - is this still an issue? - AJ
+                host, port, name = [getattr(self.launchpad, req) for req in db_reqs]
 
         else:
             try:
@@ -558,6 +559,10 @@ class OptTask(FireTaskBase):
         Returns:
             ([list]) Points of the search space. 
         """
+
+        if 'space' in self:
+            if self['space']:
+                return pickle.load(open(self['space'], 'rb'))
 
         total_dimspace = []
 
