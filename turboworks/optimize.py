@@ -23,10 +23,6 @@ __author__ = "Alexander Dunn"
 __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
 
-# TODO: @ardunn - In retrain_interval, why use a random guess? That's nuts. The idea here was to use the previously trained model to guess (say) the second best solution, the third best solution, etc. If this is too complicated, then I would just remove the parameter. There is already n_search_points and n_train_points to make things go faster if needed. You could repurpose this parameter to be something just for doing a random guess every once in a while (e.g., once every 10 iterations) to help balance exploration and exploitation. - AJ
-# TODO: @ardunn - The default for n_train_points should be None, which would signify to use all the already-explored points to build the model. It is clunky to have to set this to some arbitrary large number. - AJ
-# TODO: @ardunn - there is just a lot of parameters documented here. Suggest some reorganization (e.g., put related parameters next to one another) and also suggest more comprehensive docs outside the code, i.e., in the official Turboworks docs.
-
 @explicit_serialize
 class OptTask(FireTaskBase):
     """
@@ -42,12 +38,19 @@ class OptTask(FireTaskBase):
             Example: dimensions = dim = [(1,100), (9.293, 18.2838), ("red", "blue", "green")].
             
     Optional args:
-        get_z (string): the fully-qualified name of a function which, given a x vector, returns another vector z which
-            provides extra information to the machine learner. The features defined in z are not used to run the
-            workflow creator.
-            Examples: 
-                get_z = 'my_module.my_fun'
-                get_z = '/path/to/folder/containing/my_package.my_module.my_fun'
+    
+        Database setup:
+        host (string): The name of the MongoDB host where the optimization data will be stored.
+        port (int): The number of the MongoDB port where the optimization data will be stored.
+        name (string): The name of the MongoDB database where the optimization data will be stored.
+        lpad (LaunchPad): A Fireworks LaunchPad object, which can be used to define the host/port/name of the db.
+        opt_label (string): Names the collection of that the particular optimization's data will be stored in. Multiple
+            collections correspond to multiple independent optimizations.
+        db_extras (dict): Keyword arguments to be passed to MongoClient to help set up the db (e.g., password, username,
+            SSL info)
+            Example: db_extras={'username': 'myuser', 'password': 'mypassword', maxPoolSize=10}
+    
+        Predictors:
         predictor (string): names a function which given a list of explored points and unexplored points, returns an 
             optimized guess. 
             Included sklearn predictors are:
@@ -62,38 +65,45 @@ class OptTask(FireTaskBase):
             Defaults to 'RandomForestRegressor'
             Example builtin predictor: predictor = 'SVR'
             Example custom predictor: predictor = 'my_module.my_predictor'
-        max (bool): If true, makes optimization tend toward maximum values instead of minimum ones.
-        wf_creator_args (list): the positional args to be passed to the wf_creator function alongsize the new x vector
-        wf_creator_kwargs (dict): details the kwargs to be passed to the wf_creator function alongside the new x vector
-        duplicate_check (bool): If True, checks for duplicate guess in discrete, finite spaces. Default is no
-            duplicate check.
-        host (string): The name of the MongoDB host where the optimization data will be stored.
-        port (int): The number of the MongoDB port where the optimization data will be stored.
-        name (string): The name of the MongoDB database where the optimization data will be stored.
-        lpad (LaunchPad): A Fireworks LaunchPad object.
-        opt_label (string): Names the collection of that the particular optimization's data will be stored in. Multiple
-            collections correspond to multiple independent optimizations.
-        retrain_interval (int): The number of iterations to wait before retraining the expensive model. On iterations
-            where the model is not trained, a random guess is used. 
-        n_search_points (int): The number of points to be searched in the search space when choosing the next best
-            point. Choosing more points to search may increase the effectiveness of the optimization. The default is
-            1000 points. 
-        n_train_points (int): The number of already explored points to be chosen for training. Default is None, meaning
-            all available points will be used for training. Reduce the number of points to decrease training times.
-        n_generation_points (int): The number of points to be generated and stored the database during creation of the
-            search space. Use this if your search space is gigantic, otherwise OptTask will try to store a huge 
-            search space in your database!
-        space (str): The fully specified path of a pickle file containing a list of all possible searchable vectors.
-            For example '/Users/myuser/myfolder/myspace.p'. When loaded, this space should be a list of tuples. 
         predictor_args (list): the positional args to be passed to the model along with a list of points to be searched.
             For sklearn-based predictors included in OptTask, these positional args are passed to the init method of
             the chosen model. For custom predictors, these are passed to the chosen predictor function alongside the 
             searched guesses, the output from searched guesses, and an unsearched space to be used with optimization.
         predictor_kwargs (dict): the kwargs to be passed to the model. Similar to predictor_args.
+        
+        Predictor performance:
+        n_search_points (int): The number of points to be searched in the search space when choosing the next best
+            point. Choosing more points to search may increase the effectiveness of the optimization. The default is
+            1000 points. 
+        n_train_points (int): The number of already explored points to be chosen for training. Default is None, meaning
+            all available points will be used for training. Reduce the number of points to decrease training times.
+        random_interval (int): Suggests a random guess every n guesses instead of using the predictor suggestion. For
+            instance, random_interval=10 has OptTask randomly guess every 1/10 predictions, and uses the predictor the 
+            other 9/10 times. Setting random_interval to an int greater than 1 may increase exploration. Default is 
+            None, meaning no random guesses. 
+        space (str): The fully specified path of a pickle file containing a list of all possible searchable vectors.
+            For example '/Users/myuser/myfolder/myspace.p'. When loaded, this space should be a list of tuples. 
+        
+        Extra features:
+        get_z (string): the fully-qualified name of a function which, given a x vector, returns another vector z which
+            provides extra information to the machine learner. The features defined in z are not used to run the
+            workflow creator.
+            Examples: 
+                get_z = 'my_module.my_fun'
+                get_z = '/path/to/folder/containing/my_package.my_module.my_fun'
         get_z_args (list): the positional arguments to be passed to the get_z function alongside x
         get_z_kwargs (dict): the kwargs to be passed to the get_z function alongside x
+        
+        Miscellaneous:
+        wf_creator_args (list): the positional args to be passed to the wf_creator function alongsize the new x vector
+        wf_creator_kwargs (dict): details the kwargs to be passed to the wf_creator function alongside the new x vector
         encode_categorical (bool): If True, preprocesses categorical data (strings) to one-hot encoded binary arrays for
             use with custom predictor functions. Default False. 
+        duplicate_check (bool): If True, checks that custom optimizers are not making duplicate guesses; all built-in
+            optimizers cannot duplicate guess. If the custom predictor suggests a duplicate, OptTask picks a random
+            guess out of the remaining untried space. Defualt is no duplicate check.
+        max (bool): If true, makes optimization tend toward maximum values instead of minimum ones.
+        
             
     Attributes:
         collection (MongoDB collection): The collection to store the optimization data.
@@ -113,12 +123,10 @@ class OptTask(FireTaskBase):
     """
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
-
-    #todo: change these attrs
-    optional_params = ['get_z', 'predictor', 'max', 'wf_creator_args', 'wf_creator_kwargs', 'duplicate_check',
-                       'host', 'port', 'name', 'lpad', 'opt_label', 'retrain_interval', 'n_train_points',
-                       'n_search_points', 'n_generation_points', 'space', 'predictor_args', 'predictor_kwargs',
-                       'get_z_args', 'get_z_kwargs', 'encode_categorical']
+    optional_params = ['host', 'port', 'name', 'lpad', 'opt_label', 'db_extras', 'predictor', 'predictor_args',
+                       'predictor_kwargs', 'n_search_points', 'n_train_points', 'random_interval', 'space', 'get_z',
+                       'get_z_args', 'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs', 'encode_categorical',
+                       'duplicate_check', 'max']
 
     def run_task(self, fw_spec):
         """
@@ -132,7 +140,6 @@ class OptTask(FireTaskBase):
             (FWAction) A workflow based on the workflow creator and a new, optimized guess. 
         """
 
-        # the pid identifies the process during parallel duplicate checking
         pid = getpid()
         sleeptime = .01
         max_runs = 1000
@@ -141,12 +148,11 @@ class OptTask(FireTaskBase):
         self._set_queries(fw_spec)
 
         # Running stepwise optimization for concurrent processes requires a manual 'lock' on the optimization database
-        # to prevent duplicate guesses. The first process sets up a manager document which handles locking and queuing
+        # to prevent duplicate guesses. The first process sets up a manager document which handles locking and queueing
         # processes by PID. The single, active process in the lock is free to access optimization data; the queue of the
         # manager holds parallel process PIDs waiting to access the db. When the active process finishes, it removes
         # itself from the lock and moves the first queue PID into the lock, allowing the next process to begin
-        # optimization. Each process continually tries to either queue itself of place itself into the lock if not
-        # already active.
+        # optimization. Each process continually tries to either queue or place itself into the lock if not active.
 
         for run in range(max_resets * max_runs):
             managers = self.collection.find(self._manager_query)
@@ -182,6 +188,47 @@ class OptTask(FireTaskBase):
 
                 elif lock == pid:
 
+                    #todo: add ability to save model
+
+                    # required args
+                    wf_creator = self._deserialize(self['wf_creator'])
+                    x_dims = self['dimensions']
+
+                    # predictor definition
+                    predictor = 'RandomForestRegressor' if 'predictor' not in self else self['predictor']
+                    pred_args = self['predictor_args'] if 'predictor_args' in self else []
+                    pred_kwargs = self['predictor_kwargs'] if 'predictor_kwargs' in self else {}
+
+                    # predictor performance
+                    random_interval = self['random_interval'] if 'random_interval' in self else None
+                    train_points = self['n_train_points'] if 'n_train_points' in self else None
+                    search_points = self['n_search_points'] if 'n_search_points' in self else 1000
+
+                    # extra features
+                    self.get_z = self._deserialize(self['get_z']) if 'get_z' in self else lambda input_vector: []
+                    get_z_args = self['get_z_args'] if 'get_z_args' in self else []
+                    get_z_kwargs = self['get_z_kwargs'] if 'get_z_kwargs' in self else {}
+
+                    # miscellaneous
+                    wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else []
+                    wf_creator_kwargs = self['wf_creator_kwargs'] if 'wf_creator_kwargs' in self else {}
+                    encode_categorical = self['encode_categorical'] if 'encode_categorical' in self else False
+                    duplicate_check = self['duplicate_check'] if 'duplicate_check' in self else False
+                    maximize = self['max'] if 'max' in self else False
+
+                    for kwname, kwdict in {'wf_creator_kwargs': wf_creator_kwargs,
+                                           'get_z_kwargs': get_z_kwargs,
+                                           'predictor_kwargs': pred_kwargs}:
+                        if not isinstance(kwdict, dict):
+                            raise TypeError("{} should be a dictonary of keyword arguments.".format(kwname))
+
+
+                    for pname, plist in {'wf_creator_args': wf_creator_args,
+                                         'get_z_args': get_z_args,
+                                         'predictor_args': pred_args}:
+                        if not isinstance(plist, list) or isinstance(plist, tuple):
+                            raise TypeError("{} should be a list/tuple of positional arguments".format(pname))
+
                     x = fw_spec['_x_opt']
                     y = fw_spec['_y_opt']
 
@@ -189,25 +236,26 @@ class OptTask(FireTaskBase):
                     # process A is running its new workflow. Therefore, process A must reserve the guess.
                     # Line below releases reservation on this document in case of workflow failure or end of workflow.
                     self.collection.find_one_and_update({'x': x}, {'$set': {'y': y}})
-                    self.dtypes = Dtypes()
 
-                    x_dims = self['dimensions']
+                    self.dtypes = Dtypes()
                     self._check_dims(x_dims)
 
                     # fetch additional attributes for constructing machine learning model by calling get_z, if it exists
-                    self.get_z = self._deserialize(self['get_z']) if 'get_z' in self else lambda input_vector: []
-                    get_z_args = self['get_z_args'] if 'get_z_args' in self else []
-                    get_z_kwargs = self['get_z_kwargs'] if 'get_z_kwargs' in self else {}
                     z = self.get_z(x, *get_z_args, **get_z_kwargs)
 
-                    train_points = self['n_train_points'] if 'n_train_points' in self else 1000  # TODO: @ardunn - put these variable definitions (including default values) at top of function. Same with other similar params. - AJ
-                    search_points = self['n_search_points'] if 'n_search_points' in self else 1000
+                    # use all possible training points as default
+                    n_explored = self.collection.find(self._explored_query).count()
+                    if not train_points or train_points > n_explored:
+                        train_points = n_explored
 
-                    explored_docs = self.collection.find(self._explored_query, limit=train_points)  # TODO: @ardunn - ideally you want a random selection for the limit. Look up how to do this in Mongo so you don't always get the same records back. - AJ
+                    # Mongo aggregation framework may give duplicate documents, so we cannot use $sample to randomize
+                    # the training points used
+                    explored_indices = random.sample(range(1, n_explored + 1), train_points)
 
                     Y = [y]
                     XZ_explored = [x + z]
-                    for doc in explored_docs:
+                    for i in explored_indices:
+                        doc = self.collection.find_one({'index': i})
                         XZ_explored.append(doc['x'] + doc['z'])
                         Y.append(doc['y'])
 
@@ -217,13 +265,12 @@ class OptTask(FireTaskBase):
                         xj = list(xi)
                         if self.collection.find({'x': xj, 'y':{'$ne': 'reserved'}}).count() == 0 and xj != x:
                             X_unexplored.append(xj)
-
                             if len(X_unexplored) == search_points:
                                 break
 
                     XZ_unexplored = [xi + self.get_z(xi, *get_z_args, **get_z_kwargs) for xi in X_unexplored]
 
-                    # there are no more unexplored points in the entire space
+                    # if there are no more unexplored points in the entire space
                     if len(XZ_unexplored) < 1:
                         if self._is_discrete(x_dims):
                             raise Exception("The discrete space has been searched exhaustively.")
@@ -234,11 +281,6 @@ class OptTask(FireTaskBase):
                     xz_dims = x_dims + self._z_dims(XZ_unexplored, len(x))
 
                     # run machine learner on Z and X features
-
-                    #todo: do docs for random_interval
-                    random_interval = self['random_interval'] if 'random_interval' in self else None
-                    encode_categorical = self['encode_categorical'] if 'encode_categorical' in self else False
-
                     self.predictors = ['RandomForestRegressor',
                                        'AdaBoostRegressor',
                                        'BaggingRegressor',
@@ -248,14 +290,11 @@ class OptTask(FireTaskBase):
                                        'MLPRegressor',
                                        'SVR']
 
-                    predictor = 'RandomForestRegressor' if 'predictor' not in self else self['predictor']
-
                     if random_interval:
+                        if random_interval < 1 or not isinstance(random_interval, int):
+                            raise ValueError("The random interval must be an integer greater than 0.")
                         if self.collection.find(self._explored_query).count() % random_interval == 0:
                             predictor = 'random_guess'
-
-                    pred_args = self['predictor_args'] if 'predictor_args' in self else []
-                    pred_kwargs = self['predictor_kwargs'] if 'predictor_kwargs' in self else {}
 
                     if predictor in self.predictors:
 
@@ -278,7 +317,6 @@ class OptTask(FireTaskBase):
                         else:
                             raise NameError("{} was in the predictor list but did not have a model!".format(predictor))
 
-                        maximize = self['max'] if 'max' in self else False
                         XZ_explored = self._preprocess(XZ_explored, xz_dims)
                         XZ_unexplored = self._preprocess(XZ_unexplored, xz_dims)
                         xz_onehot = self._predict(XZ_explored, Y, XZ_unexplored, model(*pred_args, **pred_kwargs), maximize)
@@ -303,14 +341,18 @@ class OptTask(FireTaskBase):
                         xz_new = predictor_fun(XZ_explored, Y, XZ_unexplored, *pred_args, **pred_kwargs)
 
                     # duplicate checking for custom optimizer functions
-                    if 'duplicate_check' in self and predictor not in self.predictors and predictor != 'random_guess':
-                        if self['duplicate_check']:
+                    if duplicate_check:
+                        if predictor not in self.predictors and predictor != 'random_guess':
                             if self._is_discrete(x_dims):
                                 x_new = xz_new[:len(x)]
                                 X_explored = [xz[:len(x)] for xz in XZ_explored]
                                 # test only for x, not xz because custom predicted z may not be accounted for
                                 if x_new in X_explored:
                                     xz_new = random.choice(XZ_unexplored)
+
+                            else:
+                                raise ValueError("A duplicate check cannot be performed on spaces with continuous"
+                                                 "dimensions (e.g., floats)")
 
                     # separate 'predicted' z features from the new x vector
                     x_new, z_new = xz_new[:len(x)], xz_new[len(x):]
@@ -352,16 +394,6 @@ class OptTask(FireTaskBase):
                         self.collection.find_one_and_update({'_id': manager_id},
                                                             {'$set': {'lock': new_lock, 'queue': queue}})
 
-                    wf_creator = self._deserialize(self['wf_creator'])
-
-                    wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else []
-                    if not isinstance(wf_creator_args, list) or isinstance(wf_creator_args, tuple):
-                        raise TypeError("wf_creator_args should be a list/tuple of positional arguments")
-
-                    wf_creator_kwargs = self['wf_creator_kwargs'] if 'wf_creator_kwargs' in self else {}
-                    if not isinstance(wf_creator_kwargs, dict):
-                        raise TypeError("wf_creator_kwargs should be a dictonary of keyword arguments.")
-
                     return FWAction(additions=wf_creator(x_new, *wf_creator_args, **wf_creator_kwargs),
                                     update_spec={'optimization_id': opt_id})
 
@@ -387,12 +419,9 @@ class OptTask(FireTaskBase):
         """
 
         opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default'
+        db_extras = self['db_extras'] if 'db_extras' in self else {}
         db_reqs = ('host', 'port', 'name')
         db_def = [req in self for req in db_reqs]
-
-        #todo: add db_extras to docs
-        # allowing kwargs to be passed to MongoClient (e.g., username, password, SSL info, maxPoolSize)
-        db_extras = self['db_extras'] if 'db_extras' in self else {}
 
         if all(db_def):
             host, port, name = [self[k] for k in db_reqs]
