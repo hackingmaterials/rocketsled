@@ -139,8 +139,6 @@ class OptTask(FireTaskBase):
         self._setup_db(fw_spec)
         self._set_queries(fw_spec)
 
-        # Todo: make n_generation points create new points every time
-
         # Running stepwise optimization for concurrent processes requires a manual 'lock' on the optimization database
         # to prevent duplicate guesses. The first process sets up a manager document which handles locking and queuing
         # processes by PID. The single, active process in the lock is free to access optimization data; the queue of the
@@ -173,7 +171,7 @@ class OptTask(FireTaskBase):
 
                         # avoid bootup problems if manager docs are being deleted concurrently with this check
                         try:
-                            self.collection.find_one_and_update({'_id': manager_id}, {'$push': {'queue': manager_id}})
+                            self.collection.find_one_and_update({'_id': manager_id}, {'$push': {'queue': pid}})
 
                         except TypeError:
                             continue
@@ -235,14 +233,6 @@ class OptTask(FireTaskBase):
 
                             unexplored_docs = self.collection.find(self._unexplored_inclusive_query, limit=search_points)
 
-                            # there are no more unexplored points in the entire space
-                            if unexplored_docs.count() == 0:
-                                if self._is_discrete(x_dims):
-                                    raise Exception("The discrete space has been searched exhaustively.")
-                                else:
-                                    raise TypeError("A comprehensive list of points was exhausted but the dimensions are"
-                                                    "not discrete.")
-
                         # append the additional attributes to the unique vectors to feed into machine learning
                         XZ_unexplored = [doc['x'] + doc['z'] for doc in unexplored_docs]
 
@@ -258,6 +248,14 @@ class OptTask(FireTaskBase):
                                     break
                         
                         XZ_unexplored = [xi + self.get_z(xi) for xi in X_unexplored]
+
+                    # there are no more unexplored points in the entire space
+                    if len(XZ_unexplored) <= 1:
+                        if self._is_discrete(x_dims):
+                            raise Exception("The discrete space has been searched exhaustively.")
+                        else:
+                            raise TypeError("A comprehensive list of points was exhausted but the dimensions are"
+                                            "not discrete.")
 
                     xz_dims = x_dims + self._z_dims(XZ_unexplored, len(x))
 

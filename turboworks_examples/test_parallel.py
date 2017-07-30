@@ -38,8 +38,8 @@ if __name__ == "__main__":
     launchpad = LaunchPad(name=TESTDB_NAME)
     launchpad.reset(password=None, require_password=False)
 
-    n_processes = 2
-    n_runs = 15
+    n_processes = 10
+    n_runs = 3
 
     # Should throw an 'Exhausted' error when n_processes*n_runs > 125 (the total space size)
 
