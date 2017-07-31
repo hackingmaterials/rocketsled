@@ -4,7 +4,7 @@ Machine Learning Interface/Black Box Optimizer for FireWorks workflows.
 
 # What is TurboWorks?
 TurboWorks is a flexible and easy-to-use automatic machine-learning framework for Fireworks workflows.
-![Fireworks logo](/docs/multiple_wf.png "Fireworks")
+![Fireworks logo](/docs/fw.png "Fireworks")
 ### Why would I use it?
 If you have a complex, multi-iteration task to execute across different computers, and you would like to automatically reduce the number of expensive calculations needed
 to run your task, TurboWorks is for you. 
