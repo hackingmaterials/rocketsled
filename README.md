@@ -8,8 +8,8 @@ TurboWorks is a flexible and easy-to-use automatic machine-learning framework fo
 If you have a complex, multi-iteration task to execute across different computers, and you would like to automatically reduce the number of expensive calculations needed
 to run your task, TurboWorks is for you. 
 ### What can it do?
-TurboWorks functions as a **black box optimizer** for an optimization loop; it requires no knowledge of a function in order to optimize it. More importantly
- though, TurboWorks **retains the workflow management abilties** of FireWorks (provenance, dynamic workflows, duplicate detection and correction, error handling).   
+TurboWorks functions as a **black box optimizer** for a sequential optimization loop; it requires no knowledge of a function in order to optimize it. More importantly
+ though, TurboWorks **retains the workflow management abilties** of FireWorks (provenance, dynamic workflows, duplicate detection and correction, error handling) across **arbitrary computing resources**.   
 TurboWorks is implemented as a modular, atomic task (FireTask) in a FireWorks workflow; it can run multiple optimizations for a single task or execute
 only once in an entire workflow. It's up to you.
  
@@ -49,7 +49,10 @@ python test_basic.py
 
 If you aren't comfortable with Fireworks, please work through the tutorials [here.](https://hackingmaterials.lbl.gov/fireworks/) 
 
-Turboworks is designed for *inverse optimization tasks with incremental improvement*. For example, a typical workflow might look like this:
+Turboworks is designed for *inverse optimization tasks with sequential improvement*. For example, a typical workflow without optimization might look like this:
+
+![Workflow without opt](http://github.com/ardunn/turboworks/blob/master/docs/basic_workflow.svg "A basic workflow")
+
 
 Input parameters are given to the first Firework. This begins the worklow, and a useful output result is given. The workflow is repeated until enough useful output is obtained (for example, finding a maximum).
 
