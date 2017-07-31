@@ -1,5 +1,7 @@
 """
 The FireTask for running automatic optimization loops.
+
+Please see the documentation for a comprehensive guide on usage. 
 """
 import sys
 import random
@@ -7,7 +9,8 @@ import pickle
 from itertools import product
 from os import getpid
 from time import sleep
-from pymongo import MongoClient, ReturnDocument
+from warnings import warn
+from pymongo import MongoClient
 from numpy import sctypes, asarray
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, BaggingRegressor, GradientBoostingRegressor
 from sklearn.linear_model import LinearRegression
@@ -22,6 +25,7 @@ from fireworks import FWAction, LaunchPad
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
+
 
 @explicit_serialize
 class OptTask(FireTaskBase):
@@ -145,7 +149,7 @@ class OptTask(FireTaskBase):
         self._setup_db(fw_spec)
 
         # points for which a workflow has already been run
-        self._completed = {'x': {'$exists': 1}, 'y': {'$exists': 1, '$ne': 'reserved'}, 'z': {'$exists': 1}}
+        self._completed_query = {'x': {'$exists': 1}, 'y': {'$exists': 1, '$ne': 'reserved'}, 'z': {'$exists': 1}}
         # the query format for the manager document
         self._manager_query = {'lock': {'$exists': 1}, 'queue': {'$exists': 1}}
 
@@ -222,7 +226,6 @@ class OptTask(FireTaskBase):
                         if not isinstance(kwdict, dict):
                             raise TypeError("{} should be a dictonary of keyword arguments.".format(kwname))
 
-
                     for pname, plist in {'wf_creator_args': wf_creator_args,
                                          'get_z_args': get_z_args,
                                          'predictor_args': pred_args}.items():
@@ -235,7 +238,7 @@ class OptTask(FireTaskBase):
                     # If process A suggests a certain guess and runs it, process B may suggest the same guess while
                     # process A is running its new workflow. Therefore, process A must reserve the guess.
                     # Line below releases reservation on this document in case of workflow failure or end of workflow.
-                    res = self.collection.delete_one({'x': x, 'y': 'reserved'})
+                    self.collection.delete_one({'x': x, 'y': 'reserved'})
                     self.dtypes = Dtypes()
                     self._check_dims(x_dims)
 
@@ -243,7 +246,7 @@ class OptTask(FireTaskBase):
                     z = self.get_z(x, *get_z_args, **get_z_kwargs)
 
                     # use all possible training points as default
-                    n_completed = self.collection.find(self._completed).count()
+                    n_completed = self.collection.find(self._completed_query).count()
                     if not train_points or train_points > n_completed:
                         train_points = n_completed
 
@@ -256,7 +259,7 @@ class OptTask(FireTaskBase):
                     for i in explored_indices:
                         doc = self.collection.find_one({'index': i})
                         if doc is None:
-                            raise ValueError ("The doc with index {} does not exist".format(i))
+                            raise ValueError("The doc with index {} does not exist".format(i))
                         XZ_explored.append(doc['x'] + doc['z'])
                         Y.append(doc['y'])
 
@@ -321,7 +324,11 @@ class OptTask(FireTaskBase):
 
                         XZ_explored = self._preprocess(XZ_explored, xz_dims)
                         XZ_unexplored = self._preprocess(XZ_unexplored, xz_dims)
-                        xz_onehot = self._predict(XZ_explored, Y, XZ_unexplored, model(*pred_args, **pred_kwargs), maximize)
+                        xz_onehot = self._predict(XZ_explored,
+                                                  Y,
+                                                  XZ_unexplored,
+                                                  model(*pred_args, **pred_kwargs),
+                                                  maximize)
                         xz_new = self._postprocess(xz_onehot, xz_dims)
 
                     elif predictor == 'random_guess':
@@ -370,13 +377,13 @@ class OptTask(FireTaskBase):
                             forced_dupe = self.collection.find_one({'x': x})
                             if forced_dupe:
                                 # only update the fields which should be updated
-                                self.collection.find_one_and_update({'x': x}, {'$set':
-                                                                    {'y': y, 'z': z, 'z_new': z_new, 'x_new': x_new,
-                                                                     'predictor': predictor}})
+                                self.collection.find_one_and_update({'x': x},
+                                                                    {'$set': {'y': y, 'z': z, 'z_new': z_new,
+                                                                              'x_new': x_new, 'predictor': predictor}})
                                 opt_id = forced_dupe['_id']
                             else:
                                 # update all the fields, as it is a new document
-                                index = self.collection.find(self._completed).count()
+                                index = self.collection.find(self._completed_query).count()
                                 res = self.collection.insert_one(
                                     {'z': z, 'y': y, 'x': x, 'z_new': z_new, 'x_new': x_new, 'predictor': predictor,
                                      'index': index + 1})
@@ -391,7 +398,8 @@ class OptTask(FireTaskBase):
                                 raise ValueError(
                                     "The predictor suggested a guess which has already been tried: {}".format(x_new))
 
-                    except Exception as E:
+                    except TypeError as E:
+                        warn("Process {} timed out while computing next guess, with exception {}".format(pid, E))
                         continue
 
                     queue = self.collection.find_one({'_id': manager_id})['queue']
@@ -453,10 +461,8 @@ class OptTask(FireTaskBase):
                 # auto_load did not return any launchpad object, so nothing was defined.
                 raise AttributeError("The optimization database must be specified explicitly (with host, port, and "
                                      "name), with Launchpad object (lpad), by setting _add_launchpad_and_fw_id to True "
-                                     "in the fw_spec, or by defining LAUNCHPAD_LOC in fw_config.py for "
-                                     "LaunchPad.auto_load()")  # TODO: @ardunn - LAUNCHPAD_LOC is typically not set through fw_config.py (that requires modifying FWS source code), it's set through a config file: https://hackingmaterials.lbl.gov/fireworks/config_tutorial.html  - AJ
-
-
+                                     "in the fw_spec, or by defining LAUNCHPAD_LOC in your config file for "
+                                     "LaunchPad.auto_load()")
 
         mongo = MongoClient(host, port, **db_extras)
         db = getattr(mongo, name)
@@ -536,7 +542,6 @@ class OptTask(FireTaskBase):
         Args:
             dims ([tuple]): dimensions of the search space. Individual dimensions should be in (higher, lower)
                 form if integers, and should be a comprehensive list if categorical.
-            n_points (int): number of points to search. If None, uses all possible points in the search space.
             discrete_floats (bool): If true, converts floating point (continuous) dimensions into discrete dimensions 
                 by randomly sampling points between the dimension's (upper, lower) boundaries. If this is set to False, 
                 and there is a continuous dimension, a list of all possible points in the space can't be calculated. 
@@ -562,12 +567,12 @@ class OptTask(FireTaskBase):
                     dimspace = list(range(lower, upper + 1))
                 elif type(lower) in self.dtypes.floats:
                     if discrete_floats:
-                        dimspace = [random.uniform(lower, upper) for i in range(n_floats)]
+                        dimspace = [random.uniform(lower, upper) for _ in range(n_floats)]
                     else:
                         raise ValueError("The dimension is a float. The dimension space is infinite.")
                 else:  # The dimension is a discrete finite string list of two entries
                     dimspace = dim
-            else: # the dimension is a list of categories or discrete integer/float entries
+            else:  # the dimension is a list of categories or discrete integer/float entries
                 dimspace = dim
 
             random.shuffle(dimspace)
@@ -576,7 +581,7 @@ class OptTask(FireTaskBase):
 
         return space
 
-    def _predict(self, X, y, space, model, maximize):
+    def _predict(self, X, Y, space, model, maximize):
         """
         Scikit-learn compatible model for stepwise optimization. It uses a regressive predictor evaluated on
         remaining points in a discrete space.
@@ -587,7 +592,7 @@ class OptTask(FireTaskBase):
 
         Args:
             X ([list]): List of vectors containing input training data.
-            y (list): List of scalars containing output training data.
+            Y (list): List of scalars containing output training data.
             space ([list]): List of vectors containing all possible inputs. Should be preprocessed before being 
             passed to
                 predictor function.
@@ -599,7 +604,7 @@ class OptTask(FireTaskBase):
             (list) A vector which is predicted to minimize (or maximize) the objective function.
 
         """
-        model.fit(X, y)
+        model.fit(X, Y)
         values = model.predict(space).tolist()
         evaluator = max if maximize else min
         min_or_max = evaluator(values)
@@ -702,7 +707,7 @@ class OptTask(FireTaskBase):
         """
 
         Z_unexplored = [z[x_length:] for z in XZ_unexplored]
-        Z_explored = [doc['z'] for doc in self.collection.find(self._completed)]
+        Z_explored = [doc['z'] for doc in self.collection.find(self._completed_query)]
         Z = Z_explored + Z_unexplored
 
         if not Z:
@@ -736,6 +741,7 @@ class Dtypes(object):
         self.others = d['others']
         self.discrete = self.ints + self.others
         self.all = self.numbers + self.others
+
 
 def random_guess(dimensions, dtypes=Dtypes()):
     """
