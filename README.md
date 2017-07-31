@@ -4,6 +4,7 @@ Machine Learning Interface/Black Box Optimizer for FireWorks workflows.
 
 # What is TurboWorks?
 TurboWorks is a flexible and easy-to-use automatic machine-learning framework for Fireworks workflows.
+![Fireworks logo](/docs/multiple_wf.png "Fireworks")
 ### Why would I use it?
 If you have a complex, multi-iteration task to execute across different computers, and you would like to automatically reduce the number of expensive calculations needed
 to run your task, TurboWorks is for you. 
@@ -61,12 +62,11 @@ Randomly selecting the next input parameters is *inefficient*, since we will hav
 with an optimization loop.
 
 This is where Turboworks comes in handy. Turboworks is a Firetask (called `OptTask`) which can go in any Firework in the workflow, and which uses `sklearn` regressors to predict the best *input* parameters for the next iteration,
-store them in a MongoDB database, and start a new workflow to compute the next output. The optimization loop then repeats.
+store them in a MongoDB database, and start a new workflow to compute the next output. 
 
 ![Turboworks](/docs/tw.png "Turboworks workflow")
 
-
-The most basic version of `OptTask` implementation requires 4 things:
+### The most basic version of `OptTask` implementation requires 4 things:
 * **Workflow creator function**: takes in a vector of parameters `x`  and returns a Fireworks workflow. Specified with the `wf_creator` arg to `OptTask`.
 * **`'_x_opt'` and `'_y_opt'` fields in spec**: the parameters the workflow is run with and the output metric, in the spec of the Firework containing `OptTask`
 * **Dimensions of the search space**: A list of the spaces dimensions, where each dimension is defined by`(higher, lower)` form (for  `float`/ `int`)  or `["a", "comprehensive", "list"]` form for categories. Specified with the `dimensions` argument of `OptTask`
