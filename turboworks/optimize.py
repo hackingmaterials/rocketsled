@@ -112,12 +112,8 @@ class OptTask(FireTaskBase):
         launchpad (LaunchPad): The Fireworks LaunchPad object which determines where workflow data is stored.
         _manager_query (dict/MongoDB query syntax): The document format which details how the manager (for parallel
             optimizations) are managed.
-        _explored_query (dict/MongoDB query syntax): The document format which details how the optimization data (on 
-            a per optimization loop basis) is stored for explored points. 
-        _unexplored_inclusive_query (dict/MongoDB query syntax): The document format which details how optimization
-            data is stored for unexplored points including the current point.
-        _unexplored_noninclusive_query (dict/MongoDB query syntax): Similar to unexplored_inclusive_format but not
-            including the current guess.
+        _completed_query (dict/MongoDB query syntax): The document format which details how the optimization data (on 
+            a per optimization loop basis) is stored for points which have already been computed/explored by a workflow. 
         _n_cats (int): The number of categorical dimensions.
         _encoding_info (dict): Data for converting between one-hot encoded data and categorical data.
     """
@@ -127,6 +123,8 @@ class OptTask(FireTaskBase):
                        'predictor_kwargs', 'n_search_points', 'n_train_points', 'random_interval', 'space', 'get_z',
                        'get_z_args', 'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs', 'encode_categorical',
                        'duplicate_check', 'max']
+
+    #todo: add persistent models and or/retrain_interval using saved model
 
     def run_task(self, fw_spec):
         """
@@ -145,7 +143,11 @@ class OptTask(FireTaskBase):
         max_runs = 1000
         max_resets = 10
         self._setup_db(fw_spec)
-        self._set_queries(fw_spec)
+
+        # points for which a workflow has already been run
+        self._completed = {'x': {'$exists': 1}, 'y': {'$exists': 1, '$ne': 'reserved'}, 'z': {'$exists': 1}}
+        # the query format for the manager document
+        self._manager_query = {'lock': {'$exists': 1}, 'queue': {'$exists': 1}}
 
         # Running stepwise optimization for concurrent processes requires a manual 'lock' on the optimization database
         # to prevent duplicate guesses. The first process sets up a manager document which handles locking and queueing
@@ -188,8 +190,6 @@ class OptTask(FireTaskBase):
 
                 elif lock == pid:
 
-                    #todo: add ability to save model
-
                     # required args
                     wf_creator = self._deserialize(self['wf_creator'])
                     x_dims = self['dimensions']
@@ -218,14 +218,14 @@ class OptTask(FireTaskBase):
 
                     for kwname, kwdict in {'wf_creator_kwargs': wf_creator_kwargs,
                                            'get_z_kwargs': get_z_kwargs,
-                                           'predictor_kwargs': pred_kwargs}:
+                                           'predictor_kwargs': pred_kwargs}.items():
                         if not isinstance(kwdict, dict):
                             raise TypeError("{} should be a dictonary of keyword arguments.".format(kwname))
 
 
                     for pname, plist in {'wf_creator_args': wf_creator_args,
                                          'get_z_args': get_z_args,
-                                         'predictor_args': pred_args}:
+                                         'predictor_args': pred_args}.items():
                         if not isinstance(plist, list) or isinstance(plist, tuple):
                             raise TypeError("{} should be a list/tuple of positional arguments".format(pname))
 
@@ -235,8 +235,7 @@ class OptTask(FireTaskBase):
                     # If process A suggests a certain guess and runs it, process B may suggest the same guess while
                     # process A is running its new workflow. Therefore, process A must reserve the guess.
                     # Line below releases reservation on this document in case of workflow failure or end of workflow.
-                    self.collection.find_one_and_update({'x': x}, {'$set': {'y': y}})
-
+                    res = self.collection.delete_one({'x': x, 'y': 'reserved'})
                     self.dtypes = Dtypes()
                     self._check_dims(x_dims)
 
@@ -244,18 +243,20 @@ class OptTask(FireTaskBase):
                     z = self.get_z(x, *get_z_args, **get_z_kwargs)
 
                     # use all possible training points as default
-                    n_explored = self.collection.find(self._explored_query).count()
-                    if not train_points or train_points > n_explored:
-                        train_points = n_explored
+                    n_completed = self.collection.find(self._completed).count()
+                    if not train_points or train_points > n_completed:
+                        train_points = n_completed
 
                     # Mongo aggregation framework may give duplicate documents, so we cannot use $sample to randomize
                     # the training points used
-                    explored_indices = random.sample(range(1, n_explored + 1), train_points)
+                    explored_indices = random.sample(range(1, n_completed + 1), train_points)
 
                     Y = [y]
                     XZ_explored = [x + z]
                     for i in explored_indices:
                         doc = self.collection.find_one({'index': i})
+                        if doc is None:
+                            raise ValueError ("The doc with index {} does not exist".format(i))
                         XZ_explored.append(doc['x'] + doc['z'])
                         Y.append(doc['y'])
 
@@ -263,14 +264,15 @@ class OptTask(FireTaskBase):
                     X_unexplored = []
                     for xi in X_space:
                         xj = list(xi)
-                        if self.collection.find({'x': xj, 'y':{'$ne': 'reserved'}}).count() == 0 and xj != x:
+                        if self.collection.find({'x': xj}).count() == 0 and xj != x:
                             X_unexplored.append(xj)
                             if len(X_unexplored) == search_points:
                                 break
 
                     XZ_unexplored = [xi + self.get_z(xi, *get_z_args, **get_z_kwargs) for xi in X_unexplored]
 
-                    # if there are no more unexplored points in the entire space
+                    # if there are no more unexplored points in the entire space, either they have been explored
+                    # (ie have x, y, and z) or have been reserved.
                     if len(XZ_unexplored) < 1:
                         if self._is_discrete(x_dims):
                             raise Exception("The discrete space has been searched exhaustively.")
@@ -293,7 +295,7 @@ class OptTask(FireTaskBase):
                     if random_interval:
                         if random_interval < 1 or not isinstance(random_interval, int):
                             raise ValueError("The random interval must be an integer greater than 0.")
-                        if self.collection.find(self._explored_query).count() % random_interval == 0:
+                        if n_completed % random_interval == 0:
                             predictor = 'random_guess'
 
                     if predictor in self.predictors:
@@ -363,27 +365,33 @@ class OptTask(FireTaskBase):
                         if self.collection.find_one(self._manager_query)['lock'] != pid:
                             continue
                         else:
-                            opt_id = self._store({'z': z,
-                                                  'y': y,
-                                                  'x': x,
-                                                  'z_new': z_new,
-                                                  'x_new': x_new,})
-                            index = self.collection.find(self._explored_query).count()
 
-                            self.collection.find_one_and_update({'x': x}, {'$set': {'index': index}})
+                            # if it is a duplicate (such as a forced identical first guess)
+                            forced_dupe = self.collection.find_one({'x': x})
+                            if forced_dupe:
+                                # only update the fields which should be updated
+                                self.collection.find_one_and_update({'x': x}, {'$set':
+                                                                    {'y': y, 'z': z, 'z_new': z_new, 'x_new': x_new,
+                                                                     'predictor': predictor}})
+                                opt_id = forced_dupe['_id']
+                            else:
+                                # update all the fields, as it is a new document
+                                index = self.collection.find(self._completed).count()
+                                res = self.collection.insert_one(
+                                    {'z': z, 'y': y, 'x': x, 'z_new': z_new, 'x_new': x_new, 'predictor': predictor,
+                                     'index': index + 1})
+                                opt_id = res.inserted_id
 
                             # ensure previously computed workflow results are not overwritten by concurrent predictions
                             if self.collection.find({'x': x_new, 'y': {'$exists': 1, '$ne': 'reserved'}}).count() == 0:
                                 # reserve the new x to prevent parallel processes from registering it as unexplored,
                                 # since the next iteration of this process will be exploring it
-                                self.collection.find_one_and_replace({'x': x_new},
-                                                                     {'x': x_new, 'y': 'reserved'},
-                                                                     upsert=True)
+                                self.collection.insert_one({'x': x_new, 'y': 'reserved'})
                             else:
                                 raise ValueError(
                                     "The predictor suggested a guess which has already been tried: {}".format(x_new))
 
-                    except TypeError:
+                    except Exception as E:
                         continue
 
                     queue = self.collection.find_one({'_id': manager_id})['queue']
@@ -454,33 +462,6 @@ class OptTask(FireTaskBase):
         db = getattr(mongo, name)
         self.collection = getattr(db, opt_label)
 
-    def _set_queries(self, fw_spec):
-        """
-        Sets the formats which the optimization database will use to query data. The class attributes here are used to 
-        distinguish between points already explored (ie a workflow has been run using this point) and points which have
-        yet to be explored (ie, for which a workflow has not been run). The query format of the manager is also set here.
-            
-        Args:
-            fw_spec (dict): The spec of the Firework which contains this Firetask.
-
-        Returns:
-            None
-
-        """
-        x = fw_spec['_x_opt']
-
-        # points for which a workflow has already been run
-        self._explored_query = {'x': {'$exists': 1}, 'y': {'$exists': 1}, 'z': {'$exists': 1}}
-
-        # points for which a workflow has not already been run, including the current point (already run)
-        self._unexplored_inclusive_query = {'x': {'$exists': 1}, 'y': {'$exists': 0}}
-
-        # points for which a workflow has not already been run, not including the current point
-        self._unexplored_noninclusive_query = {'x': {'$ne': x, '$exists': 1}, 'y': {'$exists': 0}}
-
-        # the query format for the manager document
-        self._manager_query = {'lock': {'$exists': 1}, 'queue': {'$exists': 1}}
-
     def _check_dims(self, dims):
         """
         Ensure the dimensions are in the correct format for the optimization.
@@ -509,22 +490,6 @@ class OptTask(FireTaskBase):
                 if type(entry) not in self.dtypes.all:
                     raise TypeError("The entry {} in dimension {} cannot be used with OptTask."
                                     "A list of acceptable datatypes is {}".format(entry, dim, self.dtypes.all))
-
-    def _store(self, spec):
-        """
-        Stores and updates turboworks database files and prevents parallel initial guesses. 
-
-        Args:
-            spec (dict): a turboworks-generated spec (or subset of a spec) to be stored in the turboworks db.
-
-        Returns:
-            (ObjectId) the PyMongo BSON id object for the document inserted/updated.
-        """
-        new_doc = self.collection.find_one_and_replace({'x': spec['x']},
-                                                       spec,
-                                                       upsert=True,
-                                                       return_document=ReturnDocument.AFTER)
-        return new_doc['_id']
 
     def _deserialize(self, fun):
         """
@@ -737,7 +702,7 @@ class OptTask(FireTaskBase):
         """
 
         Z_unexplored = [z[x_length:] for z in XZ_unexplored]
-        Z_explored = [doc['z'] for doc in self.collection.find(self._explored_query)]
+        Z_explored = [doc['z'] for doc in self.collection.find(self._completed)]
         Z = Z_explored + Z_unexplored
 
         if not Z:
