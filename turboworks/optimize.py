@@ -9,7 +9,7 @@ import pickle
 from itertools import product
 from os import getpid
 from time import sleep
-from warnings import warn
+import warnings
 from pymongo import MongoClient
 from numpy import sctypes, asarray
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, BaggingRegressor, GradientBoostingRegressor
@@ -108,7 +108,6 @@ class OptTask(FireTaskBase):
             guess out of the remaining untried space. Defualt is no duplicate check.
         max (bool): If true, makes optimization tend toward maximum values instead of minimum ones.
         
-            
     Attributes:
         collection (MongoDB collection): The collection to store the optimization data.
         dtypes (Dtypes): Object containing the datatypes available for optimization.
@@ -399,7 +398,9 @@ class OptTask(FireTaskBase):
                                     "The predictor suggested a guess which has already been tried: {}".format(x_new))
 
                     except TypeError as E:
-                        warn("Process {} timed out while computing next guess, with exception {}".format(pid, E))
+                        warnings.warn(
+                            "Process {} timed out while computing next guess, with exception {}".format(pid, E),
+                             RuntimeWarning)
                         continue
 
                     queue = self.collection.find_one({'_id': manager_id})['queue']
