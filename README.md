@@ -1,6 +1,6 @@
 # TurboWorks
 Machine Learning Interface/Black Box Optimizer for FireWorks workflows.
-
+![Comparison of Workflows](/docs/Comparison.png "Difference between optimized and unoptimized workflows")
 
 # What is TurboWorks?
 TurboWorks is a flexible and easy-to-use automatic machine-learning framework for Fireworks workflows.
