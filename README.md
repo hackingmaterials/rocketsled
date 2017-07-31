@@ -51,18 +51,20 @@ If you aren't comfortable with Fireworks, please work through the tutorials [her
 
 Turboworks is designed for *inverse optimization tasks with sequential improvement*. For example, a typical workflow without optimization might look like this:
 
-![Workflow without opt](http://github.com/ardunn/turboworks/blob/master/docs/basic.png "A basic workflow")
 ![Workflow without opt](/docs/basic.png "A basic workflow")
-
-
 
 Input parameters are given to the first Firework. This begins the worklow, and a useful output result is given. The workflow is repeated until enough useful output is obtained (for example, finding a maximum).
 
-Randomly selecting the next input parameters is inefficient, since we will have to execute many workflows. To reduce the required number of computed workflows, we need to intelligently choose new input parameters
+![Workflow being repeated](/docs/multiple_wf.png "Multiple sequential workflows")
+
+Randomly selecting the next input parameters is *inefficient*, since we will have to execute many workflows. To reduce the required number of computed workflows, we need to *intelligently* choose new input parameters
 with an optimization loop.
 
 This is where Turboworks comes in handy. Turboworks is a Firetask (called `OptTask`) which can go in any Firework in the workflow, and which uses `sklearn` regressors to predict the best *input* parameters for the next iteration,
 store them in a MongoDB database, and start a new workflow to compute the next output. The optimization loop then repeats.
+
+![Turboworks](/docs/tw.png "Turboworks workflow")
+
 
 The most basic version of `OptTask` implementation requires 4 things:
 * **Workflow creator function**: takes in a vector of parameters `x`  and returns a Fireworks workflow. Specified with the `wf_creator` arg to `OptTask`.
