@@ -51,7 +51,9 @@ If you aren't comfortable with Fireworks, please work through the tutorials [her
 
 Turboworks is designed for *inverse optimization tasks with sequential improvement*. For example, a typical workflow without optimization might look like this:
 
-![Workflow without opt](http://github.com/ardunn/turboworks/blob/master/docs/basic_workflow.svg "A basic workflow")
+![Workflow without opt](http://github.com/ardunn/turboworks/blob/master/docs/basic.png "A basic workflow")
+![Workflow without opt](/docs/basic.png "A basic workflow")
+
 
 
 Input parameters are given to the first Firework. This begins the worklow, and a useful output result is given. The workflow is repeated until enough useful output is obtained (for example, finding a maximum).
