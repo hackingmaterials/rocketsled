@@ -45,25 +45,27 @@ cd turboworks_examples
 python test_basic.py
 ~~~~
 
-## Tutorial 1: Get Up and running
+## A Visual Explanation
+
 If you aren't comfortable with Fireworks, please work through the tutorials [here.](https://hackingmaterials.lbl.gov/fireworks/) 
 
-Turboworks is designed for inverse optimization tasks with incremental improvement. For example, a typical workflow might look like this:
+Turboworks is designed for *inverse optimization tasks with incremental improvement*. For example, a typical workflow might look like this:
 
-Input parameters are given to the first firework. This begins the worklow, and a useful output result is given. The workflow is repeated until enough useful output is obtained (for example, finding a maximum).
+Input parameters are given to the first Firework. This begins the worklow, and a useful output result is given. The workflow is repeated until enough useful output is obtained (for example, finding a maximum).
 
 Randomly selecting the next input parameters is inefficient, since we will have to execute many workflows. To reduce the required number of computed workflows, we need to intelligently choose new input parameters
 with an optimization loop.
 
-This is where Turboworks comes in handy. Turboworks is a Firetask (called `OptTask`) which can go in any firework in the workflow, and which uses `sklearn` regressors to predict the best input parameters,
+This is where Turboworks comes in handy. Turboworks is a Firetask (called `OptTask`) which can go in any Firework in the workflow, and which uses `sklearn` regressors to predict the best *input* parameters for the next iteration,
 store them in a MongoDB database, and start a new workflow to compute the next output. The optimization loop then repeats.
 
 The most basic version of `OptTask` implementation requires 4 things:
 * **Workflow creator function**: takes in a vector of parameters `x`  and returns a Fireworks workflow. Specified with the `wf_creator` arg to `OptTask`.
 * **`'_x_opt'` and `'_y_opt'` fields in spec**: the parameters the workflow is run with and the output metric, in the spec of the Firework containing `OptTask`
 * **Dimensions of the search space**: A list of the spaces dimensions, where each dimension is defined by`(higher, lower)` form (for  `float`/ `int`)  or `["a", "comprehensive", "list"]` form for categories. Specified with the `dimensions` argument of `OptTask`
-* **MongoDB collection to store data**: Each optimization problem should have it's own collection.
+* **MongoDB collection to store data**: Each optimization problem should have its own collection.
 
+## Tutorial 1: Get Up and running
 
 The fastest way to get up and running is to do a simple example. Lets create an optimization loop with one Firework containing two Firetasks, 
 `BasicCaclulateTask` and `OptTask`. `BasicCalculateTask` takes in parameters `A`, `B`, and `C` and computes `A*B/C`. We will have `OptTask` run 10 workflows to minimize  `A*B/C` with a `sklearn` `RandomForestRegressor` predictor. 
