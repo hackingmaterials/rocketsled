@@ -5,7 +5,6 @@ Please see the documentation for a comprehensive guide on usage.
 """
 import sys
 import random
-import pickle
 from itertools import product
 from os import getpid, path
 from time import sleep, time
@@ -21,6 +20,12 @@ from sklearn.preprocessing import LabelBinarizer
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction, LaunchPad
+try:
+    # for Python versions < 3.6
+    import cPickle as pickle
+except:
+    # for Python > 3.6
+    import pickle
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
