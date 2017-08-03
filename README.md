@@ -74,9 +74,9 @@ store them in a MongoDB database, and start a new workflow to compute the next o
 or with a Launchpad object (via `lpad` arg to `OptTask`). 
 
 
-## Tutorial 1: Get Up and running
+## Tutorial: Basic example
 
-The fastest way to get up and running is to do a simple example. Lets create an optimization loop with one Firework containing two Firetasks, 
+The fastest way to get up and running is to do an example. Lets create an optimization loop with one Firework containing two Firetasks, 
 `BasicCaclulateTask` and `OptTask`. 
 
 `BasicCalculateTask` takes in parameters `A`, `B`, and `C` and computes `A*B/C`. We will have `OptTask` run 10 workflows to minimize  `A*B/C` with a `sklearn` `RandomForestRegressor` predictor. 
@@ -183,7 +183,7 @@ The documents containing `lock`, `queue`, and `reserved` are used for duplicate 
 
 Most of what `OptTask` can do is specified through arguments to `OptTask`. See `test_extras.py` for an example of many of the advanced features. 
 
-#### Specify `wf_creator` (required)
+### Specify `wf_creator` (required)
 The workflow creator accepts `x` (the vector of input params) and returns the workflow that will be run in the optimization loop. It should be specified as a `string` in the format: 
 
 `wf_creator='my_package.my_module.my_wf_creator'`
@@ -194,7 +194,7 @@ Or alternatively:
 
 **In your workflow creator, remember to include `_x_opt` and `_y_opt` keys in the spec for the Firework containing `OptTask`!**
 
-#### Pass arguments to `wf_creator`
+### Pass arguments to `wf_creator`
 Add args and kwargs as arguments to `wf_creator` alongside `x` with
 * `wf_creator_args`: a list of positional arguments
 * `wf_creator_kwargs`: a dict of keyword arguments
@@ -205,7 +205,7 @@ For example:
     wf_creator_kwargs={'rerun': False} 
 ```
 
-#### Specify `dimensions` (required)
+### Specify `dimensions` (required)
 The dimensions argument defines the workflow input parameter space that the predictor will search. `dimensions` must be a list of individual dimensions:
 
 * For integer and float dimensions, use `(lower, higher)` format
@@ -216,7 +216,7 @@ For example:
 `dimensions=[(1, 100), (12.0, 99.99), ['red', 'green', 'blue']]`
 
 
-#### Specify a `space` and limit input parameter combinations
+### Specify a `space` and limit input parameter combinations
 In certain scenarios, not every single combination of input parameters defined by `dimensions` is a viable guess for `x`.
 In these scenarios, we might increase the efficiency of optimization by limiting the search space to a discontinuous set of possible `x` vectors. Use `space` to define the absolute path of a pickle file containing a list 
 of all available `x`. For example:
@@ -228,7 +228,7 @@ The `space` should be defined as a comprehensive list of `x` vectors, for exampl
 `space=[[1, 19, 12.78], [4, 20, 19.11], ... [8, 18, 2019.83]]`
 
 
-#### Choose a `predictor` (builtin, custom)
+### Choose a `predictor` (builtin, custom)
 `OptTask` can use one of eight `sklearn` regressors to make predictions for the next best `x` guess:
 
 * `RandomForestRegressor` (default)
@@ -257,7 +257,7 @@ Or alternatively:
 
 `predictor='/path/to/my_module.my_wf_creator'`
 
-#### Pass arguments to predictor
+### Pass arguments to predictor
 
 Pass arguments to both builtin and custom predictors with:
 * `predictor_args`: a list of positional arguments
@@ -270,7 +270,7 @@ Pass arguments to both builtin and custom predictors with:
     predictor_kwargs={'max_depth': 2, 'criterion': 'mae'} 
 ```
 
-#### Utilities for custom predictors
+### Utilities for custom predictors
 
 If your custom predictor is not able to handle categorical data, pass
 
@@ -287,7 +287,7 @@ set `OptTask`'s argument
 To automatically suggest random guesses when the custom predictor suggests duplicates. 
 The random guesses are guaranteed to be unique and not duplicates. By default, there is no duplicate check.
 
-#### Store optimization data in a database
+### Store optimization data in a database
 
 The optimization db can be specified with one of the following options:
 
@@ -315,7 +315,7 @@ a dict containing all arguments for a `MongoClient` connection. For example:
                'maxPoolSize': 10}
 ```
 
-#### Fetch, store, and optimize with extra features (`z`)
+### Fetch, store, and optimize with extra features (`z`)
 In addition to the unique vector that identifies a point in the search space, `x`, we may want to use extra features (a vector `z`)
 to improve the performance of our optimization. For instance, a useful `z` feature for optimization may be a linear combination of `x` features.
 
@@ -338,7 +338,7 @@ Alternatively,
 `get_z='\path\to\my_module.my_get_z`
 
 
-#### Pass arguments to `get_z`
+### Pass arguments to `get_z`
 Add args and kwargs as arguments to `get_z` alongside `x` with
 * `get_z_args`: a list of positional arguments
 * `get_z_kwargs`: a dict of keyword arguments
@@ -349,7 +349,7 @@ For example:
     get_z_kwargs={'bilinear': False} 
 ```
 
-#### Control predictor performance
+### Control predictor performance
 `OptTask` allows for control of predictor performance using
 
 * `n_search_points`: The number of points to be searched in the search space when choosing the next best point. The default is 1000 points.
@@ -369,7 +369,7 @@ For example,
     random_interval=100
 ```
 
-#### Choose a maximum instead of a minimum
+### Choose a maximum instead of a minimum
 By default, `OptTask` will suggest input parameters `x` that minimize the output metric `y`. To maximize the output metric instead, use
 
 `max=True`
