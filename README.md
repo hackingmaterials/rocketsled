@@ -66,16 +66,20 @@ store them in a MongoDB database, and start a new workflow to compute the next o
 
 ![Turboworks](/docs/tw.png "Turboworks workflow")
 
-### The most basic version of `OptTask` implementation requires 4 things:
-* **Workflow creator function**: takes in a vector of parameters `x`  and returns a Fireworks workflow. Specified with the `wf_creator` arg to `OptTask`.
+### What's the minimum I need to run a workflow with `OptTask`?
+* **Workflow creator function**: takes in a vector of workflow input parameters `x`  and returns a Fireworks workflow based on those parameters. Specified with the `wf_creator` arg to `OptTask`. `OptTask` should be located somewhere in the workflow that `wf_creator` returns. 
 * **`'_x_opt'` and `'_y_opt'` fields in spec**: the parameters the workflow is run with and the output metric, in the spec of the Firework containing `OptTask`
 * **Dimensions of the search space**: A list of the spaces dimensions, where each dimension is defined by`(higher, lower)` form (for  `float`/ `int`)  or `["a", "comprehensive", "list"]` form for categories. Specified with the `dimensions` argument of `OptTask`
-* **MongoDB collection to store data**: Each optimization problem should have its own collection.
+* **MongoDB collection to store data**: Each optimization problem should have its own collection. Specify with `host`, `port`, and `name` arguments to `OptTask`,
+or with a Launchpad object (via `lpad` arg to `OptTask`). 
+
 
 ## Tutorial 1: Get Up and running
 
 The fastest way to get up and running is to do a simple example. Lets create an optimization loop with one Firework containing two Firetasks, 
-`BasicCaclulateTask` and `OptTask`. `BasicCalculateTask` takes in parameters `A`, `B`, and `C` and computes `A*B/C`. We will have `OptTask` run 10 workflows to minimize  `A*B/C` with a `sklearn` `RandomForestRegressor` predictor. 
+`BasicCaclulateTask` and `OptTask`. 
+
+`BasicCalculateTask` takes in parameters `A`, `B`, and `C` and computes `A*B/C`. We will have `OptTask` run 10 workflows to minimize  `A*B/C` with a `sklearn` `RandomForestRegressor` predictor. 
 
 ```
 # turboworks_examples/calculate_task.py
@@ -98,7 +102,7 @@ class BasicCalculateTask(FireTaskBase):
         return FWAction(update_spec={'_y_opt': score})
 ```
 
-The following workflow creator function takes in `x`, and returns a workflow based on `x`. Once we start a workflow created with this function, it will keep execute the workflow, predict the next best `x`, and then automatically load another workflow onto the Launchpad using the new `x`. 
+The following workflow creator function takes in `x`, and returns a workflow based on `x`. Once we start a workflow created with this function, it will execute the workflow, predict the next best `x`, and then automatically load another workflow onto the Launchpad using the new `x`. 
 
 ```
 # turboworks_examples/test_basic.py
@@ -168,12 +172,209 @@ $ mongo
 > use turboworks
 > db.opt_default.find()
 ```
-* `'x'` indicates the guesses for which expensive workflows have already been run.
+Looking through the query results, the following fields are used during the optimization:
+* `'x'` indicates the guesses for which expensive workflows have already been run. This array contains the `A`, `B`, and `C` guesses. 
 * `'x_new'` indicates the predicted best next guess using the available information at that time.
 * `'index'` indicates the iteration number (i.e., the number of times the workflow has been run)
 
 The documents containing `lock`, `queue`, and `reserved` are used for duplicate checking for concurrent optimization loops. 
 
-## Tutorial 2: Custom Optimization Algorithms and Extra Features
+## Advanced features of `OptTask`
 
-## Tutorial 3: How to Use `OptTask's` Other Abilities
+Most of what `OptTask` can do is specified through arguments to `OptTask`. See `test_extras.py` for an example of many of the advanced features. 
+
+#### Specify `wf_creator` (required)
+The workflow creator accepts `x` (the vector of input params) and returns the workflow that will be run in the optimization loop. It should be specified as a `string` in the format: 
+
+`wf_creator='my_package.my_module.my_wf_creator'`
+
+Or alternatively:
+
+`wf_creator='/path/to/my_module.my_wf_creator'`
+
+**In your workflow creator, remember to include `_x_opt` and `_y_opt` keys in the spec for the Firework containing `OptTask`!**
+
+#### Pass arguments to `wf_creator`
+Add args and kwargs as arguments to `wf_creator` alongside `x` with
+* `wf_creator_args`: a list of positional arguments
+* `wf_creator_kwargs`: a dict of keyword arguments
+
+For example:
+```
+    wf_creator_args=[2, 12],
+    wf_creator_kwargs={'rerun': False} 
+```
+
+#### Specify `dimensions` (required)
+The dimensions argument defines the workflow input parameter space that the predictor will search. `dimensions` must be a list of individual dimensions:
+
+* For integer and float dimensions, use `(lower, higher)` format
+* For categorical dimensions, use a comprehensive list/tuple of all possible choices (e.g., `['red', 'green', 'blue']`)
+
+For example:
+
+`dimensions=[(1, 100), (12.0, 99.99), ['red', 'green', 'blue']]`
+
+
+#### Specify a `space` and limit input parameter combinations
+In certain scenarios, not every single combination of input parameters defined by `dimensions` is a viable guess for `x`.
+In these scenarios, we might increase the efficiency of optimization by limiting the search space to a discontinuous set of possible `x` vectors. Use `space` to define the absolute path of a pickle file containing a list 
+of all available `x`. For example:
+
+`space='\path\to\my_space.p'`
+
+The `space` should be defined as a comprehensive list of `x` vectors, for example:
+
+`space=[[1, 19, 12.78], [4, 20, 19.11], ... [8, 18, 2019.83]]`
+
+
+#### Choose a `predictor` (builtin, custom)
+`OptTask` can use one of eight `sklearn` regressors to make predictions for the next best `x` guess:
+
+* `RandomForestRegressor` (default)
+* `LinearRegression`
+* `AdaBoostRegressor`
+* `BaggingRegressor`
+* `GradientBoostingRegressor`
+* `GaussianProcessRegressor`
+* `MLPRegressor`
+* `SVR`
+
+Pass any of these as a string to `OptTask` to use. For example, 
+`predictor='SVR'`. 
+
+It is also able to use custom predictor functions.
+The predictor must be able to predict a new `x` vector (the input parameters for the workflow) from the information the previous workflows have run. `OptTask` provides the following:
+* A list of previous input vectors (a list of `x` from previous workflows, `X`)
+* A list of previous output metrics (a list of `y` scalars from previous workflows, `Y`)
+* A list of possible new `x` to choose from. The custom predictor can return one of these `x` vectors **or** any `x` vector fitting inside the problem dimensions.
+
+Specify `predictor` with the same string format as `wf_creator`, for example:
+
+`predictor='my_package.my_module.my_wf_creator'`
+
+Or alternatively:
+
+`predictor='/path/to/my_module.my_wf_creator'`
+
+#### Pass arguments to predictor
+
+Pass arguments to both builtin and custom predictors with:
+* `predictor_args`: a list of positional arguments
+* `predictor_kwargs`: a dict of keyword arguments
+
+
+`predictor_args` and `predictor_kwargs` can be passed to `OptTask` as args. For example:
+```
+    predictor_args=['huber', 0.2, 500],
+    predictor_kwargs={'max_depth': 2, 'criterion': 'mae'} 
+```
+
+#### Utilities for custom predictors
+
+If your custom predictor is not able to handle categorical data, pass
+
+`encode_categorical=True`
+
+To `OptTask` to automatically One-hot encode categorical data. The custom predictor will recieve only numerical data, and `OptTask` will reencode the predictor guess to start the next workflow.
+
+Duplicate `x` vectors can cause workflows to be needlessly repeated.
+`OptTask` built in predictors will not suggest duplicate guesses; however, if your custom predictor is prone to suggest duplicates, 
+set `OptTask`'s argument 
+
+`duplicate_check=True`
+
+To automatically suggest random guesses when the custom predictor suggests duplicates. 
+The random guesses are guaranteed to be unique and not duplicates. By default, there is no duplicate check.
+
+#### Store optimization data in a database
+
+The optimization db can be specified with one of the following options:
+
+1. With `host`, `port`, and `name` arguments to `OptTask`, for example:
+```
+    host='localhost;
+    port=27017
+    name='my_db'
+```
+
+2. With a LaunchPad object in the `lpad` argument, for example: `lpad=LaunchPad()`
+
+3. By setting `_add_launchpad_and_fw_id` to `True` in the fw spec. 
+
+4. Specify `LAUNCHPAD_LOC` in the fw config file for `LaunchPad.auto_load()`
+
+Specify the collection the optimization data should be stored in with `opt_label`, for example `opt_label='my_opt'`.
+**Each optimization should have its own collection.**
+
+For password-protected databases, SSL security protocols, or other mongo specs,  use the `db_extras` argument to define
+a dict containing all arguments for a `MongoClient` connection. For example:
+```
+    db_extras={'username': 'myuser', 
+               'password': 'mypassword', 
+               'maxPoolSize': 10}
+```
+
+#### Fetch, store, and optimize with extra features (`z`)
+In addition to the unique vector that identifies a point in the search space, `x`, we may want to use extra features (a vector `z`)
+to improve the performance of our optimization. For instance, a useful `z` feature for optimization may be a linear combination of `x` features.
+
+To use `z` features, specify a function which accepts `x` (the workflow input parameters) and returns `z`, the extra features, as 
+`OptTask`'s `get_z`argument. For example:
+
+```
+# This function returns two extra features which may be used 
+# to make better predictions
+
+    def my_get_z(x):
+        return [x[0] * 2, x[2] ** 3]
+```
+Specify the location of this function with the argument to `OptTask`:
+
+`get_z='my_package.my_module.my_get_z'`
+
+Alternatively,
+
+`get_z='\path\to\my_module.my_get_z`
+
+
+#### Pass arguments to `get_z`
+Add args and kwargs as arguments to `get_z` alongside `x` with
+* `get_z_args`: a list of positional arguments
+* `get_z_kwargs`: a dict of keyword arguments
+
+For example:
+```
+    get_z_args=['extrapolated', 2],
+    get_z_kwargs={'bilinear': False} 
+```
+
+#### Control predictor performance
+`OptTask` allows for control of predictor performance using
+
+* `n_search_points`: The number of points to be searched in the search space when choosing the next best point. The default is 1000 points.
+Increase the number of search points to increase optimization efficiency.
+* `n_train_points`: The number of already explored points to be chosen for training. Default is `None`, meaning
+            all available points will be used for training. Reduce the number of points to decrease training times.
+* `random_interval`: Suggests a random guess every `n` guesses instead of using the predictor suggestion. For
+            instance, `random_interval=10` has `OptTask` randomly guess every 1/10 predictions, and uses the predictor the 
+            other 9/10 times. Setting `random_interval` to an `int` greater than 1 may increase exploration. Default is 
+            `None`, meaning no random guesses. 
+            
+For example,
+
+```
+    n_search_points=100000,
+    n_train_points=50000,
+    random_interval=100
+```
+
+#### Choose a maximum instead of a minimum
+By default, `OptTask` will suggest input parameters `x` that minimize the output metric `y`. To maximize the output metric instead, use
+
+`max=True`
+
+As an argument to `OptTask`. 
+
+
+  

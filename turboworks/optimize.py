@@ -52,7 +52,7 @@ class OptTask(FireTaskBase):
             collections correspond to multiple independent optimizations.
         db_extras (dict): Keyword arguments to be passed to MongoClient to help set up the db (e.g., password, username,
             SSL info)
-            Example: db_extras={'username': 'myuser', 'password': 'mypassword', maxPoolSize=10}
+            Example: db_extras={'username': 'myuser', 'password': 'mypassword', 'maxPoolSize': 10}
     
         Predictors:
         predictor (string): names a function which given a list of explored points and unexplored points, returns an 
