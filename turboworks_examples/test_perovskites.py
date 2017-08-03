@@ -43,7 +43,7 @@ perovskites = pd.read_csv('unc.csv')
 
 # dim = [(0, 51), (0, 51), (0, 6)]
 # todo: use categorical anions
-dim = [ab_mend, ab_mend, c_names]
+dim = [ab_mendrank, ab_mendrank, c_mendrank]
 
 # Defining search space with exclusions
 # exclusions = pickle.load(open('excluded_compounds.p', 'rb'))  # in atomic
@@ -51,25 +51,23 @@ dim = [ab_mend, ab_mend, c_names]
 # space_noex = []
 # for x in gs_ranking:
 #     if x not in exclusions:
-#         a_mend = ab_mend[ab_atomic.index(x[0])]
-#         b_mend = ab_mend[ab_atomic.index(x[1])]
-#         c_mendi = c_names[c_atomic.index(x[2])]
+#         a_mend = ab_mendrank[ab_atomic.index(x[0])]
+#         b_mend = ab_mendrank[ab_atomic.index(x[1])]
+#         c_mendi = c_mendrank[c_atomic.index(x[2])]
 #         space_noex.append((a_mend, b_mend, c_mendi))
-# pickle.dump(space_noex, open('space_gs_cat_included.p', 'wb'))
+# pickle.dump(space_noex, open('space_gs_mend.p', 'wb'))
 
-space_noex = pickle.load(open('space_gs_cat_included.p', 'rb'))
+space_noex = pickle.load(open('space_gs_mend.p', 'rb'))
 
 
 def mend_to_name(a_mr, b_mr, c_mr):
-    # go from mendeleev to name
-    a_i = ab_mend.index(a_mr)
-    b_i = ab_mend.index(b_mr)
-    # todo: try categorical for anion
-    # c_i = c_mendrank.index(c_mr)
+    # go from mendeleev rank to name
+    a_i = ab_mendrank.index(a_mr)
+    b_i = ab_mendrank.index(b_mr)
+    c_i = c_mendrank.index(c_mr)
     a = ab_names[a_i]
     b = ab_names[b_i]
-    # c = c_names[c_i]
-    c = c_mr
+    c = c_names[c_i]
     return a, b, c
 
 @explicit_serialize
@@ -91,7 +89,7 @@ class EvaluateFitnessTask(FireTaskBase):
         output = {'_y_opt': score}
         return FWAction(update_spec=output)
 
-def wf_creator(x, predictor, get_z, lpad, space, chemical_rules=False):
+def wf_creator(x, predictor, get_z, lpad, space, persistent_z, chemical_rules=False):
     spec = {'A': x[0], 'B': x[1], 'C': x[2], '_x_opt': x}
 
     firework = Firework([EvaluateFitnessTask(),
@@ -101,11 +99,12 @@ def wf_creator(x, predictor, get_z, lpad, space, chemical_rules=False):
                                 get_z=get_z,
                                 predictor=predictor,
                                 duplicate_check=True,
-                                wf_creator_args=[predictor, get_z, lpad, space],
+                                wf_creator_args=[predictor, get_z, lpad, space, persistent_z],
                                 wf_creator_kwargs={'chemical_rules': chemical_rules},
                                 get_z_kwargs = {'chemical_rules': chemical_rules},
                                 max=True,
                                 space=space if chemical_rules else None,
+                                persistent_z=persistent_z,
                                 opt_label='test_perovskites',
                                 n_search_points=20000,
                                 n_train_points=20000)],
@@ -115,13 +114,13 @@ def wf_creator(x, predictor, get_z, lpad, space, chemical_rules=False):
 def get_z(x, chemical_rules=False):
     descriptors = ['X', 'average_ionic_radius']
     a, b, c = mend_to_name(x[0], x[1], x[2])
-    # name = a + b + c
-    # conglomerate = [get_pymatgen_descriptor(name, d) for d in descriptors]
-    # means = [np.mean(k) for k in conglomerate]
-    # stds = [np.std(k) for k in conglomerate]
-    # ranges = [np.ptp(k) for k in conglomerate]
-    # z = means + stds + ranges
-    z = []
+    name = a + b + c
+    conglomerate = [get_pymatgen_descriptor(name, d) for d in descriptors]
+    means = [np.mean(k) for k in conglomerate]
+    stds = [np.std(k) for k in conglomerate]
+    ranges = [np.ptp(k) for k in conglomerate]
+    z = means + stds + ranges
+    # z = []
 
     for d in descriptors[:1]:
         ab_attrs = [getattr(Element(el), d) for el in (a, b)]
@@ -146,8 +145,7 @@ def get_z(x, chemical_rules=False):
     return z
 
 if __name__ =="__main__":
-
-    TESTDB_NAME = 'cat'
+    TESTDB_NAME = 'newruns'
     predictor = 'RandomForestRegressor'
     get_z = 'turboworks_examples.test_perovskites.get_z'
     n_cands = 20
@@ -166,14 +164,14 @@ if __name__ =="__main__":
         launchpad = LaunchPad(name=rundb)
         launchpad.reset(password=None, require_password=False)
         launchpad.add_wf(wf_creator(random.choice(space_noex), predictor, get_z, launchpad,
-                                    filedir + '/space_gs_cat_included.p',
+                                    filedir + '/space_gs_mend.p', filedir + '/persistent_z.p',
                                     chemical_rules=True))
 
         y = []
         cands = 0
         while cands != n_cands:
             launch_rocket(launchpad)
-            cands = collection.find({'yi':30.0}).count()
+            cands = collection.find({'y':30.0}).count()
             y.append(cands)
 
         pickle.dump(y, open(filename + "_{}".format(i), 'w'))

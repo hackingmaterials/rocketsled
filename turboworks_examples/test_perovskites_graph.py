@@ -116,7 +116,6 @@ if __name__=="__main__":
     rfwex_norank_Y = depickle('perovskites_RandomForestRegressor_wex_norank_20cands_20runs.p')
     rfwex_newz_Y  = depickle('perovskites_RandomForestRegressor_newz_20cands_20runs.p')
     rfwex_ox_Y = depickle('perovskites_RandomForestRegressor_oxstates_20cands_20runs.p')
-    rfwex_tuning_Y = depickle('perovskites_RandomForestRegressor_tuning_20cands_20runs.p')
 
     rfnoz_stats = get_stats_iterationwise(rfnoz_Y)
     rfwithz_stats = get_stats_iterationwise(rfwithz_Y)
@@ -124,7 +123,6 @@ if __name__=="__main__":
     rfwex_norank_stats = get_stats_iterationwise(rfwex_norank_Y)
     rfwex_newz_stats = get_stats_iterationwise(rfwex_newz_Y)
     rfwex_ox_stats = get_stats_iterationwise(rfwex_ox_Y)
-    rfwex_tuning_stats = get_stats_iterationwise(rfwex_tuning_Y)
 
 
     # print rfnoz_stats['mean'][-1]
@@ -133,7 +131,6 @@ if __name__=="__main__":
     print rfwex_norank_stats['mean'][-1]
     print rfwex_newz_stats['mean'][-1]
     print rfwex_ox_stats['mean'][-1]
-    print rfwex_tuning_stats['mean'][-1]
 
 
     # addtofig_individuals(rfwithz_Y, '', color=None)

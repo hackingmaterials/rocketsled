@@ -349,6 +349,16 @@ For example:
     get_z_kwargs={'bilinear': False} 
 ```
 
+### Prevent `z` vectors from being calculated more than once with `persistent_z`
+If calculating all z vectors is not computationally trivial, we can calculate each `z` only once and store the result for `OptTask` use.
+
+Specify the argument of `OptTask` as the filename where the `z` should be stored. For example:
+
+`persistent_z='/path/to/my_persistent_z.p`
+
+`OptTask` will automatically read from this file on each iteration and will not recalculate `z`. 
+
+
 ### Control predictor performance
 `OptTask` allows for control of predictor performance using
 

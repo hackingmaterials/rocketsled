@@ -7,8 +7,8 @@ import sys
 import random
 import pickle
 from itertools import product
-from os import getpid
-from time import sleep
+from os import getpid, path
+from time import sleep, time
 import warnings
 from pymongo import MongoClient
 from numpy import sctypes, asarray
@@ -97,6 +97,12 @@ class OptTask(FireTaskBase):
                 get_z = '/path/to/folder/containing/my_package.my_module.my_fun'
         get_z_args (list): the positional arguments to be passed to the get_z function alongside x
         get_z_kwargs (dict): the kwargs to be passed to the get_z function alongside x
+        persistent_z (str): The filename (pickle file) which should be used to store persistent z calculations. Specify
+            this argument if calculating z for many (n_search_points) is not trivial and will cost time in computing.
+            With this argument specified, each z will only be calculated once. Defaults to None, meaning that all
+            unexplored z are calculated each iteration.
+            Example:
+                persistent_z = '/path/to/persistent_z_guesses.p'
         
         Miscellaneous:
         wf_creator_args (list): the positional args to be passed to the wf_creator function alongsize the new x vector
@@ -211,6 +217,7 @@ class OptTask(FireTaskBase):
                     self.get_z = self._deserialize(self['get_z']) if 'get_z' in self else lambda input_vector: []
                     get_z_args = self['get_z_args'] if 'get_z_args' in self else []
                     get_z_kwargs = self['get_z_kwargs'] if 'get_z_kwargs' in self else {}
+                    persistent_z = self['persistent_z'] if 'persistent_z' in self else None
 
                     # miscellaneous
                     wf_creator_args = self['wf_creator_args'] if 'wf_creator_args' in self else []
@@ -271,7 +278,16 @@ class OptTask(FireTaskBase):
                             if len(X_unexplored) == search_points:
                                 break
 
-                    XZ_unexplored = [xi + self.get_z(xi, *get_z_args, **get_z_kwargs) for xi in X_unexplored]
+                    if persistent_z:
+                        if path.exists(persistent_z):
+                            xz_map = pickle.load(open(persistent_z, 'rb'))
+                        else:
+                            xz_map = {tuple(xi): self.get_z(xi, *get_z_args, **get_z_kwargs) for xi in X_space}
+                            pickle.dump(xz_map, open(persistent_z, 'wb'))
+
+                        XZ_unexplored = [xi + xz_map[tuple(xi)] for xi in X_unexplored]
+                    else:
+                        XZ_unexplored = [xi + self.get_z(xi, *get_z_args, **get_z_kwargs) for xi in X_unexplored]
 
                     # if there are no more unexplored points in the entire space, either they have been explored
                     # (ie have x, y, and z) or have been reserved.
