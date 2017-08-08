@@ -275,6 +275,8 @@ class OptTask(FireTaskBase):
                         Y.append(doc['y'])
 
                     X_space = self._discretize_space(x_dims, discrete_floats=True)
+                    X_space = list(X_space) if persistent_z else X_space
+
                     X_unexplored = []
                     for xi in X_space:
                         xj = list(xi)
