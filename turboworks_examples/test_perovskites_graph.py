@@ -110,43 +110,32 @@ def depickle(file):
     return pickle.load(open(file, 'rb'))
 
 if __name__=="__main__":
-    rfwithz_Y = depickle('perovskites_RandomForestRegressor_withz_20cands_20runs.p')
-    rfnoz_Y = depickle('perovskites_RandomForestRegressor_noz_20cands_20runs.p')
-    rfwex_Y = depickle('perovskites_RandomForestRegressor_wex_20cands_20runs.p')
-    rfwex_norank_Y = depickle('perovskites_RandomForestRegressor_wex_norank_20cands_20runs.p')
-    rfwex_newz_Y  = depickle('perovskites_RandomForestRegressor_newz_20cands_20runs.p')
-    rfwex_ox_Y = depickle('perovskites_RandomForestRegressor_oxstates_20cands_20runs.p')
 
-    rfnoz_stats = get_stats_iterationwise(rfnoz_Y)
-    rfwithz_stats = get_stats_iterationwise(rfwithz_Y)
-    rfwex_stats = get_stats_iterationwise(rfwex_Y)
-    rfwex_norank_stats = get_stats_iterationwise(rfwex_norank_Y)
-    rfwex_newz_stats = get_stats_iterationwise(rfwex_newz_Y)
-    rfwex_ox_stats = get_stats_iterationwise(rfwex_ox_Y)
+    rf_noex_noz = depickle('RFR_noex_noz.p')
+    # rf_noex_withz = depickle('RFR_noex_withz.p')
+    rf_withex_noz = depickle('RFR_withex_noz.p')
+    rf_withex_withz = depickle('RFR_withex_withz.p')
+
+    rf_noex_noz_stats = get_stats_iterationwise(rf_noex_noz)
+    # rf_noex_withz_stats = get_stats_iterationwise(rf_noex_withz)
+    rf_withex_noz_stats = get_stats_iterationwise(rf_withex_noz)
+    rf_withex_withz_stats = get_stats_iterationwise(rf_withex_withz)
 
 
-    # print rfnoz_stats['mean'][-1]
-    print rfwithz_stats['mean'][-1]
-    print rfwex_stats['mean'][-1]
-    print rfwex_norank_stats['mean'][-1]
-    print rfwex_newz_stats['mean'][-1]
-    print rfwex_ox_stats['mean'][-1]
+    print rf_noex_noz_stats['mean'][-1]
+    # print rf_noex_withz_stats['mean'][-1]
+    print rf_withex_noz_stats['mean'][-1]
+    print rf_withex_withz_stats['mean'][-1]
 
 
-    # addtofig_individuals(rfwithz_Y, '', color=None)
-    # addtofig_individuals(rfwithz_Y, 'rf', color='dodgerblue')
-    # addtofig_individuals(rfnoz_Y, 'rf', color='slategrey')
-    addtofig_iterationwise(rfwex_ox_stats, 'orange', 'RF with ox states')
-    # addtofig_iterationwise(rfwex_newz_stats, 'dodgerblue', 'RF with new z')
-    # addtofig_iterationwise(rfwex_norank_stats, 'green', 'RF with z')
-    # addtofig_iterationwise(rfwex_tuning_stats, 'green', 'RF with 150 trees')
-    # addtofig_iterationwise(rfwex_stats, 'purple', 'RF with z, GS rank')
-    # addtofig_iterationwise(rfnoz_stats, 'green', 'RF without z')
-    # addtofig_iterationwise(rfwithz_stats, 'dodgerblue', 'RF with z')
-    # addtofig_iterationwise(ch, 'orange', 'Chemical Rules', single=True)
+    addtofig_iterationwise(rf_noex_noz_stats, 'green', 'RF without chem rules without z')
+    # addtofig_iterationwise(rf_noex_withz_stats, 'red', 'RF without chem rules with z')
+    addtofig_iterationwise(rf_withex_noz_stats, 'cyan', 'RF with chem rules without z')
+    addtofig_iterationwise(rf_withex_withz_stats, 'blue', 'RF with chem rules with z')
+    addtofig_iterationwise(ch, 'orange', 'Chemical Rules', single=True)
     addtofig_iterationwise(ran2, 'black', 'Random Search', single=True, markersize=0.1)
 
-    # pyplot.xlim(0, 4200)
+    pyplot.xlim(0, 4200)
 
     pyplot.yticks(range(21))
     pyplot.legend(loc='right', prop={'size':8})

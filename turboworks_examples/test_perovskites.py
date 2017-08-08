@@ -42,7 +42,6 @@ c_mendrank = [4, 3, 2, 1, 6, 5, 0]
 perovskites = pd.read_csv('unc.csv')
 
 # dim = [(0, 51), (0, 51), (0, 6)]
-# todo: use categorical anions
 dim = [ab_mendrank, ab_mendrank, c_mendrank]
 
 # Defining search space with exclusions
@@ -145,7 +144,7 @@ def get_z(x, chemical_rules=False):
     return z
 
 if __name__ =="__main__":
-    TESTDB_NAME = 'newruns'
+    TESTDB_NAME = 'noex_withz'
     predictor = 'RandomForestRegressor'
     get_z = 'turboworks_examples.test_perovskites.get_z'
     n_cands = 20
@@ -165,7 +164,7 @@ if __name__ =="__main__":
         launchpad.reset(password=None, require_password=False)
         launchpad.add_wf(wf_creator(random.choice(space_noex), predictor, get_z, launchpad,
                                     filedir + '/space_gs_mend.p', filedir + '/persistent_z.p',
-                                    chemical_rules=True))
+                                    chemical_rules=False))
 
         y = []
         cands = 0
