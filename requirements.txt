@@ -3,4 +3,3 @@ numpy
 sklearn
 scipy
 fireworks
-skopt
