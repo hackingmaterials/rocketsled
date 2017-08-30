@@ -23,9 +23,8 @@ class WorkflowsTestCase(unittest.TestCase):
         run_extras(test_case=True)
 
 def suite():
-    wfTestSuite = unittest.TestSuite()
-    wfTestSuite.addTest(WorkflowsTestCase('test_categorical'))
-    wfTestSuite.addTest(WorkflowsTestCase('test_basic'))
-    wfTestSuite.addTest(WorkflowsTestCase('test_extras'))
-
-    return wfTestSuite
+    wf_test_suite = unittest.TestSuite()
+    wf_test_suite.addTest(WorkflowsTestCase('test_basic'))
+    wf_test_suite.addTest(WorkflowsTestCase('test_categorical'))
+    wf_test_suite.addTest(WorkflowsTestCase('test_extras'))
+    return wf_test_suite
