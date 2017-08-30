@@ -112,24 +112,24 @@ def depickle(file):
 if __name__=="__main__":
 
     rf_noex_noz = depickle('RFR_noex_noz.p')
-    # rf_noex_withz = depickle('RFR_noex_withz.p')
+    rf_noex_withz = depickle('RFR_noex_withz.p')
     rf_withex_noz = depickle('RFR_withex_noz.p')
     rf_withex_withz = depickle('RFR_withex_withz.p')
 
     rf_noex_noz_stats = get_stats_iterationwise(rf_noex_noz)
-    # rf_noex_withz_stats = get_stats_iterationwise(rf_noex_withz)
+    rf_noex_withz_stats = get_stats_iterationwise(rf_noex_withz)
     rf_withex_noz_stats = get_stats_iterationwise(rf_withex_noz)
     rf_withex_withz_stats = get_stats_iterationwise(rf_withex_withz)
 
 
     print rf_noex_noz_stats['mean'][-1]
-    # print rf_noex_withz_stats['mean'][-1]
+    print rf_noex_withz_stats['mean'][-1]
     print rf_withex_noz_stats['mean'][-1]
     print rf_withex_withz_stats['mean'][-1]
 
 
     addtofig_iterationwise(rf_noex_noz_stats, 'green', 'RF without chem rules without z')
-    # addtofig_iterationwise(rf_noex_withz_stats, 'red', 'RF without chem rules with z')
+    addtofig_iterationwise(rf_noex_withz_stats, 'red', 'RF without chem rules with z')
     addtofig_iterationwise(rf_withex_noz_stats, 'cyan', 'RF with chem rules without z')
     addtofig_iterationwise(rf_withex_withz_stats, 'blue', 'RF with chem rules with z')
     addtofig_iterationwise(ch, 'orange', 'Chemical Rules', single=True)
@@ -138,8 +138,9 @@ if __name__=="__main__":
     pyplot.xlim(0, 4200)
 
     pyplot.yticks(range(21))
-    pyplot.legend(loc='right', prop={'size':8})
-    pyplot.xlabel("Calculations")
+    pyplot.legend(loc='center right', prop={'size':8})
+    # pyplot.xlabel("Calculations")
+    pyplot.xlabel('Number of Computations')
     pyplot.ylabel("Candidates Found")
     pyplot.title("Comparison of Predictors for Finding Solar Water Splitting Perovskites")
     # pyplot.savefig("{}_withoutz_max.png".format(predictor))

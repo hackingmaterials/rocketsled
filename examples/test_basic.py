@@ -27,7 +27,7 @@ def wf_creator(x):
     # CalculateTask writes _y_opt field to the spec internally.
 
     firework1 = Firework([CalculateTask(),
-                          OptTask(wf_creator='turboworks_examples.test_basic.wf_creator',
+                          OptTask(wf_creator='examples.test_basic.wf_creator',
                                   dimensions=X_dim,
                                   host='localhost',
                                   port=27017,
@@ -36,21 +36,23 @@ def wf_creator(x):
 
     return Workflow([firework1])
 
-
-if __name__ == "__main__":
-
+def run_workflows(test_case=False):
     TESTDB_NAME = 'turboworks'
     launchpad = LaunchPad(name=TESTDB_NAME)
-    launchpad.reset(password=None, require_password=False)
+    if test_case:
+        getattr(launchpad.connection, TESTDB_NAME).opt_default.drop()
 
     # clean up tw database if necessary
+    launchpad.reset(password=None, require_password=False)
 
     launchpad.add_wf(wf_creator([5, 5, 2]))
-
-    rapidfire(launchpad, nlaunches=10, sleep_time=0)
+    rapidfire(launchpad, nlaunches=10, sleep_time=0, strm_lvl='CRITICAL')
 
     # tear down database
     # launchpad.connection.drop_database(TESTDB_NAME)
+
+if __name__ == "__main__":
+    run_workflows()
 
 
 

@@ -92,7 +92,7 @@ def wf_creator(x, predictor, get_z, lpad, space, persistent_z, chemical_rules=Fa
     spec = {'A': x[0], 'B': x[1], 'C': x[2], '_x_opt': x}
 
     firework = Firework([EvaluateFitnessTask(),
-                        OptTask(wf_creator='turboworks_examples.test_perovskites.wf_creator',
+                        OptTask(wf_creator='examples.test_perovskites.wf_creator',
                                 dimensions=dim,
                                 lpad=lpad,
                                 get_z=get_z,
@@ -146,13 +146,13 @@ def get_z(x, chemical_rules=False):
 if __name__ =="__main__":
     TESTDB_NAME = 'noex_withz'
     predictor = 'RandomForestRegressor'
-    get_z = 'turboworks_examples.test_perovskites.get_z'
+    get_z = 'examples.test_perovskites.get_z'
     n_cands = 20
     n_runs = 20
     filename = 'perovskites_{}_{}_{}cands_{}runs.p'.format(predictor, TESTDB_NAME, n_cands, n_runs)
 
     Y = []
-    for i in range(n_runs):
+    for i in range(14, n_runs):
         rundb = TESTDB_NAME + "_{}".format(i)
 
         conn = MongoClient('localhost', 27017)

@@ -13,6 +13,7 @@ from turboworks.optimize import OptTask
 from calculate_task import MixedCalculateTask as CalculateTask
 import random
 
+opt_label = "opt_extras"
 
 # use a wf_creator function with more arguments...
 def wf_creator(x, launchpad, my_arg, my_kwarg=1):
@@ -23,16 +24,16 @@ def wf_creator(x, launchpad, my_arg, my_kwarg=1):
     # CalculateTask writes _y_opt field to the spec internally.
 
     firework1 = Firework([CalculateTask(),
-                          OptTask(wf_creator='turboworks_examples.test_extras.wf_creator',
+                          OptTask(wf_creator='examples.test_extras.wf_creator',
                                   dimensions=fw1_dim,
-                                  get_z='turboworks_examples.test_extras.get_z',
-                                  predictor='turboworks_examples.test_extras.example_predictor',
+                                  get_z='examples.test_extras.get_z',
+                                  predictor='examples.test_extras.example_predictor',
                                   max=True,
                                   lpad=launchpad,
                                   wf_creator_args=[launchpad, my_arg * 3],
                                   wf_creator_kwargs={'my_kwarg': my_kwarg * 2},
                                   duplicate_check=True,
-                                  opt_label="opt_extras_example",
+                                  opt_label=opt_label,
                                   retrain_interval=5)],
                          spec=fw1_spec)
 
@@ -50,18 +51,26 @@ def example_predictor(X_tot, y, X_space_total):
     # custom optimizer code goes here
     return random.choice(X_space_total)
 
-
-if __name__ == "__main__":
-
+def run_workflows(test_case=False):
     TESTDB_NAME = 'turboworks'
-    launchpad = LaunchPad(name=TESTDB_NAME)
-    launchpad.reset(password=None, require_password=False)
-    launchpad.add_wf(wf_creator([1, 1, 2, "red"], launchpad, 3, my_kwarg=1))
 
+    # clean up tw database if necessary
+    launchpad = LaunchPad(name=TESTDB_NAME)
+    if test_case:
+        getattr(getattr(launchpad.connection, TESTDB_NAME), opt_label).drop()
+
+    launchpad.reset(password=None, require_password=False)
+
+    launchpad.add_wf(wf_creator([1, 1, 2, "red"], launchpad, 3, my_kwarg=1))
 
     # if n_launches > 24 for this particular example, the search space will be exhausted and OptTask will throw
     # an exception
-    rapidfire(launchpad, nlaunches=25, sleep_time=0)
+    rapidfire(launchpad, nlaunches=23, sleep_time=0)
 
     # tear down database
     # launchpad.connection.drop_database(TESTDB_NAME)
+
+
+if __name__ == "__main__":
+
+    run_workflows()
