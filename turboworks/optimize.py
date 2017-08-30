@@ -139,6 +139,7 @@ class OptTask(FireTaskBase):
                        'duplicate_check', 'max']
 
     #todo: add persistent models and or/retrain_interval using saved model
+    #todo: for the time being, this can be done with a custom optimizer
 
     def run_task(self, fw_spec):
         """
@@ -300,7 +301,7 @@ class OptTask(FireTaskBase):
                     # (ie have x, y, and z) or have been reserved.
                     if len(XZ_unexplored) < 1:
                         if self._is_discrete(x_dims):
-                            raise Exception("The discrete space has been searched exhaustively.")
+                            raise ExhaustedSpaceError("The discrete space has been searched exhaustively.")
                         else:
                             raise TypeError("A comprehensive list of points was exhausted but the dimensions are"
                                             "not discrete.")
@@ -765,6 +766,10 @@ class Dtypes(object):
         self.others = d['others']
         self.discrete = self.ints + self.others
         self.all = self.numbers + self.others
+
+
+class ExhaustedSpaceError(Exception):
+    pass
 
 
 def random_guess(dimensions, dtypes=Dtypes()):
