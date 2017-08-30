@@ -39,10 +39,10 @@ def wf_creator(x):
 def run_workflows(test_case=False):
     TESTDB_NAME = 'turboworks'
     launchpad = LaunchPad(name=TESTDB_NAME)
-    if test_case:
-        getattr(launchpad.connection, TESTDB_NAME).opt_default.drop()
 
     # clean up tw database if necessary
+    if test_case:
+        getattr(launchpad.connection, TESTDB_NAME).opt_default.drop()
     launchpad.reset(password=None, require_password=False)
 
     launchpad.add_wf(wf_creator([5, 5, 2]))

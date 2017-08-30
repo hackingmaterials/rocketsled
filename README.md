@@ -38,12 +38,11 @@ git clone https://github.com/ardunn/turboworks.git
 cd turboworks
 pip install . -r requirements
 
-# Make sure Mongo DB's daemon is running
-mongod
+# Make sure Mongo DB's daemon is running locally!
+mongod 
 
-# Now lets run a minimization example
-cd turboworks_examples
-python test_basic.py
+# Now lets run the tests
+python setup.py test
 ~~~~
 
 ## A Visual Explanation
@@ -182,6 +181,7 @@ The documents containing `lock`, `queue`, and `reserved` are used for duplicate 
 ## Advanced features of `OptTask`
 
 Most of what `OptTask` can do is specified through arguments to `OptTask`. See `test_extras.py` for an example of many of the advanced features. 
+Examples of several different (basic) usage scenarios are provided in the `examples` directory.
 
 ### Specify `wf_creator` (required)
 The workflow creator accepts `x` (the vector of input params) and returns the workflow that will be run in the optimization loop. It should be specified as a `string` in the format: 
