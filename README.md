@@ -386,5 +386,22 @@ By default, `OptTask` will suggest input parameters `x` that minimize the output
 
 As an argument to `OptTask`. 
 
+### Submit and optimize jobs in batches with `batch_size`
+Turboworks supports batch job submission and optimization. For example, you may want to run 10 workflows, optimize the
+next 10 best guesses, and submit another 10 workflows. To do this, use
+
+`batch_size=10`
+
+As an argument to `OptTask`. `OptTask` will wait until all jobs in single batch are finished computing before predicting 
+the next best guesses and submitting another batch.
+
+To start a batch-style optimization loop, submit your first batch manually, where each batch item is an optimization 
+loop continaing `OptTask`. `OptTask` will automatically handle the rest!
+
+If you are confused on using `batch_size` and batch optimization, check out the example `test_batch.py`, which is 
+identical to `test_basic.py` except that it submits and optimizes jobs in batches of `5`. 
+
+
+
 
   
