@@ -393,7 +393,9 @@ next 10 best guesses, and submit another 10 workflows. To do this, use
 `batch_size=10`
 
 As an argument to `OptTask`. `OptTask` will wait until all jobs in single batch are finished computing before predicting 
-the next best guesses and submitting another batch.
+the next best guesses and submitting another batch. The workflow scheme for a batch optimization is shown below:
+
+![Batch Optimization](/docs/batch.png)
 
 To start a batch-style optimization loop, submit your first batch manually, where each batch item is an optimization 
 loop continaing `OptTask`. `OptTask` will automatically handle the rest!
