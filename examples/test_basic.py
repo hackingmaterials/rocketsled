@@ -10,7 +10,7 @@ The Firework contains 2 Tasks.
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
 from turboworks.optimize import OptTask
-from calculate_task import BasicCalculateTask as CalculateTask
+from examples.calculate_task import BasicCalculateTask as CalculateTask
 
 
 __author__ = "Alexander Dunn"

@@ -119,6 +119,8 @@ class OptTask(FireTaskBase):
             optimizers cannot duplicate guess. If the custom predictor suggests a duplicate, OptTask picks a random
             guess out of the remaining untried space. Defualt is no duplicate check.
         max (bool): If true, makes optimization tend toward maximum values instead of minimum ones.
+        batch_size (int): The number of jobs to submit per batch for a batch optimization. For example, batch_size=5
+            will optimize every 5th job, then submitting another 5 jobs based on the best 5 predictions.
         
     Attributes:
         collection (MongoDB collection): The collection to store the optimization data.
@@ -137,7 +139,7 @@ class OptTask(FireTaskBase):
     optional_params = ['host', 'port', 'name', 'lpad', 'opt_label', 'db_extras', 'predictor', 'predictor_args',
                        'predictor_kwargs', 'n_search_points', 'n_train_points', 'random_interval', 'space', 'get_z',
                        'get_z_args', 'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs', 'encode_categorical',
-                       'duplicate_check', 'max', 'batch']
+                       'duplicate_check', 'max', 'batch_size']
 
     #todo: add persistent models and or/retrain_interval using saved model
     #todo: for the time being, this can be done with a custom optimizer
@@ -232,7 +234,7 @@ class OptTask(FireTaskBase):
                     encode_categorical = self['encode_categorical'] if 'encode_categorical' in self else False
                     duplicate_check = self['duplicate_check'] if 'duplicate_check' in self else False
                     maximize = self['max'] if 'max' in self else False
-                    n_per_batch = self['batch'] if 'batch' in self else 1
+                    batch_size = self['batch_size'] if 'batch_size' in self else 1
 
                     for kwargname, kwargdict in {'wf_creator_kwargs': wf_creator_kwargs,
                                            'get_z_kwargs': get_z_kwargs,
@@ -265,12 +267,31 @@ class OptTask(FireTaskBase):
                         train_points = n_completed
 
                     # check if an opimization should be done, when in batch mode
-                    batch_mode = False if n_per_batch==1 else True
-                    if batch_mode and not self.batch_ready(n_completed, n_per_batch):
-                        self.collection.find_one_and_update({'x': x},
-                                                            {'$set': {'y': y, 'z': z, 'z_new': [], 'x_new': [],
-                                                                      'predictor': None}},
-                                                            upsert=True)
+                    batch_mode = False if batch_size==1 else True
+                    if batch_mode and not self.batch_ready(n_completed, batch_size):
+
+                        # 'None' predictor means this job was not used for an optimization run.
+                        if self.collection.find_one({'x': x}):
+                            if self.collection.find_one({'x': x, 'y': 'reserved'}):
+                                # For reserved guesses: update everything
+                                self.collection.find_one_and_update({'x': x, 'y': 'reserved'},
+                                                                    {'$set': {'y': y, 'z': z, 'z_new': [], 'x_new': [],
+                                                                              'predictor': None,
+                                                                              'index': n_completed + 1}})
+
+                            else:
+                                # For completed guesses (ie, this workflow is a forced duplicate), do not update index,
+                                # but update everything else
+                                self.collection.find_one_and_update({'x': x},
+                                                                    {'$set': {'y': y, 'z': z, 'z_new': [], 'x_new': [],
+                                                                              'predictor': None}})
+                        else:
+                            # For new guesses: insert x, y, z, index, predictor, and dummy new guesses
+                            self.collection.insert_one({'x': x, 'y': y, 'z': z, 'x_new': [], 'z_new': [],
+                                                        'predictor': None, 'index': n_completed + 1})
+
+
+                        self.pop_lock(manager_id)
                         return None
 
                     # Mongo aggregation framework may give duplicate documents, so we cannot use $sample to randomize
@@ -364,12 +385,12 @@ class OptTask(FireTaskBase):
                                                       XZ_unexplored,
                                                       model(*pred_args, **pred_kwargs),
                                                       maximize,
-                                                  n_per_batch)
+                                                  batch_size)
 
                         XZ_new = [self._postprocess(xz_onehot, xz_dims) for xz_onehot in XZ_onehot]
 
                     elif predictor == 'random_guess':
-                        XZ_new = random.sample(XZ_unexplored, n_per_batch)
+                        XZ_new = random.sample(XZ_unexplored, batch_size)
 
                     else:
                         # If using a custom predictor, automatically convert categorical info to one-hot encoded ints
@@ -455,13 +476,7 @@ class OptTask(FireTaskBase):
                              RuntimeWarning)
                         continue
 
-                    queue = self.collection.find_one({'_id': manager_id})['queue']
-                    if not queue:
-                        self.collection.find_one_and_update({'_id': manager_id}, {'$set': {'lock': None}})
-                    else:
-                        new_lock = queue.pop(0)
-                        self.collection.find_one_and_update({'_id': manager_id},
-                                                            {'$set': {'lock': new_lock, 'queue': queue}})
+                    self.pop_lock(manager_id)
 
                     X_new = [xz_new[:len(x)] for xz_new in XZ_new]
                     new_wfs = [wf_creator(x_new, *wf_creator_args, **wf_creator_kwargs) for x_new in X_new]
@@ -637,6 +652,26 @@ class OptTask(FireTaskBase):
 
         return space
 
+
+    def pop_lock(self, manager_id):
+        """
+        Releases the current process lock on the manager doc, and moves waiting processes from the queue to the lock.
+
+        Args:
+            manager_id: The MongoDB ObjectID object of the manager doc.
+
+        Returns:
+            None
+
+        """
+        queue = self.collection.find_one({'_id': manager_id})['queue']
+        if not queue:
+            self.collection.find_one_and_update({'_id': manager_id}, {'$set': {'lock': None}})
+        else:
+            new_lock = queue.pop(0)
+            self.collection.find_one_and_update({'_id': manager_id},
+                                                {'$set': {'lock': new_lock, 'queue': queue}})
+
     def _predict(self, X, Y, space, model, maximize, n_predictions):
         """
         Scikit-learn compatible model for stepwise optimization. It uses a regressive predictor evaluated on
@@ -782,12 +817,25 @@ class OptTask(FireTaskBase):
                         dims[i] = cat_values
         return dims
 
-    def batch_ready(self, n_completed, n_per_batch):
-        if n_completed == 0:
-            return False
+    def batch_ready(self, n_completed, batch_size):
+        """
+        Determines whether a batch has completed (based on the size of batch and number of completed workflows), so that
+        an optimization predicts the next n_per_batch x vectors and automatically loads them to the launchpad.
+
+        Args:
+            n_completed: The number of completed workflows.
+            batch_size: The number of workflows per workflow batch.
+
+        Returns:
+            True if ready for a batch prediction (for example, your batch size is 10 and the 20th workflow has just
+            completed, OptTask will predict the 10 next best guesses).
+            False if not ready for a batch prediction (for example, you have a batch size of 10 and are only 8
+            workflows into the batch, OptTask will wait until the batch completes.)
+
+        """
 
         # if current job is the job completing the batch
-        elif n_completed - 1 % n_per_batch == 0:
+        if n_completed not in (0, 1) and (n_completed + 1) % batch_size == 0:
             return True
         else:
             return False
