@@ -8,5 +8,5 @@ setup(name='turboworks',
       version='0.1',
       author = 'Alex Dunn',
       description = 'Machine learning integration with Fireworks workflows',
-      packages=['turboworks', 'examples'],
+      packages=['turboworks', 'examples', 'benchmarks'],
       test_suite="turboworks")

@@ -12,7 +12,10 @@ __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
 
 
-class WorkflowsTestCase(unittest.TestCase):
+class TestWorkflows(unittest.TestCase):
+    """
+    Make sure basic optimization loops execute properly.
+    """
 
     def test_basic(self):
         run_basic(test_case=True)
@@ -28,8 +31,8 @@ class WorkflowsTestCase(unittest.TestCase):
 
 def suite():
     wf_test_suite = unittest.TestSuite()
-    wf_test_suite.addTest(WorkflowsTestCase('test_basic'))
-    wf_test_suite.addTest(WorkflowsTestCase('test_categorical'))
-    wf_test_suite.addTest(WorkflowsTestCase('test_extras'))
-    wf_test_suite.addTest(WorkflowsTestCase('test_batch'))
+    wf_test_suite.addTest(TestWorkflows('test_basic'))
+    wf_test_suite.addTest(TestWorkflows('test_categorical'))
+    wf_test_suite.addTest(TestWorkflows('test_extras'))
+    wf_test_suite.addTest(TestWorkflows('test_batch'))
     return wf_test_suite

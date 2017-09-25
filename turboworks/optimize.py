@@ -118,6 +118,10 @@ class OptTask(FireTaskBase):
         duplicate_check (bool): If True, checks that custom optimizers are not making duplicate guesses; all built-in
             optimizers cannot duplicate guess. If the custom predictor suggests a duplicate, OptTask picks a random
             guess out of the remaining untried space. Defualt is no duplicate check.
+        tolerances (list): The tolerance of each feature when duplicate checking. For categorical features, put 'None'
+            Example: Our dimensions are [(1, 100), ['red', 'blue'], (2.0, 20.0)]. We want our first parameter to be
+            a duplicate only if it is exact, and our third parameter to be a duplicate if it is within 1e-6. Then:
+                tolerances=[0, None, 1e-6]
         max (bool): If true, makes optimization tend toward maximum values instead of minimum ones.
         batch_size (int): The number of jobs to submit per batch for a batch optimization. For example, batch_size=5
             will optimize every 5th job, then submitting another 5 jobs based on the best 5 predictions.
@@ -233,6 +237,7 @@ class OptTask(FireTaskBase):
                     wf_creator_kwargs = self['wf_creator_kwargs'] if 'wf_creator_kwargs' in self else {}
                     encode_categorical = self['encode_categorical'] if 'encode_categorical' in self else False
                     duplicate_check = self['duplicate_check'] if 'duplicate_check' in self else False
+                    tolerance = self['tolerance'] if 'tolerance' in self else None
                     maximize = self['max'] if 'max' in self else False
                     batch_size = self['batch_size'] if 'batch_size' in self else 1
 
@@ -268,7 +273,7 @@ class OptTask(FireTaskBase):
 
                     # check if an opimization should be done, when in batch mode
                     batch_mode = False if batch_size==1 else True
-                    if batch_mode and not self.batch_ready(n_completed, batch_size):
+                    if batch_mode and not self._batch_ready(n_completed, batch_size):
 
                         # 'None' predictor means this job was not used for an optimization run.
                         if self.collection.find_one({'x': x}):
@@ -419,19 +424,24 @@ class OptTask(FireTaskBase):
                                             "supported")
 
                         if predictor not in self.predictors and predictor != 'random_guess':
-                            if self._is_discrete(x_dims):
-                                X_new = [xz_new[:len(x)] for xz_new in XZ_new]
-                                X_explored = [xz[:len(x)] for xz in XZ_explored]
-                                # test only for x, not xz because custom predicted z may not be accounted for
+                            X_new = [xz_new[:len(x)] for xz_new in XZ_new]
+                            X_explored = [xz[:len(x)] for xz in XZ_explored]
 
+                            if tolerance:
                                 for n, x_new in enumerate(X_new):
-                                    if x_new in X_explored:
+                                    if self._tolerance_check(x_new, X_explored, tolerances=tolerance):
                                         XZ_new[n] = random.choice(XZ_unexplored)
                                         XZ_unexplored.remove(x_new)
 
                             else:
-                                raise ValueError("A duplicate check cannot be performed on spaces with continuous"
-                                                 "dimensions (e.g., floats)")
+                                if self._is_discrete(x_dims):
+                                    # test only for x, not xz because custom predicted z may not be accounted for
+                                    for n, x_new in enumerate(X_new):
+                                        if x_new in X_explored:
+                                            XZ_new[n] = random.choice(XZ_unexplored)
+                                            XZ_unexplored.remove(x_new)
+                                else:
+                                    raise ValueError("Define tolerance parameter to duplicate check floats.")
 
                     # separate 'predicted' z features from the new x vector
                     X_new, Z_new = [xz_new[:len(x)] for xz_new in XZ_new], [xz_new[len(x):] for xz_new in XZ_new]
@@ -817,7 +827,52 @@ class OptTask(FireTaskBase):
                         dims[i] = cat_values
         return dims
 
-    def batch_ready(self, n_completed, batch_size):
+    def _tolerance_check(self, x_new, X_explored, tolerances):
+        """
+        Duplicate checks with tolerances.
+
+        Args:
+            x_new: the new guess to be duplicate checked
+            X_explored: the list of all explored guesses
+            tolerances: the tolerances of each dimension
+
+        Returns:
+            True if x_new is a duplicate of a guess in X_explored.
+            False if x_new is unique in the space and has yet to be tried.
+
+        """
+
+        #todo: test this
+
+        if len(tolerances) != len(x_new):
+            raise DimensionMismatchError("Make sure each dimension has a corresponding tolerance value of the same "
+                                         "type! Your dimensions and the tolerances must be the same length and types."
+                                         " Use 'None' for categorical dimensions.")
+
+        categorical_dimensions = []
+        for i in len(x_new):
+            if type(x_new[i]) not in self.numbers:
+                categorical_dimensions.append(i)
+
+        for x_ex in X_explored:
+            numerical_dimensions_inside_tolerance = []
+            for i, dim in enumerate(x_new):
+                if i not in categorical_dimensions:   # do tolerance calculations only for dimensions with numbers
+                    if abs(x_new[i] - x_ex[i]) < tolerances[i]:
+                        numerical_dimensions_inside_tolerance.append(True)
+                    else:
+                        pass
+
+            if all(numerical_dimensions_inside_tolerance):
+                return True
+
+        # If none of the points inside X_explored are close to x_new (inside tolerance) in ALL dimensions, it is not a
+        # duplicate
+
+        return False
+
+    @staticmethod
+    def _batch_ready(n_completed, batch_size):
         """
         Determines whether a batch has completed (based on the size of batch and number of completed workflows), so that
         an optimization predicts the next n_per_batch x vectors and automatically loads them to the launchpad.
@@ -859,6 +914,9 @@ class Dtypes(object):
 
 
 class ExhaustedSpaceError(Exception):
+    pass
+
+class DimensionMismatchError(Exception):
     pass
 
 
