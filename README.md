@@ -16,7 +16,7 @@ only once in an entire workflow. It's up to you.
  
 Other abilities of Turboworks include:
 * Facilitating feature engineering
-* Duplicate prevention
+* Duplicate prevention with tolerances
 * Persistent storage and optimization tracking
 * Built-in "out-of-the-box" sklearn optimizers
 * Support for custom machine learning packages
@@ -286,6 +286,14 @@ set `OptTask`'s argument
 
 To automatically suggest random guesses when the custom predictor suggests duplicates. 
 The random guesses are guaranteed to be unique and not duplicates. By default, there is no duplicate check.
+
+You can also assign duplicate tolerances with `tolerances`. Tolerances work with both integers and floats. For categorical dimensions, enter the tolerance as `None`.
+Let's run through a quick example. Lets say you are searching a space with `dimensions=[(1, 100), ["red", "blue"], and (2.0, 20.0)]`, and you would like to exclude duplicates where the first and second dimensions are the same as an existing guess and the third dimension is wthin 1e-6 of an existing guess. Then use:
+
+`tolerances=[0, None, 1e-6]`
+
+ 
+
 
 ### Store optimization data in a database
 
