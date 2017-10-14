@@ -6,9 +6,11 @@ Please see the documentation for a comprehensive guide on usage.
 import sys
 import random
 import heapq
+import numpy as np
 from itertools import product
 from os import getpid, path
 from time import sleep, time
+from operator import mul
 import warnings
 from pymongo import MongoClient
 from numpy import sctypes, asarray
@@ -18,15 +20,23 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.svm import SVR
 from sklearn.preprocessing import LabelBinarizer
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction, LaunchPad
 try:
-    # for Python versions < 3.6
+    # for Python 3.6-
     import cPickle as pickle
 except:
-    # for Python > 3.6
+    # for Python 3.6+
     import pickle
+
+try:
+    # Python 3.6+ has no reduce() builtin
+    from functools import reduce
+except:
+    pass
+
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
@@ -92,7 +102,12 @@ class OptTask(FireTaskBase):
             other 9/10 times. Setting random_interval to an int greater than 1 may increase exploration. Default is 
             None, meaning no random guesses. 
         space (str): The fully specified path of a pickle file containing a list of all possible searchable vectors.
-            For example '/Users/myuser/myfolder/myspace.p'. When loaded, this space should be a list of tuples. 
+            For example '/Users/myuser/myfolder/myspace.p'. When loaded, this space should be a list of tuples.
+        hyper_opt (int): Defines how hyperparamter search is performed. An int greater than 1 defines the number of
+            parameter combos to try with RandomizedSearchCV. A value of 1 means exhaustive search with GridSearchCV.
+        param_grid (dict): The sklearn-style dictionary to use for hyperparameter optimization. Each key should
+            correspond to a regressor parameter name, and each value should be a list of possible settings for the
+            parameter key. For example: param_grid={"n_estimators: [1, 10, 100], "max_features": ["sqrt", "auto", 3]}
         
         Extra features:
         get_z (string): the fully-qualified name of a function which, given a x vector, returns another vector z which
@@ -131,6 +146,9 @@ class OptTask(FireTaskBase):
         dtypes (Dtypes): Object containing the datatypes available for optimization.
         predictors ([str]): Built in sklearn regressors available for optimization with OptTask.
         launchpad (LaunchPad): The Fireworks LaunchPad object which determines where workflow data is stored.
+        hyperopt (int): Defines the number of hyperparameter searches to be done, as per the FireTask argument.
+        param_grid (dict): Defines the parameter grid for hyperparameter search, as per the FireTask argument.
+        get_z (str): Fully qualified name of the "get_z" function defined by the user.
         _manager_query (dict/MongoDB query syntax): The document format which details how the manager (for parallel
             optimizations) are managed.
         _completed_query (dict/MongoDB query syntax): The document format which details how the optimization data (on 
@@ -143,9 +161,11 @@ class OptTask(FireTaskBase):
     optional_params = ['host', 'port', 'name', 'lpad', 'opt_label', 'db_extras', 'predictor', 'predictor_args',
                        'predictor_kwargs', 'n_search_points', 'n_train_points', 'random_interval', 'space', 'get_z',
                        'get_z_args', 'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs', 'encode_categorical',
-                       'duplicate_check', 'max', 'batch_size']
+                       'duplicate_check', 'max', 'batch_size', 'tolerance', 'hyper_opt', 'param_grid']
 
-    #todo: add persistent models and or/retrain_interval using saved model
+    #todo: store final model params in document
+    #todo: probabilistic sampling option?
+#   #todo: add persistent models and or/retrain_interval using saved model
     #todo: for the time being, this can be done with a custom optimizer
 
     def run_task(self, fw_spec):
@@ -225,9 +245,11 @@ class OptTask(FireTaskBase):
                     random_interval = self['random_interval'] if 'random_interval' in self else None
                     train_points = self['n_train_points'] if 'n_train_points' in self else None
                     search_points = self['n_search_points'] if 'n_search_points' in self else 1000
+                    self.hyper_opt = self['hyper_opt'] if 'hyper_opt' in self else None
+                    self.param_grid = self['param_grid'] if 'param_grid' in self else None
 
                     # extra features
-                    self.get_z = self._deserialize(self['get_z']) if 'get_z' in self else lambda input_vector: []
+                    self.get_z = self._deserialize(self['get_z']) if 'get_z' in self and self['get_z'] is not None else lambda input_vector: []
                     get_z_args = self['get_z_args'] if 'get_z_args' in self else []
                     get_z_kwargs = self['get_z_kwargs'] if 'get_z_kwargs' in self else {}
                     persistent_z = self['persistent_z'] if 'persistent_z' in self else None
@@ -237,7 +259,7 @@ class OptTask(FireTaskBase):
                     wf_creator_kwargs = self['wf_creator_kwargs'] if 'wf_creator_kwargs' in self else {}
                     encode_categorical = self['encode_categorical'] if 'encode_categorical' in self else False
                     duplicate_check = self['duplicate_check'] if 'duplicate_check' in self else False
-                    tolerance = self['tolerance'] if 'tolerance' in self else None
+                    tolerances = self['tolerances'] if 'tolerances' in self else None
                     maximize = self['max'] if 'max' in self else False
                     batch_size = self['batch_size'] if 'batch_size' in self else 1
 
@@ -386,10 +408,10 @@ class OptTask(FireTaskBase):
                         XZ_unexplored = self._preprocess(XZ_unexplored, xz_dims)
 
                         XZ_onehot = self._predict(XZ_explored,
-                                                    Y,
-                                                      XZ_unexplored,
-                                                      model(*pred_args, **pred_kwargs),
-                                                      maximize,
+                                                  Y,
+                                                  XZ_unexplored,
+                                                  model(*pred_args, **pred_kwargs),
+                                                  maximize,
                                                   batch_size)
 
                         XZ_new = [self._postprocess(xz_onehot, xz_dims) for xz_onehot in XZ_onehot]
@@ -427,9 +449,9 @@ class OptTask(FireTaskBase):
                             X_new = [xz_new[:len(x)] for xz_new in XZ_new]
                             X_explored = [xz[:len(x)] for xz in XZ_explored]
 
-                            if tolerance:
+                            if tolerances:
                                 for n, x_new in enumerate(X_new):
-                                    if self._tolerance_check(x_new, X_explored, tolerances=tolerance):
+                                    if self._tolerance_check(x_new, X_explored, tolerances=tolerances):
                                         XZ_new[n] = random.choice(XZ_unexplored)
                                         XZ_unexplored.remove(x_new)
 
@@ -441,7 +463,7 @@ class OptTask(FireTaskBase):
                                             XZ_new[n] = random.choice(XZ_unexplored)
                                             XZ_unexplored.remove(x_new)
                                 else:
-                                    raise ValueError("Define tolerance parameter to duplicate check floats.")
+                                    raise ValueError("Define tolerances parameter to duplicate check floats.")
 
                     # separate 'predicted' z features from the new x vector
                     X_new, Z_new = [xz_new[:len(x)] for xz_new in XZ_new], [xz_new[len(x):] for xz_new in XZ_new]
@@ -452,7 +474,6 @@ class OptTask(FireTaskBase):
                         if self.collection.find_one(self._manager_query)['lock'] != pid:
                             continue
                         else:
-
                             for xz_new in XZ_new:
                                 x_new, z_new = xz_new[:len(x)], xz_new[len(x):]
 
@@ -706,11 +727,39 @@ class OptTask(FireTaskBase):
             (list) A vector which is predicted to minimize (or maximize) the objective function.
 
         """
+
+        if self.hyper_opt:
+            predictor_name = model.__class__.__name__
+            if predictor_name not in self.predictors:
+                raise ValueError("Cannot perform automatic hyperparameter search with custom optimizer.")
+
+            if not self.param_grid:
+                # The user did not define their own grid, so we use a default grid.
+                pgs = ParamGrids()
+                self.param_grid = getattr(pgs, predictor_name)
+
+            # CV Search is embarassingly parallel: set the number of jobs equal to the number of param combos
+            if self.hyper_opt==1:
+                n_combos = reduce(mul, [len(p) for p in list(self.param_grid.values())], 1)
+                hp_selector = GridSearchCV(model, self.param_grid, n_jobs=n_combos)
+            elif self.hyper_opt>=1:
+                hp_selector = RandomizedSearchCV(model, self.param_grid, n_iter=self.hyper_opt, n_jobs=self.hyper_opt)
+            else:
+                raise ValueError("Automatic hyperparameter optimization must be either grid or random. Please set"
+                                 "the hyper_opt parameter to 1 for GridSearchCV and to any integer larger than 1 for "
+                                 "n iterations of RandomizedSearchCV.")
+
+
+            hp_selector.fit(X, Y)
+            model = model.__class__(**hp_selector.best_params_)
+
         model.fit(X, Y)
         values = model.predict(space).tolist()
         evaluator = heapq.nlargest if maximize else heapq.nsmallest
         predictions = evaluator(n_predictions, values)
         indices = [values.index(p) for p in predictions]
+        #todo: possible batch duplicates if two x predict the same y? .index() will find the first one twice
+
         return [space[i] for i in indices]
 
     def _preprocess(self, X, dims):
@@ -911,6 +960,17 @@ class Dtypes(object):
         self.others = d['others']
         self.discrete = self.ints + self.others
         self.all = self.numbers + self.others
+
+class ParamGrids(object):
+    """
+    Defines the default parameter grids used for automatic hyperparameter search.
+    """
+
+    #todo: add the rest of the model default hyperparameters
+    def __init__(self):
+        self.RandomForestRegressor = {'criterion': ['mse', 'mae'],
+                                      'n_estimators':[1, 10, 100],
+                                      'max_features': ['auto', 'sqrt', 'log2']}
 
 
 class ExhaustedSpaceError(Exception):
