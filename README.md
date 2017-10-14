@@ -292,7 +292,26 @@ Let's run through a quick example. Lets say you are searching a space with `dime
 
 `tolerances=[0, None, 1e-6]`
 
- 
+### Optimize hyperparameters automatically
+
+Turboworks provides the ability for automatic hyperparameter optimization when using builtin optimizers. It uses the 
+`sklearn` `RandomizedSearchCV` and `GridSearchCV` tools. Enable randomized hyperparameter optimzation for *n* iterations
+with 
+
+```python
+hyper_opt=n
+```
+
+Where *n* is the number of CV searches `RandomizedSearchCV` performs, and is any integer greater than 1. To use
+exhaustive hyperparameter search with `GridSearchCV`, set *n* equal to 1. 
+
+While OptTask comes with its own default grids for each built-in optimizer, you can define your own by passing the 
+`param_grid` argument to OptTask. The `param_grid` must be a `sklearn`-style parameter dictionary, for example:
+```python
+param_grid={'criterion': ['mse', 'mae'], 
+            'n_estimators':[1, 10, 100], 
+            'max_features': ['auto', 'sqrt', 'log2']}
+```
 
 
 ### Store optimization data in a database
