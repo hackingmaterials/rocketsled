@@ -1,9 +1,11 @@
+from __future__ import unicode_literals, print_function, unicode_literals
+
 """
 An example of the most basic turboworks implementation.
 This file creates and executes a workflow containing one Firework.
 
 The Firework contains 2 Tasks.
-    1. CalculateTask - a task that reads A, B, and C from the spec and calculates (A^2 + B^2)/C
+    1. CalculateTask - a task that reads A, B, and C from the spec and calculates AB/C
     2. OptTask - a task that stores optimiztion data in the db and optimizes the next guess.
 """
 

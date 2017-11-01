@@ -1,3 +1,5 @@
+from __future__ import unicode_literals, print_function, division
+
 """
 The FireTask for running automatic optimization loops.
 
@@ -728,7 +730,7 @@ class OptTask(FireTaskBase):
 
         """
 
-        if self.hyper_opt:
+        if self.hyper_opt and len(X) > 10:
             predictor_name = model.__class__.__name__
             if predictor_name not in self.predictors:
                 raise ValueError("Cannot perform automatic hyperparameter search with custom optimizer.")
