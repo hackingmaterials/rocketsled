@@ -1,5 +1,5 @@
 # TurboWorks
-Machine Learning Interface/Black Box Optimizer for FireWorks workflows.
+An "On-rails" Machine Learning Interface/Black Box Optimizer for FireWorks workflows.
 ![Comparison of Workflows](/docs/Comparison.png "Difference between optimized and unoptimized workflows")
 
 # What is TurboWorks?
@@ -10,7 +10,8 @@ If you have a complex, multi-iteration task to execute across different computer
 to run your task, TurboWorks is for you. 
 ### What can it do?
 TurboWorks functions as a **black box optimizer** for a sequential optimization loop; it requires no knowledge of a function in order to optimize it. More importantly
- though, TurboWorks **retains the workflow management abilties** of FireWorks (provenance, dynamic workflows, duplicate detection and correction, error handling) across **arbitrary computing resources**.   
+ though, TurboWorks **retains the workflow management abilties** of FireWorks (provenance, dynamic workflows, duplicate detection and correction, error handling) across **arbitrary computing resources**.    
+ 
 TurboWorks is implemented as a modular, atomic task (FireTask) in a FireWorks workflow; it can run multiple optimizations for a single task or execute
 only once in an entire workflow. It's up to you.
  
@@ -66,6 +67,9 @@ store them in a MongoDB database, and start a new workflow to compute the next o
 ![Turboworks](/docs/tw.png "Turboworks workflow")
 
 ### What's the minimum I need to run a workflow with `OptTask`?
+Turboworks is designed to be a "plug and play" framework, meaning "plug in" your workflow and search space. Specifically, you need:
+
+
 * **Workflow creator function**: takes in a vector of workflow input parameters `x`  and returns a Fireworks workflow based on those parameters. Specified with the `wf_creator` arg to `OptTask`. `OptTask` should be located somewhere in the workflow that `wf_creator` returns. 
 * **`'_x_opt'` and `'_y_opt'` fields in spec**: the parameters the workflow is run with and the output metric, in the spec of the Firework containing `OptTask`
 * **Dimensions of the search space**: A list of the spaces dimensions, where each dimension is defined by`(higher, lower)` form (for  `float`/ `int`)  or `["a", "comprehensive", "list"]` form for categories. Specified with the `dimensions` argument of `OptTask`
