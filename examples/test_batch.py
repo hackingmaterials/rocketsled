@@ -1,7 +1,7 @@
 import os
 from fireworks import Workflow, Firework, LaunchPad
 from fireworks.core.rocket_launcher import rapidfire
-from turboworks.optimize import OptTask, random_guess
+from rocketsled.optimize import OptTask, random_guess
 from examples.calculate_task import BasicCalculateTask as CalculateTask
 
 opt_label = "opt_batch"

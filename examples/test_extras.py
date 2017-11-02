@@ -1,7 +1,7 @@
 from __future__ import unicode_literals, print_function, division
 
 """
-Examples of using extra turboworks features.
+Examples of using extra rocketsled features.
 
 In this task, the calculation and optimization includes a categorical dimension, a function to fetch extra features
 (get_z), a custom predictor function, extra arguments to the workflow creator, duplicate checking enabled, and a custom
@@ -11,7 +11,7 @@ Also, a demo of how to use the lpad kwarg to store optimization data based on a 
 
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
-from turboworks.optimize import OptTask
+from rocketsled.optimize import OptTask
 from examples.calculate_task import MixedCalculateTask as CalculateTask
 import random
 
@@ -54,7 +54,7 @@ def example_predictor(X_tot, y, X_space_total):
     return random.choice(X_space_total)
 
 def run_workflows(test_case=False):
-    TESTDB_NAME = 'turboworks'
+    TESTDB_NAME = 'rocketsled'
 
     # clean up tw database if necessary
     launchpad = LaunchPad(name=TESTDB_NAME)

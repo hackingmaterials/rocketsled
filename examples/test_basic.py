@@ -1,7 +1,7 @@
 from __future__ import unicode_literals, print_function, unicode_literals
 
 """
-An example of the most basic turboworks implementation.
+An example of the most basic rocketsled implementation.
 This file creates and executes a workflow containing one Firework.
 
 The Firework contains 2 Tasks.
@@ -11,7 +11,7 @@ The Firework contains 2 Tasks.
 
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
-from turboworks.optimize import OptTask
+from rocketsled.optimize import OptTask
 from examples.calculate_task import BasicCalculateTask as CalculateTask
 
 
@@ -33,13 +33,13 @@ def wf_creator(x):
                                   dimensions=X_dim,
                                   host='localhost',
                                   port=27017,
-                                  name='turboworks')],
+                                  name='rocketsled')],
                           spec=spec)
 
     return Workflow([firework1])
 
 def run_workflows(test_case=False):
-    TESTDB_NAME = 'turboworks'
+    TESTDB_NAME = 'rocketsled'
     launchpad = LaunchPad(name=TESTDB_NAME)
 
     # clean up tw database if necessary

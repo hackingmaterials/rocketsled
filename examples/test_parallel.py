@@ -1,12 +1,12 @@
 from __future__ import unicode_literals, print_function, division
 
 """
-An example of running turboworks optimizations in parallel.
+An example of running rocketsled optimizations in parallel.
 """
 
 import os, random
 from fireworks import Workflow, Firework, LaunchPad
-from turboworks.optimize import OptTask, random_guess
+from rocketsled.optimize import OptTask, random_guess
 from examples.calculate_task import BasicCalculateTask as CalculateTask
 
 
@@ -22,13 +22,13 @@ def wf_creator(x):
                                                    dimensions=Z_dim,
                                                    host='localhost',
                                                    port=27017,
-                                                   name='turboworks',
+                                                   name='rocketsled',
                                                    duplicate_check=True,
                                                    opt_label="opt_parallel")], spec=spec)
     return Workflow([firework1])
 
 
-# try a parallel implementation of turboworks
+# try a parallel implementation of rocketsled
 def load_parallel_wfs(n_processes):
     for i in range(n_processes):
         launchpad.add_wf(wf_creator(random_guess(dims)))
@@ -36,7 +36,7 @@ def load_parallel_wfs(n_processes):
 
 if __name__ == "__main__":
 
-    TESTDB_NAME = 'turboworks'
+    TESTDB_NAME = 'rocketsled'
     launchpad = LaunchPad(name=TESTDB_NAME)
     launchpad.reset(password=None, require_password=False)
 

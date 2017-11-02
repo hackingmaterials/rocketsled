@@ -1,10 +1,10 @@
 from fireworks.core.rocket_launcher import launch_rocket
 from fireworks import Workflow, Firework, LaunchPad, FireTaskBase, FWAction
 from fireworks.utilities.fw_utilities import explicit_serialize
-from turboworks.optimize import OptTask
+from rocketsled.optimize import OptTask
 import random
 from pymongo import MongoClient
-from matminer.descriptors.composition_features import get_pymatgen_descriptor
+# from matminer.descriptors.composition_features import get_pymatgen_descriptor
 from pymatgen import Element
 import pandas as pd
 import numpy as np
@@ -32,7 +32,7 @@ c_atomic = list(range(7))
 
 # Mendeleev number
 ab_mend = [int(Element(name).mendeleev_no) for name in ab_names]
-c_mend = [int(np.sum(get_pymatgen_descriptor(anion, 'mendeleev_no'))) for anion in c_names]
+# c_mend = [int(np.sum(get_pymatgen_descriptor(anion, 'mendeleev_no'))) for anion in c_names]
 
 # Mendeleev rank
 ab_mendrank = [sorted(ab_mend).index(i) for i in ab_mend]
@@ -57,6 +57,11 @@ dim = [ab_mendrank, ab_mendrank, c_mendrank]
 # pickle.dump(space_noex, open('space_gs_mend.p', 'wb'))
 
 space_noex = pickle.load(open('space_gs_mend.p', 'rb'))
+
+rf_params = {"n_estimators": [10, 100],
+              "max_features": ["sqrt", "log2", "auto"],
+              "bootstrap": [True, False],
+              "criterion": ["mse", "mae"]}
 
 
 def mend_to_name(a_mr, b_mr, c_mr):
@@ -100,59 +105,63 @@ def wf_creator(x, predictor, get_z, lpad, space, persistent_z, chemical_rules=Fa
                                 duplicate_check=True,
                                 wf_creator_args=[predictor, get_z, lpad, space, persistent_z],
                                 wf_creator_kwargs={'chemical_rules': chemical_rules},
-                                get_z_kwargs = {'chemical_rules': chemical_rules},
+                                # get_z_kwargs = {'chemical_rules': chemical_rules},
                                 max=True,
                                 space=space if chemical_rules else None,
                                 persistent_z=persistent_z,
                                 opt_label='test_perovskites',
                                 n_search_points=20000,
-                                n_train_points=20000)],
+                                n_train_points=20000,
+                                hyper_opt=1,
+                                param_grid=rf_params)],
                         spec=spec)
     return Workflow([firework])
 
 def get_z(x, chemical_rules=False):
-    descriptors = ['X', 'average_ionic_radius']
-    a, b, c = mend_to_name(x[0], x[1], x[2])
-    name = a + b + c
-    conglomerate = [get_pymatgen_descriptor(name, d) for d in descriptors]
-    means = [np.mean(k) for k in conglomerate]
-    stds = [np.std(k) for k in conglomerate]
-    ranges = [np.ptp(k) for k in conglomerate]
-    z = means + stds + ranges
-    # z = []
-
-    for d in descriptors[:1]:
-        ab_attrs = [getattr(Element(el), d) for el in (a, b)]
-        c_attrs = get_pymatgen_descriptor(c, d)
-
-        for attrs_set in [ab_attrs, c_attrs]:
-            z.append(np.mean(attrs_set))
-            z.append(np.ptp(attrs_set))
-            z.append(np.std(attrs_set))
-
-    z += [Element(a).max_oxidation_state, Element(a).min_oxidation_state]
-    z += [Element(b).max_oxidation_state, Element(b).min_oxidation_state]
-
-    # Chemical rules
-    rx = np.mean(get_pymatgen_descriptor(c, 'average_ionic_radius'))
-    ra = Element(a).average_ionic_radius
-    rb = Element(b).average_ionic_radius
-    gs_dev = abs(1 - (ra + rx)/(2 ** 0.5 * (rb + rx)))
-    if chemical_rules:
-        z.append(gs_dev)
-
-    return z
+    # descriptors = ['X', 'average_ionic_radius']
+    # a, b, c = mend_to_name(x[0], x[1], x[2])
+    # name = a + b + c
+    # conglomerate = [get_pymatgen_descriptor(name, d) for d in descriptors]
+    # means = [np.mean(k) for k in conglomerate]
+    # stds = [np.std(k) for k in conglomerate]
+    # ranges = [np.ptp(k) for k in conglomerate]
+    # z = means + stds + ranges
+    # # z = []
+    #
+    # for d in descriptors[:1]:
+    #     ab_attrs = [getattr(Element(el), d) for el in (a, b)]
+    #     c_attrs = get_pymatgen_descriptor(c, d)
+    #
+    #     for attrs_set in [ab_attrs, c_attrs]:
+    #         z.append(np.mean(attrs_set))
+    #         z.append(np.ptp(attrs_set))
+    #         z.append(np.std(attrs_set))
+    #
+    # z += [Element(a).max_oxidation_state, Element(a).min_oxidation_state]
+    # z += [Element(b).max_oxidation_state, Element(b).min_oxidation_state]
+    #
+    # # Chemical rules
+    # rx = np.mean(get_pymatgen_descriptor(c, 'average_ionic_radius'))
+    # ra = Element(a).average_ionic_radius
+    # rb = Element(b).average_ionic_radius
+    # gs_dev = abs(1 - (ra + rx)/(2 ** 0.5 * (rb + rx)))
+    # if chemical_rules:
+    #     z.append(gs_dev)
+    #
+    # return z
+    return []
 
 if __name__ =="__main__":
-    TESTDB_NAME = 'noex_withz'
+    TESTDB_NAME = 'perovskites'
     predictor = 'RandomForestRegressor'
-    get_z = 'examples.test_perovskites.get_z'
+    # get_z = 'examples.test_perovskites.get_z'
+    get_z = None
     n_cands = 20
-    n_runs = 20
+    n_runs = 3
     filename = 'perovskites_{}_{}_{}cands_{}runs.p'.format(predictor, TESTDB_NAME, n_cands, n_runs)
 
     Y = []
-    for i in range(14, n_runs):
+    for i in range(n_runs):
         rundb = TESTDB_NAME + "_{}".format(i)
 
         conn = MongoClient('localhost', 27017)
@@ -163,7 +172,9 @@ if __name__ =="__main__":
         launchpad = LaunchPad(name=rundb)
         launchpad.reset(password=None, require_password=False)
         launchpad.add_wf(wf_creator(random.choice(space_noex), predictor, get_z, launchpad,
-                                    filedir + '/space_gs_mend.p', filedir + '/persistent_z.p',
+                                    filedir + '/space_gs_mend.p',
+                                    None,
+                                    # filedir + '/persistent_z.p',
                                     chemical_rules=False))
 
         y = []

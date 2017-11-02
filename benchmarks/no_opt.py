@@ -4,7 +4,7 @@ Benchmarking for turboworks infrastructure.
 
 from fireworks.core.rocket_launcher import launch_rocket
 from fireworks import Workflow, Firework, LaunchPad
-from turboworks.optimize import OptTask
+from rocketsled.optimize import OptTask
 from examples.calculate_task import BasicCalculateTask as CalculateTask
 import time, pickle
 from matplotlib import pyplot
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     total_times = []
     iterations = list(range(1000))
 
-    for _ in range(5):
+    for _ in range(100):
         launchpad.reset(password=None, require_password=False)
         launchpad.add_wf(wf_creator([500, 500, 500]))
 

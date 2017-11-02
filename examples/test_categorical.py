@@ -2,7 +2,7 @@ from __future__ import unicode_literals, print_function, division
 
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
-from turboworks.optimize import OptTask
+from rocketsled.optimize import OptTask
 from calculate_task import MixedCalculateTask as CalculateTask
 
 opt_label = "opt_categorical"
@@ -19,7 +19,7 @@ def wf_creator(x):
                                   dimensions=fw1_dim,
                                   host='localhost',
                                   port=27017,
-                                  name='turboworks',
+                                  name='rocketsled',
                                   get_z='examples.test_categorical.get_z',
                                   duplicate_check=True,
                                   opt_label=opt_label)],
@@ -35,7 +35,7 @@ def get_z(x):
     return [x[0]**2, cat]
 
 def run_workflows(test_case=False):
-    TESTDB_NAME = 'turboworks'
+    TESTDB_NAME = 'rocketsled'
     launchpad = LaunchPad(name=TESTDB_NAME)
     if test_case:
         getattr(getattr(launchpad.connection, TESTDB_NAME), opt_label).drop()
