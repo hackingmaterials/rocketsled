@@ -738,7 +738,12 @@ class OptTask(FireTaskBase):
             if not self.param_grid:
                 # The user did not define their own grid, so we use a default grid.
                 pgs = ParamGrids()
-                self.param_grid = getattr(pgs, predictor_name)
+                try:
+                    self.param_grid = getattr(pgs, predictor_name)
+                except AttributeError as AE:
+                    raise ValueError("We have not submitted a default parameter grid for the built-in "
+                                     "optimizer {} yet. Submit a pull request if you want to make your own param_grid"
+                                     "the default for this optimizer.".format(self['predictor']))
 
             # CV Search is embarassingly parallel: set the number of jobs equal to the number of param combos
             if self.hyper_opt==1:
