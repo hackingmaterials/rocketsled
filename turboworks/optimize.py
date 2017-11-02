@@ -169,6 +169,7 @@ class OptTask(FireTaskBase):
     #todo: probabilistic sampling option?
 #   #todo: add persistent models and or/retrain_interval using saved model
     #todo: for the time being, this can be done with a custom optimizer
+    #todo: add ability to disable all duplicate checking and optimize in parallel
 
     def run_task(self, fw_spec):
         """
