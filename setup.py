@@ -4,7 +4,7 @@ try:
 except ImportError:
     from distutils.core import setup
 
-setup(name='turboworks',
+setup(name='rocketsled',
       version='0.1',
       author = 'Alex Dunn',
       description = 'Machine learning integration with Fireworks workflows',
