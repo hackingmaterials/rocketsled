@@ -1,21 +1,21 @@
-# TurboWorks
+# Rocketsled
 An "On-rails" Machine Learning Interface/Black Box Optimizer for FireWorks workflows.
 ![Comparison of Workflows](/docs/Comparison.png "Difference between optimized and unoptimized workflows")
 
-# What is TurboWorks?
-TurboWorks is a flexible and easy-to-use automatic machine-learning framework for Fireworks workflows.
+# What is Rocketsled?
+Rocketsled is a flexible and easy-to-use automatic machine-learning framework for Fireworks workflows.
 ![Fireworks logo](/docs/fw.png "Fireworks")
 ### Why would I use it?
 If you have a complex, multi-iteration task to execute across different computers, and you would like to automatically reduce the number of expensive calculations needed
-to run your task, TurboWorks is for you. 
+to run your task, Rocketsled is for you. 
 ### What can it do?
-TurboWorks functions as a **black box optimizer** for a sequential optimization loop; it requires no knowledge of a function in order to optimize it. More importantly
- though, TurboWorks **retains the workflow management abilties** of FireWorks (provenance, dynamic workflows, duplicate detection and correction, error handling) across **arbitrary computing resources**.    
+Rocketsled functions as a **black box optimizer** for a sequential optimization loop; it requires no knowledge of a function in order to optimize it. More importantly
+ though, Rocketsled **retains the workflow management abilties** of FireWorks (provenance, dynamic workflows, duplicate detection and correction, error handling) across **arbitrary computing resources**.    
  
-TurboWorks is implemented as a modular, atomic task (FireTask) in a FireWorks workflow; it can run multiple optimizations for a single task or execute
+Rocketsled is implemented as a modular, atomic task (FireTask) in a FireWorks workflow; it can run multiple optimizations for a single task or execute
 only once in an entire workflow. It's up to you.
  
-Other abilities of Turboworks include:
+Other abilities of Rocketsled include:
 * Facilitating feature engineering
 * Duplicate prevention with tolerances
 * Persistent storage and optimization tracking
@@ -35,8 +35,8 @@ Other abilities of Turboworks include:
 ## Installation
 ~~~~
 # Download the repository and install
-git clone https://github.com/ardunn/turboworks.git
-cd turboworks
+git clone https://github.com/hackingmaterials/rocketsled.git
+cd rocketsled
 pip install . -r requirements
 
 # Make sure Mongo DB's daemon is running locally!
@@ -50,7 +50,7 @@ python setup.py test
 
 If you aren't comfortable with Fireworks, please work through the tutorials [here.](https://hackingmaterials.lbl.gov/fireworks/) 
 
-Turboworks is designed for *inverse optimization tasks with sequential improvement*. For example, a typical workflow without optimization might look like this:
+Rocketsled is designed for *inverse optimization tasks with sequential improvement*. For example, a typical workflow without optimization might look like this:
 
 ![Workflow without opt](/docs/basic.png "A basic workflow")
 
@@ -61,13 +61,13 @@ Input parameters are given to the first Firework. This begins the worklow, and a
 Randomly selecting the next input parameters is *inefficient*, since we will have to execute many workflows. To reduce the required number of computed workflows, we need to *intelligently* choose new input parameters
 with an optimization loop.
 
-This is where Turboworks comes in handy. Turboworks is a Firetask (called `OptTask`) which can go in any Firework in the workflow, and which uses `sklearn` regressors to predict the best *input* parameters for the next iteration,
+This is where Rocketsled comes in handy. Rocketsled is a Firetask (called `OptTask`) which can go in any Firework in the workflow, and which uses `sklearn` regressors to predict the best *input* parameters for the next iteration,
 store them in a MongoDB database, and start a new workflow to compute the next output. 
 
-![Turboworks](/docs/tw.png "Turboworks workflow")
+![Rocketsled](/docs/tw.png "Rocketsled workflow")
 
 ### What's the minimum I need to run a workflow with `OptTask`?
-Turboworks is designed to be a "plug and play" framework, meaning "plug in" your workflow and search space. Specifically, you need:
+Rocketsled is designed to be a "plug and play" framework, meaning "plug in" your workflow and search space. Specifically, you need:
 
 
 * **Workflow creator function**: takes in a vector of workflow input parameters `x`  and returns a Fireworks workflow based on those parameters. Specified with the `wf_creator` arg to `OptTask`. `OptTask` should be located somewhere in the workflow that `wf_creator` returns. 
@@ -85,7 +85,7 @@ The fastest way to get up and running is to do an example. Lets create an optimi
 `BasicCalculateTask` takes in parameters `A`, `B`, and `C` and computes `A*B/C`. We will have `OptTask` run 10 workflows to minimize  `A*B/C` with a `sklearn` `RandomForestRegressor` predictor. 
 
 ```
-# turboworks_examples/calculate_task.py
+# rocketsled_examples/calculate_task.py
 
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
@@ -108,11 +108,11 @@ class BasicCalculateTask(FireTaskBase):
 The following workflow creator function takes in `x`, and returns a workflow based on `x`. Once we start a workflow created with this function, it will execute the workflow, predict the next best `x`, and then automatically load another workflow onto the Launchpad using the new `x`. 
 
 ```
-# turboworks_examples/test_basic.py
+# rocketsled_examples/test_basic.py
 
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
-from turboworks.optimize import OptTask
+from rocketsled.optimize import OptTask
 from calculate_task import BasicCalculateTask as CalculateTask
 
 def wf_creator(x):
@@ -123,11 +123,11 @@ def wf_creator(x):
     # CalculateTask writes _y_opt field to the spec internally.
 
     firework1 = Firework([CalculateTask(),
-                          OptTask(wf_creator='turboworks_examples.test_basic.wf_creator',
+                          OptTask(wf_creator='rocketsled_examples.test_basic.wf_creator',
                                   dimensions=X_dim,
                                   host='localhost',
                                   port=27017,
-                                  name='turboworks')],
+                                  name='rocketsled')],
                           spec=spec)
 
     return Workflow([firework1])
@@ -137,10 +137,10 @@ def wf_creator(x):
 
 To start the optimization, we run the code below, and we use the point `[5, 5, 2]` as our initial guess.
 ```
-# turboworks_examples/test_basic.py
+# rocketsled_examples/test_basic.py
 
 if __name__ == "__main__":
-    TESTDB_NAME = 'turboworks'
+    TESTDB_NAME = 'rocketsled'
     launchpad = LaunchPad(name=TESTDB_NAME)
     launchpad.reset(password=None, require_password=False)
     launchpad.add_wf(wf_creator([5, 5, 2]))
@@ -152,27 +152,27 @@ The output of `$python test_basic.py` is:
 2017-07-30 22:32:51,204 INFO Performing db tune-up
 2017-07-30 22:32:51,213 INFO LaunchPad was RESET.
 2017-07-30 22:32:51,216 INFO Added a workflow. id_map: {-1: 1}
-2017-07-30 22:32:51,226 INFO Created new dir /Users/alexdunn/TURBOWORKS/turboworks/turboworks_examples/launcher_2017-07-31-05-32-51-226440
+2017-07-30 22:32:51,226 INFO Created new dir /Users/alexdunn/TURBOWORKS/rocketsled/rocketsled_examples/launcher_2017-07-31-05-32-51-226440
 2017-07-30 22:32:51,226 INFO Launching Rocket
-2017-07-30 22:32:51,821 INFO RUNNING fw_id: 1 in directory: /Users/alexdunn/TURBOWORKS/turboworks/turboworks_examples/launcher_2017-07-31-05-32-51-226440
+2017-07-30 22:32:51,821 INFO RUNNING fw_id: 1 in directory: /Users/alexdunn/TURBOWORKS/rocketsled/rocketsled_examples/launcher_2017-07-31-05-32-51-226440
 2017-07-30 22:32:51,824 INFO Task started: {{calculate_task.BasicCalculateTask}}.
 2017-07-30 22:32:51,824 INFO Task completed: {{calculate_task.BasicCalculateTask}} 
-2017-07-30 22:32:51,824 INFO Task started: {{turboworks.optimize.OptTask}}.
-2017-07-30 22:32:52,906 INFO Task completed: {{turboworks.optimize.OptTask}} 
+2017-07-30 22:32:51,824 INFO Task started: {{rocketsled.optimize.OptTask}}.
+2017-07-30 22:32:52,906 INFO Task completed: {{rocketsled.optimize.OptTask}} 
 2017-07-30 22:32:52,932 INFO Rocket finished
 ...
 2017-07-30 22:32:54,755 INFO Launching Rocket
-2017-07-30 22:32:54,846 INFO RUNNING fw_id: 10 in directory: /Users/alexdunn/TURBOWORKS/turboworks/turboworks_examples/launcher_2017-07-31-05-32-54-755006
-2017-07-30 22:32:54,849 INFO Task started: {{turboworks_examples.calculate_task.BasicCalculateTask}}.
-2017-07-30 22:32:54,849 INFO Task completed: {{turboworks_examples.calculate_task.BasicCalculateTask}} 
-2017-07-30 22:32:54,849 INFO Task started: {{turboworks.optimize.OptTask}}.
-2017-07-30 22:32:55,014 INFO Task completed: {{turboworks.optimize.OptTask}} 
+2017-07-30 22:32:54,846 INFO RUNNING fw_id: 10 in directory: /Users/alexdunn/TURBOWORKS/rocketsled/rocketsled_examples/launcher_2017-07-31-05-32-54-755006
+2017-07-30 22:32:54,849 INFO Task started: {{rocketsled_examples.calculate_task.BasicCalculateTask}}.
+2017-07-30 22:32:54,849 INFO Task completed: {{rocketsled_examples.calculate_task.BasicCalculateTask}} 
+2017-07-30 22:32:54,849 INFO Task started: {{rocketsled.optimize.OptTask}}.
+2017-07-30 22:32:55,014 INFO Task completed: {{rocketsled.optimize.OptTask}} 
 2017-07-30 22:32:55,049 INFO Rocket finished
 ```
 Congratulations! We ran our first `OptTask` optimization loop. Now lets take a look at our optimization data we stored in our database.
 ```
 $ mongo
-> use turboworks
+> use rocketsled
 > db.opt_default.find()
 ```
 Looking through the query results, the following fields are used during the optimization:
@@ -298,7 +298,7 @@ Let's run through a quick example. Lets say you are searching a space with `dime
 
 ### Optimize hyperparameters automatically
 
-Turboworks provides the ability for automatic hyperparameter optimization when using builtin optimizers. It uses the 
+Rocketsled provides the ability for automatic hyperparameter optimization when using builtin optimizers. It uses the 
 `sklearn` `RandomizedSearchCV` and `GridSearchCV` tools. Enable randomized hyperparameter optimzation for *n* iterations
 with 
 
@@ -418,7 +418,7 @@ By default, `OptTask` will suggest input parameters `x` that minimize the output
 As an argument to `OptTask`. 
 
 ### Submit and optimize jobs in batches with `batch_size`
-Turboworks supports batch job submission and optimization. For example, you may want to run 10 workflows, optimize the
+Rocketsled supports batch job submission and optimization. For example, you may want to run 10 workflows, optimize the
 next 10 best guesses, and submit another 10 workflows. To do this, use
 
 `batch_size=10`
