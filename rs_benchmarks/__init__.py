@@ -2,7 +2,7 @@ from __future__ import unicode_literals, print_function, division
 
 
 """
-Rocketsled is an optimization suite "on rails" based on Scikit-Optimize and FireWorks workflows.
+Benchmarks for Rocketsled.
 
 """
 
