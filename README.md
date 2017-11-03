@@ -1,4 +1,4 @@
-# Rocketsled
+# RocketSled
 An "On-rails" Machine Learning Interface/Black Box Optimizer for FireWorks workflows.
 ![Comparison of Workflows](/docs/Comparison.png "Difference between optimized and unoptimized workflows")
 
@@ -80,50 +80,47 @@ or with a Launchpad object (via `lpad` arg to `OptTask`).
 ## Tutorial: Basic example
 
 The fastest way to get up and running is to do an example. Lets create an optimization loop with one Firework containing two Firetasks, 
-`BasicCaclulateTask` and `OptTask`. 
+`SumTask` and `OptTask`. 
 
-`BasicCalculateTask` takes in parameters `A`, `B`, and `C` and computes `A*B/C`. We will have `OptTask` run 10 workflows to minimize  `A*B/C` with a `sklearn` `RandomForestRegressor` predictor. 
+`SumTask` takes a vector `x` and computes its sum. We will have `OptTask` run 10 workflows to minimize  `x` with a `sklearn` `RandomForestRegressor` predictor. 
 
 ```
-# rocketsled_examples/calculate_task.py
+# rs_examples/example_tasks.py
 
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction
+import numpy as np
 
 @explicit_serialize
-class BasicCalculateTask(FireTaskBase):
-    _fw_name = "BasicCalculateTask"
+class SumTask(FireTaskBase):
+    _fw_name = "SumTask"
 
     def run_task(self, fw_spec):
-
-        A = fw_spec['A']
-        B = fw_spec['B']
-        C = fw_spec['C']
-
-        score = A*B/C
-        return FWAction(update_spec={'_y_opt': score})
+        x = fw_spec['_x_opt']
+        y = np.sum(x)
+        return FWAction(update_spec={'_y_opt': y})
 ```
 
 The following workflow creator function takes in `x`, and returns a workflow based on `x`. Once we start a workflow created with this function, it will execute the workflow, predict the next best `x`, and then automatically load another workflow onto the Launchpad using the new `x`. 
 
 ```
-# rocketsled_examples/test_basic.py
+# rs_examples/test_basic.py
 
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
 from rocketsled.optimize import OptTask
-from calculate_task import BasicCalculateTask as CalculateTask
+from rs_examples.example_tasks import SumTask
 
 def wf_creator(x):
 
-    spec = {'A':x[0], 'B':x[1], 'C':x[2], '_x_opt':x}
+    spec = {'_x_opt':x}
     X_dim = [(1, 5), (1, 5), (1, 5)]
 
-    # CalculateTask writes _y_opt field to the spec internally.
+    # SumTask writes _y_opt field to the spec internally.
 
-    firework1 = Firework([CalculateTask(),
-                          OptTask(wf_creator='rocketsled_examples.test_basic.wf_creator',
+    firework1 = Firework([SumTask(),
+                          OptTask(wf_creator='rs_examples.test_basic.wf_creator',
                                   dimensions=X_dim,
                                   host='localhost',
                                   port=27017,
@@ -149,25 +146,24 @@ if __name__ == "__main__":
 We only need to add the workflow created with the workflow creator to the Launchpad one time. Once the first workflow is finished, `wf_creator` is called, and a new workflow is automatically added onto the Launchpad. This is why we can add only one workflow to the Launchpad but launch 10 times.
 The output of `$python test_basic.py` is:
 ```
-2017-07-30 22:32:51,204 INFO Performing db tune-up
-2017-07-30 22:32:51,213 INFO LaunchPad was RESET.
-2017-07-30 22:32:51,216 INFO Added a workflow. id_map: {-1: 1}
-2017-07-30 22:32:51,226 INFO Created new dir /Users/alexdunn/TURBOWORKS/rocketsled/rocketsled_examples/launcher_2017-07-31-05-32-51-226440
-2017-07-30 22:32:51,226 INFO Launching Rocket
-2017-07-30 22:32:51,821 INFO RUNNING fw_id: 1 in directory: /Users/alexdunn/TURBOWORKS/rocketsled/rocketsled_examples/launcher_2017-07-31-05-32-51-226440
-2017-07-30 22:32:51,824 INFO Task started: {{calculate_task.BasicCalculateTask}}.
-2017-07-30 22:32:51,824 INFO Task completed: {{calculate_task.BasicCalculateTask}} 
-2017-07-30 22:32:51,824 INFO Task started: {{rocketsled.optimize.OptTask}}.
-2017-07-30 22:32:52,906 INFO Task completed: {{rocketsled.optimize.OptTask}} 
-2017-07-30 22:32:52,932 INFO Rocket finished
+2017-11-02 17:35:14,658 INFO Performing db tune-up
+2017-11-02 17:35:14,663 INFO LaunchPad was RESET.
+2017-11-02 17:35:14,665 INFO Added a workflow. id_map: {-1: 1}
+2017-11-02 17:35:14,670 INFO Created new dir /Users/ardunn/alex/lbl/projects/rocketsled/code/rocketsled/rs_examples/launcher_2017-11-03-00-35-14-670099
+2017-11-02 17:35:14,670 INFO Launching Rocket
+2017-11-02 17:35:19,691 INFO RUNNING fw_id: 1 in directory: /Users/ardunn/alex/lbl/projects/rocketsled/code/rocketsled/rs_examples/launcher_2017-11-03-00-35-14-670099
+2017-11-02 17:35:19,705 INFO Task started: {{rs_examples.example_tasks.SumTask}}.
+2017-11-02 17:35:19,705 INFO Task completed: {{rs_examples.example_tasks.SumTask}} 
+2017-11-02 17:35:19,708 INFO Task started: {{rocketsled.optimize.OptTask}}.
+2017-11-02 17:35:19,782 INFO Task completed: {{rocketsled.optimize.OptTask}} 
+2017-11-02 17:35:19,792 INFO Rocket finished
 ...
-2017-07-30 22:32:54,755 INFO Launching Rocket
-2017-07-30 22:32:54,846 INFO RUNNING fw_id: 10 in directory: /Users/alexdunn/TURBOWORKS/rocketsled/rocketsled_examples/launcher_2017-07-31-05-32-54-755006
-2017-07-30 22:32:54,849 INFO Task started: {{rocketsled_examples.calculate_task.BasicCalculateTask}}.
-2017-07-30 22:32:54,849 INFO Task completed: {{rocketsled_examples.calculate_task.BasicCalculateTask}} 
-2017-07-30 22:32:54,849 INFO Task started: {{rocketsled.optimize.OptTask}}.
-2017-07-30 22:32:55,014 INFO Task completed: {{rocketsled.optimize.OptTask}} 
-2017-07-30 22:32:55,049 INFO Rocket finished
+2017-11-02 17:35:20,539 INFO RUNNING fw_id: 10 in directory: /Users/ardunn/alex/lbl/projects/rocketsled/code/rocketsled/rs_examples/launcher_2017-11-03-00-35-20-530832
+2017-11-02 17:35:20,547 INFO Task started: {{rs_examples.example_tasks.SumTask}}.
+2017-11-02 17:35:20,547 INFO Task completed: {{rs_examples.example_tasks.SumTask}} 
+2017-11-02 17:35:20,549 INFO Task started: {{rocketsled.optimize.OptTask}}.
+2017-11-02 17:35:20,608 INFO Task completed: {{rocketsled.optimize.OptTask}} 
+2017-11-02 17:35:20,621 INFO Rocket finished
 ```
 Congratulations! We ran our first `OptTask` optimization loop. Now lets take a look at our optimization data we stored in our database.
 ```
