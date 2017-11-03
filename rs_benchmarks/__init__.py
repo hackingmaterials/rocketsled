@@ -2,9 +2,7 @@ from __future__ import unicode_literals, print_function, division
 
 
 """
-TurboWorks is an optimization suite based on Scikit-Optimize which interfaces with FireWorks workflows.
-
-The Scikit-Optimize library is built on top of NumPy, SciPy and Scikit-Learn.
+Rocketsled is an optimization suite "on rails" based on Scikit-Optimize and FireWorks workflows.
 
 """
 
