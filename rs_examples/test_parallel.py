@@ -4,27 +4,26 @@ from __future__ import unicode_literals, print_function, division
 An example of running rocketsled optimizations in parallel.
 """
 
-import os, random
+import os
 from fireworks import Workflow, Firework, LaunchPad
 from rocketsled.optimize import OptTask, random_guess
-from rs_examples.calculate_task import BasicCalculateTask as CalculateTask
-
+from rs_examples.example_tasks import SumTask
 
 dims = [(1, 5), (1, 5), (1, 5)]
 
+
 # a workflow creator function which takes z and returns a workflow based on x
 def wf_creator(x):
-
-    spec = {'A': x[0], 'B': x[1], 'C': x[2], '_x_opt': x, '_add_launchpad_and_fw_id': True}
+    spec = {'_x_opt': x, '_add_launchpad_and_fw_id': True}
     Z_dim = dims
 
-    firework1 = Firework([CalculateTask(), OptTask(wf_creator='rs_examples.test_parallel.wf_creator',
-                                                   dimensions=Z_dim,
-                                                   host='localhost',
-                                                   port=27017,
-                                                   name='rocketsled',
-                                                   duplicate_check=True,
-                                                   opt_label="opt_parallel")], spec=spec)
+    firework1 = Firework([SumTask(), OptTask(wf_creator='rs_examples.test_parallel.wf_creator',
+                                             dimensions=Z_dim,
+                                             host='localhost',
+                                             port=27017,
+                                             name='rocketsled',
+                                             duplicate_check=True,
+                                             opt_label="opt_parallel")], spec=spec)
     return Workflow([firework1])
 
 
@@ -51,10 +50,5 @@ if __name__ == "__main__":
         sh_output = os.system('rlaunch -s multi ' + str(n_processes) + ' --nlaunches 1')
         print(sh_output)
 
-    # tear down database
-    # launchpad.connection.drop_database(TESTDB_NAME)
-
-
-
-
-
+        # tear down database
+        # launchpad.connection.drop_database(TESTDB_NAME)

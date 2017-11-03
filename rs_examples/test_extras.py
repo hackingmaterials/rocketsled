@@ -12,7 +12,7 @@ Also, a demo of how to use the lpad kwarg to store optimization data based on a 
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
 from rocketsled.optimize import OptTask
-from rs_examples.calculate_task import MixedCalculateTask as CalculateTask
+from rs_examples.example_tasks import MixedCalculateTask as CalculateTask
 import random
 
 opt_label = "opt_extras"
