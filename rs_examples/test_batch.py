@@ -1,3 +1,6 @@
+from __future__ import unicode_literals, print_function, division
+
+
 import os
 from fireworks import Workflow, Firework, LaunchPad
 from fireworks.core.rocket_launcher import rapidfire
