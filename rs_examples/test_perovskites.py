@@ -97,7 +97,7 @@ def wf_creator(x, predictor, get_z, lpad, space, persistent_z, chemical_rules=Fa
     spec = {'A': x[0], 'B': x[1], 'C': x[2], '_x_opt': x}
 
     firework = Firework([EvaluateFitnessTask(),
-                        OptTask(wf_creator='examples.test_perovskites.wf_creator',
+                        OptTask(wf_creator='rs_examples.test_perovskites.wf_creator',
                                 dimensions=dim,
                                 lpad=lpad,
                                 get_z=get_z,
@@ -154,7 +154,7 @@ def get_z(x, chemical_rules=False):
 if __name__ =="__main__":
     TESTDB_NAME = 'perovskites'
     predictor = 'RandomForestRegressor'
-    # get_z = 'examples.test_perovskites.get_z'
+    # get_z = 'rs_examples.test_perovskites.get_z'
     get_z = None
     n_cands = 20
     n_runs = 3

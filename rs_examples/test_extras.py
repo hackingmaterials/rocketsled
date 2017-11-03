@@ -12,7 +12,7 @@ Also, a demo of how to use the lpad kwarg to store optimization data based on a 
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
 from rocketsled.optimize import OptTask
-from examples.calculate_task import MixedCalculateTask as CalculateTask
+from rs_examples.calculate_task import MixedCalculateTask as CalculateTask
 import random
 
 opt_label = "opt_extras"
@@ -26,10 +26,10 @@ def wf_creator(x, launchpad, my_arg, my_kwarg=1):
     # CalculateTask writes _y_opt field to the spec internally.
 
     firework1 = Firework([CalculateTask(),
-                          OptTask(wf_creator='examples.test_extras.wf_creator',
+                          OptTask(wf_creator='rs_examples.test_extras.wf_creator',
                                   dimensions=fw1_dim,
-                                  get_z='examples.test_extras.get_z',
-                                  predictor='examples.test_extras.example_predictor',
+                                  get_z='rs_examples.test_extras.get_z',
+                                  predictor='rs_examples.test_extras.example_predictor',
                                   max=True,
                                   lpad=launchpad,
                                   wf_creator_args=[launchpad, my_arg * 3],

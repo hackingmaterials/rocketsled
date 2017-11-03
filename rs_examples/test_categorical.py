@@ -15,12 +15,12 @@ def wf_creator(x):
     # CalculateTask writes _y_opt field to the spec internally.
 
     firework1 = Firework([CalculateTask(),
-                          OptTask(wf_creator='examples.test_categorical.wf_creator',
+                          OptTask(wf_creator='rs_examples.test_categorical.wf_creator',
                                   dimensions=fw1_dim,
                                   host='localhost',
                                   port=27017,
                                   name='rocketsled',
-                                  get_z='examples.test_categorical.get_z',
+                                  get_z='rs_examples.test_categorical.get_z',
                                   duplicate_check=True,
                                   opt_label=opt_label)],
                          spec=fw1_spec)

@@ -5,7 +5,7 @@ Benchmarking for turboworks infrastructure.
 from fireworks.core.rocket_launcher import launch_rocket
 from fireworks import Workflow, Firework, LaunchPad
 from rocketsled.optimize import OptTask
-from examples.calculate_task import BasicCalculateTask as CalculateTask
+from rs_examples.calculate_task import BasicCalculateTask as CalculateTask
 import time, pickle
 from matplotlib import pyplot
 import numpy
@@ -24,7 +24,7 @@ def wf_creator(x):
     # CalculateTask writes _y_opt field to the spec internally.
 
     firework1 = Firework([CalculateTask(),
-                          OptTask(wf_creator='benchmarks.no_opt.wf_creator',
+                          OptTask(wf_creator='rs_benchmarks.no_opt.wf_creator',
                                   dimensions=X_dim,
                                   host='localhost',
                                   port=27017,

@@ -62,7 +62,7 @@ def wf_creator(x):
     spec = {'_x_opt':x}
 
     firework1 = Firework([BenchmarkTask(),
-                          OptTask(wf_creator='benchmarks.bbfuns.wf_creator',
+                          OptTask(wf_creator='rs_benchmarks.bbfuns.wf_creator',
                                   dimensions=dimmap[BBF_NAME],
                                   host='localhost',
                                   port=27017,
