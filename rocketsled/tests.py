@@ -9,6 +9,8 @@ from rs_examples.test_categorical import run_workflows as run_categorical
 from rs_examples.test_extras import run_workflows as run_extras
 from rs_examples.test_batch import run_workflows as run_batch
 
+#todo: write better tests, these are garbage - AD
+
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
