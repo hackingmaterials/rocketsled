@@ -8,5 +8,5 @@ setup(name='rocketsled',
       version='0.1',
       author = 'Alex Dunn',
       description = 'Machine learning integration with Fireworks workflows',
-      packages=['rocketsled', 'rocketsled_examples', 'rocketsled_benchmarks'],
+      packages=['rocketsled', 'rs_examples', 'rs_benchmarks'],
       test_suite="rocketsled")
