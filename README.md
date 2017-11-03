@@ -178,6 +178,8 @@ Looking through the query results, the following fields are used during the opti
 
 The documents containing `lock`, `queue`, and `reserved` are used for duplicate checking for concurrent optimization loops. 
 
+*Have a look at the other test files in `rs_examples` to look at examples of using more advanced features.*
+
 ## Advanced features of `OptTask`
 
 Most of what `OptTask` can do is specified through arguments to `OptTask`. See `test_extras.py` for an example of many of the advanced features. 
