@@ -7,7 +7,7 @@ An example of running rocketsled optimizations in parallel.
 import os, random
 from fireworks import Workflow, Firework, LaunchPad
 from rocketsled.optimize import OptTask, random_guess
-from examples.calculate_task import BasicCalculateTask as CalculateTask
+from rs_examples.calculate_task import BasicCalculateTask as CalculateTask
 
 
 dims = [(1, 5), (1, 5), (1, 5)]
@@ -18,7 +18,7 @@ def wf_creator(x):
     spec = {'A': x[0], 'B': x[1], 'C': x[2], '_x_opt': x, '_add_launchpad_and_fw_id': True}
     Z_dim = dims
 
-    firework1 = Firework([CalculateTask(), OptTask(wf_creator='examples.test_parallel.wf_creator',
+    firework1 = Firework([CalculateTask(), OptTask(wf_creator='rs_examples.test_parallel.wf_creator',
                                                    dimensions=Z_dim,
                                                    host='localhost',
                                                    port=27017,
