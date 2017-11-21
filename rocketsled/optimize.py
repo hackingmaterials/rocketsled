@@ -170,6 +170,7 @@ class OptTask(FireTaskBase):
 #   #todo: add persistent models and or/retrain_interval using saved model
     #todo: for the time being, this can be done with a custom optimizer
     #todo: add ability to disable all duplicate checking and optimize in parallel
+    #todo: an automatic generation script (takes in file with wf_creator, creates everything else, is a terminal command)
 
     def run_task(self, fw_spec):
         """
