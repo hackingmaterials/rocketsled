@@ -385,7 +385,7 @@ Specify the argument of `OptTask` as the filename where the `z` should be stored
 
 `persistent_z='/path/to/my_persistent_z.p`
 
-`OptTask` will automatically read from this file on each iteration and will not recalculate `z`. 
+`OptTask` will automatically create and read from this file on each iteration and will not recalculate `z`. 
 
 
 ### Control predictor performance
