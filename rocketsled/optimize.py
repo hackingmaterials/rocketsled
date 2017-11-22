@@ -78,6 +78,7 @@ class OptTask(FireTaskBase):
             optimized guess. 
             Included sklearn predictors are:
                 'LinearRegression'
+                'SGDRegressor'
                 'RandomForestRegressor'
                 'AdaBoostRegressor'
                 'BaggingRegressor'
@@ -95,8 +96,6 @@ class OptTask(FireTaskBase):
         predictor_kwargs (dict): the kwargs to be passed to the model. Similar to predictor_args.
         
         Predictor performance:
-        parallelize (bool): If True, allows for optimization (training and prediction) to be run in parallel.
-            WARNING: This disables duplicate checking. False by default.
         n_search_points (int): The number of points to be searched in the search space when choosing the next best
             point. Choosing more points to search may increase the effectiveness of the optimization. The default is
             1000 points. 
