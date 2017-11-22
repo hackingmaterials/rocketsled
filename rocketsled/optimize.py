@@ -17,12 +17,13 @@ import warnings
 from pymongo import MongoClient
 from numpy import sctypes, asarray
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, BaggingRegressor, GradientBoostingRegressor
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, SGDRegressor
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.svm import SVR
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from sklearn.preprocessing import StandardScaler
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction, LaunchPad
@@ -94,6 +95,8 @@ class OptTask(FireTaskBase):
         predictor_kwargs (dict): the kwargs to be passed to the model. Similar to predictor_args.
         
         Predictor performance:
+        parallelize (bool): If True, allows for optimization (training and prediction) to be run in parallel.
+            WARNING: This disables duplicate checking. False by default.
         n_search_points (int): The number of points to be searched in the search space when choosing the next best
             point. Choosing more points to search may increase the effectiveness of the optimization. The default is
             1000 points. 
@@ -163,7 +166,7 @@ class OptTask(FireTaskBase):
     optional_params = ['host', 'port', 'name', 'lpad', 'opt_label', 'db_extras', 'predictor', 'predictor_args',
                        'predictor_kwargs', 'n_search_points', 'n_train_points', 'random_interval', 'space', 'get_z',
                        'get_z_args', 'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs', 'encode_categorical',
-                       'duplicate_check', 'max', 'batch_size', 'tolerance', 'hyper_opt', 'param_grid']
+                       'duplicate_check', 'max', 'batch_size', 'tolerance', 'hyper_opt', 'param_grid', 'parallelize']
 
     #todo: store final model params in document
     #todo: probabilistic sampling option?
@@ -171,6 +174,8 @@ class OptTask(FireTaskBase):
     #todo: for the time being, this can be done with a custom optimizer
     #todo: add ability to disable all duplicate checking and optimize in parallel
     #todo: an automatic generation script (takes in file with wf_creator, creates everything else, is a terminal command)
+    #todo: multi-objective optimization based on pareto front?
+    #todo: include automatic scaling for methods which need standardization (StandardScaler in _predict?)
 
     def run_task(self, fw_spec):
         """
@@ -378,6 +383,7 @@ class OptTask(FireTaskBase):
                                        'GradientBoostingRegressor',
                                        'GaussianProcessRegressor',
                                        'LinearRegression',
+                                       'SGDRegressor',
                                        'MLPRegressor',
                                        'SVR']
 
@@ -401,6 +407,8 @@ class OptTask(FireTaskBase):
                             model = GaussianProcessRegressor
                         elif predictor == 'LinearRegression':
                             model = LinearRegression
+                        elif predictor == 'SGDRegressor':
+                            model = SGDRegressor
                         elif predictor == 'MLPRegressor':
                             model = MLPRegressor
                         elif predictor == 'SVR':
@@ -659,7 +667,8 @@ class OptTask(FireTaskBase):
 
         if 'space' in self:
             if self['space']:
-                return pickle.load(open(self['space'], 'rb'))
+                with open(self['space'], 'rb') as f:
+                    return pickle.load(f)
 
         total_dimspace = []
 
