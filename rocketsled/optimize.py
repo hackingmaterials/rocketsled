@@ -355,10 +355,12 @@ class OptTask(FireTaskBase):
 
                     if persistent_z:
                         if path.exists(persistent_z):
-                            xz_map = pickle.load(open(persistent_z, 'rb'))
+                            with open(persistent_z, 'rb') as f:
+                                xz_map = pickle.load(f)
                         else:
                             xz_map = {tuple(xi): self.get_z(xi, *get_z_args, **get_z_kwargs) for xi in X_space}
-                            pickle.dump(xz_map, open(persistent_z, 'wb'))
+                            with open(persistent_z, 'wb') as f:
+                                pickle.dump(xz_map, f)
 
                         XZ_unexplored = [xi + xz_map[tuple(xi)] for xi in X_unexplored]
                     else:
