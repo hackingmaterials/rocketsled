@@ -16,6 +16,12 @@ __author__ = "Alexander Dunn"
 __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
 
+
+# todo: test for complex workflow
+# todo: test for parallel duplicates
+# todo: test for get_z issues
+# todo: test for less important params
+
 @explicit_serialize
 class BasicTestTask(FireTaskBase):
     _fw_name = "BasicTestTask"
@@ -24,6 +30,7 @@ class BasicTestTask(FireTaskBase):
         x = fw_spec['_x_opt']
         y = np.sum(x)
         return FWAction(update_spec={'_y_opt': y})
+
 
 def wf_creator_basic(x, launchpad):
     spec = {'_x_opt': x}
@@ -54,8 +61,6 @@ def wf_custom_predictor(x, launchpad):
 
 def custom_predictor(*args, **kwargs):
     return [3, 12, 25]
-
-# todo: test for big workflow
 
 
 class TestWorkflows(unittest.TestCase):
@@ -106,3 +111,4 @@ def suite():
     wf_test_suite.addTest(TestWorkflows('test_basic'))
     wf_test_suite.addTest(TestWorkflows('test_custom_predictor'))
     return wf_test_suite
+
