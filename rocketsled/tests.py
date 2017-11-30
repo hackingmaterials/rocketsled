@@ -19,6 +19,7 @@ __email__ = "ardunn@lbl.gov"
 
 # todo: test for complex workflow
 # todo: test for parallel duplicates
+# todo: test for float/categorical/dtypes
 # todo: test for get_z issues
 # todo: test for less important params
 
