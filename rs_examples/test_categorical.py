@@ -34,11 +34,9 @@ def get_z(x):
         cat = "lion"
     return [x[0]**2, cat]
 
-def run_workflows(test_case=False):
+def run_workflows():
     TESTDB_NAME = 'rocketsled'
     launchpad = LaunchPad(name=TESTDB_NAME)
-    if test_case:
-        getattr(getattr(launchpad.connection, TESTDB_NAME), opt_label).drop()
 
     # clean up tw database if necessary
     launchpad.reset(password=None, require_password=False)

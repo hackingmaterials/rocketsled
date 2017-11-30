@@ -5,7 +5,7 @@ An example of the most basic rocketsled implementation.
 This file creates and executes a workflow containing one Firework.
 
 The Firework contains 2 Tasks.
-    1. CalculateTask - a task that reads A, B, and C from the spec and calculates AB/C
+    1. CalculateTask - a task that reads x from the spec and calculates the sum of the vector.
     2. OptTask - a task that stores optimiztion data in the db and optimizes the next guess.
 """
 
@@ -38,15 +38,10 @@ def wf_creator(x):
 
     return Workflow([firework1])
 
-def run_workflows(test_case=False):
+def run_workflows():
     TESTDB_NAME = 'rocketsled'
     launchpad = LaunchPad(name=TESTDB_NAME)
-
-    # clean up tw database if necessary
-    if test_case:
-        getattr(launchpad.connection, TESTDB_NAME).opt_default.drop()
     launchpad.reset(password=None, require_password=False)
-
     launchpad.add_wf(wf_creator([5, 5, 2]))
     rapidfire(launchpad, nlaunches=10, sleep_time=0)
 

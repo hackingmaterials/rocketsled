@@ -53,14 +53,11 @@ def example_predictor(X_tot, y, X_space_total):
     # custom optimizer code goes here
     return random.choice(X_space_total)
 
-def run_workflows(test_case=False):
+def run_workflows():
     TESTDB_NAME = 'rocketsled'
 
     # clean up tw database if necessary
     launchpad = LaunchPad(name=TESTDB_NAME)
-    if test_case:
-        getattr(getattr(launchpad.connection, TESTDB_NAME), opt_label).drop()
-
     launchpad.reset(password=None, require_password=False)
 
     launchpad.add_wf(wf_creator([1, 1, 2, "red"], launchpad, 3, my_kwarg=1))

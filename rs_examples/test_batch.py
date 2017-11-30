@@ -27,13 +27,11 @@ def wf_creator(x):
 
     return Workflow([firework1])
 
-def run_workflows(test_case=False):
+def run_workflows():
     TESTDB_NAME = 'rocketsled'
     launchpad = LaunchPad(name=TESTDB_NAME)
 
     # clean up tw database if necessary
-    if test_case:
-        getattr(getattr(launchpad.connection, TESTDB_NAME), opt_label).drop()
     launchpad.reset(password=None, require_password=False)
 
     # load 10 batch workflows onto the launchpad
