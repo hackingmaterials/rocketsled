@@ -5,7 +5,7 @@ Benchmarking for turboworks infrastructure.
 from fireworks.core.rocket_launcher import launch_rocket
 from fireworks import Workflow, Firework, LaunchPad
 from rocketsled.optimize import OptTask
-from rs_examples.calculate_task import BasicCalculateTask as CalculateTask
+from rs_examples.example_tasks import SumTask
 import time, pickle
 from matplotlib import pyplot
 import numpy
@@ -18,12 +18,12 @@ __email__ = "ardunn@lbl.gov"
 # a workflow creator function which takes x and returns a workflow based on x
 def wf_creator(x):
 
-    spec = {'A':x[0], 'B':x[1], 'C':x[2], '_x_opt':x}
+    spec = {'_x_opt':x}
     X_dim = [(1, 1000), (1, 1000), (1, 1000)]
 
     # CalculateTask writes _y_opt field to the spec internally.
 
-    firework1 = Firework([CalculateTask(),
+    firework1 = Firework([SumTask(),
                           OptTask(wf_creator='rs_benchmarks.no_opt.wf_creator',
                                   dimensions=X_dim,
                                   host='localhost',
