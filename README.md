@@ -1,6 +1,5 @@
 ![Comparison of Workflows](/docs/rocketsledfw.png "Rocketsled logo")
 ### An "On-rails" Machine Learning Interface/Black Box Optimizer for FireWorks workflows.
-![Comparison of Workflows](/docs/Comparison.png "Difference between optimized and unoptimized workflows")
 
 # What is Rocketsled?
 Rocketsled is a flexible and easy-to-use automatic machine-learning framework for Fireworks workflows.
@@ -9,7 +8,11 @@ If you have a complex, multi-iteration task to execute across different computer
 to run your task, Rocketsled is for you. 
 ### What can it do?
 Rocketsled functions as a **black box optimizer** for a sequential optimization loop; it requires no knowledge of a function in order to optimize it. More importantly
- though, Rocketsled **retains the workflow management abilties** of FireWorks (provenance, dynamic workflows, duplicate detection and correction, error handling) across **arbitrary computing resources**.    
+ though, Rocketsled **retains the workflow management abilties** of FireWorks (provenance, dynamic workflows, duplicate detection and correction, error handling) across **arbitrary computing resources**.
+ 
+ 
+![Comparison of Workflows](/docs/Comparison.png "Difference between optimized and unoptimized workflows")
+*A Rocketsled use case in materials science*
  
 Rocketsled is implemented as a modular, atomic task (FireTask) in a FireWorks workflow; it can run multiple optimizations for a single task or execute
 only once in an entire workflow. It's up to you.
