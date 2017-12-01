@@ -192,7 +192,7 @@ class OptTask(FireTaskBase):
         sleeptime = .01
         max_runs = 1000
         max_resets = 10
-        self._setup_db(fw_spec)
+        self.lpad = self._setup_db(fw_spec)
 
         # points for which a workflow has already been run
         self._completed_query = {'x': {'$exists': 1}, 'y': {'$exists': 1, '$ne': 'reserved'}, 'z': {'$exists': 1}}
@@ -522,8 +522,10 @@ class OptTask(FireTaskBase):
                     X_new = [xz_new[:len(x)] for xz_new in XZ_new]
                     new_wfs = [wf_creator(x_new, *wf_creator_args, **wf_creator_kwargs) for x_new in X_new]
 
-                    return FWAction(additions=new_wfs,
-                                    update_spec={'_optimization_id': opt_id})
+                    for wf in new_wfs:
+                        self.lpad.add_wf(wf)
+
+                    return FWAction(update_spec={'_optimization_id': opt_id}, stored_data={'_optimization_id': opt_id})
 
             else:
                 self.collection.delete_one(self._manager_query)
@@ -543,7 +545,7 @@ class OptTask(FireTaskBase):
             fw_spec (dict): The spec of the Firework which contains this Firetask.
 
         Returns:
-            None
+            (LaunchPad): The launchpad
         """
 
         opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default'
@@ -579,6 +581,7 @@ class OptTask(FireTaskBase):
         mongo = MongoClient(host, port, **db_extras)
         db = getattr(mongo, name)
         self.collection = getattr(db, opt_label)
+        return LaunchPad(host, port, name, **db_extras)
 
     def _check_dims(self, dims):
         """
