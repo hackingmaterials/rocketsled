@@ -1,9 +1,20 @@
-host: localhost
-port: 27017
+#host: localhost
+#port: 27017
+#logdir: null
+#name: ROCKETSLED_TESTS
+#username:
+#password:
+#ssl_ca_file: null
+#strm_lvl: INFO
+#user_indices: []
+#wf_user_indices: []
+
+host: ds127436.mlab.com
+port: 27436
 logdir: null
-name: ROCKETSLED_TESTS
-username:
-password:
+name: rocketsled_test
+username: user
+password: password
 ssl_ca_file: null
 strm_lvl: INFO
 user_indices: []
