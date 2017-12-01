@@ -251,6 +251,12 @@ class TestWorkflows(unittest.TestCase):
         for tn in test_names:
             self.db.drop_collection(tn)
 
+        if self.lp.host=='localhost' and self.lp.port==27017 and self.lp.name=='ROCKETSLED_TEST':
+            try:
+                self.lp.connection.drop_database('ROCKETSLED_TEST')
+            except:
+                pass
+
 
 def suite():
     wf_test_suite = unittest.TestSuite()
