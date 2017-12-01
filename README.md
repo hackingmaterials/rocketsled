@@ -65,11 +65,14 @@ in a FireWorks workflow. It is designed for *inverse optimization tasks with seq
 
 ![Workflow without opt](/docs/basic.png "A basic workflow")
 
-Input parameters are given to the first Firework. This begins the worklow, and a useful output result is given. The workflow is repeated as desired.
+Input parameters are given to the first Firework. This begins the worklow, and a useful output result is given. The workflow is repeated as desired, often across many compute nodes in parallel.
 
 ![Workflow being repeated](/docs/multiple_wf.png "Multiple sequential workflows")
 ![Workflow being repeated](/docs/multiple_wf.png "Multiple sequential workflows")
 ![Workflow being repeated](/docs/multiple_wf.png "Multiple sequential workflows")
+![Workflow being repeated](/docs/multiple_wf.png "Multiple sequential workflows")
+![Workflow being repeated](/docs/multiple_wf.png "Multiple sequential workflows")
+
 
 Randomly selecting the next input parameters is *inefficient*, since we will have to execute many workflows. To reduce the required number of computed workflows, we need to *intelligently* choose new input parameters
 with an optimization loop.
