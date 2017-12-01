@@ -136,7 +136,8 @@ class OptTask(FireTaskBase):
             use with custom predictor functions. Default False. 
         duplicate_check (bool): If True, checks that custom optimizers are not making duplicate guesses; all built-in
             optimizers cannot duplicate guess. If the custom predictor suggests a duplicate, OptTask picks a random
-            guess out of the remaining untried space. Defualt is no duplicate check.
+            guess out of the remaining untried space. Default is no duplicate check, and an error is raised if
+            a duplicate is suggested.
         tolerances (list): The tolerance of each feature when duplicate checking. For categorical features, put 'None'
             Example: Our dimensions are [(1, 100), ['red', 'blue'], (2.0, 20.0)]. We want our first parameter to be
             a duplicate only if it is exact, and our third parameter to be a duplicate if it is within 1e-6. Then:
@@ -144,7 +145,7 @@ class OptTask(FireTaskBase):
         max (bool): If true, makes optimization tend toward maximum values instead of minimum ones.
         batch_size (int): The number of jobs to submit per batch for a batch optimization. For example, batch_size=5
             will optimize every 5th job, then submitting another 5 jobs based on the best 5 predictions.
-        
+
     Attributes:
         collection (MongoDB collection): The collection to store the optimization data.
         dtypes (Dtypes): Object containing the datatypes available for optimization.
@@ -466,13 +467,12 @@ class OptTask(FireTaskBase):
                                 for n, x_new in enumerate(X_new):
                                     if self._tolerance_check(x_new, X_explored, tolerances=tolerances):
                                         XZ_new[n] = random.choice(XZ_unexplored)
-                                        XZ_unexplored.remove(x_new)
 
                             else:
                                 if self._is_discrete(x_dims):
                                     # test only for x, not xz because custom predicted z may not be accounted for
                                     for n, x_new in enumerate(X_new):
-                                        if x_new in X_explored:
+                                        if x_new in X_explored or x_new == x:
                                             XZ_new[n] = random.choice(XZ_unexplored)
                                 else:
                                     raise ValueError("Define tolerances parameter to duplicate check floats.")
@@ -915,33 +915,39 @@ class OptTask(FireTaskBase):
 
         """
 
-        #todo: test this
-
         if len(tolerances) != len(x_new):
             raise DimensionMismatchError("Make sure each dimension has a corresponding tolerance value of the same "
                                          "type! Your dimensions and the tolerances must be the same length and types."
                                          " Use 'None' for categorical dimensions.")
 
+        # todo: there is a more efficient way to do this: abort check for a pair of points as soon as one dim...
+        # todo: ...is outside of tolerance
+
         categorical_dimensions = []
-        for i in len(x_new):
-            if type(x_new[i]) not in self.numbers:
+        for i in range(len(x_new)):
+            if type(x_new[i]) not in self.dtypes.numbers:
                 categorical_dimensions.append(i)
 
         for x_ex in X_explored:
             numerical_dimensions_inside_tolerance = []
-            for i, dim in enumerate(x_new):
-                if i not in categorical_dimensions:   # do tolerance calculations only for dimensions with numbers
-                    if abs(x_new[i] - x_ex[i]) < tolerances[i]:
+            categorical_dimensions_equal = []
+            for i, _ in enumerate(x_new):
+                if i in categorical_dimensions:
+                    if str(x_new[i]) == str(x_ex[i]):
+                        categorical_dimensions_equal.append(True)
+                    else:
+                        categorical_dimensions_equal.append(False)
+                else:
+                    if abs(float(x_new[i]) - float(x_ex[i])) <= float(tolerances[i]):
                         numerical_dimensions_inside_tolerance.append(True)
                     else:
-                        pass
+                        numerical_dimensions_inside_tolerance.append(False)
 
-            if all(numerical_dimensions_inside_tolerance):
+            if all(numerical_dimensions_inside_tolerance) and all(categorical_dimensions_equal):
                 return True
 
         # If none of the points inside X_explored are close to x_new (inside tolerance) in ALL dimensions, it is not a
         # duplicate
-
         return False
 
     @staticmethod
