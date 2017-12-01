@@ -284,8 +284,8 @@ class OptTask(FireTaskBase):
                         if not isinstance(arglist, list) or isinstance(arglist, tuple):
                             raise TypeError("{} should be a list/tuple of positional arguments".format(argname))
 
-                    x = fw_spec['_x_opt']
-                    y = fw_spec['_y_opt']
+                    x = list(fw_spec['_x_opt'])
+                    y = float(fw_spec['_y_opt'])
 
                     # If process A suggests a certain guess and runs it, process B may suggest the same guess while
                     # process A is running its new workflow. Therefore, process A must reserve the guess.
@@ -335,6 +335,7 @@ class OptTask(FireTaskBase):
                     explored_indices = random.sample(range(1, n_completed + 1), train_points)
 
                     Y = [y]
+                    z = list(z)
                     XZ_explored = [x + z]
                     for i in explored_indices:
                         doc = self.collection.find_one({'index': i})
