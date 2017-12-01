@@ -19,9 +19,7 @@ __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
 
 
-# todo: test for parallel duplicates
-# todo: test for float/categorical/dtypes
-# todo: test for get_z issues
+# todo: test for parallel duplicates?
 # todo: test for less important params
 
 @explicit_serialize
@@ -30,7 +28,7 @@ class BasicTestTask(FireTaskBase):
 
     def run_task(self, fw_spec):
         x = fw_spec['_x_opt']
-        y = np.sum(x)
+        y = np.sum(x[:-1])        # sum all except the final string element
         return FWAction(update_spec={'_y_opt': y})
 
 def wf_creator_basic(x, launchpad):
@@ -39,7 +37,7 @@ def wf_creator_basic(x, launchpad):
     """
 
     spec = {'_x_opt': x}
-    dims = [(1, 10), (10, 20), (20, 30)]
+    dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
     bt = BasicTestTask()
     ot = OptTask(wf_creator='rocketsled.tests.wf_creator_basic',
                  dimensions=dims,
@@ -56,7 +54,7 @@ def wf_custom_predictor(x, launchpad):
     Testing a custom predictor which returns the same x vector for every guess, using same workflow as test_basic.
     """
     spec = {'_x_opt': x}
-    dims = [(1, 10), (10, 20), (20, 30)]
+    dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
     bt = BasicTestTask()
     ot = OptTask(wf_creator='rocketsled.tests.wf_custom_predictor',
                  dimensions=dims,
@@ -73,8 +71,7 @@ def wf_creator_complex(x, launchpad):
     """
 
     spec = {'_x_opt': x}
-    dims = [(1, 10), (10, 20), (20, 30)]
-
+    dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
     fw0 = Firework(AdditionTask(), spec={"input_array": [1, 2]}, name='Parent')
     fw1 = Firework(AdditionTask(), spec={"input_array": [2, 3]}, name='Child A')
     fw2 = Firework(AdditionTask(), spec={"input_array": [3, 4]}, name='Child B')
@@ -83,9 +80,7 @@ def wf_creator_complex(x, launchpad):
     ot = OptTask(wf_creator='rocketsled.tests.wf_creator_complex',
                  dimensions=dims,
                  lpad=launchpad,
-                 predictor='rocketsled.tests.custom_predictor',
                  wf_creator_args=[launchpad],
-                 duplicate_check=True,
                  opt_label='test_complex')
     fw3 = Firework([bt, ot], spec=spec, name="Optimization")
 
@@ -95,8 +90,48 @@ def wf_creator_complex(x, launchpad):
     return Workflow([fw0, fw1, fw2, fw3, fw4, fw5],
                     {fw0: [fw1, fw2], fw1: [fw3], fw2: [fw3], fw3: [fw4], fw4: [fw5], fw5: []})
 
+def wf_creator_duplicates(x, launchpad):
+    """
+    Test workflow for duplicate checking with tolerances.
+    """
+    spec = {'_x_opt': x}
+    dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
+    bt = BasicTestTask()
+    ot = OptTask(wf_creator='rocketsled.tests.wf_creator_duplicates',
+                 dimensions=dims,
+                 predictor='rocketsled.tests.custom_predictor',
+                 lpad=launchpad,
+                 duplicate_check=True,
+                 tolerances=[0, 1e-6, None],
+                 wf_creator_args=[launchpad],
+                 opt_label='test_duplicates')
+    firework1 = Firework([bt, ot], spec=spec)
+    return Workflow([firework1])
+
+def wf_creator_get_z(x, launchpad):
+    """
+    Testing a basic workflow with one Firework, and two FireTasks with a get_z function.
+    """
+    spec = {'_x_opt': x}
+    dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
+    bt = BasicTestTask()
+    ot = OptTask(wf_creator='rocketsled.tests.wf_creator_get_z',
+                 dimensions=dims,
+                 predictor='rocketsled.tests.custom_predictor',
+                 lpad=launchpad,
+                 duplicate_check=True,
+                 tolerances=[0, 1e-6, None],
+                 get_z='rocketsled.tests.get_z',
+                 wf_creator_args=[launchpad],
+                 opt_label='test_get_z')
+    firework1 = Firework([bt, ot], spec=spec)
+    return Workflow([firework1])
+
 def custom_predictor(*args, **kwargs):
-    return [3, 12, 25]
+    return [3, 12.0, 'green']
+
+def get_z(x):
+    return [x[0] ** 2, x[1] ** 2]
 
 
 class TestWorkflows(unittest.TestCase):
@@ -106,7 +141,7 @@ class TestWorkflows(unittest.TestCase):
 
     def test_basic(self):
         self.lp.reset(password=None, require_password=False)
-        self.lp.add_wf(wf_creator_basic([5, 11, 25], self.lp))
+        self.lp.add_wf(wf_creator_basic([5, 11, 'blue'], self.lp))
         launch_rocket(self.lp)
 
         col = self.db.rstest.test_basic
@@ -117,12 +152,12 @@ class TestWorkflows(unittest.TestCase):
         self.assertEqual(col.find({}).count(), 3)
         self.assertEqual(manager['lock'], None)
         self.assertEqual(manager['queue'], [])
-        self.assertEqual(done['x'], [5, 11, 25])
+        self.assertEqual(done['x'], [5, 11, 'blue'])
         self.assertEqual(done['index'], 1)
 
     def test_custom_predictor(self):
         self.lp.reset(password=None, require_password=False)
-        self.lp.add_wf(wf_custom_predictor([5, 11, 25], self.lp))
+        self.lp.add_wf(wf_custom_predictor([5, 11, 'blue'], self.lp))
         launch_rocket(self.lp)
 
         col = self.db.rstest.test_custom_predictor
@@ -133,28 +168,56 @@ class TestWorkflows(unittest.TestCase):
         self.assertEqual(col.find({}).count(), 3)
         self.assertEqual(manager['lock'], None)
         self.assertEqual(manager['queue'], [])
-        self.assertEqual(done['x'], [5, 11, 25])
-        self.assertEqual(done['x_new'], [3, 12, 25])
+        self.assertEqual(done['x'], [5, 11, 'blue'])
+        self.assertEqual(done['x_new'], [3, 12, 'green'])
         self.assertEqual(done['index'], 1)
-        self.assertEqual(reserved['x'], [3, 12, 25])
+        self.assertEqual(reserved['x'], [3, 12, 'green'])
 
     def test_complex(self):
         self.lp.reset(password=None, require_password=False)
-        self.lp.add_wf(wf_creator_complex([5, 11, 25], self.lp))
+        self.lp.add_wf(wf_creator_complex([5, 11, 'blue'], self.lp))
         for _ in range(10):
             launch_rocket(self.lp)
 
         col = self.db.rstest.test_complex
-        manager = col.find_one({'y': {'$exists': 0}})
-        loop1 = col.find({'x': [5, 11, 25]})   # should return one doc, for the first WF
-        loop2 = col.find({'x': [3, 12, 25]})   # should return one doc, for the second WF
+        loop1 = col.find({'index': 1})   # should return one doc, for the first WF
+        loop2 = col.find({'index': 2})   # should return one doc, for the second WF
         reserved = col.find({'y': 'reserved'})
         self.assertEqual(col.find({}).count(), 4)
         self.assertEqual(reserved.count(), 1)
         self.assertEqual(loop1.count(), 1)
         self.assertEqual(loop2.count(), 1)
-        self.assertEqual(manager['lock'], None)
-        self.assertEqual(manager['queue'], [])
+
+    def test_duplicates(self):
+        self.lp.reset(password=None, require_password=False)
+        self.lp.add_wf(wf_creator_duplicates([5, 11, 'blue'], self.lp))
+        for _ in range(2):
+            launch_rocket(self.lp)
+
+        col = self.db.rstest.test_duplicates
+        loop1 = col.find({'x': [5, 11, 'blue']})  # should return one doc, for the first WF
+        loop2 = col.find({'x': [3, 12, 'green']})  # should return one doc, for the second WF
+        reserved = col.find({'y': 'reserved'})
+        self.assertEqual(col.find({}).count(), 4)
+        self.assertEqual(reserved.count(), 1)
+        self.assertEqual(loop1.count(), 1)
+        self.assertEqual(loop2.count(), 1) # no duplicates are in the db
+
+    def test_get_z(self):
+        self.lp.reset(password=None, require_password=False)
+        self.lp.add_wf(wf_creator_get_z([5, 11, 'blue'], self.lp))
+        for _ in range(2):
+            launch_rocket(self.lp)
+
+        col = self.db.rstest.test_get_z
+        loop1 = col.find_one({'index': 1})
+        loop2 = col.find_one({'index': 2})
+
+        self.assertEqual(col.find({}).count(), 4)
+        self.assertEqual(loop1['x'], [5, 11, 'blue'])
+        self.assertEqual(loop1['z'], [25.0, 121.0])
+        self.assertEqual(loop2['x'], [3, 12.0, 'green'])
+        self.assertEqual(loop2['z'], [9, 144.0])
 
     def tearDown(self):
         self.db.drop_database('rstest')
@@ -165,6 +228,7 @@ def suite():
     wf_test_suite.addTest(TestWorkflows('test_basic'))
     wf_test_suite.addTest(TestWorkflows('test_custom_predictor'))
     wf_test_suite.addTest(TestWorkflows('test_complex'))
-
+    wf_test_suite.addTest(TestWorkflows('test_duplicates'))
+    wf_test_suite.addTest(TestWorkflows('test_get_z'))
     return wf_test_suite
 
