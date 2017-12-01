@@ -1,10 +1,9 @@
-# RocketSled
+![Comparison of Workflows](/docs/rocketsledfw.png "Rocketsled logo")
 An "On-rails" Machine Learning Interface/Black Box Optimizer for FireWorks workflows.
 ![Comparison of Workflows](/docs/Comparison.png "Difference between optimized and unoptimized workflows")
 
 # What is Rocketsled?
 Rocketsled is a flexible and easy-to-use automatic machine-learning framework for Fireworks workflows.
-![Fireworks logo](/docs/fw.png "Fireworks")
 ### Why would I use it?
 If you have a complex, multi-iteration task to execute across different computers, and you would like to automatically reduce the number of expensive calculations needed
 to run your task, Rocketsled is for you. 
@@ -45,6 +44,12 @@ mongod
 # Now lets run the tests
 python setup.py test
 ~~~~
+
+If you cannot run `mongod` on your local machine, or would like to run tests on a server, modify the launchpad yaml
+file `rocketsled/rocketsled/tests_launchpad.yaml` to set the launchpad you'd like to use to run tests. 
+**WARNING**: Running tests resets the LaunchPad. Do **NOT** use a production LaunchPad to run tests!
+
+
 
 ## A Visual Explanation
 
