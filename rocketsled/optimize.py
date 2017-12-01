@@ -474,7 +474,6 @@ class OptTask(FireTaskBase):
                                     for n, x_new in enumerate(X_new):
                                         if x_new in X_explored:
                                             XZ_new[n] = random.choice(XZ_unexplored)
-                                            XZ_unexplored.remove(x_new)
                                 else:
                                     raise ValueError("Define tolerances parameter to duplicate check floats.")
 
