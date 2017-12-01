@@ -561,8 +561,10 @@ class OptTask(FireTaskBase):
             raise AttributeError("Host, port, and name must all be specified!")
 
         elif 'lpad' in self:
-            lpad = self['lpad']
-            host, port, name = [lpad[req] for req in db_reqs]
+            lpad_dict = self['lpad']
+            host, port, name = [lpad_dict[req] for req in db_reqs]
+            lpad = LaunchPad.from_dict(lpad_dict)
+
 
         elif '_add_launchpad_and_fw_id' in fw_spec:
             if fw_spec['_add_launchpad_and_fw_id']:
