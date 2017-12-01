@@ -477,9 +477,6 @@ class OptTask(FireTaskBase):
                                 else:
                                     raise ValueError("Define tolerances parameter to duplicate check floats.")
 
-                    # separate 'predicted' z features from the new x vector
-                    X_new, Z_new = [xz_new[:len(x)] for xz_new in XZ_new], [xz_new[len(x):] for xz_new in XZ_new]
-
                     # make sure a process has not timed out and changed the lock pid while this process
                     # is computing the next guess
                     try:
@@ -487,6 +484,7 @@ class OptTask(FireTaskBase):
                             continue
                         else:
                             for xz_new in XZ_new:
+                                # separate 'predicted' z features from the new x vector
                                 x_new, z_new = xz_new[:len(x)], xz_new[len(x):]
 
                                 # if it is a duplicate (such as a forced identical first guess)
