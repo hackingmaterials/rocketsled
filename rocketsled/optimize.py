@@ -193,7 +193,7 @@ class OptTask(FireTaskBase):
         sleeptime = .01
         max_runs = 1000
         max_resets = 10
-        self.lpad = self._setup_db(fw_spec)
+        self._setup_db(fw_spec)
 
         # points for which a workflow has already been run
         self._completed_query = {'x': {'$exists': 1}, 'y': {'$exists': 1, '$ne': 'reserved'}, 'z': {'$exists': 1}}
@@ -546,7 +546,7 @@ class OptTask(FireTaskBase):
             fw_spec (dict): The spec of the Firework which contains this Firetask.
 
         Returns:
-            (LaunchPad): The Fireworks launchpad currently being used
+            None
         """
 
         opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default'
@@ -566,7 +566,6 @@ class OptTask(FireTaskBase):
             host, port, name = [lpad_dict[req] for req in db_reqs]
             lpad = LaunchPad.from_dict(lpad_dict)
 
-
         elif '_add_launchpad_and_fw_id' in fw_spec:
             if fw_spec['_add_launchpad_and_fw_id']:
                 host, port, name = [getattr(self.launchpad, req) for req in db_reqs]
@@ -583,11 +582,8 @@ class OptTask(FireTaskBase):
                                      "name), with Launchpad object (lpad), by setting _add_launchpad_and_fw_id to True "
                                      "in the fw_spec, or by defining LAUNCHPAD_LOC in your config file for "
                                      "LaunchPad.auto_load()")
-
-        mongo = MongoClient(host, port, **db_extras)
-        db = getattr(mongo, name)
-        self.collection = getattr(db, opt_label)
-        return lpad
+        self.lpad = lpad
+        self.collection = getattr(self.lpad.db, opt_label)
 
     def _check_dims(self, dims):
         """
