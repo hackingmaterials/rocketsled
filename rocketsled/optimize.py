@@ -173,9 +173,9 @@ class OptTask(FireTaskBase):
 #   #todo: add persistent models and or/retrain_interval using saved model
     #todo: for the time being, this can be done with a custom optimizer
     #todo: add ability to disable all duplicate checking and optimize in parallel
-    #todo: an automatic generation script (takes in file with wf_creator, creates everything else, is a terminal command)
     #todo: multi-objective optimization based on pareto front?
     #todo: include automatic scaling for methods which need standardization (StandardScaler in _predict?)
+    #todo: have _bayesian_predict for predictors which can return std, to use EI/PI/etc.
 
     def run_task(self, fw_spec):
         """
