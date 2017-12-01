@@ -4,18 +4,20 @@
 # What is Rocketsled?
 Rocketsled is a flexible and easy-to-use automatic machine-learning framework for Fireworks workflows.
 ### Why would I use it?
+
+Is your computational problem:
+* Expensive and/or complex (requiring high performance computing + workflow software?)
+* Run in high-throughput (many similar workflows running concurrently?)
+* Limited by an allocation of CPU hours?
+
+If you answered yes to these three questions, *keep reading!*
+
 If you have a complex, multi-iteration task to execute across different computers, and you would like to automatically reduce the number of expensive calculations needed
 to run your task, Rocketsled is for you. 
+
 ### What can it do?
 Rocketsled functions as a **black box optimizer** for a sequential optimization loop; it requires no knowledge of a function in order to optimize it. More importantly
- though, Rocketsled **retains the workflow management abilties** of FireWorks (provenance, dynamic workflows, duplicate detection and correction, error handling) across **arbitrary computing resources**.
- 
- 
-![Comparison of Workflows](/docs/Comparison.png "Difference between optimized and unoptimized workflows")
-*A Rocketsled use case in materials science*
- 
-Rocketsled is implemented as a modular, atomic task (FireTask) in a FireWorks workflow; it can run multiple optimizations for a single task or execute
-only once in an entire workflow. It's up to you.
+though, Rocketsled **retains the workflow management abilties** of FireWorks (provenance, dynamic workflows, duplicate detection and correction, error handling) across **arbitrary computing resources**.
  
 Other abilities of Rocketsled include:
 * Facilitating feature engineering
@@ -26,6 +28,9 @@ Other abilities of Rocketsled include:
 * Automatic encoding for categorical optimization
 * Tuneable control of training and prediction performance, across many kinds of computer resources 
 
+![Comparison of Workflows](/docs/Comparison.png "Difference between optimized and unoptimized workflows")
+*A Rocketsled use case in materials science*
+
 ## Requirements
 - Python 2 or 3
 - NumPy
@@ -35,7 +40,7 @@ Other abilities of Rocketsled include:
 - MongoDB
 
 ## Installation
-~~~~
+~~~~bash
 # Download the repository and install
 git clone https://github.com/hackingmaterials/rocketsled.git
 cd rocketsled
@@ -53,16 +58,14 @@ file `rocketsled/rocketsled/tests_launchpad.yaml` to set the launchpad you'd lik
 **WARNING**: Running tests resets the LaunchPad. Do **NOT** use a production LaunchPad to run tests!
 
 
-
 ## A Visual Explanation
 
-If you aren't comfortable with Fireworks, please work through the tutorials [here.](https://hackingmaterials.lbl.gov/fireworks/) 
-
-Rocketsled is designed for *inverse optimization tasks with sequential improvement*. For example, a typical workflow without optimization might look like this:
+If you aren't comfortable with Fireworks, please work through the tutorials [here.](https://hackingmaterials.lbl.gov/fireworks/). Rocketsled is implemented as a modular, atomic task (FireTask)
+in a FireWorks workflow. It is designed for *inverse optimization tasks with sequential improvement*. For example, a typical workflow without optimization might look like this:
 
 ![Workflow without opt](/docs/basic.png "A basic workflow")
 
-Input parameters are given to the first Firework. This begins the worklow, and a useful output result is given. The workflow is repeated until enough useful output is obtained (for example, finding a maximum).
+Input parameters are given to the first Firework. This begins the worklow, and a useful output result is given. The workflow is repeated as desired.
 
 ![Workflow being repeated](/docs/multiple_wf.png "Multiple sequential workflows")
 
@@ -74,11 +77,21 @@ store them in a MongoDB database, and start a new workflow to compute the next o
 
 ![Rocketsled](/docs/tw.png "Rocketsled workflow")
 
+## How do I use it?
+
+The easiest way to use rocketsled is by reading through an example and modifying it for your own purposes. Most usage cases follow the same format:
+1. Define a workflow mapping **x**, your workflow input, to *y*, your workflow output (objective function metric), and a search space of input paramters, **X**. 
+2. Add a FireWork containing `OptTask` to the workflow. 
+3. Define a workflow creator function, which returns a new version of the above workflow based on an input of **x**. 
+
+Thats it! All other features of rocketsled can be passed as arguments to OptTask. 
+
+
 ### What's the minimum I need to run a workflow with `OptTask`?
 Rocketsled is designed to be a "plug and play" framework, meaning "plug in" your workflow and search space. Specifically, you need:
 
 
-* **Workflow creator function**: takes in a vector of workflow input parameters `x`  and returns a Fireworks workflow based on those parameters. Specified with the `wf_creator` arg to `OptTask`. `OptTask` should be located somewhere in the workflow that `wf_creator` returns. 
+* **Workflow creator function**: takes in a vector of workflow input parameters `x`  and returns a Fireworks workflow based on those parameters, including optimization. Specified with the `wf_creator` arg to `OptTask`. `OptTask` should be located somewhere in the workflow that `wf_creator` returns. 
 * **`'_x_opt'` and `'_y_opt'` fields in spec**: the parameters the workflow is run with and the output metric, in the spec of the Firework containing `OptTask`
 * **Dimensions of the search space**: A list of the spaces dimensions, where each dimension is defined by`(higher, lower)` form (for  `float`/ `int`)  or `["a", "comprehensive", "list"]` form for categories. Specified with the `dimensions` argument of `OptTask`
 * **MongoDB collection to store data**: Each optimization problem should have its own collection. Specify with `host`, `port`, and `name` arguments to `OptTask`,
@@ -90,9 +103,9 @@ or with a Launchpad object (via `lpad` arg to `OptTask`).
 The fastest way to get up and running is to do an example. Lets create an optimization loop with one Firework containing two Firetasks, 
 `SumTask` and `OptTask`. 
 
-`SumTask` takes a vector `x` and computes its sum. We will have `OptTask` run 10 workflows to minimize  `x` with a `sklearn` `RandomForestRegressor` predictor. 
+`SumTask` takes a vector `x` and computes its sum. We will have `OptTask` run 10 workflows to minimize  `x` with a predictor based on the `sklearn` `RandomForestRegressor`. 
 
-```
+```python
 # rs_examples/example_tasks.py
 
 from fireworks.utilities.fw_utilities import explicit_serialize
@@ -112,7 +125,7 @@ class SumTask(FireTaskBase):
 
 The following workflow creator function takes in `x`, and returns a workflow based on `x`. Once we start a workflow created with this function, it will execute the workflow, predict the next best `x`, and then automatically load another workflow onto the Launchpad using the new `x`. 
 
-```
+```python
 # rs_examples/test_basic.py
 
 from fireworks.core.rocket_launcher import rapidfire
@@ -141,7 +154,7 @@ def wf_creator(x):
 `OptTask` must have the `wf_creator` argument specified as a string (similar to `PyTask`). For now we can just specify the MongoDB collection with `host` `port` and `name` as args to `OptTask`, with the collection named `opt_default` by default. The dimensions of the search space are integers from `1-5` in `3` dimensions.
 
 To start the optimization, we run the code below, and we use the point `[5, 5, 2]` as our initial guess.
-```
+```python
 # rocketsled_examples/test_basic.py
 
 if __name__ == "__main__":
@@ -153,7 +166,7 @@ if __name__ == "__main__":
 ```
 We only need to add the workflow created with the workflow creator to the Launchpad one time. Once the first workflow is finished, `wf_creator` is called, and a new workflow is automatically added onto the Launchpad. This is why we can add only one workflow to the Launchpad but launch 10 times.
 The output of `$python test_basic.py` is:
-```
+```bash
 2017-11-02 17:35:14,658 INFO Performing db tune-up
 2017-11-02 17:35:14,663 INFO LaunchPad was RESET.
 2017-11-02 17:35:14,665 INFO Added a workflow. id_map: {-1: 1}
@@ -174,7 +187,7 @@ The output of `$python test_basic.py` is:
 2017-11-02 17:35:20,621 INFO Rocket finished
 ```
 Congratulations! We ran our first `OptTask` optimization loop. Now lets take a look at our optimization data we stored in our database.
-```
+```bash
 $ mongo
 > use rocketsled
 > db.opt_default.find()
@@ -210,7 +223,7 @@ Add args and kwargs as arguments to `wf_creator` alongside `x` with
 * `wf_creator_kwargs`: a dict of keyword arguments
 
 For example:
-```
+```python
     wf_creator_args=[2, 12],
     wf_creator_kwargs={'rerun': False} 
 ```
@@ -275,7 +288,7 @@ Pass arguments to both builtin and custom predictors with:
 
 
 `predictor_args` and `predictor_kwargs` can be passed to `OptTask` as args. For example:
-```
+```python
     predictor_args=['huber', 0.2, 500],
     predictor_kwargs={'max_depth': 2, 'criterion': 'mae'} 
 ```
@@ -359,7 +372,7 @@ to improve the performance of our optimization. For instance, a useful `z` featu
 To use `z` features, specify a function which accepts `x` (the workflow input parameters) and returns `z`, the extra features, as 
 `OptTask`'s `get_z`argument. For example:
 
-```
+```python
 # This function returns two extra features which may be used 
 # to make better predictions
 
@@ -381,7 +394,7 @@ Add args and kwargs as arguments to `get_z` alongside `x` with
 * `get_z_kwargs`: a dict of keyword arguments
 
 For example:
-```
+```python
     get_z_args=['extrapolated', 2],
     get_z_kwargs={'bilinear': False} 
 ```
@@ -410,7 +423,7 @@ Increase the number of search points to increase optimization efficiency.
             
 For example,
 
-```
+```python
     n_search_points=100000,
     n_train_points=50000,
     random_interval=100
