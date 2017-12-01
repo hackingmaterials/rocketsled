@@ -1,5 +1,5 @@
 ![Comparison of Workflows](/docs/rocketsledfw.png "Rocketsled logo")
-An "On-rails" Machine Learning Interface/Black Box Optimizer for FireWorks workflows.
+### An "On-rails" Machine Learning Interface/Black Box Optimizer for FireWorks workflows.
 ![Comparison of Workflows](/docs/Comparison.png "Difference between optimized and unoptimized workflows")
 
 # What is Rocketsled?
