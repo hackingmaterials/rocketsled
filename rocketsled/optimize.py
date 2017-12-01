@@ -545,7 +545,7 @@ class OptTask(FireTaskBase):
             fw_spec (dict): The spec of the Firework which contains this Firetask.
 
         Returns:
-            (LaunchPad): The launchpad
+            (LaunchPad): The Fireworks launchpad currently being used
         """
 
         opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default'
@@ -555,6 +555,7 @@ class OptTask(FireTaskBase):
 
         if all(db_def):
             host, port, name = [self[k] for k in db_reqs]
+            lpad = LaunchPad(host, port, name, **db_extras)
 
         elif any(db_def):
             raise AttributeError("Host, port, and name must all be specified!")
@@ -566,10 +567,12 @@ class OptTask(FireTaskBase):
         elif '_add_launchpad_and_fw_id' in fw_spec:
             if fw_spec['_add_launchpad_and_fw_id']:
                 host, port, name = [getattr(self.launchpad, req) for req in db_reqs]
+                lpad = self.launchpad
 
         else:
             try:
                 host, port, name = [getattr(LaunchPad.auto_load(), req) for req in db_reqs]
+                lpad = LaunchPad.auto_load()
 
             except AttributeError:
                 # auto_load did not return any launchpad object, so nothing was defined.
@@ -581,7 +584,7 @@ class OptTask(FireTaskBase):
         mongo = MongoClient(host, port, **db_extras)
         db = getattr(mongo, name)
         self.collection = getattr(db, opt_label)
-        return LaunchPad(host, port, name, **db_extras)
+        return lpad
 
     def _check_dims(self, dims):
         """
