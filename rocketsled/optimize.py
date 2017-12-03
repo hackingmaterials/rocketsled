@@ -81,7 +81,6 @@ class OptTask(FireTaskBase):
             Included sklearn predictors are:
                 'RandomForestRegressor',
                 'AdaBoostRegressor',
-                'BaggingRegressor',
                 'ExtraTreesRegressor',
                 'GradientBoostingRegressor',
                 'GaussianProcessRegressor',
@@ -386,7 +385,6 @@ class OptTask(FireTaskBase):
                     # run machine learner on Z and X features
                     self.predictors = ['RandomForestRegressor',
                                        'AdaBoostRegressor',
-                                       'BaggingRegressor',
                                        'ExtraTreesRegressor',
                                        'GradientBoostingRegressor',
                                        'GaussianProcessRegressor',
@@ -408,8 +406,6 @@ class OptTask(FireTaskBase):
                             model = RandomForestRegressor
                         elif predictor == 'AdaBoostRegressor':
                             model = AdaBoostRegressor
-                        elif predictor == 'BaggingRegressor':
-                            model = BaggingRegressor
                         elif predictor == 'ExtraTreesRegressor':
                             model = ExtraTreesRegressor
                         elif predictor == 'GradientBoostingRegressor':
