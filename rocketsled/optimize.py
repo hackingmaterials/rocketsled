@@ -169,7 +169,7 @@ class OptTask(FireTaskBase):
     optional_params = ['host', 'port', 'name', 'lpad', 'opt_label', 'db_extras', 'predictor', 'predictor_args',
                        'predictor_kwargs', 'n_search_points', 'n_train_points', 'random_interval', 'space', 'get_z',
                        'get_z_args', 'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs', 'encode_categorical',
-                       'duplicate_check', 'max', 'batch_size', 'tolerance', 'hyper_opt', 'param_grid', 'parallelize']
+                       'duplicate_check', 'max', 'batch_size', 'tolerance', 'hyper_opt', 'param_grid']
 
     #todo: store final model params in document
     #todo: probabilistic sampling option?
@@ -177,7 +177,6 @@ class OptTask(FireTaskBase):
     #todo: for the time being, this can be done with a custom optimizer
     #todo: add ability to disable all duplicate checking and optimize in parallel
     #todo: multi-objective optimization based on pareto front?
-    #todo: include automatic scaling for methods which need standardization (StandardScaler in _predict?)
     #todo: have _bayesian_predict for predictors which can return std, to use EI/PI/etc.
 
     def run_task(self, fw_spec):
