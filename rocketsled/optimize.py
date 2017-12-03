@@ -16,7 +16,8 @@ from operator import mul
 import warnings
 from pymongo import MongoClient
 from numpy import sctypes, asarray
-from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, BaggingRegressor, GradientBoostingRegressor
+from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, BaggingRegressor, GradientBoostingRegressor, \
+    ExtraTreesRegressor
 from sklearn.linear_model import LinearRegression, SGDRegressor
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.neural_network import MLPRegressor
@@ -383,6 +384,7 @@ class OptTask(FireTaskBase):
                     self.predictors = ['RandomForestRegressor',
                                        'AdaBoostRegressor',
                                        'BaggingRegressor',
+                                       'ExtraTreesRegressor',
                                        'GradientBoostingRegressor',
                                        'GaussianProcessRegressor',
                                        'LinearRegression',
@@ -404,6 +406,8 @@ class OptTask(FireTaskBase):
                             model = AdaBoostRegressor
                         elif predictor == 'BaggingRegressor':
                             model = BaggingRegressor
+                        elif predictor == 'ExtraTreesRegressor':
+                            model = ExtraTreesRegressor
                         elif predictor == 'GradientBoostingRegressor':
                             model = GradientBoostingRegressor
                         elif predictor == 'GaussianProcessRegressor':
@@ -743,6 +747,10 @@ class OptTask(FireTaskBase):
             (list) A vector which is predicted to minimize (or maximize) the objective function.
 
         """
+
+        scaler = StandardScaler()
+        X = scaler.fit_transform(X)
+        space = scaler.transform(space)
 
         if self.hyper_opt and len(X) > 10:
             predictor_name = model.__class__.__name__
