@@ -19,6 +19,7 @@ from numpy import sctypes, asarray
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, BaggingRegressor, GradientBoostingRegressor, \
     ExtraTreesRegressor
 from sklearn.linear_model import LinearRegression, SGDRegressor
+from sklearn.kernel_ridge import KernelRidge
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.svm import SVR
@@ -78,14 +79,16 @@ class OptTask(FireTaskBase):
         predictor (string): names a function which given a list of explored points and unexplored points, returns an 
             optimized guess. 
             Included sklearn predictors are:
-                'LinearRegression'
-                'SGDRegressor'
-                'RandomForestRegressor'
-                'AdaBoostRegressor'
-                'BaggingRegressor'
-                'GradientBoostingRegressor'
-                'GaussianProcessRegressor'
-                'MLPRegressor'
+                'RandomForestRegressor',
+                'AdaBoostRegressor',
+                'BaggingRegressor',
+                'ExtraTreesRegressor',
+                'GradientBoostingRegressor',
+                'GaussianProcessRegressor',
+                'LinearRegression',
+                'SGDRegressor',
+                'MLPRegressor',
+                'KernelRidge',
                 'SVR'
             Defaults to 'RandomForestRegressor'
             Example builtin predictor: predictor = 'SVR'
@@ -390,6 +393,7 @@ class OptTask(FireTaskBase):
                                        'LinearRegression',
                                        'SGDRegressor',
                                        'MLPRegressor',
+                                       'KernelRidge',
                                        'SVR']
 
                     if random_interval:
@@ -418,6 +422,8 @@ class OptTask(FireTaskBase):
                             model = SGDRegressor
                         elif predictor == 'MLPRegressor':
                             model = MLPRegressor
+                        elif predictor == 'KernelRidge':
+                            model = KernelRidge
                         elif predictor == 'SVR':
                             model = SVR
                         else:
