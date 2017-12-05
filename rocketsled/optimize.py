@@ -260,7 +260,8 @@ class OptTask(FireTaskBase):
                     self.param_grid = self['param_grid'] if 'param_grid' in self else None
 
                     # extra features
-                    self.get_z = self._deserialize(self['get_z']) if 'get_z' in self and self['get_z'] is not None else lambda input_vector: []
+                    self.get_z = self._deserialize(self['get_z']) if 'get_z' in self and self['get_z'] \
+                                                                     is not None else lambda input_vector: []
                     get_z_args = self['get_z_args'] if 'get_z_args' in self else []
                     get_z_kwargs = self['get_z_kwargs'] if 'get_z_kwargs' in self else {}
                     persistent_z = self['persistent_z'] if 'persistent_z' in self else None
@@ -526,7 +527,8 @@ class OptTask(FireTaskBase):
                                     self.collection.insert_one({'x': x_new, 'y': 'reserved'})
                                 else:
                                     raise ValueError(
-                                        "The predictor suggested a guess which has already been tried: {}".format(x_new))
+                                        "The predictor suggested a guess which has "
+                                        "already been tried: {}".format(x_new))
 
                     except TypeError as E:
                         warnings.warn(
@@ -607,8 +609,8 @@ class OptTask(FireTaskBase):
         
         Dimensions should be a list or tuple
         of lists or tuples each defining the search space in one dimension. The datatypes used inside each dimension's 
-        definition should be NumPy compatible datatypes. Numerical dimensions (floats and ints) should take the form (upper, lower). Categorical dimensions should be 
-        an exhaustive list/tuple such as ['red', 'green', 'blue'].
+        definition should be NumPy compatible datatypes. Numerical dimensions (floats and ints) should take the form
+        (upper, lower). Categorical dimensions should be an exhaustive list/tuple such as ['red', 'green', 'blue'].
         
         Args:
             dims (list): The dimensions of the search space. 
