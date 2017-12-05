@@ -373,7 +373,7 @@ class OptTask(FireTaskBase):
                     # if there are no more unexplored points in the entire space, either they have been explored
                     # (ie have x, y, and z) or have been reserved.
                     if len(XZ_unexplored) < 1:
-                        if self._is_discrete(x_dims):
+                        if self._is_discrete(x_dims, type='all'):
                             raise ExhaustedSpaceError("The discrete space has been searched exhaustively.")
                         else:
                             raise TypeError("A comprehensive list of points was exhausted but the dimensions are"
@@ -427,12 +427,15 @@ class OptTask(FireTaskBase):
                         XZ_explored = self._preprocess(XZ_explored, xz_dims)
                         XZ_unexplored = self._preprocess(XZ_unexplored, xz_dims)
 
+                        # Don't scale data if discrete (ints or categorical)
+                        scaling = False if self._is_discrete(dims=xz_dims, criteria='any') else True
                         XZ_onehot = self._predict(XZ_explored,
                                                   Y,
                                                   XZ_unexplored,
                                                   model(*pred_args, **pred_kwargs),
                                                   maximize,
-                                                  batch_size)
+                                                  batch_size,
+                                                  scaling=scaling)
 
                         XZ_new = [self._postprocess(xz_onehot, xz_dims) for xz_onehot in XZ_onehot]
 
@@ -498,18 +501,26 @@ class OptTask(FireTaskBase):
                                 if forced_dupe:
                                     # only update the fields which should be updated
                                     self.collection.find_one_and_update({'x': x},
-                                                                        {'$set': {'y': y, 'z': z, 'z_new': z_new,
-                                                                                  'x_new': x_new, 'predictor': predictor}})
+                                                                        {'$set': {'y': y,
+                                                                                  'z': z,
+                                                                                  'z_new': z_new,
+                                                                                  'x_new': x_new,
+                                                                                  'predictor': predictor}})
                                     opt_id = forced_dupe['_id']
                                 else:
                                     # update all the fields, as it is a new document
-                                    res = self.collection.insert_one(
-                                        {'z': z, 'y': y, 'x': x, 'z_new': z_new, 'x_new': x_new, 'predictor': predictor,
-                                         'index': n_completed + 1})
+                                    res = self.collection.insert_one({'z': z,
+                                                                      'y': y,
+                                                                      'x': x,
+                                                                      'z_new': z_new,
+                                                                      'x_new': x_new,
+                                                                      'predictor': predictor,
+                                                                      'index': n_completed + 1})
                                     opt_id = res.inserted_id
 
-                                # ensure previously computed workflow results are not overwritten by concurrent predictions
-                                if self.collection.find({'x': x_new, 'y': {'$exists': 1, '$ne': 'reserved'}}).count() == 0:
+                                # ensure previously fin. workflow results are not overwritten by concurrent predictions
+                                if self.collection.find({'x': x_new,
+                                                         'y': {'$exists': 1, '$ne': 'reserved'}}).count() == 0:
                                     # reserve the new x to prevent parallel processes from registering it as unexplored,
                                     # since the next iteration of this process will be exploring it
                                     self.collection.insert_one({'x': x_new, 'y': 'reserved'})
@@ -641,21 +652,30 @@ class OptTask(FireTaskBase):
         mod = __import__(str(modname), globals(), locals(), fromlist=[str(funcname)])
         return getattr(mod, funcname)
 
-    def _is_discrete(self, dims):
+    def _is_discrete(self, dims, criteria='all'):
         """
-        Checks if the search space is totally discrete.
+        Checks if the search space is discrete.
 
         Args:
             dims ([tuple]): dimensions of the search space
+            criteria (str): If 'all', returns bool based on whether ALL dimensions are discrete. If 'any', returns bool
+                based on whether ANY dimensions are discrete.
 
         Returns:
             (bool) whether the search space is totally discrete.
         """
 
-        for dim in dims:
-            if type(dim[0]) not in self.dtypes.discrete or type(dim[1]) not in self.dtypes.discrete:
-                return False
-        return True
+        if criteria=='all':
+            for dim in dims:
+                if type(dim[0]) not in self.dtypes.discrete or type(dim[1]) not in self.dtypes.discrete:
+                    return False
+            return True
+
+        elif criteria=='any':
+            for dim in dims:
+                if type(dim[0]) in self.dtypes.discrete or type(dim[1]) in self.dtypes.discrete:
+                    return True
+            return False
 
     def _discretize_space(self, dims, discrete_floats=False, n_floats=100):
         """
@@ -724,7 +744,7 @@ class OptTask(FireTaskBase):
             self.collection.find_one_and_update({'_id': manager_id},
                                                 {'$set': {'lock': new_lock, 'queue': queue}})
 
-    def _predict(self, X, Y, space, model, maximize, n_predictions):
+    def _predict(self, X, Y, space, model, maximize, n_predictions, scaling=False):
         """
         Scikit-learn compatible model for stepwise optimization. It uses a regressive predictor evaluated on
         remaining points in a discrete space.
@@ -749,9 +769,11 @@ class OptTask(FireTaskBase):
 
         """
 
-        scaler = StandardScaler()
-        X = scaler.fit_transform(X)
-        space = scaler.transform(space)
+        # Scale data if all floats for dimensions
+        if scaling:
+            scaler = StandardScaler()
+            X = scaler.fit_transform(X)
+            space = scaler.transform(space)
 
         if self.hyper_opt and len(X) > 10:
             predictor_name = model.__class__.__name__
