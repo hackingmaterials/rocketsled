@@ -104,10 +104,6 @@ class OptTask(FireTaskBase):
             1000 points. 
         n_train_points (int): The number of already explored points to be chosen for training. Default is None, meaning
             all available points will be used for training. Reduce the number of points to decrease training times.
-        random_interval (int): Suggests a random guess every n guesses instead of using the predictor suggestion. For
-            instance, random_interval=10 has OptTask randomly guess every 1/10 predictions, and uses the predictor the 
-            other 9/10 times. Setting random_interval to an int greater than 1 may increase exploration. Default is 
-            None, meaning no random guesses. 
         space (str): The fully specified path of a pickle file containing a list of all possible searchable vectors.
             For example '/Users/myuser/myfolder/myspace.p'. When loaded, this space should be a list of tuples.
         hyper_opt (int): Defines how hyperparamter search is performed. An int greater than 1 defines the number of
@@ -115,6 +111,14 @@ class OptTask(FireTaskBase):
         param_grid (dict): The sklearn-style dictionary to use for hyperparameter optimization. Each key should
             correspond to a regressor parameter name, and each value should be a list of possible settings for the
             parameter key. For example: param_grid={"n_estimators: [1, 10, 100], "max_features": ["sqrt", "auto", 3]}
+
+        Balancing exploration and exploitation
+        random_interval (int): Suggests a random guess every n guesses instead of using the predictor suggestion. For
+            instance, random_interval=10 has OptTask randomly guess every 1/10 predictions, and uses the predictor the
+            other 9/10 times. Setting random_interval to an int greater than 1 may increase exploration. Default is
+            None, meaning no random guesses.
+        propex (int): Enables proportional selection, where the probability of selecting a candidate is proportional
+            to its score. Propex 
         
         Extra features:
         get_z (string): the fully-qualified name of a function which, given a x vector, returns another vector z which
@@ -170,14 +174,6 @@ class OptTask(FireTaskBase):
                        'predictor_kwargs', 'n_search_points', 'n_train_points', 'random_interval', 'space', 'get_z',
                        'get_z_args', 'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs', 'encode_categorical',
                        'duplicate_check', 'max', 'batch_size', 'tolerance', 'hyper_opt', 'param_grid']
-
-    #todo: store final model params in document
-    #todo: probabilistic sampling option?
-#   #todo: add persistent models and or/retrain_interval using saved model
-    #todo: for the time being, this can be done with a custom optimizer
-    #todo: add ability to disable all duplicate checking and optimize in parallel
-    #todo: multi-objective optimization based on pareto front?
-    #todo: have _bayesian_predict for predictors which can return std, to use EI/PI/etc.
 
     def run_task(self, fw_spec):
         """
@@ -256,6 +252,8 @@ class OptTask(FireTaskBase):
                     random_interval = self['random_interval'] if 'random_interval' in self else None
                     train_points = self['n_train_points'] if 'n_train_points' in self else None
                     search_points = self['n_search_points'] if 'n_search_points' in self else 1000
+                    self.propex = self['propex'] if 'propex' in self else False
+                    self.tournament = self['tournament'] if 'tournament' in self else None
                     self.hyper_opt = self['hyper_opt'] if 'hyper_opt' in self else None
                     self.param_grid = self['param_grid'] if 'param_grid' in self else None
 
@@ -813,7 +811,6 @@ class OptTask(FireTaskBase):
         predictions = evaluator(n_predictions, values)
         indices = [values.index(p) for p in predictions]
         #todo: possible batch duplicates if two x predict the same y? .index() will find the first one twice
-
         return [space[i] for i in indices]
 
     def _preprocess(self, X, dims):

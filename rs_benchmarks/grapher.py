@@ -1,8 +1,5 @@
-import plotly.plotly as py
-import plotly.graph_objs as go
+from matplotlib import pyplot as plt
 import pickle
-
-# Create random data with numpy
 import numpy as np
 
 
@@ -10,35 +7,40 @@ def depickle(file):
     return pickle.load(open(file, 'rb'))
 
 
-py.sign_in('ardunn', '7CM5eLh5l1vMqIwqvlKE') # Replace the username, and API key with your credentials.
+# lines = ['ran', 'gp', 'rf', 'svr']
+lines = ['ran', 'gp', 'rf', 'svr']
 
 
-BBFUN = "rosen"
+# f, (axbranin, axrosen) = plt.subplots(2)
+f, axrosen = plt.subplots(1)
 
-y_gp = depickle('gp_{}.pickle'.format(BBFUN))
-y_gbt = depickle('gbt_{}.pickle'.format(BBFUN))
-y_rf = depickle('rf_{}.pickle'.format(BBFUN))
-y_ran = depickle('ran_{}.pickle'.format(BBFUN))
-x = list(range(1000))
 
-y_gp = np.mean(y_gp, axis=0)
-y_gbt = np.mean(y_gbt, axis=0)
-y_rf = np.mean(y_rf, axis=0)
-y_ran = np.mean(y_ran, axis=0)
+colormap = {'gp': 'green', 'ran': 'black', 'rf': 'red', 'svr': 'blue', 'ran2': 'grey'}
+algmap = {'gp': 'Gaussian Process', 'ran': 'Random', 'rf': 'Random Forest', 'svr': 'Support Vector'}
+titlemap = {'branin': 'Branin-Hoo', 'rosen': 'Rosenbrock'}
+for line in lines:
+    # for BBFUN in ['branin', 'rosen']:
+    for BBFUN in ['rosen']:
+        try:
+            # ax = axbranin if BBFUN=='branin' else axrosen
+            ax = axrosen
+            tot_data = depickle('{}_{}.pickle'.format(line, BBFUN))
+            print np.asarray(tot_data).shape
+            mean = np.mean(tot_data, axis=0)
+            std = np.mean(tot_data, axis=0)
+            x = range(len(mean))
+            # plt.errorbar(x, mean, yerr=std, color=colormap[line])
+            ax.semilogy(x, mean, color=colormap[line], label=algmap[line])
+            ax.set_ylim([0, 2100])
+            # ax.set_title(titlemap[BBFUN])
+            ax.set_title("Log")
+            ax.set_ylabel('Rosenbrock Value')
+            ax.set_xlabel('No. Function Evaluations')
+            # if line != 'ran':
+            #     ax.fill_between(x, mean-std, mean+std, color=colormap[line], alpha=0.2)
+            ax.legend()
+        except:
+            pass
 
-print y_gp, y_gbt, y_rf, y_ran
-
-width = 2
-
-# Create a trace
-gp = go.Scatter(x = x, y = y_gp, line={'color': 'green', 'width': width})
-
-gbt = go.Scatter(x = x, y = y_gbt, line={'color': 'blue', 'width': width})
-
-rf = go.Scatter(x = x, y = y_rf, line={'color': 'red', 'width': width})
-
-ran = go.Scatter(x = x, y = y_ran, line={'color': 'black', 'width': width})
-
-data = [gp, gbt, rf, ran]
-
-py.plot(data, filename='{}'.format(BBFUN))
+f.subplots_adjust(hspace=.4)
+plt.show()

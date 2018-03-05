@@ -32,13 +32,12 @@ def wf_creator(x):
                                   opt_label='no_opt',
                                   predictor='random_guess')],
                           spec=spec)
-
     return Workflow([firework1])
 
 
 
 if __name__ == "__main__":
-    TESTDB_NAME = 'turboworks'
+    TESTDB_NAME = 'rocketsled'
     launchpad = LaunchPad(name=TESTDB_NAME)
 
     total_times = []
