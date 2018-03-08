@@ -11,7 +11,7 @@ The Firework contains 2 Tasks.
 
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
-from rocketsled.optimize import OptTask
+from rocketsled import OptTask
 from rocketsled.examples.example_tasks import SumTask
 
 
@@ -29,17 +29,18 @@ def wf_creator(x):
     # CalculateTask writes _y_opt field to the spec internally.
 
     firework1 = Firework([SumTask(),
-                          OptTask(wf_creator='rs_examples.test_basic.wf_creator',
+                          OptTask(wf_creator='rocketsled.examples.test_basic.'
+                                             'wf_creator',
                                   dimensions=X_dim,
                                   host='localhost',
                                   port=27017,
-                                  name='rocketsled')],
+                                  name='ROCKETSLED_EXAMPLES')],
                           spec=spec)
 
     return Workflow([firework1])
 
 def run_workflows():
-    TESTDB_NAME = 'rocketsled'
+    TESTDB_NAME = 'ROCKETSLED_EXAMPLES'
     launchpad = LaunchPad(name=TESTDB_NAME)
     launchpad.reset(password=None, require_password=False)
     launchpad.add_wf(wf_creator([5, 5, 2]))

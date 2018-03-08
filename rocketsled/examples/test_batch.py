@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function, division
 from fireworks import Workflow, Firework, LaunchPad
 from fireworks.core.rocket_launcher import rapidfire
 from rocketsled.optimize import OptTask, random_guess
-from rocketsled.examples import SumTask
+from rocketsled.examples.example_tasks import SumTask
 
 opt_label = "opt_batch"
 X_dim = [(1, 5), (1, 5), (1, 5)]
@@ -14,11 +14,12 @@ def wf_creator(x):
 
     # CalculateTask writes _y_opt field to the spec internally.
     firework1 = Firework([SumTask(),
-                          OptTask(wf_creator='rs_examples.test_batch.wf_creator',
+                          OptTask(wf_creator='rocketsled.examples.test_batch.'
+                                             'wf_creator',
                                   dimensions=X_dim,
                                   host='localhost',
                                   port=27017,
-                                  name='rocketsled',
+                                  name='ROCKETSLED_EXAMPLES',
                                   opt_label=opt_label,
                                   batch_size=5)],
                          spec=spec)
@@ -26,7 +27,7 @@ def wf_creator(x):
     return Workflow([firework1])
 
 def run_workflows():
-    TESTDB_NAME = 'rocketsled'
+    TESTDB_NAME = 'ROCKETSLED_EXAMPLES'
     launchpad = LaunchPad(name=TESTDB_NAME)
 
     # clean up tw database if necessary
