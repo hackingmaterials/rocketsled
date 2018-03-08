@@ -7,6 +7,7 @@ FireWorks workflows.
 """
 
 from rocketsled.optimize import OptTask
+from rocketsled.auto_setup import auto_setup
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
