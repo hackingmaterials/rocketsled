@@ -10,6 +10,6 @@ except ImportError:
 setup(name='rocketsled',
       version='0.1',
       author = 'Alex Dunn',
-      description = 'Machine learning integration with Fireworks workflows',
-      packages=['rocketsled', 'rs_examples', 'rs_benchmarks'],
-      test_suite="rocketsled")
+      description = 'Black box optimization with Fireworks workflows, on rails',
+      packages=['rocketsled'],
+      test_suite="nose.collector")

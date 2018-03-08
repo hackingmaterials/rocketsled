@@ -2,23 +2,19 @@ from __future__ import unicode_literals, print_function, division
 
 """
 A file for testing the workflow capabilities of OptTask.
-
 Note that a local mongod instance in admin mode must be running for the tests to
 pass by default.
-
 WARNING: Tests reset the launchpad you specify. Specify a launchpad for testing 
 you wouldn't mind resetting (e.g., mlab.com)
-
 Modify tests_launchpad.yaml to define the db where you'd like to run the tests 
 if you do not have access to admin mongod privledges on your local machine. 
-
 """
 import os
 import unittest
 import yaml
 import numpy as np
 from fireworks import FWAction, Firework, Workflow, LaunchPad, ScriptTask
-from fireworks.core.rocket_launcher import launch_rocket, rapidfire
+from fireworks.core.rocket_launcher import launch_rocket
 from fireworks.core.firework import FireTaskBase
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fw_tutorials.firetask.addition_task import AdditionTask
@@ -27,10 +23,6 @@ from rocketsled.optimize import OptTask
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
-
-
-# todo: test for parallel duplicates?
-# todo: test for less important params
 
 test_names = ['test_basic', 'test_custom_predictor', 'test_complex',
               'test_duplicates', 'test_get_z']
@@ -83,7 +75,6 @@ def wf_creator_complex(x, launchpad):
     """
     Testing a custom workflow of five fireworks with complex dependencies, and
     optimization in the middle.
-
     This "complex" Workflow has the form:
                     fw0
                     / \
@@ -269,6 +260,12 @@ class TestWorkflows(unittest.TestCase):
             except:
                 pass
 
+        # Remove straggler FW.json file, if it exists...
+        fwjson_fp = os.path.dirname(os.path.realpath(__file__)) + '/FW.json'
+        try:
+            os.remove(fwjson_fp)
+        except:
+            pass
 
 def suite():
     wf_test_suite = unittest.TestSuite()
@@ -279,4 +276,3 @@ def suite():
 
 if __name__ == "__main__":
     unittest.main()
-
