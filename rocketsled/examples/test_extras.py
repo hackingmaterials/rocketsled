@@ -3,16 +3,17 @@ from __future__ import unicode_literals, print_function, division
 """
 Examples of using extra rocketsled features.
 
-In this task, the calculation and optimization includes a categorical dimension, a function to fetch extra features
-(get_z), a custom predictor function, extra arguments to the workflow creator, duplicate checking enabled, and a custom
-storage location for the optimization data.
-Also, a demo of how to use the lpad kwarg to store optimization data based on a Firework's LaunchPad object.
+In this task, the calculation and optimization includes a categorical dimension,
+a function to fetch extra features (get_z), a custom predictor function, extra 
+arguments to the workflow creator, duplicate checking enabled, and a custom 
+storage location for the optimization data. Also, a demo of how to use the lpad 
+kwarg to store optimization data based on a Firework's LaunchPad object.
 """
 
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
 from rocketsled import OptTask
-from rocketsled.examples.example_tasks import MixedCalculateTask as CalculateTask
+from rocketsled.examples.example_tasks import MixedCalculateTask
 import random
 
 opt_label = "opt_extras"
@@ -25,11 +26,13 @@ def wf_creator(x, launchpad, my_arg, my_kwarg=1):
 
     # CalculateTask writes _y_opt field to the spec internally.
 
-    firework1 = Firework([CalculateTask(),
-                          OptTask(wf_creator='rs_examples.test_extras.wf_creator',
+    firework1 = Firework([MixedCalculateTask(),
+                          OptTask(wf_creator='rocketsled.examples.test_extras.'
+                                             'wf_creator',
                                   dimensions=fw1_dim,
-                                  get_z='rs_examples.test_extras.get_z',
-                                  predictor='rs_examples.test_extras.example_predictor',
+                                  get_z='rocketsled.examples.test_extras.get_z',
+                                  predictor='rocketsled.examples.test_extras.'
+                                            'example_predictor',
                                   max=True,
                                   lpad=launchpad,
                                   wf_creator_args=[launchpad, my_arg * 3],
@@ -49,12 +52,12 @@ def get_z(x):
 # how an example custom optimization function could be used
 # replace the code inside example_predictor with your favorite optimizer
 
-def example_predictor(X_tot, y, X_space_total):
+def example_predictor(X_space_total):
     # custom optimizer code goes here
     return random.choice(X_space_total)
 
 def run_workflows():
-    TESTDB_NAME = 'rocketsled'
+    TESTDB_NAME = 'ROCKETSLED_EXAMPLES'
 
     # clean up tw database if necessary
     launchpad = LaunchPad(name=TESTDB_NAME)
@@ -62,8 +65,8 @@ def run_workflows():
 
     launchpad.add_wf(wf_creator([1, 1, 2, "red"], launchpad, 3, my_kwarg=1))
 
-    # if n_launches > 24 for this particular example, the search space will be exhausted and OptTask will throw
-    # an exception
+    # if n_launches > 24 for this particular example, the search space will be
+    # exhausted and OptTask will throw an exception
     rapidfire(launchpad, nlaunches=23, sleep_time=0)
 
     # tear down database
@@ -71,5 +74,4 @@ def run_workflows():
 
 
 if __name__ == "__main__":
-
     run_workflows()

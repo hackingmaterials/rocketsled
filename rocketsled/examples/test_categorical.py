@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function, division
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
 from rocketsled.optimize import OptTask
-from example_tasks import MixedCalculateTask as CalculateTask
+from rocketsled.examples.example_tasks import MixedCalculateTask
 
 opt_label = "opt_categorical"
 
@@ -14,13 +14,15 @@ def wf_creator(x):
 
     # CalculateTask writes _y_opt field to the spec internally.
 
-    firework1 = Firework([CalculateTask(),
-                          OptTask(wf_creator='rs_examples.test_categorical.wf_creator',
+    firework1 = Firework([MixedCalculateTask(),
+                          OptTask(wf_creator='rocketsled.examples.'
+                                             'test_categorical.wf_creator',
                                   dimensions=fw1_dim,
                                   host='localhost',
                                   port=27017,
-                                  name='rocketsled',
-                                  get_z='rs_examples.test_categorical.get_z',
+                                  name='ROCKETSLED_EXAMPLES',
+                                  get_z='rocketsled.examples.test_categorical.'
+                                        'get_z',
                                   duplicate_check=True,
                                   opt_label=opt_label)],
                          spec=fw1_spec)
@@ -35,7 +37,7 @@ def get_z(x):
     return [x[0]**2, cat]
 
 def run_workflows():
-    TESTDB_NAME = 'rocketsled'
+    TESTDB_NAME = 'ROCKETSLED_EXAMPLES'
     launchpad = LaunchPad(name=TESTDB_NAME)
 
     # clean up tw database if necessary

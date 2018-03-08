@@ -7,7 +7,7 @@ An example of running rocketsled optimizations in parallel.
 import os
 from fireworks import Workflow, Firework, LaunchPad
 from rocketsled.optimize import OptTask, random_guess
-from rocketsled.examples import SumTask
+from rocketsled.examples.example_tasks import SumTask
 
 dims = [(1, 5), (1, 5), (1, 5)]
 
@@ -17,13 +17,15 @@ def wf_creator(x):
     spec = {'_x_opt': x, '_add_launchpad_and_fw_id': True}
     Z_dim = dims
 
-    firework1 = Firework([SumTask(), OptTask(wf_creator='rs_examples.test_parallel.wf_creator',
-                                             dimensions=Z_dim,
-                                             host='localhost',
-                                             port=27017,
-                                             name='rocketsled',
-                                             duplicate_check=True,
-                                             opt_label="opt_parallel")], spec=spec)
+    firework1 = Firework([SumTask(),
+                          OptTask(wf_creator='rocketsled.test_parallel.wf_creator',
+                                  dimensions=Z_dim,
+                                  host='localhost',
+                                  port=27017,
+                                  name='ROCKETSLED_EXAMPLES',
+                                  duplicate_check=True,
+                                  opt_label="opt_parallel")],
+                         spec=spec)
     return Workflow([firework1])
 
 
@@ -35,7 +37,7 @@ def load_parallel_wfs(n_processes):
 
 if __name__ == "__main__":
 
-    TESTDB_NAME = 'rocketsled'
+    TESTDB_NAME = 'ROCKETSLED_EXAMPLES'
     launchpad = LaunchPad(name=TESTDB_NAME)
     launchpad.reset(password=None, require_password=False)
 

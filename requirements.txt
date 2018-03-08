@@ -3,3 +3,4 @@ scikit-learn
 scipy
 fireworks
 pymongo
+nose
