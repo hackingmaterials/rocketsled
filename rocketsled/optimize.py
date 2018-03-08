@@ -29,6 +29,7 @@ from sklearn.preprocessing import StandardScaler
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction, LaunchPad
+from rocketsled.grids import ParamGrids
 try:
     # for Python 3.6-
     import cPickle as pickle
@@ -252,10 +253,12 @@ class OptTask(FireTaskBase):
                     random_interval = self['random_interval'] if 'random_interval' in self else None
                     train_points = self['n_train_points'] if 'n_train_points' in self else None
                     search_points = self['n_search_points'] if 'n_search_points' in self else 1000
-                    self.propex = self['propex'] if 'propex' in self else False
-                    self.tournament = self['tournament'] if 'tournament' in self else None
+
+                    # hyperparameter optimization
                     self.hyper_opt = self['hyper_opt'] if 'hyper_opt' in self else None
                     self.param_grid = self['param_grid'] if 'param_grid' in self else None
+                    if any([self.hyper_opt, self.param_grid]) and not all([self.hyper_opt, self.param_grid]):
+                        raise ValueError("Please specify a number of hyperparameter optimization searches and a parameter grid.")
 
                     # extra features
                     self.get_z = self._deserialize(self['get_z']) if 'get_z' in self and self['get_z'] \
@@ -579,12 +582,10 @@ class OptTask(FireTaskBase):
 
         elif 'lpad' in self:
             lpad_dict = self['lpad']
-            host, port, name = [lpad_dict[req] for req in db_reqs]
             lpad = LaunchPad.from_dict(lpad_dict)
 
         elif '_add_launchpad_and_fw_id' in fw_spec:
             if fw_spec['_add_launchpad_and_fw_id']:
-                host, port, name = [getattr(self.launchpad, req) for req in db_reqs]
                 lpad = self.launchpad
 
         else:
@@ -992,7 +993,6 @@ class OptTask(FireTaskBase):
             completed, OptTask will predict the 10 next best guesses).
             False if not ready for a batch prediction (for example, you have a batch size of 10 and are only 8
             workflows into the batch, OptTask will wait until the batch completes.)
-
         """
 
         # if current job is the job completing the batch
@@ -1017,18 +1017,6 @@ class Dtypes(object):
         self.others = d['others']
         self.discrete = self.ints + self.others
         self.all = self.numbers + self.others
-
-class ParamGrids(object):
-    """
-    Defines the default parameter grids used for automatic hyperparameter search.
-    """
-
-    #todo: add the rest of the model default hyperparameters
-    def __init__(self):
-        self.RandomForestRegressor = {'criterion': ['mse', 'mae'],
-                                      'n_estimators':[1, 10, 100],
-                                      'max_features': ['auto', 'sqrt', 'log2']}
-
 
 class ExhaustedSpaceError(Exception):
     pass
