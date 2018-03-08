@@ -12,7 +12,7 @@ The Firework contains 2 Tasks.
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
 from rocketsled.optimize import OptTask
-from rs_examples.example_tasks import SumTask
+from rocketsled.examples.example_tasks import SumTask
 
 
 __author__ = "Alexander Dunn"

@@ -5,7 +5,7 @@ Benchmarking for turboworks infrastructure.
 from fireworks.core.rocket_launcher import launch_rocket
 from fireworks import Workflow, Firework, LaunchPad
 from rocketsled.optimize import OptTask
-from rs_examples.example_tasks import SumTask
+from rocketsled.examples import SumTask
 import time, pickle
 from matplotlib import pyplot
 import numpy
