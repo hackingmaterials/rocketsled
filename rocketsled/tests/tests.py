@@ -3,20 +3,20 @@ from __future__ import unicode_literals, print_function, division
 """
 A file for testing the workflow capabilities of OptTask.
 
-Note that a local mongod instance in admin mode must be running for the tests to pass by default.
+Note that a local mongod instance in admin mode must be running for the tests to
+pass by default.
 
-WARNING: Tests reset the launchpad you specify. Specify a launchpad for testing you wouldn't mind resetting (e.g., 
-mlab.com)
+WARNING: Tests reset the launchpad you specify. Specify a launchpad for testing 
+you wouldn't mind resetting (e.g., mlab.com)
 
-Modify tests_launchpad.yaml to define the db where you'd like to run the tests if you do not have access to admin
-mongod privledges on your local machine. 
+Modify tests_launchpad.yaml to define the db where you'd like to run the tests 
+if you do not have access to admin mongod privledges on your local machine. 
 
 """
 import os
 import unittest
 import yaml
 import numpy as np
-from pymongo import MongoClient
 from fireworks import FWAction, Firework, Workflow, LaunchPad, ScriptTask
 from fireworks.core.rocket_launcher import launch_rocket, rapidfire
 from fireworks.core.firework import FireTaskBase
@@ -32,7 +32,8 @@ __email__ = "ardunn@lbl.gov"
 # todo: test for parallel duplicates?
 # todo: test for less important params
 
-test_names = ['test_basic', 'test_custom_predictor', 'test_complex', 'test_duplicates', 'test_get_z']
+test_names = ['test_basic', 'test_custom_predictor', 'test_complex',
+              'test_duplicates', 'test_get_z']
 
 @explicit_serialize
 class BasicTestTask(FireTaskBase):
@@ -51,7 +52,7 @@ def wf_creator_basic(x, launchpad):
     spec = {'_x_opt': x}
     dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
     bt = BasicTestTask()
-    ot = OptTask(wf_creator='rocketsled.tests.wf_creator_basic',
+    ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_basic',
                  dimensions=dims,
                  predictor='RandomForestRegressor',
                  predictor_kwargs={'random_state': 1},
@@ -63,14 +64,15 @@ def wf_creator_basic(x, launchpad):
 
 def wf_custom_predictor(x, launchpad):
     """
-    Testing a custom predictor which returns the same x vector for every guess, using same workflow as test_basic.
+    Testing a custom predictor which returns the same x vector for every guess,
+    using same workflow as test_basic.
     """
     spec = {'_x_opt': x}
     dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
     bt = BasicTestTask()
-    ot = OptTask(wf_creator='rocketsled.tests.wf_custom_predictor',
+    ot = OptTask(wf_creator='rocketsled.tests.tests.wf_custom_predictor',
                  dimensions=dims,
-                 predictor='rocketsled.tests.custom_predictor',
+                 predictor='rocketsled.tests.tests.custom_predictor',
                  lpad=launchpad,
                  wf_creator_args=[launchpad],
                  opt_label='test_custom_predictor')
@@ -79,7 +81,8 @@ def wf_custom_predictor(x, launchpad):
 
 def wf_creator_complex(x, launchpad):
     """
-    Testing a custom workflow of five fireworks with complex dependencies, and optimization in the middle.
+    Testing a custom workflow of five fireworks with complex dependencies, and
+    optimization in the middle.
 
     This "complex" Workflow has the form:
                     fw0
@@ -100,7 +103,7 @@ def wf_creator_complex(x, launchpad):
     fw2 = Firework(AdditionTask(), spec={"input_array": [3, 4]}, name='Child B')
 
     bt = BasicTestTask()
-    ot = OptTask(wf_creator='rocketsled.tests.wf_creator_complex',
+    ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_complex',
                  dimensions=dims,
                  lpad=launchpad,
                  wf_creator_args=[launchpad],
@@ -108,10 +111,13 @@ def wf_creator_complex(x, launchpad):
     fw3 = Firework([bt, ot], spec=spec, name="Optimization")
 
     fw4 = Firework(AdditionTask(), spec={"input_array": [5, 6]}, name='After 1')
-    fw5 = Firework(ScriptTask.from_str('echo "ScriptTask: Finished complex workflow w/ optimization."'), name='After 2')
+    fw5 = Firework(ScriptTask.from_str('echo "ScriptTask: Finished complex '
+                                       'workflow w/ optimization."'),
+                   name='After 2')
 
     return Workflow([fw0, fw1, fw2, fw3, fw4, fw5],
-                    {fw0: [fw1, fw2], fw1: [fw3], fw2: [fw3], fw3: [fw4], fw4: [fw5], fw5: []})
+                    {fw0: [fw1, fw2], fw1: [fw3], fw2: [fw3], fw3: [fw4], fw4:
+                        [fw5], fw5: []})
 
 def wf_creator_duplicates(x, launchpad):
     """
@@ -120,9 +126,9 @@ def wf_creator_duplicates(x, launchpad):
     spec = {'_x_opt': x}
     dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
     bt = BasicTestTask()
-    ot = OptTask(wf_creator='rocketsled.tests.wf_creator_duplicates',
+    ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_duplicates',
                  dimensions=dims,
-                 predictor='rocketsled.tests.custom_predictor',
+                 predictor='rocketsled.tests.tests.custom_predictor',
                  lpad=launchpad,
                  duplicate_check=True,
                  tolerances=[0, 1e-6, None],
@@ -133,19 +139,19 @@ def wf_creator_duplicates(x, launchpad):
 
 def wf_creator_get_z(x, launchpad):
     """
-    Testing a basic workflow with one Firework, and two FireTasks with a get_z function. Also tests that duplicate
-    checking is working with get_z.
+    Testing a basic workflow with one Firework, and two FireTasks with a get_z
+    function. Also tests that duplicate checking is working with get_z.
     """
     spec = {'_x_opt': x}
     dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
     bt = BasicTestTask()
-    ot = OptTask(wf_creator='rocketsled.tests.wf_creator_get_z',
+    ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_get_z',
                  dimensions=dims,
-                 predictor='rocketsled.tests.custom_predictor',
+                 predictor='rocketsled.tests.tests.custom_predictor',
                  lpad=launchpad,
                  duplicate_check=True,
                  tolerances=[0, 1e-6, None],
-                 get_z='rocketsled.tests.get_z',
+                 get_z='rocketsled.tests.tests.get_z',
                  wf_creator_args=[launchpad],
                  opt_label='test_get_z')
     firework1 = Firework([bt, ot], spec=spec)
@@ -207,8 +213,8 @@ class TestWorkflows(unittest.TestCase):
             launch_rocket(self.lp)
 
         col = self.db.test_complex
-        loop1 = col.find({'index': 1})   # should return one doc, for the first WF
-        loop2 = col.find({'index': 2})   # should return one doc, for the second WF
+        loop1 = col.find({'index': 1})   # should return one doc, for first WF
+        loop2 = col.find({'index': 2})   # should return one doc, for second WF
         reserved = col.find({'y': 'reserved'})
         self.assertEqual(col.find({}).count(), 4)
         self.assertEqual(reserved.count(), 1)
@@ -222,8 +228,12 @@ class TestWorkflows(unittest.TestCase):
             launch_rocket(self.lp)
 
         col = self.db.test_duplicates
-        loop1 = col.find({'x': [5, 11, 'blue']})  # should return one doc, for the first WF
-        loop2 = col.find({'x': [3, 12, 'green']})  # should return one doc, for the second WF
+        loop1 = col.find({'x': [5, 11, 'blue']})
+        # should return one doc, for the first WF
+
+        loop2 = col.find({'x': [3, 12, 'green']})
+        # should return one doc, for the second WF
+
         reserved = col.find({'y': 'reserved'})
         self.assertEqual(col.find({}).count(), 4)
         self.assertEqual(reserved.count(), 1)
@@ -251,7 +261,9 @@ class TestWorkflows(unittest.TestCase):
         for tn in test_names:
             self.db.drop_collection(tn)
 
-        if self.lp.host=='localhost' and self.lp.port==27017 and self.lp.name=='ROCKETSLED_TEST':
+        if self.lp.host=='localhost'\
+                and self.lp.port==27017 \
+                and self.lp.name=='ROCKETSLED_TEST':
             try:
                 self.lp.connection.drop_database('ROCKETSLED_TEST')
             except:
@@ -263,4 +275,8 @@ def suite():
     for tn in test_names:
         wf_test_suite.addTest(TestWorkflows(tn))
     return wf_test_suite
+
+
+if __name__ == "__main__":
+    unittest.main()
 

@@ -7,7 +7,7 @@ An example of running rocketsled optimizations in parallel.
 import os
 from fireworks import Workflow, Firework, LaunchPad
 from rocketsled.optimize import OptTask, random_guess
-from rs_examples.example_tasks import SumTask
+from rocketsled.examples import SumTask
 
 dims = [(1, 5), (1, 5), (1, 5)]
 
