@@ -8,15 +8,13 @@ Please see the documentation for a comprehensive guide on usage.
 import sys
 import random
 import heapq
-import numpy as np
 from itertools import product
 from os import getpid, path
 from time import sleep, time
 from operator import mul
 import warnings
-from pymongo import MongoClient
 from numpy import sctypes, asarray
-from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, BaggingRegressor, GradientBoostingRegressor, \
+from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, GradientBoostingRegressor, \
     ExtraTreesRegressor
 from sklearn.linear_model import LinearRegression, SGDRegressor
 from sklearn.kernel_ridge import KernelRidge
@@ -29,7 +27,6 @@ from sklearn.preprocessing import StandardScaler
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction, LaunchPad
-from rocketsled.grids import ParamGrids
 try:
     # for Python 3.6-
     import cPickle as pickle
@@ -107,20 +104,21 @@ class OptTask(FireTaskBase):
             all available points will be used for training. Reduce the number of points to decrease training times.
         space (str): The fully specified path of a pickle file containing a list of all possible searchable vectors.
             For example '/Users/myuser/myfolder/myspace.p'. When loaded, this space should be a list of tuples.
-        hyper_opt (int): Defines how hyperparamter search is performed. An int greater than 1 defines the number of
-            parameter combos to try with RandomizedSearchCV. A value of 1 means exhaustive search with GridSearchCV.
+
+        Hyperparameter search:
         param_grid (dict): The sklearn-style dictionary to use for hyperparameter optimization. Each key should
             correspond to a regressor parameter name, and each value should be a list of possible settings for the
             parameter key. For example: param_grid={"n_estimators: [1, 10, 100], "max_features": ["sqrt", "auto", 3]}
+        hyper_opt (int): Defines how hyperparamter search is performed. An int of 1 or greater defines the number of
+            parameter combos to try with RandomizedSearchCV. A value of None means exhaustive search with GridSearchCV.
+            param_grid must be defined to use this option. All searches are performed in parallel, if possible.
 
         Balancing exploration and exploitation
         random_interval (int): Suggests a random guess every n guesses instead of using the predictor suggestion. For
             instance, random_interval=10 has OptTask randomly guess every 1/10 predictions, and uses the predictor the
             other 9/10 times. Setting random_interval to an int greater than 1 may increase exploration. Default is
             None, meaning no random guesses.
-        propex (int): Enables proportional selection, where the probability of selecting a candidate is proportional
-            to its score. Propex 
-        
+
         Extra features:
         get_z (string): the fully-qualified name of a function which, given a x vector, returns another vector z which
             provides extra information to the machine learner. The features defined in z are not used to run the
@@ -384,16 +382,8 @@ class OptTask(FireTaskBase):
                     xz_dims = x_dims + self._z_dims(XZ_unexplored, len(x))
 
                     # run machine learner on Z and X features
-                    self.predictors = ['RandomForestRegressor',
-                                       'AdaBoostRegressor',
-                                       'ExtraTreesRegressor',
-                                       'GradientBoostingRegressor',
-                                       'GaussianProcessRegressor',
-                                       'LinearRegression',
-                                       'SGDRegressor',
-                                       'MLPRegressor',
-                                       'KernelRidge',
-                                       'SVR']
+                    plist = [RandomForestRegressor, AdaBoostRegressor, ExtraTreesRegressor, GradientBoostingRegressor, LinearRegression, SGDRegressor, MLPRegressor, KernelRidge, SVR]
+                    self.predictors = {p.__class__.__name__:p for p in plist}
 
                     if random_interval:
                         if random_interval < 1 or not isinstance(random_interval, int):
@@ -402,43 +392,11 @@ class OptTask(FireTaskBase):
                             predictor = 'random_guess'
 
                     if predictor in self.predictors:
-
-                        if predictor == 'RandomForestRegressor':
-                            model = RandomForestRegressor
-                        elif predictor == 'AdaBoostRegressor':
-                            model = AdaBoostRegressor
-                        elif predictor == 'ExtraTreesRegressor':
-                            model = ExtraTreesRegressor
-                        elif predictor == 'GradientBoostingRegressor':
-                            model = GradientBoostingRegressor
-                        elif predictor == 'GaussianProcessRegressor':
-                            model = GaussianProcessRegressor
-                        elif predictor == 'LinearRegression':
-                            model = LinearRegression
-                        elif predictor == 'SGDRegressor':
-                            model = SGDRegressor
-                        elif predictor == 'MLPRegressor':
-                            model = MLPRegressor
-                        elif predictor == 'KernelRidge':
-                            model = KernelRidge
-                        elif predictor == 'SVR':
-                            model = SVR
-                        else:
-                            raise NameError("{} was in the predictor list but did not have a model!".format(predictor))
-
+                        model = self.predictors[predictor]
                         XZ_explored = self._preprocess(XZ_explored, xz_dims)
                         XZ_unexplored = self._preprocess(XZ_unexplored, xz_dims)
-
-                        # Don't scale data if discrete (ints or categorical)
                         scaling = False if self._is_discrete(dims=xz_dims, criteria='any') else True
-                        XZ_onehot = self._predict(XZ_explored,
-                                                  Y,
-                                                  XZ_unexplored,
-                                                  model(*pred_args, **pred_kwargs),
-                                                  maximize,
-                                                  batch_size,
-                                                  scaling=scaling)
-
+                        XZ_onehot = self._predict(XZ_explored, Y, XZ_unexplored, model(*pred_args, **pred_kwargs), maximize, batch_size, scaling=scaling)
                         XZ_new = [self._postprocess(xz_onehot, xz_dims) for xz_onehot in XZ_onehot]
 
                     elif predictor == 'random_guess':
@@ -453,12 +411,10 @@ class OptTask(FireTaskBase):
 
                         try:
                             predictor_fun = self._deserialize(predictor)
-
                         except ImportError as E:
                             raise NameError("The custom predictor {} didnt import correctly!\n{}".format(predictor, E))
 
                         XZ_new = predictor_fun(XZ_explored, Y, XZ_unexplored, *pred_args, **pred_kwargs)
-
                         if not isinstance(XZ_new[0], list) or isinstance(XZ_new[0], tuple):
                             XZ_new = [XZ_new]
 
@@ -467,8 +423,7 @@ class OptTask(FireTaskBase):
 
                         #todo: fix batch_mode duplicate checking
                         if batch_mode:
-                            raise Exception("Dupicate checking in batch mode for custom predictors is not yet "
-                                            "supported")
+                            raise Exception("Dupicate checking in batch mode for custom predictors is not yet supported")
 
                         if predictor not in self.predictors and predictor != 'random_guess':
                             X_new = [xz_new[:len(x)] for xz_new in XZ_new]
@@ -590,7 +545,6 @@ class OptTask(FireTaskBase):
 
         else:
             try:
-                host, port, name = [getattr(LaunchPad.auto_load(), req) for req in db_reqs]
                 lpad = LaunchPad.auto_load()
 
             except AttributeError:
@@ -659,7 +613,7 @@ class OptTask(FireTaskBase):
 
         Args:
             dims ([tuple]): dimensions of the search space
-            criteria (str): If 'all', returns bool based on whether ALL dimensions are discrete. If 'any', returns bool
+            criteria (str/unicode): If 'all', returns bool based on whether ALL dimensions are discrete. If 'any', returns bool
                 based on whether ANY dimensions are discrete.
 
         Returns:
@@ -776,33 +730,19 @@ class OptTask(FireTaskBase):
             X = scaler.fit_transform(X)
             space = scaler.transform(space)
 
-        if self.hyper_opt and len(X) > 10:
+        if self.param_grid and len(X) > 10:
             predictor_name = model.__class__.__name__
             if predictor_name not in self.predictors:
                 raise ValueError("Cannot perform automatic hyperparameter search with custom optimizer.")
-
-            if not self.param_grid:
-                # The user did not define their own grid, so we use a default grid.
-                pgs = ParamGrids()
-                try:
-                    self.param_grid = getattr(pgs, predictor_name)
-                except AttributeError as AE:
-                    raise ValueError("We have not submitted a default parameter grid for the built-in "
-                                     "optimizer {} yet. Submit a pull request if you want to make your own param_grid"
-                                     "the default for this optimizer.".format(self['predictor']))
-
-            # CV Search is embarassingly parallel: set the number of jobs equal to the number of param combos
-            if self.hyper_opt==1:
+            if not self.hyper_opt:
                 n_combos = reduce(mul, [len(p) for p in list(self.param_grid.values())], 1)
                 hp_selector = GridSearchCV(model, self.param_grid, n_jobs=n_combos)
             elif self.hyper_opt>=1:
                 hp_selector = RandomizedSearchCV(model, self.param_grid, n_iter=self.hyper_opt, n_jobs=self.hyper_opt)
             else:
                 raise ValueError("Automatic hyperparameter optimization must be either grid or random. Please set"
-                                 "the hyper_opt parameter to 1 for GridSearchCV and to any integer larger than 1 for "
+                                 "the hyper_opt parameter to None for GridSearchCV and to any integer larger than 1 for "
                                  "n iterations of RandomizedSearchCV.")
-
-
             hp_selector.fit(X, Y)
             model = model.__class__(**hp_selector.best_params_)
 
