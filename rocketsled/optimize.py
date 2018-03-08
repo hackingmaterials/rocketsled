@@ -255,8 +255,8 @@ class OptTask(FireTaskBase):
                     # hyperparameter optimization
                     self.hyper_opt = self['hyper_opt'] if 'hyper_opt' in self else None
                     self.param_grid = self['param_grid'] if 'param_grid' in self else None
-                    if any([self.hyper_opt, self.param_grid]) and not all([self.hyper_opt, self.param_grid]):
-                        raise ValueError("Please specify a number of hyperparameter optimization searches and a parameter grid.")
+                    if self.hyper_opt and not self.param_grid:
+                        raise ValueError("Please specify a param_grid.")
 
                     # extra features
                     self.get_z = self._deserialize(self['get_z']) if 'get_z' in self and self['get_z'] \
@@ -678,7 +678,6 @@ class OptTask(FireTaskBase):
         space = [[xi] for xi in total_dimspace[0]] if len(dims) == 1 else product(*total_dimspace)
 
         return space
-
 
     def pop_lock(self, manager_id):
         """
