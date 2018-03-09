@@ -6,34 +6,62 @@ Functions for visualizing optimization progress.
 import numpy as np
 from matplotlib import pyplot as plt
 
-def visualize(lpad, opt_label, opt=min, showbest=True, latexify=False):
+def visualize(collection, opt=min, showbest=True, latexify=False,
+              fontfamily="serif", mode='show'):
+    """
+    Visualize the progress of an optimization.
 
+    Args:
+        collection (pymongo Collection): The pymongo colllection containing your
+            rocketsled optimization. For example, if you set you opt_label to
+            'opt123', and used the same db as your LaunchPad, you could use
+            lpad.db.opt123
+        opt (builtin): Whether to plot optimizing for minimum or maximum. Use
+            builtin min for minima, and builtin max for maxima.
+        showbest (bool): Point out the best point on legend and on plot. If more
+            than one best point (i.e., multiple equal maxima), show them all.
+        latexify (bool): Use LaTeX for formatting.
+        fontfamily (str): The font family to use for rendering. Choose from
+            'serif', 'sans-serif', 'fantasy', 'monospace', or 'cursive'.
+        mode (str): What to do with the plot/data. Set 'show' to show, 'return'
+            to return the plot object, or 'best' to return a pymongo iterator
+            for the documents of the best scoring function evaluations.
+
+    Returns:
+        Either None, a matplotlib plot, or a pymongo iterator. See 'mode' for
+        details.
+    """
     fxstr = "$f(x)$" if latexify else "f(x)"
 
-    c = lpad.db[opt_label]
-    n = c.count() - 2
-    i = np.zeros(n)
-    fx = np.zeros(n)
-    best = np.zeros(n)
-    mean = np.zeros(n)
-    std = np.zeros(n)
+    i = []
+    fx = []
+    best = []
+    mean = []
+    std = []
 
-    ix = 0
     best_val = None
     best_i = None
-    for doc in c.find({'index': {'$exists': 1}}):
-        fx[ix] = doc['y']
-        i[ix] = doc['index']
-        best[ix] = opt(fx)
+    for doc in collection.find({'index': {'$exists': 1}}):
+        fx.append(doc['y'])
+        i.append(doc['index'])
+        best.append(opt(fx))
 
-        if best_val != best[ix]:
-            best_val = best[ix]
-            best_i = i[ix]
+        if best_val != best[-1]:
+            best_val = best[-1]
+            best_i = i[-1]
 
-        mean[ix] = np.mean(fx[:ix + 1])
-        std[ix] = np.std(fx[:ix + 1])
-        ix += 1
+        mean.append(np.mean(fx))
+        std.append(np.std(fx))
 
+    mean = np.asarray(mean)
+    std = np.asarray(std)
+
+    if latexify:
+        plt.rc('text', usetex=True)
+    else:
+        plt.rc('text', usetex=False)
+
+    plt.rc('font', family=fontfamily)
     plt.title("Rocketsled optimization results")
     plt.scatter(i, fx, color='blue', label=fxstr)
     plt.plot(i, best, color='orange', label="best {} value".format(fxstr))
@@ -48,27 +76,31 @@ def visualize(lpad, opt_label, opt=min, showbest=True, latexify=False):
             best_label = "Best value: $f(x) = {}$".format(best_val)
         else:
             best_label = "Best value: f(x) = {}".format(best_val)
-        plt.scatter([best_i], [best_val], color='red', s=70, linewidth=3,
-                    label=best_label, facecolors='none', edgecolors='r')
+        plt.scatter([best_i], [best_val], color='green', s=70, linewidth=3,
+                    label=best_label, facecolors='none', edgecolors='green')
 
-        best = c.find({'y': best_val})
+        best = collection.find({'y': best_val})
         for b in best:
             if latexify:
                 artext = '$x = {}$'.format(b['x'])
             else:
                 artext = 'x = {}'.format(b['x'])
             plt.annotate(artext,
-                         xy=(b['index'], best_val),
-                         xytext=(b['index'] + 2, best_val),
-                         arrowprops=dict(facecolor='red', shrink=0.05),
-                         color='red')
+                         xy=(b['index'] + 0.5, best_val),
+                         xytext=(b['index'] + 5, best_val),
+                         arrowprops=dict(color='green'),
+                         color='green',
+                         bbox=dict(facecolor='white', alpha=1.0))
 
     plt.legend()
-    plt.show()
-
-
+    if mode=='show':
+        plt.show()
+    elif mode=='return':
+        return plt
+    elif mode=='best':
+        return collection.find({'y': best_val})
 
 if __name__ == "__main__":
     from fireworks import LaunchPad
     lpad = LaunchPad(host='localhost', port=27017, name='ROCKETSLED_EXAMPLES')
-    visualize(lpad, 'opt_auto', opt=min, latexify=True)
+    visualize(lpad.db.opt_auto, opt=max)
