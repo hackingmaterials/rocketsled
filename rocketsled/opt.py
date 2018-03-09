@@ -534,7 +534,7 @@ class OptTask(FireTaskBase):
             None
         """
         time_now = datetime.datetime.utcnow().strftime(FW_BLOCK_FORMAT)
-        opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default' + time_now
+        opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default_' + time_now
         db_extras = self['db_extras'] if 'db_extras' in self else {}
         db_reqs = ('host', 'port', 'name')
         db_def = [req in self for req in db_reqs]
