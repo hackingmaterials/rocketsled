@@ -8,7 +8,7 @@ Your auto-created script will be in the rocketsled/auto_sleds directory.
 from rocketsled import auto_setup
 
 def myfun(x):
-    res = float(x[0]) * float(x[1]) / float(x[2])
+    res = int(float(x[0]) * float(x[1]) / float(x[2]))
     return res
 
 

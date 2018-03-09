@@ -136,7 +136,7 @@ def auto_setup(func, dimensions, wfname=None, **kwargs):
             f.write("    lpad.add_wf(wf1)\n")
             f.write("    # rapidfire(lpad, nlaunches=5, sleep_time=0)")
 
-        print("\nFile successfully created! Find your auto sled at "
+        print("\nFile successfully created!\nFind your auto sled at "
               "{}\n".format(filename))
 
     else:
