@@ -7,6 +7,7 @@ Please see the documentation for a comprehensive guide on usage.
 """
 import random
 import heapq
+import datetime
 from itertools import product
 from os import getpid, path
 from time import sleep
@@ -25,6 +26,7 @@ from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.preprocessing import StandardScaler
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
+from fireworks.utilities.fw_utilities import FW_BLOCK_FORMAT
 from fireworks import FWAction, LaunchPad
 from rocketsled.acq import acquire
 from rocketsled.utils import deserialize, Dtypes
@@ -531,8 +533,8 @@ class OptTask(FireTaskBase):
         Returns:
             None
         """
-
-        opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default'
+        time_now = datetime.datetime.utcnow().strftime(FW_BLOCK_FORMAT)
+        opt_label = self['opt_label'] if 'opt_label' in self else 'opt_default' + time_now
         db_extras = self['db_extras'] if 'db_extras' in self else {}
         db_reqs = ('host', 'port', 'name')
         db_def = [req in self for req in db_reqs]
