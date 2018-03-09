@@ -9,7 +9,7 @@ Automatically set up a file to execute a rocketsled optimization given:
 from fireworks import PyTask, Firework, Workflow
 
 
-def auto_setup(fname, func=None, wf=None):
+def auto_setup(fname, func=None, wf=None, opttask_args=None):
     """
     Automatically set up a FireWorks-based optimization loop with OptTask.
     Use either a function, Workflow, or Firework to pass into auto_setup.
