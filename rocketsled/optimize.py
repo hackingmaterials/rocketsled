@@ -105,6 +105,9 @@ class OptTask(FireTaskBase):
             all available points will be used for training. Reduce the number of points to decrease training times.
         space (str): The fully specified path of a pickle file containing a list of all possible searchable vectors.
             For example '/Users/myuser/myfolder/myspace.p'. When loaded, this space should be a list of tuples.
+        acq (str): The acquisition function to use. Can be 'ei' for expected improvement, 'pi' for probability of improvement,
+            or 'lcb' for lower confidence bound. Defaults to None, which means no acquisition function is used, and the highest
+            predicted point is picked. Only applies to builtin predictors.
 
         Hyperparameter search:
         param_grid (dict): The sklearn-style dictionary to use for hyperparameter optimization. Each key should
@@ -240,9 +243,7 @@ class OptTask(FireTaskBase):
                         sleep(sleeptime)
 
                 elif lock == pid:
-
                     try:
-
                         # required args
                         wf_creator = self._deserialize(self['wf_creator'])
                         x_dims = self['dimensions']
@@ -256,7 +257,7 @@ class OptTask(FireTaskBase):
                         random_interval = self['random_interval'] if 'random_interval' in self else None
                         trainpts = self['n_train_points'] if 'n_train_points' in self else None
                         searchpts = self['n_search_points'] if 'n_search_points' in self else 1000
-                        self.acq = self['acq'] if 'acq' in self else 'ei'
+                        self.acq = self['acq'] if 'acq' in self else None
 
                         # hyperparameter optimization
                         self.hyper_opt = self['hyper_opt'] if 'hyper_opt' in self else None
@@ -389,7 +390,7 @@ class OptTask(FireTaskBase):
 
                         # run machine learner on Z and X features
                         plist = [RandomForestRegressor, GaussianProcessRegressor, AdaBoostRegressor, ExtraTreesRegressor, GradientBoostingRegressor, LinearRegression, SGDRegressor, MLPRegressor, KernelRidge, SVR]
-                        self.predictors = {p.__class__.__name__:p for p in plist}
+                        self.predictors = {p.__name__: p for p in plist}
 
                         if random_interval:
                             if random_interval < 1 or not isinstance(random_interval, int):
@@ -448,69 +449,66 @@ class OptTask(FireTaskBase):
                                                 XZ_new[n] = random.choice(XZ_unexplored)
                                     else:
                                         raise ValueError("Define tolerances parameter to duplicate check floats.")
+                    except Exception:
+                        self.pop_lock(manager_id)
+                        raise
 
-                        # make sure a process has not timed out and changed the lock pid while this process
-                        # is computing the next guess
-                        try:
-                            if self.collection.find_one(self._manager_query)['lock'] != pid:
-                                continue
-                            else:
-                                for xz_new in XZ_new:
-                                    # separate 'predicted' z features from the new x vector
-                                    x_new, z_new = xz_new[:len(x)], xz_new[len(x):]
-
-                                    # if it is a duplicate (such as a forced identical first guess)
-                                    forced_dupe = self.collection.find_one({'x': x})
-                                    if forced_dupe:
-                                        # only update the fields which should be updated
-                                        self.collection.find_one_and_update({'x': x},
-                                                                            {'$set': {'y': y,
-                                                                                      'z': z,
-                                                                                      'z_new': z_new,
-                                                                                      'x_new': x_new,
-                                                                                      'predictor': predictor}})
-                                        opt_id = forced_dupe['_id']
-                                    else:
-                                        # update all the fields, as it is a new document
-                                        res = self.collection.insert_one({'z': z,
-                                                                          'y': y,
-                                                                          'x': x,
-                                                                          'z_new': z_new,
-                                                                          'x_new': x_new,
-                                                                          'predictor': predictor,
-                                                                          'index': n_completed + 1})
-                                        opt_id = res.inserted_id
-
-                                    # ensure previously fin. workflow results are not overwritten by concurrent predictions
-                                    if self.collection.find({'x': x_new,
-                                                             'y': {'$exists': 1, '$ne': 'reserved'}}).count() == 0:
-                                        # reserve the new x to prevent parallel processes from registering it as unexplored,
-                                        # since the next iteration of this process will be exploring it
-                                        self.collection.insert_one({'x': x_new, 'y': 'reserved'})
-                                    else:
-                                        raise ValueError(
-                                            "The predictor suggested a guess which has "
-                                            "already been tried: {}".format(x_new))
-
-                        except TypeError as E:
-                            warnings.warn(
-                                "Process {} timed out while computing next guess, with exception {}".format(pid, E),
-                                 RuntimeWarning)
+                    # make sure a process has not timed out and changed the lock pid while this process
+                    # is computing the next guess
+                    try:
+                        if self.collection.find_one(self._manager_query)['lock'] != pid:
                             continue
+                        else:
+                            for xz_new in XZ_new:
+                                # separate 'predicted' z features from the new x vector
+                                x_new, z_new = xz_new[:len(x)], xz_new[len(x):]
 
-                        self.pop_lock(manager_id)
+                                # if it is a duplicate (such as a forced identical first guess)
+                                forced_dupe = self.collection.find_one({'x': x})
+                                if forced_dupe:
+                                    # only update the fields which should be updated
+                                    self.collection.find_one_and_update({'x': x},
+                                                                        {'$set': {'y': y,
+                                                                                  'z': z,
+                                                                                  'z_new': z_new,
+                                                                                  'x_new': x_new,
+                                                                                  'predictor': predictor}})
+                                    opt_id = forced_dupe['_id']
+                                else:
+                                    # update all the fields, as it is a new document
+                                    res = self.collection.insert_one({'z': z,
+                                                                      'y': y,
+                                                                      'x': x,
+                                                                      'z_new': z_new,
+                                                                      'x_new': x_new,
+                                                                      'predictor': predictor,
+                                                                      'index': n_completed + 1})
+                                    opt_id = res.inserted_id
 
-                        X_new = [xz_new[:len(x)] for xz_new in XZ_new]
-                        new_wfs = [wf_creator(x_new, *wf_creator_args, **wf_creator_kwargs) for x_new in X_new]
+                                # ensure previously fin. workflow results are not overwritten by concurrent predictions
+                                if self.collection.find({'x': x_new,
+                                                         'y': {'$exists': 1, '$ne': 'reserved'}}).count() == 0:
+                                    # reserve the new x to prevent parallel processes from registering it as unexplored,
+                                    # since the next iteration of this process will be exploring it
+                                    self.collection.insert_one({'x': x_new, 'y': 'reserved'})
+                                else:
+                                    raise ValueError(
+                                        "The predictor suggested a guess which has "
+                                        "already been tried: {}".format(x_new))
 
-                        for wf in new_wfs:
-                            self.lpad.add_wf(wf)
+                    except TypeError as E:
+                        warnings.warn(
+                            "Process {} timed out while computing next guess, with exception {}".format(pid, E),
+                             RuntimeWarning)
+                        continue
 
-                        return FWAction(update_spec={'_optimization_id': opt_id}, stored_data={'_optimization_id': opt_id})
+                    self.pop_lock(manager_id)
 
-                    except Exception as E:
-                        self.pop_lock(manager_id)
-                        raise E
+                    X_new = [xz_new[:len(x)] for xz_new in XZ_new]
+                    new_wfs = [wf_creator(x_new, *wf_creator_args, **wf_creator_kwargs) for x_new in X_new]
+                    for wf in new_wfs:
+                        self.lpad.add_wf(wf)
+                    return FWAction(update_spec={'_optimization_id': opt_id}, stored_data={'_optimization_id': opt_id})
 
             else:
                 self.collection.delete_one(self._manager_query)
@@ -753,7 +751,7 @@ class OptTask(FireTaskBase):
             hp_selector.fit(X, Y)
             model = model.__class__(**hp_selector.best_params_)
 
-        if self.acq == 'off':
+        if self.acq is None:
             model.fit(X, Y)
             values = model.predict(space).tolist()
             evaluator = heapq.nlargest if maximize else heapq.nsmallest
