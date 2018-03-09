@@ -1,3 +1,5 @@
+from  __future__ import print_function, unicode_literals
+
 """
 Utility functions for OptTask.
 """
@@ -61,7 +63,6 @@ def random_guess(dimensions, dtypes=Dtypes()):
     """
 
     random_vector = []
-
     for dimset in dimensions:
         upper = dimset[1]
         lower = dimset[0]
@@ -76,7 +77,6 @@ def random_guess(dimensions, dtypes=Dtypes()):
             new_param = random.randint(0, domain_size)
             random_vector.append(dimset[new_param])
         else:
-            raise TypeError("The type {} is not supported by dummy opt as a categorical or "
-                            "numerical type".format(type(upper)))
-
+            raise TypeError("The type {} is not supported by dummy opt as a "
+                            "categorical or numerical type".format(type(upper)))
     return random_vector
