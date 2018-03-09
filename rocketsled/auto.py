@@ -2,7 +2,8 @@ from __future__ import unicode_literals, print_function, division
 
 """
 Automatically set up a file to execute a rocketsled optimization given:
-    - a workflow taking in a vector x, and returning a scalar y.
+    - a function taking in a vector x, and returning a scalar y.
+    - a space you'd like to constrain the problem to
     
     Thats it!
     
@@ -42,10 +43,9 @@ def auto_setup(func, dimensions, wfname=None, **kwargs):
             dimensions = [(1,100), (9.293, 18.2838), ("red", "blue", "green")]
         kwargs: Arguments to be passed as options to OptTask. Valid arguments
             to be passed are any valid args for OptTask. For example,
-            lpad, host, port, name, opt_label, acq, predictor_kwargs, etc...
+            lpad, host, port, name, opt_label, acq, predictor, etc...
 
     """
-
     # Determine the name and directory
     dir = os.path.dirname(os.path.abspath(__file__)) + '/auto_sleds'
     time_now = datetime.datetime.utcnow().strftime(FW_BLOCK_FORMAT)
@@ -57,8 +57,8 @@ def auto_setup(func, dimensions, wfname=None, **kwargs):
             ipy.write('"""\n This file has been autocreated by '
                       'auto_setup.py\n"""')
     if wfname:
-        if "/" in wfname:
-            raise ValueError("Please do not use the '/' character in the name.")
+        if "/" in wfname or " " in wfname:
+            raise ValueError("Please do not use ' ' or '/' in the wf name.")
     else:
         wfname = "autosled_" + time_now
 
@@ -116,6 +116,7 @@ def auto_setup(func, dimensions, wfname=None, **kwargs):
                 f.write("    lpad = LaunchPad.from_dict(" + lpad + ")\n")
             else:
                 f.write("    lpad = LaunchPad.auto_load()\n")
+            f.write("    # lpad.reset(password=None, require_password=False)\n")
             f.write("\n    # Define your workflow to start...\n")
             f.write("    wf1 = wf_creator(random_guess(" + str(dimensions) +
                     "))\n\n")
