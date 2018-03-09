@@ -5,15 +5,14 @@ The FireTask for running automatic optimization loops.
 
 Please see the documentation for a comprehensive guide on usage. 
 """
-import sys
 import random
 import heapq
 from itertools import product
 from os import getpid, path
-from time import sleep, time
+from time import sleep
 from operator import mul
 import warnings
-from numpy import sctypes, asarray
+from numpy import asarray
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, GradientBoostingRegressor, \
     ExtraTreesRegressor
 from sklearn.linear_model import LinearRegression, SGDRegressor
@@ -28,6 +27,7 @@ from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction, LaunchPad
 from rocketsled.acquisition import acquire
+from rocketsled.utils import deserialize, Dtypes
 try:
     # for Python 3.6-
     import cPickle as pickle
@@ -245,7 +245,7 @@ class OptTask(FireTaskBase):
                 elif lock == pid:
                     try:
                         # required args
-                        wf_creator = self._deserialize(self['wf_creator'])
+                        wf_creator = deserialize(self['wf_creator'])
                         x_dims = self['dimensions']
 
                         # predictor definition
@@ -266,7 +266,7 @@ class OptTask(FireTaskBase):
                             raise ValueError("Please specify a param_grid.")
 
                         # extra features
-                        self.get_z = self._deserialize(self['get_z']) if 'get_z' in self and self['get_z'] \
+                        self.get_z = deserialize(self['get_z']) if 'get_z' in self and self['get_z'] \
                                                                          is not None else lambda input_vector: []
                         get_z_args = self['get_z_args'] if 'get_z_args' in self else []
                         get_z_kwargs = self['get_z_kwargs'] if 'get_z_kwargs' in self else {}
@@ -313,7 +313,8 @@ class OptTask(FireTaskBase):
 
                         # check if an opimization should be done, when in batch mode
                         batch_mode = False if batch_size==1 else True
-                        if batch_mode and not self._batch_ready(n_completed, batch_size):
+                        batch_ready = n_completed not in (0, 1) and (n_completed + 1) % batch_size == 0
+                        if batch_mode and not batch_ready:
 
                             # 'None' predictor means this job was not used for an optimization run.
                             if self.collection.find_one({'x': x}):
@@ -396,7 +397,7 @@ class OptTask(FireTaskBase):
                             if random_interval < 1 or not isinstance(random_interval, int):
                                 raise ValueError("The random interval must be an integer greater than 0.")
                             if n_completed % random_interval == 0:
-                                predictor = 'random_guess'
+                                predictor = 'random'
 
                         if predictor in self.predictors:
                             model = self.predictors[predictor]
@@ -406,7 +407,7 @@ class OptTask(FireTaskBase):
                             XZ_onehot = self._predict(XZ_explored, Y, XZ_unexplored, model(*pred_args, **pred_kwargs), maximize, batch_size, scaling=scaling)
                             XZ_new = [self._postprocess(xz_onehot, xz_dims) for xz_onehot in XZ_onehot]
 
-                        elif predictor == 'random_guess':
+                        elif predictor == 'random':
                             XZ_new = random.sample(XZ_unexplored, batch_size)
 
                         else:
@@ -417,7 +418,7 @@ class OptTask(FireTaskBase):
                                 XZ_unexplored = self._preprocess(XZ_unexplored, xz_dims)
 
                             try:
-                                predictor_fun = self._deserialize(predictor)
+                                predictor_fun = deserialize(predictor)
                             except ImportError as E:
                                 raise NameError("The custom predictor {} didnt import correctly!\n{}".format(predictor, E))
 
@@ -432,7 +433,7 @@ class OptTask(FireTaskBase):
                             if batch_mode:
                                 raise Exception("Dupicate checking in batch mode for custom predictors is not yet supported")
 
-                            if predictor not in self.predictors and predictor != 'random_guess':
+                            if predictor not in self.predictors and predictor != 'random':
                                 X_new = [xz_new[:len(x)] for xz_new in XZ_new]
                                 X_explored = [xz[:len(x)] for xz in XZ_explored]
 
@@ -592,28 +593,6 @@ class OptTask(FireTaskBase):
                 if type(entry) not in self.dtypes.all:
                     raise TypeError("The entry {} in dimension {} cannot be used with OptTask."
                                     "A list of acceptable datatypes is {}".format(entry, dim, self.dtypes.all))
-
-    def _deserialize(self, fun):
-        """
-        Takes a fireworks serialzed function handle and maps it to a function object.
-
-        Args:
-            fun (string): a 'module.function' or '/path/to/mod.func' style string specifying the function
-
-        Returns:
-            (function) The function object defined by fun
-        """
-        # todo: merge with PyTask's deserialize code, move to fw utils
-
-        toks = fun.rsplit(".", 1)
-        modname, funcname = toks
-
-        if "/" in toks[0]:
-            path, modname = toks[0].rsplit("/", 1)
-            sys.path.append(path)
-
-        mod = __import__(str(modname), globals(), locals(), fromlist=[str(funcname)])
-        return getattr(mod, funcname)
 
     def _is_discrete(self, dims, criteria='all'):
         """
@@ -929,84 +908,9 @@ class OptTask(FireTaskBase):
         # duplicate
         return False
 
-    @staticmethod
-    def _batch_ready(n_completed, batch_size):
-        """
-        Determines whether a batch has completed (based on the size of batch and number of completed workflows), so that
-        an optimization predicts the next n_per_batch x vectors and automatically loads them to the launchpad.
-
-        Args:
-            n_completed: The number of completed workflows.
-            batch_size: The number of workflows per workflow batch.
-
-        Returns:
-            True if ready for a batch prediction (for example, your batch size is 10 and the 20th workflow has just
-            completed, OptTask will predict the 10 next best guesses).
-            False if not ready for a batch prediction (for example, you have a batch size of 10 and are only 8
-            workflows into the batch, OptTask will wait until the batch completes.)
-        """
-
-        # if current job is the job completing the batch
-        if n_completed not in (0, 1) and (n_completed + 1) % batch_size == 0:
-            return True
-        else:
-            return False
-
-
-class Dtypes(object):
-    """
-    Defines the datatypes available for optimization.
-    """
-
-    def __init__(self):
-        d = sctypes
-        self.ints = d['int'] + d['uint'] + [int]
-        self.floats = d['float'] + [float]
-        self.reals = self.ints + self.floats
-        self.complex = d['complex']
-        self.numbers = self.reals + self.complex
-        self.others = d['others']
-        self.discrete = self.ints + self.others
-        self.all = self.numbers + self.others
 
 class ExhaustedSpaceError(Exception):
     pass
 
 class DimensionMismatchError(Exception):
     pass
-
-
-def random_guess(dimensions, dtypes=Dtypes()):
-    """
-    Returns random new inputs based on the dimensions of the search space.
-    It works with float, integer, and categorical types
-
-    Args:
-        dimensions ([tuple]): defines the dimensions of each parameter
-            example: [(1,50),(-18.939,22.435),["red", "green" , "blue", "orange"]]
-
-    Returns:
-        random_vector (list): randomly chosen next parameters in the search space
-            example: [12, 1.9383, "green"]
-    """
-
-    random_vector = []
-
-    for dimset in dimensions:
-        upper = dimset[1]
-        lower = dimset[0]
-        if type(lower) in dtypes.ints:
-            new_param = random.randint(lower, upper)
-            random_vector.append(new_param)
-        elif type(lower) in dtypes.floats:
-            new_param = random.uniform(lower, upper)
-            random_vector.append(new_param)
-        elif type(lower) in dtypes.others:
-            domain_size = len(dimset)-1
-            new_param = random.randint(0, domain_size)
-            random_vector.append(dimset[new_param])
-        else:
-            raise TypeError("The type {} is not supported by dummy opt as a categorical or "
-                            "numerical type".format(type(upper)))
-
-    return random_vector
