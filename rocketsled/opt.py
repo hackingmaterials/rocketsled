@@ -26,7 +26,7 @@ from sklearn.preprocessing import StandardScaler
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction, LaunchPad
-from rocketsled.acquisition import acquire
+from rocketsled.acq import acquire
 from rocketsled.utils import deserialize, Dtypes
 try:
     # for Python 3.6-
