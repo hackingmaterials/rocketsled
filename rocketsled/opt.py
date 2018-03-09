@@ -421,7 +421,7 @@ class OptTask(FireTaskBase):
 
                             try:
                                 predictor_fun = deserialize(predictor)
-                            except ImportError as E:
+                            except Exception as E:
                                 raise NameError("The custom predictor {} didnt import correctly!\n{}".format(predictor, E))
 
                             XZ_new = predictor_fun(XZ_explored, Y, XZ_unexplored, *pred_args, **pred_kwargs)
