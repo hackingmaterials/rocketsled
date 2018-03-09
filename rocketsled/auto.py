@@ -80,18 +80,30 @@ def auto_setup(func, dimensions, wfname=None, **kwargs):
         funcpath = "rocketsled.auto_sleds." + wfname + ".f"
 
         with open(filename, 'w') as f:
-            f.write("from __future__ import print_function, unicode_literals\n")
+            f.write("from __future__ import unicode_literals\n")
+            f.write('"""\n')
+            f.write("This is an automatically created script from auto_setup.\n"
+                    "If you are not comfortable working with FireWorks and "
+                    "PyTask, do NOT move this\nfile out this directory or "
+                    "rename it if you want to run this workflow!\n\nIf you are"
+                    " comfortable working with FireWorks and PyTask, feel f"
+                    "ree to edit\nand/or move this file to suit your needs. "
+                    "See the OptTask documentation and the\nexamples for more "
+                    "information on setting up workflow creators.\n")
+            f.write('"""\n')
             f.write("from fireworks import PyTask, Firework, Workflow, "
                     "LaunchPad\n")
             f.write("from fireworks.core.rocket_launcher import rapidfire\n")
             f.write("from rocketsled.utils import deserialize, "
                     "random_guess\n")
             f.write("from rocketsled import OptTask\n\n\n")
+            f.write("# This is your function, imported to rocketsled to use"
+                    " with PyTask.\n")
             f.write("f = deserialize('" + rawfunc + "')\n\n")
             f.write("def wf_creator(x):\n")
             f.write("    spec = {'_x_opt':x}\n")
             f.write("    pt = " + PyTask_as_string(funcpath) + "\n")
-            f.write("    ot = " + OptTask_as_string(**kwargs) + "\n\n")
+            f.write("    ot = " + OptTask_as_string(**kwargs) + "\n")
             f.write("    fw0 = Firework([pt], spec=spec, name='PyTaskFW')\n")
             f.write("    fw1 = Firework([ot], spec=spec, "
                     "name='RocketsledFW')\n")
@@ -100,8 +112,8 @@ def auto_setup(func, dimensions, wfname=None, **kwargs):
             f.write("    return wf\n")
             f.write("\n\nif __name__=='__main__': \n\n")
             f.write("    # Make sure the launchpad below is correct, and make "
-                    "changes if necessary if it does not match the OptTask db "
-                    "^^^:\n")
+                    "changes if necessary if\n    # it does not match the "
+                    "OptTask db ^^^:\n")
             if all(s in kwargs for s in ['host', 'port', 'name']):
                 h = kwargs['host']
                 p = kwargs['port']
