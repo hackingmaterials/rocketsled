@@ -12,4 +12,6 @@ setup(name='rocketsled',
       author = 'Alex Dunn',
       description = 'Black box optimization with Fireworks workflows, on rails',
       packages=['rocketsled'],
-      test_suite="nose.collector")
+      test_suite="nose.collector",
+      install_requires=['fireworks', 'scikit-learn', 'scipy', 'numpy', 'pymongo'
+                        , 'nose', 'matplotlib'])
