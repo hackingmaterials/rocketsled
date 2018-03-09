@@ -13,4 +13,5 @@ def myfun(x):
 if __name__ == "__main__":
     auto_setup(myfun, dimensions=[(1, 100), (1, 100), (5, 65)],
                wfname="expensive_WF", host='localhost',
-               name="ROCKETSLED_EXAMPLES", port=27017, opt_label='opt_auto')
+               name="ROCKETSLED_EXAMPLES", port=27017, opt_label='opt_auto',
+               max=True)

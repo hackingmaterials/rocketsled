@@ -6,7 +6,7 @@ Functions for visualizing optimization progress.
 import numpy as np
 from matplotlib import pyplot as plt
 
-def visualize(collection, opt=min, showbest=True, latexify=False,
+def visualize(collection, maximize=False, showbest=True, latexify=False,
               fontfamily="serif", mode='show'):
     """
     Visualize the progress of an optimization.
@@ -16,8 +16,7 @@ def visualize(collection, opt=min, showbest=True, latexify=False,
             rocketsled optimization. For example, if you set you opt_label to
             'opt123', and used the same db as your LaunchPad, you could use
             lpad.db.opt123
-        opt (builtin): Whether to plot optimizing for minimum or maximum. Use
-            builtin min for minima, and builtin max for maxima.
+        maximize (bool): Whether to plot optimizing for minimum or maximum.
         showbest (bool): Point out the best point on legend and on plot. If more
             than one best point (i.e., multiple equal maxima), show them all.
         latexify (bool): Use LaTeX for formatting.
@@ -32,12 +31,14 @@ def visualize(collection, opt=min, showbest=True, latexify=False,
         details.
     """
     fxstr = "$f(x)$" if latexify else "f(x)"
+    opt = max if maximize else min
 
     i = []
     fx = []
     best = []
     mean = []
     std = []
+    n = collection.find().count() - 2
 
     best_val = None
     best_i = None
@@ -87,7 +88,7 @@ def visualize(collection, opt=min, showbest=True, latexify=False,
                 artext = 'x = {}'.format(b['x'])
             plt.annotate(artext,
                          xy=(b['index'] + 0.5, best_val),
-                         xytext=(b['index'] + 5, best_val),
+                         xytext=(b['index'] + float(n)/12.0, best_val),
                          arrowprops=dict(color='green'),
                          color='green',
                          bbox=dict(facecolor='white', alpha=1.0))
@@ -103,4 +104,4 @@ def visualize(collection, opt=min, showbest=True, latexify=False,
 if __name__ == "__main__":
     from fireworks import LaunchPad
     lpad = LaunchPad(host='localhost', port=27017, name='ROCKETSLED_EXAMPLES')
-    visualize(lpad.db.opt_auto, opt=max)
+    visualize(lpad.db.opt_auto, maximize=True)
