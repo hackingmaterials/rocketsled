@@ -81,7 +81,7 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
                                                 "dev.)".format(fxstr))
         plt.fill_between(i, mean + std, mean - std, color='grey', alpha=0.3)
 
-    plt.xlabel("Number of {} evaluations".format(fxstr))
+    plt.xlabel("{} evaluation".format(fxstr))
     plt.ylabel("{} value".format(fxstr))
     best_val = opt(best)
 
@@ -117,4 +117,4 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
 if __name__ == "__main__":
     from fireworks import LaunchPad
     lpad = LaunchPad(host='localhost', port=27017, name='ROCKETSLED_EXAMPLES')
-    visualize(lpad.db.opt_auto, maximize=True, showmean=False)
+    visualize(lpad.db.opt_auto, maximize=True)
