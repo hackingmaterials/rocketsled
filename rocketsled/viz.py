@@ -72,7 +72,8 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
         plt.rc('text', usetex=False)
 
     plt.rc('font', family=fontfamily)
-    plt.title("Rocketsled optimization results - {}".format(timestr))
+    plt.title("Rocketsled optimization results for {} - "
+              "{}".format(collection.name, timestr))
     plt.scatter(i, fx, color='blue', label=fxstr)
     plt.plot(i, best, color='orange', label="best {} value".format(fxstr))
 
