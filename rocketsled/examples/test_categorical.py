@@ -20,7 +20,7 @@ def wf_creator(x):
                                   dimensions=fw1_dim,
                                   host='localhost',
                                   port=27017,
-                                  name='ROCKETSLED_EXAMPLES',
+                                  name='rsled',
                                   get_z='rocketsled.examples.test_categorical.'
                                         'get_z',
                                   duplicate_check=True,
@@ -37,7 +37,7 @@ def get_z(x):
     return [x[0]**2, cat]
 
 def run_workflows():
-    TESTDB_NAME = 'ROCKETSLED_EXAMPLES'
+    TESTDB_NAME = 'rsled'
     launchpad = LaunchPad(name=TESTDB_NAME)
 
     # clean up tw database if necessary

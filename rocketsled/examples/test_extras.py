@@ -57,7 +57,7 @@ def example_predictor(X_space_total):
     return random.choice(X_space_total)
 
 def run_workflows():
-    TESTDB_NAME = 'ROCKETSLED_EXAMPLES'
+    TESTDB_NAME = 'rsled'
 
     # clean up tw database if necessary
     launchpad = LaunchPad(name=TESTDB_NAME)

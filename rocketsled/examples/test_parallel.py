@@ -23,7 +23,7 @@ def wf_creator(x):
                                   dimensions=Z_dim,
                                   host='localhost',
                                   port=27017,
-                                  name='ROCKETSLED_EXAMPLES',
+                                  name='rsled',
                                   duplicate_check=True,
                                   opt_label="opt_parallel")],
                          spec=spec)
@@ -38,7 +38,7 @@ def load_parallel_wfs(n_processes):
 
 if __name__ == "__main__":
 
-    TESTDB_NAME = 'ROCKETSLED_EXAMPLES'
+    TESTDB_NAME = 'rsled'
     launchpad = LaunchPad(name=TESTDB_NAME)
     launchpad.reset(password=None, require_password=False)
 
