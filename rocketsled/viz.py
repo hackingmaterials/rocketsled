@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-
 """
 Functions for visualizing optimization progress.
 """
@@ -92,9 +91,9 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
 
     if showbest:
         if latexify:
-            best_label = "Best value: $f(x) = {}$".format(best_val)
+            best_label = "Best value: $f(x) = {:.2E}$".format(best_val)
         else:
-            best_label = "Best value: f(x) = {}".format(best_val)
+            best_label = "Best value: f(x) = {:.2E}".format(best_val)
 
         best = collection.find({'y': best_val})
         for b in best:
@@ -105,6 +104,10 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
                 artext = '$x = {}$'.format(b['x'])
             else:
                 artext = 'x = {}'.format(b['x'])
+            if maximize:
+                print("argmax(f(x)) is {}".format(artext))
+            else:
+                print("argmin(f(x)) is {}".format(artext))
             plt.annotate(artext,
                          xy=(b['index'] + 0.5, best_val),
                          xytext=(b['index'] + float(n)/12.0, best_val),
@@ -119,11 +122,11 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
     elif mode=='best':
         return collection.find({'y': best_val})
     else:
-        return ValueError("Please specify the mode as 'show', 'return', "
+        return ValueError("Please specify the mode as 'show', 'return', or "
                           "'best'.")
 
 
 if __name__ == "__main__":
     from fireworks import LaunchPad
-    lpad = LaunchPad(host='localhost', port=27017, name='acq')
-    visualize(lpad.db.ei, maximize=True)
+    lpad = LaunchPad(host='localhost', port=27017, name='acqtest')
+    visualize(lpad.db.ei, maximize=False)
