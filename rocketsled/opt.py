@@ -110,6 +110,8 @@ class OptTask(FireTaskBase):
         acq (str): The acquisition function to use. Can be 'ei' for expected improvement, 'pi' for probability of improvement,
             or 'lcb' for lower confidence bound. Defaults to None, which means no acquisition function is used, and the highest
             predicted point is picked. Only applies to builtin predictors.
+        n_bootstraps (int): The number of times each optimization should, sample, train, and predict values when generating
+            uncertainty estimates for prediction. Only used if acq specified.
 
         Hyperparameter search:
         param_grid (dict): The sklearn-style dictionary to use for hyperparameter optimization. Each key should
@@ -179,7 +181,8 @@ class OptTask(FireTaskBase):
     optional_params = ['host', 'port', 'name', 'lpad', 'opt_label', 'db_extras', 'predictor', 'predictor_args',
                        'predictor_kwargs', 'n_search_points', 'n_train_points', 'acq', 'random_interval', 'space', 'get_z',
                        'get_z_args', 'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs', 'encode_categorical',
-                       'duplicate_check', 'max', 'batch_size', 'tolerance', 'hyper_opt', 'param_grid', 'timeout']
+                       'duplicate_check', 'max', 'batch_size', 'tolerance', 'hyper_opt', 'param_grid', 'timeout',
+                       'n_bootstraps']
 
     def run_task(self, fw_spec):
         """
@@ -259,7 +262,8 @@ class OptTask(FireTaskBase):
                         random_interval = self['random_interval'] if 'random_interval' in self else None
                         trainpts = self['n_train_points'] if 'n_train_points' in self else None
                         searchpts = self['n_search_points'] if 'n_search_points' in self else 1000
-                        self.acq = self['acq'] if 'acq' in self else None
+                        self.acq = self['acq'] if 'acq' in self else 'ei'
+                        self.nstraps = self['n_bootstraps'] if 'n_bootstraps' in self else 10
 
                         # hyperparameter optimization
                         self.hyper_opt = self['hyper_opt'] if 'hyper_opt' in self else None
@@ -716,7 +720,7 @@ class OptTask(FireTaskBase):
             X = scaler.fit_transform(X)
             space = scaler.transform(space)
 
-        if self.param_grid and len(X) > 10:
+        if self.param_grid and len(X) > 3:
             predictor_name = model.__class__.__name__
             if predictor_name not in self.predictors:
                 raise ValueError("Cannot perform automatic hyperparameter search with custom optimizer.")
@@ -732,13 +736,14 @@ class OptTask(FireTaskBase):
             hp_selector.fit(X, Y)
             model = model.__class__(**hp_selector.best_params_)
 
-        if self.acq is None:
+        if self.acq is None or len(X) < 3:
             model.fit(X, Y)
             values = model.predict(space).tolist()
             evaluator = heapq.nlargest if maximize else heapq.nsmallest
         else:
             # Use the acquistion function values
-            values = acquire(self.acq, X, Y, space, model, maximize)
+            values = acquire(self.acq, X, Y, space, model, maximize,
+                             self.nstraps)
             evaluator = heapq.nlargest
 
         #todo: possible batch duplicates if two x predict the same y? .index() will find the first one twice
