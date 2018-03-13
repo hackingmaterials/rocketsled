@@ -34,13 +34,13 @@ def wf_creator(x):
                                   dimensions=X_dim,
                                   host='localhost',
                                   port=27017,
-                                  name='ROCKETSLED_EXAMPLES')],
+                                  name='rsled')],
                           spec=spec)
 
     return Workflow([firework1])
 
 def run_workflows():
-    TESTDB_NAME = 'ROCKETSLED_EXAMPLES'
+    TESTDB_NAME = 'rsled'
     launchpad = LaunchPad(name=TESTDB_NAME)
     launchpad.reset(password=None, require_password=False)
     launchpad.add_wf(wf_creator([5, 5, 2]))

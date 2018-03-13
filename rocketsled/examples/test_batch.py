@@ -20,7 +20,7 @@ def wf_creator(x):
                                   dimensions=X_dim,
                                   host='localhost',
                                   port=27017,
-                                  name='ROCKETSLED_EXAMPLES',
+                                  name='rsled',
                                   opt_label=opt_label,
                                   batch_size=5)],
                          spec=spec)
@@ -28,7 +28,7 @@ def wf_creator(x):
     return Workflow([firework1])
 
 def run_workflows():
-    TESTDB_NAME = 'ROCKETSLED_EXAMPLES'
+    TESTDB_NAME = 'rsled'
     launchpad = LaunchPad(name=TESTDB_NAME)
 
     # clean up tw database if necessary

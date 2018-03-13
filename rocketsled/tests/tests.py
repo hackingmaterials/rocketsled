@@ -254,9 +254,9 @@ class TestWorkflows(unittest.TestCase):
 
         if self.lp.host=='localhost'\
                 and self.lp.port==27017 \
-                and self.lp.name=='ROCKETSLED_TESTS':
+                and self.lp.name=='rsled_tests':
             try:
-                self.lp.connection.drop_database('ROCKETSLED_TESTS')
+                self.lp.connection.drop_database('rsled_tests')
             except:
                 pass
 

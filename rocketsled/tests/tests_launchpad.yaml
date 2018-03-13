@@ -1,7 +1,7 @@
 host: localhost
 port: 27017
 logdir: null
-name: ROCKETSLED_TESTS
+name: rsled_tests
 username:
 password:
 ssl_ca_file: null
