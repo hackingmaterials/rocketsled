@@ -111,7 +111,8 @@ class OptTask(FireTaskBase):
             or 'lcb' for lower confidence bound. Defaults to None, which means no acquisition function is used, and the highest
             predicted point is picked. Only applies to builtin predictors.
         n_bootstraps (int): The number of times each optimization should, sample, train, and predict values when generating
-            uncertainty estimates for prediction. Only used if acq specified.
+            uncertainty estimates for prediction. Only used if acq specified. At least 10 data points must be present for
+            bootstrapping.
 
         Hyperparameter search:
         param_grid (dict): The sklearn-style dictionary to use for hyperparameter optimization. Each key should
@@ -720,7 +721,7 @@ class OptTask(FireTaskBase):
             X = scaler.fit_transform(X)
             space = scaler.transform(space)
 
-        if self.param_grid and len(X) > 3:
+        if self.param_grid and len(X) > 10:
             predictor_name = model.__class__.__name__
             if predictor_name not in self.predictors:
                 raise ValueError("Cannot perform automatic hyperparameter search with custom optimizer.")
@@ -736,7 +737,7 @@ class OptTask(FireTaskBase):
             hp_selector.fit(X, Y)
             model = model.__class__(**hp_selector.best_params_)
 
-        if self.acq is None or len(X) < 3:
+        if self.acq is None or len(X) < 10:
             model.fit(X, Y)
             values = model.predict(space).tolist()
             evaluator = heapq.nlargest if maximize else heapq.nsmallest
