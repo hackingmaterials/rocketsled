@@ -8,6 +8,10 @@ import numpy as np
 from scipy.stats import norm
 from sklearn.model_selection import train_test_split
 
+__author__ = "Alexander Dunn"
+__version__ = "0.1"
+__email__ = "ardunn@lbl.gov"
+
 def acquire(acq, X, Y, space, model, maximize, nstraps):
     """
     A high level function for calculating acquisition values.

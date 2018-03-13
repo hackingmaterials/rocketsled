@@ -8,6 +8,10 @@ import sys
 import random
 from numpy import sctypes
 
+__author__ = "Alexander Dunn"
+__version__ = "0.1"
+__email__ = "ardunn@lbl.gov"
+
 
 class Dtypes(object):
     """
