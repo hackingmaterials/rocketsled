@@ -2,7 +2,8 @@ from __future__ import unicode_literals, print_function, division
 
 from fireworks import Workflow, Firework, LaunchPad
 from fireworks.core.rocket_launcher import rapidfire
-from rocketsled.optimize import OptTask, random_guess
+from rocketsled import OptTask
+from rocketsled.utils import random_guess
 from rocketsled.examples.example_tasks import SumTask
 
 opt_label = "opt_batch"

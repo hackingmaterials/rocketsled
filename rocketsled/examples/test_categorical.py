@@ -2,7 +2,7 @@ from __future__ import unicode_literals, print_function, division
 
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
-from rocketsled.optimize import OptTask
+from rocketsled import OptTask
 from rocketsled.examples.example_tasks import MixedCalculateTask
 
 opt_label = "opt_categorical"
