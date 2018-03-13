@@ -9,6 +9,10 @@ import datetime
 import numpy as np
 from matplotlib import pyplot as plt
 
+__author__ = "Alexander Dunn"
+__version__ = "0.1"
+__email__ = "ardunn@lbl.gov"
+
 def visualize(collection, maximize=False, showbest=True, showmean=True,
               latexify=False, fontfamily="serif", mode='show'):
     """
@@ -114,8 +118,12 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
         return plt
     elif mode=='best':
         return collection.find({'y': best_val})
+    else:
+        return ValueError("Please specify the mode as 'show', 'return', "
+                          "'best'.")
+
 
 if __name__ == "__main__":
     from fireworks import LaunchPad
-    lpad = LaunchPad(host='localhost', port=27017, name='ROCKETSLED_EXAMPLES')
-    visualize(lpad.db.opt_auto, maximize=True)
+    lpad = LaunchPad(host='localhost', port=27017, name='acq')
+    visualize(lpad.db.ei, maximize=True)
