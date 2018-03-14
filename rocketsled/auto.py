@@ -2,8 +2,8 @@ from __future__ import unicode_literals, print_function, division
 
 """
 Automatically set up a file to execute a rocketsled optimization given:
-    - a function taking in a vector x, and returning a scalar y.
-    - a space you'd like to constrain the problem to
+    - a function taking in a vector x, and returning a scalar y (func)
+    - a space you'd like to constrain the problem to (dimensions)
     
     Thats it!
     
@@ -76,6 +76,10 @@ def auto_setup(func, dimensions, wfname=None, **kwargs):
         if not hasattr(func, '__call__'):
             raise TypeError("func must be a callable function.")
         rawfunc = os.path.abspath(sys.modules.get(func.__module__).__file__)
+        if rawfunc.endswith(".pyc"):
+            warnings.warn(".pyc file found! If launching does not work, "
+                          "try deleting the .pyc file or wrapping the function"
+                          "locally!")
         rawfunc = rawfunc[:-2] + func.__name__
         funcpath = "rocketsled.auto_sleds." + wfname + ".f"
 
