@@ -83,7 +83,7 @@ def ppredict(X, Y, space, model):
             remaining space.
 
     """
-    X_train, _, y_train, _ = train_test_split(X, Y, test_size=0.33)
+    X_train, _, y_train, _ = train_test_split(X, Y, test_size=0.2)
     pmodel = deepcopy(model)
     pmodel.fit(X_train, y_train)
     return pmodel.predict(space)
