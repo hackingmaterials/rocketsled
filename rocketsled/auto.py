@@ -17,7 +17,7 @@ from fireworks.utilities.fw_utilities import FW_BLOCK_FORMAT
 import warnings
 
 
-def auto_setup(func, dimensions, wfname=None, **kwargs):
+def auto_setup(func, dimensions, wfname=None, launch_ready=False, **kwargs):
     """
     Automatically set up a FireWorks-based optimization loop with OptTask with
     you own function.
@@ -41,6 +41,8 @@ def auto_setup(func, dimensions, wfname=None, **kwargs):
             includes all possible categories as a list.
             Example:
             dimensions = [(1,100), (9.293, 18.2838), ("red", "blue", "green")]
+        launch_ready (bool): If True, the created document can be executed
+            immediately.
         kwargs: Arguments to be passed as options to OptTask. Valid arguments
             to be passed are any valid args for OptTask. For example,
             lpad, host, port, name, opt_label, acq, predictor, etc...
@@ -138,8 +140,10 @@ def auto_setup(func, dimensions, wfname=None, **kwargs):
                     "))\n\n")
             f.write("    # Add it to the launchpad and launch!\n")
             f.write("    lpad.add_wf(wf1)\n")
-            f.write("    # rapidfire(lpad, nlaunches=5, sleep_time=0)")
-
+            if launch_ready:
+                f.write("    rapidfire(lpad, nlaunches=5, sleep_time=0)")
+            else:
+                f.write("    # rapidfire(lpad, nlaunches=5, sleep_time=0)")
         print("\nFile successfully created!\nFind your auto sled at "
               "{}\n".format(filename))
 
