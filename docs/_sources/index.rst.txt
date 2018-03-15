@@ -15,7 +15,7 @@ written in Python.
 
 
 =========================
-Is ``rocketsled`` for me?
+Is rocketsled for me?
 =========================
 Is your computational problem:
 
@@ -39,7 +39,7 @@ computers, and you would like to *automatically* reduce the number of expensive
 calculations needed to run your task, **rocketsled is for you.**
 
 ============================
-What does ``rocketsled`` do?
+What does rocketsled do?
 ============================
 
 ``rocketsled`` functions as a **black box optimizer** for a sequential optimization
@@ -48,7 +48,7 @@ loop; it requires no knowledge of a function in order to optimize it.
 More importantly though, rocketsled **retains the workflow management abilties** of FireWorks (provenance, dynamic workflows, duplicate detection and correction,
 error handling) across **arbitrary computing resources**.
 
-``rocketsled`` is intended to be "plug-and-play", meaning simply "plug-in" an expensive
+``rocketsled`` is intended to be "plug-and-play": simply "plug-in" an expensive
 objective function, constraints, and (optionally) a black box optimization algorithm,
 and rocketsled + FireWorks handles the rest.
 
@@ -100,7 +100,7 @@ Features of ``rocketsled``
 
 * 10 Built-in "out-of-the-box" sklearn-based Bayesian optimizers
 
-* Support for nearly any custom optimizer written in Python (both Bayesian and non-Bayesian)
+* Support for nearly any custom optimizer written in Python (Bayesian and non-Bayesian)
 
 * Facilitated feature engineering with ``get_z`` argument
 
@@ -128,6 +128,7 @@ Requirements
 * FireWorks
 * MongoDB
 
+
 Install
 -------
 
@@ -144,9 +145,11 @@ Run tests locally
 
 .. code-block:: bash
 
-    $ # Make sure the mongod daemon is running
+    $ # Make sure the mongod daemon is running as admin
     $ mongod
     $ python setup.py test
+
+Tip: To run tests using a remote launchpad, edit ``/rocketsled/tests/tests_launchpad.yaml``
 
 =========
 Tutorials
@@ -155,33 +158,63 @@ Tutorials
 *Tutorials 1 and 2 require some knowledge of Fireworks. If you aren't comfortable with Fireworks, please work through the tutorials* `here <https://hackingmaterials.lbl.gov/fireworks/>`_.
 
 
-Quickstart
-----------
+Tutorial 0 - Quickstart
+-----------------------
 
-Quickstart link will be here.
+In the quickstart, we show how to use
+
+**Time to complete**: 2-5 min
+
+`Quickstart link will be here. <www.google.com>`_
 
 Tutorial 1 - Basic usage
 ------------------------
 
-Basic usage tutorial link will be here.
+In this tutorial we demonstrate how to get a basic optimization loop up and
+running with a FireWorks workflow.
+
+**Time to complete**: 20 min
+
+`Basic tutorial <www.google.com>`_
 
 Tutorial 2 - Advanced usage
 ---------------------------
+In this tutorial we explore the more advanced capabilities of ``OptTask``.
 
-Advanced usage tutorial link will be here.
+`Advanced tutorial <www.google.com>`_
 
 
 A Comprehensive Guide to ``rocketsled``
 ---------------------------------------
 
-Comprehensive guide link will be here.
+Find a comprehensive guide to using rocketsled at the link below. The guide
+exhaustively documents the possible arguments to ``OptTask`` and provides at least
+one example of each. If working through the tutorials did not answer your
+question, you'll most likely find your answer here.
+
+`Comprehensive guide <www.google.com>`_
+
+
+Documentation
+-------------
+
+Find the auto-generated documentation here. Beware! Only for the brave.
+
+`Documentation  <www.google.com>`_
 
 
 ===========
 Usage Cases
 ===========
 
-Usage cases will have link here
+Rocketsled is applicable to many types of computing problems. Find some examples
+on the `usage cases page. <www.google.com>`_
+
+
+==============================
+Acknowledgments and References
+==============================
+Forthcoming...
 
 
 

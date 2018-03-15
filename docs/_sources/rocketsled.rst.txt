@@ -6,15 +6,16 @@ Subpackages
 
 .. toctree::
 
+    rocketsled.auto_sleds
     rocketsled.examples
 
 Submodules
 ----------
 
-rocketsled.ALEX\_GRAPHER module
--------------------------------
+rocketsled.ALEXGRAPHER module
+-----------------------------
 
-.. automodule:: rocketsled.ALEX_GRAPHER
+.. automodule:: rocketsled.ALEXGRAPHER
     :members:
     :undoc-members:
     :show-inheritance:
@@ -23,6 +24,14 @@ rocketsled.acq module
 ---------------------
 
 .. automodule:: rocketsled.acq
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rocketsled.algo module
+----------------------
+
+.. automodule:: rocketsled.algo
     :members:
     :undoc-members:
     :show-inheritance:
@@ -39,6 +48,14 @@ rocketsled.opt module
 ---------------------
 
 .. automodule:: rocketsled.opt
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rocketsled.skopttest module
+---------------------------
+
+.. automodule:: rocketsled.skopttest
     :members:
     :undoc-members:
     :show-inheritance:
