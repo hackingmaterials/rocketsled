@@ -10,6 +10,7 @@ Modify tests_launchpad.yaml to define the db where you'd like to run the tests
 if you do not have access to admin mongod privledges on your local machine. 
 """
 import os
+import warnings
 import unittest
 from ruamel.yaml import YAML
 import numpy as np
@@ -249,23 +250,31 @@ class TestWorkflows(unittest.TestCase):
         self.assertEqual(loop2['z'], [9, 144.0])
 
     def tearDown(self):
-        self.lp.reset(password=None, require_password=False)
+        try:
+            self.lp.reset(password=None, require_password=False)
+        except Exception:
+            warnings.warn("LaunchPad {} could not be reset! There may be "
+                          "fireworks from these tests remaining on the "
+                          "LaunchPad.".format(self.lp.to_dict()))
         for tn in test_names:
-            self.db.drop_collection(tn)
+            try:
+                self.db.drop_collection(tn)
+            except Exception:
+                pass
 
         if self.lp.host=='localhost'\
                 and self.lp.port==27017 \
                 and self.lp.name=='rsled_tests':
             try:
                 self.lp.connection.drop_database('rsled_tests')
-            except:
+            except Exception:
                 pass
 
         # Remove straggler FW.json file, if it exists...
         fwjson_fp = os.path.dirname(os.path.realpath(__file__)) + '/FW.json'
         try:
             os.remove(fwjson_fp)
-        except:
+        except Exception:
             pass
 
 def suite():
