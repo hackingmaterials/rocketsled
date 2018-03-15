@@ -46,7 +46,7 @@ div.body {
     /* Color of text in main document*/
     color: #000000;
     padding: 0 30px 30px 30px;
-    font-size: 1.1em;
+    font-size: 0.95em;
 }
 
 div.footer {
@@ -65,7 +65,7 @@ div.footer a {
 }
 
 div.related {
-    background-color: #F86009;
+    background-color: #E54C00;
     line-height: 32px;
     color: #fff;
     text-shadow: 0px 1px 0 #444;
@@ -137,7 +137,7 @@ div.sphinxsidebar input[type=text]{
 /* -- body styles ----------------------------------------------------------- */
 
 a {
-    color: #F86009;
+    color: #E54C00;
     text-decoration: none;
 }
 
@@ -151,20 +151,20 @@ div.body h4,
 div.body h5,
 div.body h6 {
     font-family: "Lato", sans-serif;
-    background-color: #F86009;
+    background-color: #E54C00;
     font-weight: normal;
     color: #fff;
     margin: 30px 0px 10px 0px;
     padding: 5px 0 5px 10px;
-    text-shadow: 0px 1px 0 black
+    text-shadow: 0px 0px 0 black
 }
 
-div.body h1 { border-top: 20px ; margin-top: 0; font-size: 200%; }
-div.body h2 { font-size: 150%; color: #F86009; font-family: "Palatino", serif}
-div.body h3 { font-size: 110%; color: #446; font-family: "Palatino", serif}
-div.body h4 { font-size: 110%; background-color: #F86009; }
-div.body h5 { font-size: 100%; background-color: #F86009; }
-div.body h6 { font-size: 100%; background-color: #F86009; }
+div.body h1 { border-top: 20px ; margin-top: 0; font-size: 185%; ; font-family: "Helvetica", serif}
+div.body h2 { font-size: 130%; color: #E54C00; font-family: "Helvetica", serif}
+div.body h3 { font-size: 130%; color: #446; font-family: "Palatino", serif}
+div.body h4 { font-size: 110%; background-color: #E54C00; }
+div.body h5 { font-size: 100%; background-color: #E54C00; }
+div.body h6 { font-size: 100%; background-color: #E54C00; }
 
 a.headerlink {
     color: #fff;
@@ -174,7 +174,7 @@ a.headerlink {
 }
 
 a.headerlink:hover {
-    background-color: #F86009;
+    background-color: #E54C00;
     color: white;
 }
 
