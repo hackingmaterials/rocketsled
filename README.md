@@ -1,4 +1,4 @@
-![Comparison of Workflows](/docs/rocketsledfw.png "Rocketsled logo")
+![Comparison of Workflows](/docs_old/rocketsledfw.png "Rocketsled logo")
 ### An "On-rails" Machine Learning Interface/Black Box Optimizer for FireWorks workflows.
 
 # What is Rocketsled?
@@ -28,7 +28,7 @@ Other abilities of Rocketsled include:
 * Automatic encoding for categorical optimization
 * Tuneable control of training and prediction performance, across many kinds of computer resources 
 
-![Comparison of Workflows](/docs/Comparison.png "Difference between optimized and unoptimized workflows")
+![Comparison of Workflows](/docs_old/Comparison.png "Difference between optimized and unoptimized workflows")
 *A Rocketsled use case in materials science*
 
 ## Requirements
@@ -63,15 +63,15 @@ file `rocketsled/rocketsled/tests_launchpad.yaml` to set the launchpad you'd lik
 If you aren't comfortable with Fireworks, please work through the tutorials [here.](https://hackingmaterials.lbl.gov/fireworks/). Rocketsled is implemented as a modular, atomic task (FireTask)
 in a FireWorks workflow. It is designed for *inverse optimization tasks with sequential improvement*. For example, a typical workflow without optimization might look like this:
 
-![Workflow without opt](/docs/basic.png "A basic workflow")
+![Workflow without opt](/docs_old/basic.png "A basic workflow")
 
 Input parameters are given to the first Firework. This begins the worklow, and a useful output result is given. The workflow is repeated as desired, often across many compute nodes in parallel.
 
-![Workflow being repeated](/docs/multiple_wf.png "Multiple sequential workflows")
-![Workflow being repeated](/docs/multiple_wf.png "Multiple sequential workflows")
-![Workflow being repeated](/docs/multiple_wf.png "Multiple sequential workflows")
-![Workflow being repeated](/docs/multiple_wf.png "Multiple sequential workflows")
-![Workflow being repeated](/docs/multiple_wf.png "Multiple sequential workflows")
+![Workflow being repeated](/docs_old/multiple_wf.png "Multiple sequential workflows")
+![Workflow being repeated](/docs_old/multiple_wf.png "Multiple sequential workflows")
+![Workflow being repeated](/docs_old/multiple_wf.png "Multiple sequential workflows")
+![Workflow being repeated](/docs_old/multiple_wf.png "Multiple sequential workflows")
+![Workflow being repeated](/docs_old/multiple_wf.png "Multiple sequential workflows")
 
 
 Randomly selecting the next input parameters is *inefficient*, since we will have to execute many workflows. To reduce the required number of computed workflows, we need to *intelligently* choose new input parameters
@@ -80,7 +80,7 @@ with an optimization loop.
 This is where Rocketsled comes in handy. Rocketsled is a Firetask (called `OptTask`) which can go in any Firework in the workflow, and which uses `sklearn` regressors to predict the best *input* parameters for the next iteration,
 store them in a MongoDB database, and start a new workflow to compute the next output. 
 
-![Rocketsled](/docs/tw.png "Rocketsled workflow")
+![Rocketsled](/docs_old/tw.png "Rocketsled workflow")
 
 ## How do I use it?
 
@@ -450,7 +450,7 @@ next 10 best guesses, and submit another 10 workflows. To do this, use
 As an argument to `OptTask`. `OptTask` will wait until all jobs in single batch are finished computing before predicting 
 the next best guesses and submitting another batch. The workflow scheme for a batch optimization is shown below:
 
-![Batch Optimization](/docs/batch.png)
+![Batch Optimization](/docs_old/batch.png)
 
 To start a batch-style optimization loop, submit your first batch manually, where each batch item is an optimization 
 loop continaing `OptTask`. `OptTask` will automatically handle the rest!
