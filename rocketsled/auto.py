@@ -146,10 +146,10 @@ def auto_setup(func, dimensions, wfname=None, launch_ready=False, **kwargs):
                 f.write("    # rapidfire(lpad, nlaunches=5, sleep_time=0)")
         print("\nFile successfully created!\nFind your auto sled at "
               "{}\n".format(filename))
-
     else:
         raise ValueError("Please specify a callable function or a properly"
                          "formatted string location of the function")
+    return filename
 
 def PyTask_as_string(funcpath):
     return "PyTask(func=" + "'{}'".format(funcpath) + \
