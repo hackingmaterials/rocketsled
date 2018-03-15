@@ -49,8 +49,8 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
     n = collection.find().count() - 2
 
     dt = datetime.datetime.now()
-    dtdata = [dt.hour, dt.minute, dt.second, dt.day, dt.month, dt.year]
-    timestr = "{}:{}.{} {}/{}/{}".format(*dtdata)
+    dtdata = [dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second]
+    timestr = "{}-{}-{} {}:{}.{}".format(*dtdata)
 
     t0 = time.time()
 
@@ -128,5 +128,5 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
 
 if __name__ == "__main__":
     from fireworks import LaunchPad
-    lpad = LaunchPad(host='localhost', port=27017, name='acqtest')
-    visualize(lpad.db.ei, maximize=False)
+    lpad = LaunchPad(host='localhost', port=27017, name='rsl')
+    visualize(lpad.db.opt_auto, maximize=True)
