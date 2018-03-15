@@ -86,7 +86,7 @@ and rocketsled + FireWorks handles the rest.</p>
 <a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
 <a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
 <p>Randomly selecting the next sets of input parameters to run is <em>inefficient</em>, since we will execute many workflows, including those with unfavorable results. To reduce the required number of computed workflows, we need to <em>intelligently</em> choose new input parameters with an <strong>optimization loop.</strong></p>
-<p>This is where <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> comes in handy. <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> is a sub-job (FireTask) called <code class="docutils literal notranslate"><span class="pre">OptTask</span></code>, which can go in any Firework in the workflow, and which uses <code class="docutils literal notranslate"><span class="pre">sklearn</span></code> regressors to predict the best <em>input</em> parameters for the next iteration, store them in a MongoDB database, and start a new workflow to compute the next output.</p>
+<p>This is where <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> comes in handy. <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> is a sub-job (FireTask) called <code class="docutils literal notranslate"><span class="pre">OptTask</span></code>, which can go in any Firework in the workflow, and which uses <code class="docutils literal notranslate"><span class="pre">sklearn</span></code> regressors to predict the best <em>input</em> parameters for the next iteration, store them in a MongoDB database, and automatically submit a new workflow to compute the next output.</p>
 <img alt="basicwf" class="align-center" src="_images/singlewf_withrs.png" />
 </div>
 <div class="section" id="features-of-rocketsled">
@@ -94,6 +94,7 @@ and rocketsled + FireWorks handles the rest.</p>
 <ul class="simple">
 <li>One-line setup tools</li>
 <li>Persistent storage and optimization tracking</li>
+<li>Automatic workflow submission and management with FireWorks</li>
 <li><dl class="first docutils">
 <dt>Ability to handle complex search spaces, including:</dt>
 <dd><ul class="first last">
@@ -104,7 +105,7 @@ and rocketsled + FireWorks handles the rest.</p>
 </dd>
 </dl>
 </li>
-<li>10 Built-in “out-of-the-box” sklearn-based Bayesian optimizers</li>
+<li>10 Built-in “out-of-the-box” sklearn-based tunable Bayesian optimizers</li>
 <li>Support for nearly any custom optimizer written in Python (Bayesian and non-Bayesian)</li>
 <li>Facilitated feature engineering with <code class="docutils literal notranslate"><span class="pre">get_z</span></code> argument</li>
 <li>Tuneable control of training and prediction performance, across many kinds of computer resources</li>
@@ -151,21 +152,23 @@ $ python setup.py <span class="nb">test</span>
 <p><em>Tutorials 1 and 2 require some knowledge of Fireworks. If you aren’t comfortable with Fireworks, please work through the tutorials</em> <a class="reference external" href="https://hackingmaterials.lbl.gov/fireworks/">here</a>.</p>
 <div class="section" id="tutorial-0-quickstart">
 <h2>Tutorial 0 - Quickstart<a class="headerlink" href="#tutorial-0-quickstart" title="Permalink to this headline">¶</a></h2>
-<p>In the quickstart, we show how to use</p>
+<p>In the quickstart, we show how to use rocketsled’s <code class="docutils literal notranslate"><span class="pre">auto_setup</span></code> to get
+up and running quickly, if your objective function is a python function.</p>
 <p><strong>Time to complete</strong>: 2-5 min</p>
-<p><a class="reference external" href="www.google.com">Quickstart link will be here.</a></p>
+<p><a class="reference external" href="https://www.google.com">Quickstart link will be here.</a></p>
 </div>
 <div class="section" id="tutorial-1-basic-usage">
 <h2>Tutorial 1 - Basic usage<a class="headerlink" href="#tutorial-1-basic-usage" title="Permalink to this headline">¶</a></h2>
 <p>In this tutorial we demonstrate how to get a basic optimization loop up and
 running with a FireWorks workflow.</p>
-<p><strong>Time to complete</strong>: 20 min</p>
-<p><a class="reference external" href="www.google.com">Basic tutorial</a></p>
+<p><strong>Time to complete</strong>: 10 min</p>
+<p><a class="reference external" href="https://www.google.com">Basic tutorial link will be here</a></p>
 </div>
 <div class="section" id="tutorial-2-advanced-usage">
 <h2>Tutorial 2 - Advanced usage<a class="headerlink" href="#tutorial-2-advanced-usage" title="Permalink to this headline">¶</a></h2>
 <p>In this tutorial we explore the more advanced capabilities of <code class="docutils literal notranslate"><span class="pre">OptTask</span></code>.</p>
-<p><a class="reference external" href="www.google.com">Advanced tutorial</a></p>
+<p><strong>Time to complete</strong>: 20 min</p>
+<p><a class="reference external" href="https://www.google.com">Advanced tutorial link will be here</a></p>
 </div>
 <div class="section" id="a-comprehensive-guide-to-rocketsled">
 <h2>A Comprehensive Guide to <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code><a class="headerlink" href="#a-comprehensive-guide-to-rocketsled" title="Permalink to this headline">¶</a></h2>
@@ -173,12 +176,12 @@ running with a FireWorks workflow.</p>
 exhaustively documents the possible arguments to <code class="docutils literal notranslate"><span class="pre">OptTask</span></code> and provides at least
 one example of each. If working through the tutorials did not answer your
 question, you’ll most likely find your answer here.</p>
-<p><a class="reference external" href="www.google.com">Comprehensive guide</a></p>
+<p><a class="reference external" href="https://www.google.com">Comprehensive guide link will be here</a></p>
 </div>
 <div class="section" id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
 <p>Find the auto-generated documentation here. Beware! Only for the brave.</p>
-<p><a class="reference external" href="www.google.com">Documentation</a></p>
+<p><a class="reference external" href="https://www.google.com">Documentation link will be here</a></p>
 </div>
 </div>
 <div class="section" id="usage-cases">

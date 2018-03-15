@@ -71,3 +71,7 @@ old/perovskites/.DS_Store
 
 old/perovskites/.DS_Store
 .idea/
+
+
+# auto sleds
+rocketsled/auto_sleds/*
