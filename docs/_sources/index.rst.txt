@@ -49,7 +49,7 @@ More importantly though, rocketsled **retains the workflow management abilties**
 error handling) across **arbitrary computing resources**.
 
 ``rocketsled`` is intended to be "plug-and-play": simply "plug-in" an expensive
-objective function, constraints, and (optionally) a black box optimization algorithm,
+objective function or workflow, constraints, and (optionally) a black box optimization algorithm,
 and rocketsled + FireWorks handles the rest.
 
 
