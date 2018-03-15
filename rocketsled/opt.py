@@ -264,6 +264,8 @@ class OptTask(FireTaskBase):
                         trainpts = self['n_train_points'] if 'n_train_points' in self else None
                         searchpts = self['n_search_points'] if 'n_search_points' in self else 1000
                         self.acq = self['acq'] if 'acq' in self else 'ei'
+                        if self.acq not in [None, 'ei', 'pi', 'lcb']:
+                            raise ValueError("Invalid acquisition function. Use 'ei', 'pi', 'lcb', or None.")
                         self.nstraps = self['n_bootstraps'] if 'n_bootstraps' in self else 10
 
                         # hyperparameter optimization
@@ -473,6 +475,9 @@ class OptTask(FireTaskBase):
 
                                 # if it is a duplicate (such as a forced identical first guess)
                                 forced_dupe = self.collection.find_one({'x': x})
+
+                                acqmap = {"ei": "Expected Improvement", "pi": "Probability of Improvement", "lcb": "Lower Confidence Boundary", None: "Highest Value"}
+                                predictorstr = predictor + " with acquisition: " + acqmap[self.acq]
                                 if forced_dupe:
                                     # only update the fields which should be updated
                                     self.collection.find_one_and_update({'x': x},
@@ -480,7 +485,7 @@ class OptTask(FireTaskBase):
                                                                                   'z': z,
                                                                                   'z_new': z_new,
                                                                                   'x_new': x_new,
-                                                                                  'predictor': predictor}})
+                                                                                  'predictor': predictorstr}})
                                     opt_id = forced_dupe['_id']
                                 else:
                                     # update all the fields, as it is a new document
@@ -489,7 +494,7 @@ class OptTask(FireTaskBase):
                                                                       'x': x,
                                                                       'z_new': z_new,
                                                                       'x_new': x_new,
-                                                                      'predictor': predictor,
+                                                                      'predictor': predictorstr,
                                                                       'index': n_completed + 1})
                                     opt_id = res.inserted_id
 
