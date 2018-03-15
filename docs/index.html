@@ -1,0 +1,250 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>rocketsled &#8212; rocketsled 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+ 
+<link href='https://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">rocketsled 0.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <a class="reference internal image-reference" href="_images/rsfw.png"><img alt="rocketsled logo" class="align-center" src="_images/rsfw.png" style="width: 600px;" /></a>
+<p>rocketsled is a flexible, automatic
+<a class="reference external" href="https://github.com/hackingmaterials/rocketsled">(open source)</a> optimization
+framework <em>“on rails”</em> for serious high throughput computation.</p>
+<p>rocketsled is an extension of
+<a class="reference external" href="https://github.com/materialsproject/fireworks">FireWorks</a> workflow software,
+written in Python.</p>
+<div class="section" id="is-rocketsled-for-me">
+<h1>Is <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> for me?<a class="headerlink" href="#is-rocketsled-for-me" title="Permalink to this headline">¶</a></h1>
+<p>Is your computational problem:</p>
+<div class="section" id="expensive-and-or-complex">
+<h2>1. Expensive and/or complex?<a class="headerlink" href="#expensive-and-or-complex" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div>Does it require high performance computing +  workflow tools?</div></blockquote>
+</div>
+<div class="section" id="run-in-high-throughput">
+<h2>2. Run in high-throughput?<a class="headerlink" href="#run-in-high-throughput" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div>Many similar workflows running concurrently?</div></blockquote>
+</div>
+<div class="section" id="limited-by-an-allocation-of-cpu-hours">
+<h2>3. Limited by an allocation of CPU hours?<a class="headerlink" href="#limited-by-an-allocation-of-cpu-hours" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div>Want the most “bang for your buck”?</div></blockquote>
+<p>If you answered yes to these three questions, <em>keep reading!</em></p>
+<p>If you have a complex, multi-iteration task to execute on high performance
+computers, and you would like to <em>automatically</em> reduce the number of expensive
+calculations needed to run your task, <strong>rocketsled is for you.</strong></p>
+</div>
+</div>
+<div class="section" id="what-does-rocketsled-do">
+<h1>What does <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> do?<a class="headerlink" href="#what-does-rocketsled-do" title="Permalink to this headline">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> functions as a <strong>black box optimizer</strong> for a sequential optimization
+loop; it requires no knowledge of a function in order to optimize it.</p>
+<p>More importantly though, rocketsled <strong>retains the workflow management abilties</strong> of FireWorks (provenance, dynamic workflows, duplicate detection and correction,
+error handling) across <strong>arbitrary computing resources</strong>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> is intended to be “plug-and-play”, meaning simply “plug-in” an expensive
+objective function, constraints, and (optionally) a black box optimization algorithm,
+and rocketsled + FireWorks handles the rest.</p>
+<div class="section" id="a-visual-explanation">
+<h2>A visual explanation…<a class="headerlink" href="#a-visual-explanation" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> is designed for optimization tasks with sequential improvement. For example, a typical workflow without optimization might look like this:</p>
+<img alt="basicwf" class="align-center" src="_images/singlewf.png" />
+<p>Input parameters are given to the first job (Firework). This begins the workflow, and a useful output result is given. The workflow is repeated as desired, often across many compute nodes in parallel.</p>
+<a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
+<a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
+<a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
+<a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
+<p>Randomly selecting the next sets of input parameters to run is <em>inefficient</em>, since we will execute many workflows, including those with unfavorable results. To reduce the required number of computed workflows, we need to <em>intelligently</em> choose new input parameters with an <strong>optimization loop.</strong></p>
+<p>This is where <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> comes in handy. <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> is a sub-job (FireTask) called <code class="docutils literal notranslate"><span class="pre">OptTask</span></code>, which can go in any Firework in the workflow, and which uses <code class="docutils literal notranslate"><span class="pre">sklearn</span></code> regressors to predict the best <em>input</em> parameters for the next iteration, store them in a MongoDB database, and start a new workflow to compute the next output.</p>
+<img alt="basicwf" class="align-center" src="_images/singlewf_withrs.png" />
+</div>
+<div class="section" id="features-of-rocketsled">
+<h2>Features of <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code><a class="headerlink" href="#features-of-rocketsled" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>One-line setup tools</li>
+<li>Persistent storage and optimization tracking</li>
+<li><dl class="first docutils">
+<dt>Ability to handle complex search spaces, including:</dt>
+<dd><ul class="first last">
+<li>discrete (categorical, integer) dimensions</li>
+<li>continuous dimensions</li>
+<li>discontinuous spaces (subsets of entire spaces)</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li>10 Built-in “out-of-the-box” sklearn-based Bayesian optimizers</li>
+<li>Support for nearly any custom optimizer written in Python (both Bayesian and non-Bayesian)</li>
+<li>Facilitated feature engineering with <code class="docutils literal notranslate"><span class="pre">get_z</span></code> argument</li>
+<li>Tuneable control of training and prediction performance, across many kinds of computer resources</li>
+<li>Avoids submitting duplicate workflows, even when workflows run with massive parallelism</li>
+<li>Automatic encoding for categorical optimization</li>
+<li>and more… (see comprehensive guide)</li>
+</ul>
+</div>
+</div>
+<div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Python 2 or 3</li>
+<li>NumPy</li>
+<li>SciPy</li>
+<li>Scikit-learn</li>
+<li>FireWorks</li>
+<li>MongoDB</li>
+</ul>
+</div>
+<div class="section" id="install">
+<h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="c1"># Download the repository and install</span>
+$ git clone https://github.com/hackingmaterials/rocketsled.git
+$ <span class="nb">cd</span> rocketsled
+$ pip install -e . -r requirements.txt
+</pre></div>
+</div>
+</div>
+<div class="section" id="run-tests-locally">
+<h2>Run tests locally<a class="headerlink" href="#run-tests-locally" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="c1"># Make sure the mongod daemon is running</span>
+$ mongod
+$ python setup.py <span class="nb">test</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="tutorials">
+<h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
+<p><em>Tutorials 1 and 2 require some knowledge of Fireworks. If you aren’t comfortable with Fireworks, please work through the tutorials</em> <a class="reference external" href="https://hackingmaterials.lbl.gov/fireworks/">here</a>.</p>
+<div class="section" id="quickstart">
+<h2>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h2>
+<p>Quickstart link will be here.</p>
+</div>
+<div class="section" id="tutorial-1-basic-usage">
+<h2>Tutorial 1 - Basic usage<a class="headerlink" href="#tutorial-1-basic-usage" title="Permalink to this headline">¶</a></h2>
+<p>Basic usage tutorial link will be here.</p>
+</div>
+<div class="section" id="tutorial-2-advanced-usage">
+<h2>Tutorial 2 - Advanced usage<a class="headerlink" href="#tutorial-2-advanced-usage" title="Permalink to this headline">¶</a></h2>
+<p>Advanced usage tutorial link will be here.</p>
+</div>
+<div class="section" id="a-comprehensive-guide-to-rocketsled">
+<h2>A Comprehensive Guide to <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code><a class="headerlink" href="#a-comprehensive-guide-to-rocketsled" title="Permalink to this headline">¶</a></h2>
+<p>Comprehensive guide link will be here.</p>
+</div>
+</div>
+<div class="section" id="usage-cases">
+<h1>Usage Cases<a class="headerlink" href="#usage-cases" title="Permalink to this headline">¶</a></h1>
+<p>Usage cases will have link here</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Is <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> for me?</a><ul>
+<li><a class="reference internal" href="#expensive-and-or-complex">1. Expensive and/or complex?</a></li>
+<li><a class="reference internal" href="#run-in-high-throughput">2. Run in high-throughput?</a></li>
+<li><a class="reference internal" href="#limited-by-an-allocation-of-cpu-hours">3. Limited by an allocation of CPU hours?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#what-does-rocketsled-do">What does <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> do?</a><ul>
+<li><a class="reference internal" href="#a-visual-explanation">A visual explanation…</a></li>
+<li><a class="reference internal" href="#features-of-rocketsled">Features of <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#installation">Installation</a><ul>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#install">Install</a></li>
+<li><a class="reference internal" href="#run-tests-locally">Run tests locally</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tutorials">Tutorials</a><ul>
+<li><a class="reference internal" href="#quickstart">Quickstart</a></li>
+<li><a class="reference internal" href="#tutorial-1-basic-usage">Tutorial 1 - Basic usage</a></li>
+<li><a class="reference internal" href="#tutorial-2-advanced-usage">Tutorial 2 - Advanced usage</a></li>
+<li><a class="reference internal" href="#a-comprehensive-guide-to-rocketsled">A Comprehensive Guide to <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#usage-cases">Usage Cases</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">rocketsled 0.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, HackingMaterials.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
+    </div>
+
+  </body>
+</html>
