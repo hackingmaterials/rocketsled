@@ -160,7 +160,7 @@ class TestWorkflows(unittest.TestCase):
         lp_filedir = os.path.dirname(os.path.realpath(__file__))
         lp_file = open(lp_filedir + '/tests_launchpad.yaml', 'r')
         yaml = YAML()
-        lp_dict = yaml.load(lp_file)
+        lp_dict = dict(yaml.load(lp_file))
         self.lp = LaunchPad.from_dict(lp_dict)
         self.db = self.lp.db
 
