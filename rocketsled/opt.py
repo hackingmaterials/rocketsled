@@ -431,8 +431,8 @@ class OptTask(FireTaskBase):
                             except Exception as E:
                                 raise NameError("The custom predictor {} didnt import correctly!\n{}".format(predictor, E))
 
-                            XZ_new = predictor_fun(XZ_explored, Y, XZ_unexplored, *pred_args, **pred_kwargs)
-                            if not isinstance(XZ_new[0], list) or isinstance(XZ_new[0], tuple):
+                            XZ_new = predictor_fun(XZ_explored, Y, x_dims, XZ_unexplored, *pred_args, **pred_kwargs)
+                            if not isinstance(XZ_new[0], (list, tuple)):
                                 XZ_new = [XZ_new]
 
                         # duplicate checking for custom optimizer functions
@@ -477,7 +477,10 @@ class OptTask(FireTaskBase):
                                 forced_dupe = self.collection.find_one({'x': x})
 
                                 acqmap = {"ei": "Expected Improvement", "pi": "Probability of Improvement", "lcb": "Lower Confidence Boundary", None: "Highest Value"}
-                                predictorstr = predictor + " with acquisition: " + acqmap[self.acq]
+                                if predictor in self.predictors:
+                                    predictorstr = predictor + " with acquisition: " + acqmap[self.acq]
+                                else:
+                                    predictorstr = predictor
                                 if forced_dupe:
                                     # only update the fields which should be updated
                                     self.collection.find_one_and_update({'x': x},

@@ -56,7 +56,7 @@ def acquire(acq, X, Y, space, model, maximize, nstraps):
     elif acq == 'lcb':
         acqf = lcb
     else:
-        raise ValueError("Unknown acquisition function!")
+        raise ValueError("Unknown acquisition function: {}!".format(acq))
 
     if maximize:
         Y = -1 * np.asarray(Y)
