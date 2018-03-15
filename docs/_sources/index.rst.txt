@@ -164,7 +164,7 @@ Tutorial 0 - Quickstart
 -----------------------
 
 In the quickstart, we show how to use rocketsled's ``auto_setup`` to get
-up and running quickly, if your objective function is a python function.
+up and running quickly, starting only with an objective function written in Python.
 
 **Time to complete**: 2-5 min
 
