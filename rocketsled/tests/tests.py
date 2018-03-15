@@ -11,7 +11,7 @@ if you do not have access to admin mongod privledges on your local machine.
 """
 import os
 import unittest
-import yaml
+from ruamel.yaml import YAML
 import numpy as np
 from fireworks import FWAction, Firework, Workflow, LaunchPad, ScriptTask
 from fireworks.core.rocket_launcher import launch_rocket
@@ -159,6 +159,7 @@ class TestWorkflows(unittest.TestCase):
     def setUp(self):
         lp_filedir = os.path.dirname(os.path.realpath(__file__))
         lp_file = open(lp_filedir + '/tests_launchpad.yaml', 'r')
+        yaml = YAML()
         lp_dict = yaml.load(lp_file)
         self.lp = LaunchPad.from_dict(lp_dict)
         self.db = self.lp.db
