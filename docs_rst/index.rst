@@ -79,7 +79,7 @@ Input parameters are given to the first job (Firework). This begins the workflow
 
 Randomly selecting the next sets of input parameters to run is *inefficient*, since we will execute many workflows, including those with unfavorable results. To reduce the required number of computed workflows, we need to *intelligently* choose new input parameters with an **optimization loop.**
 
-This is where ``rocketsled`` comes in handy. ``rocketsled`` is a sub-job (FireTask) called ``OptTask``, which can go in any Firework in the workflow, and which uses ``sklearn`` regressors to predict the best *input* parameters for the next iteration, store them in a MongoDB database, and start a new workflow to compute the next output.
+This is where ``rocketsled`` comes in handy. ``rocketsled`` is a sub-job (FireTask) called ``OptTask``, which can go in any Firework in the workflow, and which uses ``sklearn`` regressors to predict the best *input* parameters for the next iteration, store them in a MongoDB database, and automatically submit a new workflow to compute the next output.
 
 .. image:: _static/singlewf_withrs.png
    :alt: basicwf
@@ -93,12 +93,14 @@ Features of ``rocketsled``
 
 * Persistent storage and optimization tracking
 
+* Automatic workflow submission and management with FireWorks
+
 * Ability to handle complex search spaces, including:
     + discrete (categorical, integer) dimensions
     + continuous dimensions
     + discontinuous spaces (subsets of entire spaces)
 
-* 10 Built-in "out-of-the-box" sklearn-based Bayesian optimizers
+* 10 Built-in "out-of-the-box" sklearn-based tunable Bayesian optimizers
 
 * Support for nearly any custom optimizer written in Python (Bayesian and non-Bayesian)
 
@@ -161,11 +163,12 @@ Tutorials
 Tutorial 0 - Quickstart
 -----------------------
 
-In the quickstart, we show how to use
+In the quickstart, we show how to use rocketsled's ``auto_setup`` to get
+up and running quickly, if your objective function is a python function.
 
 **Time to complete**: 2-5 min
 
-`Quickstart link will be here. <www.google.com>`_
+`Quickstart link will be here. <https://www.google.com>`_
 
 Tutorial 1 - Basic usage
 ------------------------
@@ -173,15 +176,17 @@ Tutorial 1 - Basic usage
 In this tutorial we demonstrate how to get a basic optimization loop up and
 running with a FireWorks workflow.
 
-**Time to complete**: 20 min
+**Time to complete**: 10 min
 
-`Basic tutorial <www.google.com>`_
+`Basic tutorial link will be here <https://www.google.com>`_
 
 Tutorial 2 - Advanced usage
 ---------------------------
 In this tutorial we explore the more advanced capabilities of ``OptTask``.
 
-`Advanced tutorial <www.google.com>`_
+**Time to complete**: 20 min
+
+`Advanced tutorial link will be here <https://www.google.com>`_
 
 
 A Comprehensive Guide to ``rocketsled``
@@ -192,7 +197,7 @@ exhaustively documents the possible arguments to ``OptTask`` and provides at lea
 one example of each. If working through the tutorials did not answer your
 question, you'll most likely find your answer here.
 
-`Comprehensive guide <www.google.com>`_
+`Comprehensive guide link will be here <https://www.google.com>`_
 
 
 Documentation
@@ -200,7 +205,7 @@ Documentation
 
 Find the auto-generated documentation here. Beware! Only for the brave.
 
-`Documentation  <www.google.com>`_
+`Documentation link will be here <https://www.google.com>`_
 
 
 ===========
