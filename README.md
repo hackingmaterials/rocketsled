@@ -1,4 +1,4 @@
-# <img alt="rocketsled" src="docs_rst/_static/rsfw.png" width="500">
+# <img alt="rocketsled" src="docs_rst/_static/rsfw.png" width="400">
 
 rocketsled is a black-box optimization framework "on rails" for serious high-throughput computation with FireWorks.
 
