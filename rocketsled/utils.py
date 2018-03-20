@@ -4,7 +4,7 @@ from  __future__ import print_function, unicode_literals
 Utility functions for OptTask.
 """
 
-import sys
+import imp
 import random
 from numpy import sctypes
 
@@ -43,10 +43,9 @@ def deserialize(fun):
 
     toks = fun.rsplit(".", 1)
     modname, funcname = toks
-
     if "/" in toks[0]:
-        path, modname = toks[0].rsplit("/", 1)
-        sys.path.append(path)
+        modpath, modname = toks[0].rsplit("/", 1)
+        packages = imp.load_source(modname, toks[0] + ".py")
 
     mod = __import__(str(modname), globals(), locals(), fromlist=[str(funcname)])
     return getattr(mod, funcname)
