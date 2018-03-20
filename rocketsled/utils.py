@@ -45,9 +45,9 @@ def deserialize(fun):
     modname, funcname = toks
     if "/" in toks[0]:
         modpath, modname = toks[0].rsplit("/", 1)
-        packages = imp.load_source(modname, toks[0] + ".py")
-
-    mod = __import__(str(modname), globals(), locals(), fromlist=[str(funcname)])
+        mod = imp.load_source(modname, toks[0] + ".py")
+    else:
+        mod = __import__(str(modname), globals(), locals(), fromlist=[str(funcname)])
     return getattr(mod, funcname)
 
 
