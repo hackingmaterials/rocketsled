@@ -390,7 +390,7 @@ class OptTask(FireTaskBase):
                         # if there are no more unexplored points in the entire space, either they have been explored
                         # (ie have x, y, and z) or have been reserved.
                         if len(XZ_unexplored) < 1:
-                            if self._is_discrete(x_dims, type='all'):
+                            if self._is_discrete(x_dims, criteria='all'):
                                 raise ExhaustedSpaceError("The discrete space has been searched exhaustively.")
                             else:
                                 raise TypeError("A comprehensive list of points was exhausted but the dimensions are"
