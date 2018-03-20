@@ -100,14 +100,17 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
             plt.scatter([b['index']], [best_val], color='green', s=70,
                         linewidth=3, label=best_label, facecolors='none',
                         edgecolors='green')
+
+            artext = "x = ["
+            for xi in b['x']:
+                artext += str(xi) + ",\n"
+            artext = artext[:-2] + "]"
             if latexify:
-                artext = '$x = {}$'.format(b['x'])
-            else:
-                artext = 'x = {}'.format(b['x'])
+                artext = "$" + artext + "$"
             if maximize:
-                print("argmax(f(x)) is {}".format(artext))
+                print("argmax(f(x)) is {}".format(b['x']))
             else:
-                print("argmin(f(x)) is {}".format(artext))
+                print("argmin(f(x)) is {}".format(b['x']))
             plt.annotate(artext,
                          xy=(b['index'] + 0.5, best_val),
                          xytext=(b['index'] + float(n)/12.0, best_val),
