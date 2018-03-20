@@ -14,4 +14,4 @@ setup(name='rocketsled',
       packages=['rocketsled'],
       test_suite="nose.collector",
       install_requires=['fireworks', 'scikit-learn', 'scipy', 'numpy', 'pymongo'
-                        , 'nose', 'matplotlib'])
+                        , 'nose'])

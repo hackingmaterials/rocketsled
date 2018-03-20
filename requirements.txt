@@ -4,4 +4,3 @@ scipy
 fireworks
 pymongo
 nose
-matplotlib
