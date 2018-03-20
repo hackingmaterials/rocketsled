@@ -10,11 +10,13 @@ Automatically set up a file to execute a rocketsled optimization given:
 All output will be organized inside the "auto_sleds" directory. 
 """
 
-import os, sys
+import os
+import sys
 import datetime
+import warnings
 from fireworks import LaunchPad
 from fireworks.utilities.fw_utilities import FW_BLOCK_FORMAT
-import warnings
+from rocketsled.utils import deserialize
 
 
 def auto_setup(func, dimensions, wfname=None, launch_ready=False, **kwargs):
@@ -79,10 +81,20 @@ def auto_setup(func, dimensions, wfname=None, launch_ready=False, **kwargs):
             raise TypeError("func must be a callable function.")
         rawfunc = os.path.abspath(sys.modules.get(func.__module__).__file__)
         if rawfunc.endswith(".pyc"):
-            warnings.warn(".pyc file found! If launching does not work, "
-                          "try deleting the .pyc file or wrapping the function"
-                          "locally!")
-        rawfunc = rawfunc[:-2] + func.__name__
+            rawfunc = rawfunc[:-3] + func.__name__
+        else:
+            rawfunc = rawfunc[:-2] + func.__name__
+
+        # See if import will work
+        try:
+            deserialize(rawfunc)
+        except AttributeError:
+            warnings.warn("Import attempt failed! File will still be written, "
+                          "but if launching does not work, make sure the "
+                          "function exists, is named properly, and "
+                          "the string argument of the functions location is "
+                          "/the/full/path/to/my/module.myfunc")
+
         funcpath = "rocketsled.auto_sleds." + wfname + ".f"
 
         with open(filename, 'w') as f:
