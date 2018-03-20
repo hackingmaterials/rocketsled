@@ -19,7 +19,7 @@ from fireworks.core.rocket_launcher import launch_rocket
 from fireworks.core.firework import FireTaskBase
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fw_tutorials.firetask.addition_task import AdditionTask
-from rocketsled.opt import OptTask
+from rocketsled.task import OptTask
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
