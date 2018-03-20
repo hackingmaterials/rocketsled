@@ -20,7 +20,6 @@ Can't find one suiting your needs? Use these as a template for writing your own!
 
 
 def stochastic_rbf(X, y, dim, *args, **kwargs):
-
     return solution
 
 

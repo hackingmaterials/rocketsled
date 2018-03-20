@@ -157,8 +157,9 @@ def PyTask_as_string(funcpath):
 
 def OptTask_as_string(**kwargs):
     otstr = "OptTask("
+    strlist = (str, unicode) if sys.version_info[0] < 3 else str
     for k, v in kwargs.items():
-        if isinstance(v, (str, unicode)):
+        if isinstance(v, strlist):
             strv = "'{}'".format(str(v))
         else:
             strv = str(v)
