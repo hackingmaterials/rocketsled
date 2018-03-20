@@ -128,5 +128,5 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
 
 if __name__ == "__main__":
     from fireworks import LaunchPad
-    lpad = LaunchPad(host='localhost', port=27017, name='rsl')
-    visualize(lpad.db.opt_auto, maximize=True)
+    lpad = LaunchPad(host='localhost', port=27017, name='gp')
+    visualize(lpad.db.ei, maximize=False)
