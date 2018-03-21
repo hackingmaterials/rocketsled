@@ -17,7 +17,7 @@ __email__ = "ardunn@lbl.gov"
 def acquire(acq, X, Y, space, model, maximize, nstraps):
     """
     A high level function for calculating acquisition values. Includes a
-    strategy for stimating mean values and uncertainty with bootstrapping;
+    strategy for estimating mean values and uncertainty with bootstrapping;
     Independently train with different sets of data, and predict over the same
     space of unknown points.
 
@@ -83,7 +83,7 @@ def ppredict(X, Y, space, model):
             remaining space.
 
     """
-    X_train, _, y_train, _ = train_test_split(X, Y, test_size=0.2)
+    X_train, _, y_train, _ = train_test_split(X, Y, test_size=0.25)
     pmodel = deepcopy(model)
     pmodel.fit(X_train, y_train)
     return pmodel.predict(space)
@@ -106,6 +106,7 @@ def ei(fmin, mu, std):
     vals = np.zeros_like(mu)
     mask = std > 0
     improve = fmin - mu[mask]
+    std = std[mask]
     vals[mask] = improve * norm.cdf(improve/std) + std * norm.pdf(improve/std)
     return vals
 
