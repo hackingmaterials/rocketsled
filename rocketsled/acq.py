@@ -105,9 +105,10 @@ def ei(fmin, mu, std):
     """
     vals = np.zeros_like(mu)
     mask = std > 0
+    stdm = std[mask]
     improve = fmin - mu[mask]
-    std = std[mask]
-    vals[mask] = improve * norm.cdf(improve/std) + std * norm.pdf(improve/std)
+    vals[mask] = improve * norm.cdf(improve/stdm) + stdm * \
+                 norm.pdf(improve/stdm)
     return vals
 
 def pi(fmin, mu, std):
