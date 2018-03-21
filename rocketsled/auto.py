@@ -71,6 +71,7 @@ def auto_setup(func, dimensions, wfname=None, launch_ready=False, **kwargs):
         warnings.warn("That workflow file has already been created! Appending "
                       "the current datetime to the filename.")
         filename = dir + "/" + wfname + "_" + time_now + ".py"
+        wfname += "_" + time_now
 
     wfc = "rocketsled.auto_sleds." + wfname + ".wf_creator"
     kwargs['wf_creator'] = wfc
