@@ -21,15 +21,15 @@ Is your computational problem:
 
 1. Expensive and/or complex?
 ----------------------------
-    Does it require high performance computing +  workflow tools?
+    **Does it require high performance computing +  workflow tools?**
 
 2. Run in high-throughput?
 --------------------------
-    Many similar workflows running concurrently?
+    **Many similar workflows running concurrently?**
 
 3. Limited by an allocation of CPU hours?
 -----------------------------------------
-    Want the most "bang for your buck"?
+    **Want the most "bang for your buck"?**
 
 
 If you answered yes to these three questions, *keep reading!*
@@ -109,6 +109,8 @@ Features of ``rocketsled``
 * Tuneable control of training and prediction performance, across many kinds of computer resources
 
 * Avoids submitting duplicate workflows, even when workflows run with massive parallelism
+
+* Automatic hyperparameter optimization
 
 * Automatic encoding for categorical optimization
 
