@@ -28,18 +28,18 @@ rocketsled.acq module
     :undoc-members:
     :show-inheritance:
 
-rocketsled.algo module
-----------------------
-
-.. automodule:: rocketsled.algo
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 rocketsled.auto module
 ----------------------
 
 .. automodule:: rocketsled.auto
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rocketsled.datainput\_Branin module
+-----------------------------------
+
+.. automodule:: rocketsled.datainput_Branin
     :members:
     :undoc-members:
     :show-inheritance:
@@ -52,10 +52,26 @@ rocketsled.opt module
     :undoc-members:
     :show-inheritance:
 
+rocketsled.rbf module
+---------------------
+
+.. automodule:: rocketsled.rbf
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 rocketsled.skopttest module
 ---------------------------
 
 .. automodule:: rocketsled.skopttest
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rocketsled.task module
+----------------------
+
+.. automodule:: rocketsled.task
     :members:
     :undoc-members:
     :show-inheritance:
