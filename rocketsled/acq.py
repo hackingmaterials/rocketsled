@@ -88,7 +88,6 @@ def ppredict(X, Y, space, model):
     pmodel.fit(X_train, y_train)
     return pmodel.predict(space)
 
-
 def ei(fmin, mu, std):
     """
     Returns expected improvement values.
@@ -109,6 +108,8 @@ def ei(fmin, mu, std):
     improve = fmin - mu[mask]
     vals[mask] = improve * norm.cdf(improve/stdm) + stdm * \
                  norm.pdf(improve/stdm)
+    # improve = fmin - mu
+    # vals = improve * norm.cdf(improve/std) + std * norm.pdf(improve/std)
     return vals
 
 def pi(fmin, mu, std):
