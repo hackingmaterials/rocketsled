@@ -351,7 +351,7 @@ class OptTask(FireTaskBase):
                                     "Invalid acquisition function. Use 'ei', "
                                     "'pi', 'lcb', or None.")
                         else:
-                            self.acq = 'ei'
+                            self.acq = None
                         if 'n_boots' in self:
                             self.n_boots = self['n_boots']
                         else:
@@ -437,7 +437,7 @@ class OptTask(FireTaskBase):
                                                 "".format(argname))
 
                         x = list(fw_spec['_x_opt'])
-                        y = float(fw_spec['_y_opt'])
+                        y = fw_spec['_y_opt']
 
                         # If process A suggests a certain guess and runs it,
                         # process B may suggest the same guess while process A
@@ -501,17 +501,21 @@ class OptTask(FireTaskBase):
                         # the training points used
                         explored_indices = random.sample(
                             range(1, n_completed + 1), n_trainpts)
+                        explored_docs = self.c.find(
+                            {'index': {'$in': explored_indices}},
+                            batch_size=1000)
 
-                        Y = [y]
+                        Y = [None] * n_completed
+                        Y.append(y)
+                        X_explored = [None] * n_completed
+                        X_explored.append(x)
                         z = list(z)
-                        XZ_explored = [x + z]
-                        for i in explored_indices:
-                            doc = self.c.find_one({'index': i})
-                            if doc is None:
-                                raise ValueError("The doc with index {} does "
-                                                 "not exist".format(i))
-                            XZ_explored.append(doc['x'] + doc['z'])
-                            Y.append(doc['y'])
+                        XZ_explored = [None] * n_completed
+                        XZ_explored.append(x + z)
+                        for i, doc in enumerate(explored_docs):
+                            X_explored[i] = doc['x']
+                            XZ_explored[i] = doc['x'] + doc['z']
+                            Y[i] = doc['y']
 
                         X_space = self._discretize_space(x_dims)
                         X_space = list(X_space) if persistent_z else X_space
@@ -519,7 +523,8 @@ class OptTask(FireTaskBase):
                         X_unexplored = []
                         for xi in X_space:
                             xj = list(xi)
-                            if self.c.find({'x': xj}).count() == 0 and xj != x:
+                            if xj not in X_explored:
+                            # if self.c.find({'x': xj}).count() == 0 and xj != x:
                                 X_unexplored.append(xj)
                                 if len(X_unexplored) == n_searchpts:
                                     break
