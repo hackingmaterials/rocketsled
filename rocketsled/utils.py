@@ -31,10 +31,11 @@ class Dtypes(object):
 
 def deserialize(fun):
     """
-    Takes a fireworks serialzed function handle and maps it to a function object.
+    Takes a fireworks serialzed function handle and maps to a function object.
 
     Args:
-        fun (string): a 'module.function' or '/path/to/mod.func' style string specifying the function
+        fun (string): a 'module.function' or '/path/to/mod.func' style string
+            specifying the function
 
     Returns:
         (function) The function object defined by fun
@@ -47,7 +48,8 @@ def deserialize(fun):
         modpath, modname = toks[0].rsplit("/", 1)
         mod = imp.load_source(modname, toks[0] + ".py")
     else:
-        mod = __import__(str(modname), globals(), locals(), fromlist=[str(funcname)])
+        mod = __import__(str(modname), globals(), locals(),
+                         fromlist=[str(funcname)])
     return getattr(mod, funcname)
 
 
@@ -58,10 +60,10 @@ def random_guess(dimensions, dtypes=Dtypes()):
 
     Args:
         dimensions ([tuple]): defines the dimensions of each parameter
-            example: [(1,50),(-18.939,22.435),["red", "green" , "blue", "orange"]]
+            example: [(1,50),(-18.939,22.435),["red", "green" , "blue"]]
 
     Returns:
-        random_vector (list): randomly chosen next parameters in the search space
+        random_vector (list): randomly chosen next params in the search space
             example: [12, 1.9383, "green"]
     """
 
@@ -83,3 +85,17 @@ def random_guess(dimensions, dtypes=Dtypes()):
             raise TypeError("The type {} is not supported by dummy opt as a "
                             "categorical or numerical type".format(type(upper)))
     return random_vector
+
+def pareto(Y):
+    """
+    Returns the indices of Pareto-optimal solutions.
+
+    Args:
+        Y [list]: A list of lists containing values to be evaluated for Pareto-
+            optimality
+
+    Returns:
+        list - The indices of the entries which are Pareto-optimal
+    """
+    pass
+

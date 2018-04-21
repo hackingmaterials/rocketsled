@@ -160,10 +160,10 @@ class TestWorkflows(unittest.TestCase):
     def setUp(self):
         lp_filedir = os.path.dirname(os.path.realpath(__file__))
         with open(lp_filedir + '/tests_launchpad.yaml', 'r') as lp_file:
-        	yaml = YAML()
-        	lp_dict = dict(yaml.load(lp_file))
-        	self.lp = LaunchPad.from_dict(lp_dict)
-        	self.db = self.lp.db
+            yaml = YAML()
+            lp_dict = dict(yaml.load(lp_file))
+            self.lp = LaunchPad.from_dict(lp_dict)
+            self.db = self.lp.db
 
     def test_basic(self):
         self.lp.reset(password=None, require_password=False)
