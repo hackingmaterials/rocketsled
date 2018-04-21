@@ -131,9 +131,9 @@ def auto_setup(func, dimensions, wfname=None, launch_ready=False, **kwargs):
                         " name='" + wfname + " @ ' + str(x))\n")
                 f.write("    return wf\n")
                 f.write("\n\nif __name__=='__main__': \n\n")
-                f.write("    # Make sure the launchpad below is correct, and make "
-                        "changes if necessary if\n    # it does not match the "
-                        "OptTask db ^^^:\n")
+                f.write("    # Make sure the launchpad below is correct, and "
+                        "make changes if necessary if\n    # it does not match "
+                        "the OptTask db ^^^:\n")
                 if all(s in kwargs for s in ['host', 'port', 'name']):
                     h = kwargs['host']
                     p = kwargs['port']
@@ -148,7 +148,8 @@ def auto_setup(func, dimensions, wfname=None, launch_ready=False, **kwargs):
                     f.write("    lpad = LaunchPad.from_dict(" + lpad + ")\n")
                 else:
                     f.write("    lpad = LaunchPad.auto_load()\n")
-                f.write("    # lpad.reset(password=None, require_password=False)\n")
+                f.write("    # lpad.reset(password=None, require_password=False"
+                        ")\n")
                 f.write("\n    # Define your workflow to start...\n")
                 f.write("    wf1 = wf_creator(random_guess(" + str(dimensions) +
                         "))\n\n")
