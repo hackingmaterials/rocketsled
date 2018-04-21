@@ -85,3 +85,17 @@ def random_guess(dimensions, dtypes=Dtypes()):
             raise TypeError("The type {} is not supported by dummy opt as a "
                             "categorical or numerical type".format(type(upper)))
     return random_vector
+
+def pareto(Y):
+    """
+    Returns the indices of Pareto-optimal solutions.
+
+    Args:
+        Y [list]: A list of lists containing values to be evaluated for Pareto-
+            optimality
+
+    Returns:
+        list - The indices of the entries which are Pareto-optimal
+    """
+    pass
+
