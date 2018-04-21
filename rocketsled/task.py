@@ -226,6 +226,9 @@ class OptTask(FireTaskBase):
         _n_cats (int): The number of categorical dimensions.
         _encoding_info (dict): Data for converting between one-hot encoded data
             and categorical data.
+        _pareto (bool): Whether to use the pareto fronier to optimize with
+            respect to multiple objectives. This is automatically determined
+            from the form of the variables set in the spec.
     """
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
@@ -503,7 +506,7 @@ class OptTask(FireTaskBase):
                             range(1, n_completed + 1), n_trainpts)
                         explored_docs = self.c.find(
                             {'index': {'$in': explored_indices}},
-                            batch_size=1000)
+                            batch_size=10000)
 
                         Y = [None] * n_completed
                         Y.append(y)
@@ -517,9 +520,12 @@ class OptTask(FireTaskBase):
                             XZ_explored[i] = doc['x'] + doc['z']
                             Y[i] = doc['y']
 
+                        if isinstance(Y[0], (list, tuple)):
+                            self._pareto = True
+                        else:
+                            self._pareto = False
                         X_space = self._discretize_space(x_dims)
                         X_space = list(X_space) if persistent_z else X_space
-
                         X_unexplored = []
                         for xi in X_space:
                             xj = list(xi)
@@ -1123,7 +1129,8 @@ class OptTask(FireTaskBase):
         """
 
         Z_unexplored = [z[x_length:] for z in XZ_unexplored]
-        Z_explored = [doc['z'] for doc in self.c.find(self._completed)]
+        Z_explored = [doc['z'] for doc in self.c.find(self._completed,
+                                                      batch_size=10000)]
         Z = Z_explored + Z_unexplored
 
         if not Z:
