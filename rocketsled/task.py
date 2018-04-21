@@ -882,8 +882,10 @@ class OptTask(FireTaskBase):
 
         Args:
             dims ([tuple]): dimensions of the search space.
-            n_floats (int): Number of floating points to sample from continuous
-                dimensions when discrete_float is True.
+            n_floats (int): Number of floating points to sample from each
+                continuous dimension when discrete dimensions are present. If
+                all dimensions are continuous, this argument is ignored and
+                a space of n_searchpts is generated in a more efficient manner.
 
         Returns:
             ([list]) Points of the search space. 
@@ -909,13 +911,13 @@ class OptTask(FireTaskBase):
         dims_float = all([type(dim[0]) in self.dtypes.floats for dim in dims])
         if dims_float and dims_ranged:
             # Save computation/memory if all ranges of floats
-            space = np.zeros((n_floats, len(dims)))
+            nf = self['n_searchpts']
+            space = np.zeros((nf, len(dims)))
             for i, dim in enumerate(dims):
                 low = dim[0]
                 high = dim[1]
                 if low in self.dtypes.floats:
-                    space[:, i] = np.random.uniform(low=low, high=high,
-                                                    size=n_floats)
+                    space[:, i] = np.random.uniform(low=low, high=high, size=nf)
             return space.tolist()
         else:
             #todo: this could be faster
