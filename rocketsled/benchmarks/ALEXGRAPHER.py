@@ -3,7 +3,7 @@ import warnings
 import datetime
 import numpy as np
 from matplotlib import pyplot as plt
-from skopt.benchmarks import branin
+from skopt.benchmarks import branin, hart6
 from scipy.optimize import rosen
 from rocketsled import auto_setup
 from rocketsled.utils import Dtypes
@@ -15,7 +15,7 @@ import math
 
 dtypes = Dtypes()
 
-def visualize(csets, maximize, labels, colors, fontfamily="serif"):
+def visualize(csets, maximize, labels, colors, limit=0, fontfamily="serif"):
     opt = max if maximize else min
 
     for l, cset in enumerate(csets):
@@ -24,7 +24,7 @@ def visualize(csets, maximize, labels, colors, fontfamily="serif"):
             fx = []
             i = []
             best = []
-            for doc in c.find({'index': {'$exists': 1}}):
+            for doc in c.find({'index': {'$exists': 1}}).limit(limit):
                 fx.append(doc['y'])
                 i.append(doc['index'])
                 best.append(opt(fx))
@@ -38,10 +38,10 @@ def visualize(csets, maximize, labels, colors, fontfamily="serif"):
         avgbest = opt(mean)
         print(avgbest)
         plt.plot(i, mean, label=" Avg best {}: {}".format(labels[l], avgbest), color=colors[l])
-        # plt.fill_between(i, mean - std, mean + std, color=colors[l], alpha=0.2)
+        plt.fill_between(i, mean - std, mean + std, color=colors[l], alpha=0.2)
 
     plt.rc('font', family=fontfamily)
-    plt.yscale("log")
+    #plt.yscale("log")
     plt.xlabel("fx evaluation")
     plt.ylabel("fx value")
     plt.legend()
@@ -54,7 +54,7 @@ def ran_run(func, dims, runs, comps_per_run, maximize):
     for r in range(runs):
         print("RUN {} of {}".format(r, runs))
         rany = np.zeros(comps_per_run)
-        ranx = list(ds(dims))
+        ranx = np.asarray([np.random.uniform(low=d[0], high=d[1], size=comps_per_run) for d in dims]).T
         for c in range(comps_per_run):
             rany[c] = func(ranx[c])
         for c in range(1, comps_per_run):
@@ -91,6 +91,11 @@ def rastrigindim (dim):
     return [(-5.12, 5.12)] * dim
 
 
+def hart6dim():
+    return [(0.0, 1.0)]*6
+
+def braninneg(x):
+    return -100.0 + branin(x) 
 
 if __name__ == "__main__":
     dim = [(-5.0, 10.0), (0.0, 15.0)] # branin
@@ -106,19 +111,19 @@ if __name__ == "__main__":
     # auto_setup(branin, dim, wfname='stochtest', opt_label='st', launch_ready=True, host='localhost', name="acqtest", port=27017, predictor="rocketsled.algo.stochastic_rbf", n_search_points=1000)
 
     for i in range(100):
-        auto_setup(branin, dim, wfname='papertest{}'.format(i), opt_label='ei{}'.format(i), host='localhost', acq='ei', name="papertest", port=27017, n_bootstraps=1000, predictor="RandomForestRegressor", n_search_points=1000)
+         auto_setup(braninneg, dim, wfname='papertest_braninneg{}'.format(i), opt_label='ei{}'.format(i), host='localhost', acq='ei', name="papertest_braninneg", port=27017, n_bootstraps=1000, predictor="RandomForestRegressor", n_search_points=1000)
 
     # auto_setup(wfunc, dim, wfname='ran', opt_label='ran', host='localhost', name="acqtest4", port=27017, predictor="random")
 
-    # lpad = LaunchPad(host='localhost', port=27017, name='acq')
+    lpad = LaunchPad(host='localhost', port=27017, name='papertest_braninneg')
 
-    # ranx, rany = ran_run(wfunc, dim, runs=1000, comps_per_run=50, maximize=False)
-    # df = pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ALEXGRAPHER_ran.csv")
-    # df = pd.DataFrame.from_csv("ALEXGRAPHER_ran.csv")
-    # ranx = df['x']
-    # rany = df['y']
-    # ei_runs = [getattr(lpad.db, "ei{}".format(i))for i in range(10)]
-    # plt = visualize([ei_runs], False, labels=['EI'], colors=['blue'])
-    # plt.plot(ranx, rany, color='black')
-    # print(min(rany))
-    # plt.show()
+    ranx, rany = ran_run(braninneg, dim, runs=1000, comps_per_run=50, maximize=False)
+    df = pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ALEXGRAPHER_ran_braninneg.csv")
+    #df = pd.DataFrame.from_csv("ALEXGRAPHER_ran_braninneg.csv")
+    #ranx = df['x']
+    #rany = df['y']
+    #ei_runs = [getattr(lpad.db, "ei{}".format(i))for i in range(10)]
+    #plt = visualize([ei_runs], False, labels=['EI'], colors=['blue'], limit=50)
+    #plt.plot(ranx, rany, color='black')
+    #print(min(rany))
+    #plt.show()
