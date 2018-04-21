@@ -3,7 +3,7 @@ import warnings
 import datetime
 import numpy as np
 from matplotlib import pyplot as plt
-from skopt.benchmarks import branin
+from skopt.benchmarks import branin, hart6
 from scipy.optimize import rosen
 from rocketsled import auto_setup
 from rocketsled.utils import Dtypes
