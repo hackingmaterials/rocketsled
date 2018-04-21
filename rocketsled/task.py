@@ -344,9 +344,9 @@ class OptTask(FireTaskBase):
                         else:
                             n_trainpts = None
                         if 'n_searchpts' in self:
-                            n_searchpts = self['n_searchpts']
+                            self.n_searchpts = self['n_searchpts']
                         else:
-                            n_searchpts = 1000
+                            self.n_searchpts = 1000
                         if 'acq' in self:
                             self.acq = self['acq']
                             if self.acq not in [None, 'ei', 'pi', 'lcb']:
@@ -532,7 +532,7 @@ class OptTask(FireTaskBase):
                             if xj not in X_explored:
                             # if self.c.find({'x': xj}).count() == 0 and xj != x:
                                 X_unexplored.append(xj)
-                                if len(X_unexplored) == n_searchpts:
+                                if len(X_unexplored) == self.n_searchpts:
                                     break
 
                         if persistent_z:
@@ -911,12 +911,12 @@ class OptTask(FireTaskBase):
         dims_float = all([type(dim[0]) in self.dtypes.floats for dim in dims])
         if dims_float and dims_ranged:
             # Save computation/memory if all ranges of floats
-            nf = self['n_searchpts']
+            nf = self.n_searchpts
             space = np.zeros((nf, len(dims)))
             for i, dim in enumerate(dims):
                 low = dim[0]
                 high = dim[1]
-                if low in self.dtypes.floats:
+                if type(low) in self.dtypes.floats:
                     space[:, i] = np.random.uniform(low=low, high=high, size=nf)
             return space.tolist()
         else:
