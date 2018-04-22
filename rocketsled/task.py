@@ -916,8 +916,7 @@ class OptTask(FireTaskBase):
             for i, dim in enumerate(dims):
                 low = dim[0]
                 high = dim[1]
-                if type(low) in self.dtypes.floats:
-                    space[:, i] = np.random.uniform(low=low, high=high, size=nf)
+                space[:, i] = np.random.uniform(low=low, high=high, size=nf)
             return space.tolist()
         else:
             #todo: this could be faster
@@ -953,7 +952,6 @@ class OptTask(FireTaskBase):
 
         Returns:
             None
-
         """
         queue = self.c.find_one({'_id': manager_id})['queue']
         if not queue:
@@ -994,11 +992,19 @@ class OptTask(FireTaskBase):
                 objective function.
         """
 
-        # Scale data if all floats for dimensions
-        if scaling:
-            scaler = StandardScaler()
-            X = scaler.fit_transform(X)
-            space = scaler.transform(space)
+        # # Scale data if all floats for dimensions
+        # if scaling:
+        #     scaler = StandardScaler()
+        #     scaler.fit(X + space)
+        #     X = scaler.transform(X)
+        #     scaled = scaler.transform(space)
+        # else:
+        #     scaled = space
+        # todo: Figure out if scaling categorical data makes optimizer better
+        scaler = StandardScaler()
+        scaler.fit(X + space)
+        X = scaler.transform(X)
+        scaled = scaler.transform(space)
 
         if self.param_grid and len(X) > 10:
             predictor_name = model.__class__.__name__
@@ -1025,11 +1031,11 @@ class OptTask(FireTaskBase):
 
         if self.acq is None or len(X) < 10:
             model.fit(X, Y)
-            values = model.predict(space).tolist()
+            values = model.predict(scaled).tolist()
             evaluator = heapq.nlargest if maximize else heapq.nsmallest
         else:
             # Use the acquistion function values
-            values = acquire(self.acq, X, Y, space, model, maximize,
+            values = acquire(self.acq, X, Y, scaled, model, maximize,
                              self.n_boots)
             evaluator = heapq.nlargest
 
