@@ -6,6 +6,7 @@ An example of running rocketsled optimizations in parallel.
 
 import os
 from fireworks import Workflow, Firework, LaunchPad
+from fireworks.scripts.rlaunch_run import launch_multiprocess
 from rocketsled import OptTask
 from rocketsled.utils import random_guess
 from rocketsled.examples.tasks import SumTask
@@ -19,7 +20,7 @@ def wf_creator(x):
     Z_dim = dims
 
     firework1 = Firework([SumTask(),
-                          OptTask(wf_creator='rocketsled.parallel.wf_creator',
+                          OptTask(wf_creator='rocketsled.examples.parallel.wf_creator',
                                   dimensions=Z_dim,
                                   host='localhost',
                                   port=27017,
@@ -43,15 +44,12 @@ if __name__ == "__main__":
     launchpad.reset(password=None, require_password=False)
 
     n_processes = 10
-    n_runs = 13
+    n_runs = 10
 
     # Should throw an 'Exhausted' error when n_processes*n_runs > 125 (the total space size)
 
     load_parallel_wfs(n_processes)
+    launch_multiprocess(launchpad, None, 'INFO', n_runs, n_processes, 0)
 
-    for i in range(n_runs):
-        sh_output = os.system('rlaunch -s multi ' + str(n_processes) + ' --nlaunches 1')
-        print(sh_output)
-
-        # tear down database
+    # tear down database
         # launchpad.connection.drop_database(TESTDB_NAME)
