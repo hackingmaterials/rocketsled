@@ -18,9 +18,10 @@ import pymongo
 from fireworks import FWAction, Firework, Workflow, LaunchPad, ScriptTask
 from fireworks.core.rocket_launcher import launch_rocket
 from fireworks.core.firework import FireTaskBase
+from fireworks.scripts.rlaunch_run import launch_multiprocess
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fw_tutorials.firetask.addition_task import AdditionTask
-from rocketsled.task import OptTask
+from rocketsled.task import OptTask, ExhaustedSpaceError
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
@@ -176,6 +177,24 @@ def wf_creator_accuracy(x, launchpad):
     firework1 = Firework([at, ot], spec=spec)
     return Workflow([firework1])
 
+def wf_creator_parallel(x, launchpad):
+    """
+    An expensive test ensuring the database is locked and released
+    correctly during optimization.
+    """
+    spec = {'_x_opt': x}
+    dims = [(1, 5), (1, 5), (1, 5)]
+    at = AccuracyTask()
+    ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_parallel',
+                 dimensions=dims,
+                 lpad=launchpad,
+                 wf_creator_args=[launchpad],
+                 opt_label='test_parallel',
+                 maximize=True)
+    firework1 = Firework([at, ot], spec=spec)
+    return Workflow([firework1])
+
+
 def custom_predictor(*args, **kwargs):
     return [3, 12.0, 'green']
 
@@ -291,6 +310,28 @@ class TestWorkflows(unittest.TestCase):
                                               limit=1):
             best = doc['y']
         self.assertGreater(best, avg_random_best)
+
+    def test_parallel(self):
+        n_procs = 10
+        self.lp.reset(password=None, require_password=False)
+        for i in range(n_procs):
+            # Assume the worst case, with n_procs forced duplicates
+            self.lp.add_wf(wf_creator_parallel([1, 5, 3], self.lp))
+        try:
+            launch_multiprocess(self.lp, None, 'INFO', 13, n_procs, 0)
+        except ExhaustedSpaceError:
+            pass
+
+        self.assertEqual(
+            self.db.test_parallel.find({'y': {'$exists': 1}}).count(), 125)
+
+        X_unique = []
+        for doc in self.db.test_parallel.find({'x_new': {"$exists": 1}}):
+            X_unique.append(doc['x_new'])
+        for doc in self.db.test_parallel.find({'y': 'reserved'}):
+            X_unique.append(doc['x'])
+        self.assertEqual(len(X_unique), 125)
+
 
     def tearDown(self):
         try:
