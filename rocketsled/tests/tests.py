@@ -14,6 +14,7 @@ import warnings
 import unittest
 from ruamel.yaml import YAML
 import numpy as np
+import pymongo
 from fireworks import FWAction, Firework, Workflow, LaunchPad, ScriptTask
 from fireworks.core.rocket_launcher import launch_rocket
 from fireworks.core.firework import FireTaskBase
@@ -35,6 +36,15 @@ class BasicTestTask(FireTaskBase):
     def run_task(self, fw_spec):
         x = fw_spec['_x_opt']
         y = np.sum(x[:-1])        # sum all except the final string element
+        return FWAction(update_spec={'_y_opt': y})
+
+@explicit_serialize
+class AccuracyTask(FireTaskBase):
+    _fw_name = "AccuracyTask"
+
+    def run_task(self, fw_spec):
+        x = fw_spec['_x_opt']
+        y = x[0] * x[1] / x[2]
         return FWAction(update_spec={'_y_opt': y})
 
 def wf_creator_basic(x, launchpad):
@@ -149,6 +159,23 @@ def wf_creator_get_z(x, launchpad):
     firework1 = Firework([bt, ot], spec=spec)
     return Workflow([firework1])
 
+def wf_creator_accuracy(x, launchpad):
+    """
+    An expensive test ensuring the default predictor actually performs better
+    than the average random case on the function defined in AccuracyTask.
+    """
+    spec = {'_x_opt': x}
+    dims = [(1, 10), (10.0, 20.0), (20.0, 30.0)]
+    at = AccuracyTask()
+    ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_accuracy',
+                 dimensions=dims,
+                 lpad=launchpad,
+                 wf_creator_args=[launchpad],
+                 opt_label='test_accuracy',
+                 maximize=True)
+    firework1 = Firework([at, ot], spec=spec)
+    return Workflow([firework1])
+
 def custom_predictor(*args, **kwargs):
     return [3, 12.0, 'green']
 
@@ -248,6 +275,22 @@ class TestWorkflows(unittest.TestCase):
         self.assertEqual(loop1['z'], [25.0, 121.0])
         self.assertEqual(loop2['x'], [3, 12.0, 'green'])
         self.assertEqual(loop2['z'], [9, 144.0])
+
+    def test_accuracy(self):
+        self.lp.reset(password=None, require_password=False)
+        self.lp.add_wf(wf_creator_accuracy([1, 10.1, 30.1], self.lp))
+        for _ in range(20):
+            launch_rocket(self.lp)
+        # We want to maximize the function. The minimum is 0.5, and the maximum
+        # is 10.
+        avg_random_best = 7.23002918931 # calculated with 1,000,000 calcs
+        best = None
+        for doc in self.db.test_accuracy.find({'y': {'$exists': 1,
+                                                     '$ne': 'reserved'}},
+                                              sort=[('y', pymongo.DESCENDING)],
+                                              limit=1):
+            best = doc['y']
+        self.assertGreater(best, avg_random_best)
 
     def tearDown(self):
         try:
