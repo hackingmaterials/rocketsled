@@ -12,7 +12,7 @@ The Firework contains 2 Tasks.
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
 from rocketsled import OptTask
-from rocketsled.examples.example_tasks import SumTask
+from rocketsled.examples.tasks import SumTask
 
 
 __author__ = "Alexander Dunn"
@@ -29,7 +29,7 @@ def wf_creator(x):
     # CalculateTask writes _y_opt field to the spec internally.
 
     firework1 = Firework([SumTask(),
-                          OptTask(wf_creator='rocketsled.examples.test_basic.'
+                          OptTask(wf_creator='rocketsled.examples.basic.'
                                              'wf_creator',
                                   dimensions=X_dim,
                                   host='localhost',

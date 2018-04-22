@@ -257,7 +257,7 @@ class OptTask(FireTaskBase):
 
         pid = getpid()
         sleeptime = .01
-        timeout = self['timeout'] if 'timeout' in self else 180
+        timeout = self['timeout'] if 'timeout' in self else 500
         max_runs = int(timeout/sleeptime)
         max_resets = 3
         self._setup_db(fw_spec)
@@ -507,7 +507,11 @@ class OptTask(FireTaskBase):
                         explored_docs = self.c.find(
                             {'index': {'$in': explored_indices}},
                             batch_size=10000)
-
+                        reserved_docs = self.c.find({'y': 'reserved'},
+                                                    batch_size=10000)
+                        reserved = []
+                        for doc in reserved_docs:
+                            reserved.append(doc['x'])
                         Y = [None] * n_completed
                         Y.append(y)
                         X_explored = [None] * n_completed
@@ -529,7 +533,7 @@ class OptTask(FireTaskBase):
                         X_unexplored = []
                         for xi in X_space:
                             xj = list(xi)
-                            if xj not in X_explored:
+                            if xj not in X_explored and xj not in reserved:
                             # if self.c.find({'x': xj}).count() == 0 and xj != x:
                                 X_unexplored.append(xj)
                                 if len(X_unexplored) == self.n_searchpts:
@@ -591,8 +595,11 @@ class OptTask(FireTaskBase):
                             XZ_explored = self._preprocess(XZ_explored, xz_dims)
                             XZ_unexplored = self._preprocess(XZ_unexplored,
                                                              xz_dims)
-                            scaling = False if self._is_discrete(
-                                dims=xz_dims, criteria='any') else True
+                            # todo: Figure out if scaling categorical data makes
+                            # todo: optimizer better
+                            # scaling = False if self._is_discrete(
+                            #     dims=xz_dims, criteria='any') else True
+                            scaling = True
                             XZ_onehot = self._predict(
                                 XZ_explored, Y, XZ_unexplored,
                                 model(*predargs, **predkwargs), maximize,
@@ -669,7 +676,8 @@ class OptTask(FireTaskBase):
                     # make sure a process has not timed out and changed the lock
                     # pid while this process is computing the next guess
                     try:
-                        if self.c.find_one(self._manager)['lock'] != pid:
+                        if self.c.find_one(self._manager)['lock'] != pid or \
+                            self.c.find(self._manager).count() == 0:
                             continue
                         else:
                             for xz_new in XZ_new:
@@ -746,7 +754,8 @@ class OptTask(FireTaskBase):
                     return FWAction(update_spec={'_optimization_id': opt_id},
                                     stored_data={'_optimization_id': opt_id})
             else:
-                self.c.delete_one(self._manager)
+                # Delete the manager that this has created
+                self.c.delete_one({'lock': pid})
 
             if run in [max_runs*k for k in range(1, max_resets)]:
                 self.c.find_one_and_update(self._manager,
@@ -916,8 +925,7 @@ class OptTask(FireTaskBase):
             for i, dim in enumerate(dims):
                 low = dim[0]
                 high = dim[1]
-                if type(low) in self.dtypes.floats:
-                    space[:, i] = np.random.uniform(low=low, high=high, size=nf)
+                space[:, i] = np.random.uniform(low=low, high=high, size=nf)
             return space.tolist()
         else:
             #todo: this could be faster
@@ -953,7 +961,6 @@ class OptTask(FireTaskBase):
 
         Returns:
             None
-
         """
         queue = self.c.find_one({'_id': manager_id})['queue']
         if not queue:
@@ -997,8 +1004,11 @@ class OptTask(FireTaskBase):
         # Scale data if all floats for dimensions
         if scaling:
             scaler = StandardScaler()
-            X = scaler.fit_transform(X)
-            space = scaler.transform(space)
+            scaler.fit(X + space)
+            X = scaler.transform(X)
+            scaled = scaler.transform(space)
+        else:
+            scaled = space
 
         if self.param_grid and len(X) > 10:
             predictor_name = model.__class__.__name__
@@ -1025,11 +1035,11 @@ class OptTask(FireTaskBase):
 
         if self.acq is None or len(X) < 10:
             model.fit(X, Y)
-            values = model.predict(space).tolist()
+            values = model.predict(scaled).tolist()
             evaluator = heapq.nlargest if maximize else heapq.nsmallest
         else:
             # Use the acquistion function values
-            values = acquire(self.acq, X, Y, space, model, maximize,
+            values = acquire(self.acq, X, Y, scaled, model, maximize,
                              self.n_boots)
             evaluator = heapq.nlargest
 

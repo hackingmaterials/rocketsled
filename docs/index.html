@@ -75,7 +75,7 @@ loop; it requires no knowledge of a function in order to optimize it.</p>
 error handling) across <strong>arbitrary computing resources</strong>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> is intended to be “plug-and-play”: simply “plug-in” an expensive
 objective function or workflow, constraints, and (optionally) a black box optimization algorithm,
-and rocketsled + FireWorks handles the rest.</p>
+and rocketsled + FireWorks automatically creates the optimization loop.</p>
 <div class="section" id="a-visual-explanation">
 <h2>A visual explanation…<a class="headerlink" href="#a-visual-explanation" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> is designed for optimization tasks with sequential improvement. For example, a typical workflow without optimization might look like this:</p>
@@ -110,6 +110,7 @@ and rocketsled + FireWorks handles the rest.</p>
 <li>Facilitated feature engineering with <code class="docutils literal notranslate"><span class="pre">get_z</span></code> argument</li>
 <li>Tuneable control of training and prediction performance, across many kinds of computer resources</li>
 <li>Avoids submitting duplicate workflows, even when workflows run with massive parallelism</li>
+<li>Automatic hyperparameter optimization</li>
 <li>Automatic encoding for categorical optimization</li>
 <li>and more… (see comprehensive guide)</li>
 </ul>
@@ -151,47 +152,37 @@ $ python setup.py <span class="nb">test</span>
 <h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
 <p><em>Tutorials 1 and 2 require some knowledge of Fireworks. If you aren’t comfortable with Fireworks, please work through the tutorials</em> <a class="reference external" href="https://hackingmaterials.lbl.gov/fireworks/">here</a>.</p>
 <div class="section" id="tutorial-0-quickstart">
-<h2>Tutorial 0 - Quickstart<a class="headerlink" href="#tutorial-0-quickstart" title="Permalink to this headline">¶</a></h2>
+<h2><a class="reference internal" href="quickstart.html"><span class="doc">Tutorial 0 - Quickstart</span></a><a class="headerlink" href="#tutorial-0-quickstart" title="Permalink to this headline">¶</a></h2>
 <p>In the quickstart, we show how to use rocketsled’s <code class="docutils literal notranslate"><span class="pre">auto_setup</span></code> to get
 up and running quickly, starting only with an objective function written in Python.</p>
 <p><strong>Time to complete</strong>: 2-5 min</p>
-<p><a class="reference external" href="https://www.google.com">Quickstart link will be here.</a></p>
 </div>
 <div class="section" id="tutorial-1-basic-usage">
-<h2>Tutorial 1 - Basic usage<a class="headerlink" href="#tutorial-1-basic-usage" title="Permalink to this headline">¶</a></h2>
+<h2><a class="reference internal" href="basic.html"><span class="doc">Tutorial 1 - Basic usage</span></a><a class="headerlink" href="#tutorial-1-basic-usage" title="Permalink to this headline">¶</a></h2>
 <p>In this tutorial we demonstrate how to get a basic optimization loop up and
 running with a FireWorks workflow.</p>
 <p><strong>Time to complete</strong>: 10 min</p>
-<p><a class="reference external" href="https://www.google.com">Basic tutorial link will be here</a></p>
 </div>
 <div class="section" id="tutorial-2-advanced-usage">
-<h2>Tutorial 2 - Advanced usage<a class="headerlink" href="#tutorial-2-advanced-usage" title="Permalink to this headline">¶</a></h2>
+<h2><a class="reference internal" href="advanced.html"><span class="doc">Tutorial 2 - Advanced usage</span></a><a class="headerlink" href="#tutorial-2-advanced-usage" title="Permalink to this headline">¶</a></h2>
 <p>In this tutorial we explore the more advanced capabilities of <code class="docutils literal notranslate"><span class="pre">OptTask</span></code>.</p>
 <p><strong>Time to complete</strong>: 20 min</p>
-<p><a class="reference external" href="https://www.google.com">Advanced tutorial link will be here</a></p>
 </div>
 <div class="section" id="a-comprehensive-guide-to-rocketsled">
-<h2>A Comprehensive Guide to <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code><a class="headerlink" href="#a-comprehensive-guide-to-rocketsled" title="Permalink to this headline">¶</a></h2>
+<h2><a class="reference internal" href="guide.html"><span class="doc">A Comprehensive Guide to rocketsled</span></a><a class="headerlink" href="#a-comprehensive-guide-to-rocketsled" title="Permalink to this headline">¶</a></h2>
 <p>Find a comprehensive guide to using rocketsled at the link below. The guide
 exhaustively documents the possible arguments to <code class="docutils literal notranslate"><span class="pre">OptTask</span></code> and provides at least
 one example of each. If working through the tutorials did not answer your
 question, you’ll most likely find your answer here.</p>
-<p><a class="reference external" href="https://www.google.com">Comprehensive guide link will be here</a></p>
 </div>
 <div class="section" id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
-<p>Find the auto-generated documentation here. Beware! Only for the brave.</p>
-<p><a class="reference external" href="https://www.google.com">Documentation link will be here</a></p>
+<p>Find the auto-generated documentation <a class="reference internal" href="modules.html"><span class="doc">here</span></a>. Beware! Only for the brave.</p>
 </div>
 </div>
-<div class="section" id="usage-cases">
-<h1>Usage Cases<a class="headerlink" href="#usage-cases" title="Permalink to this headline">¶</a></h1>
-<p>Rocketsled is applicable to many types of computing problems. Find some examples
-on the <a class="reference external" href="www.google.com">usage cases page.</a></p>
-</div>
-<div class="section" id="acknowledgments-and-references">
-<h1>Acknowledgments and References<a class="headerlink" href="#acknowledgments-and-references" title="Permalink to this headline">¶</a></h1>
-<p>Forthcoming…</p>
+<div class="section" id="use-cases">
+<h1>Use Cases<a class="headerlink" href="#use-cases" title="Permalink to this headline">¶</a></h1>
+<p>Rocketsled is applicable to many types of scientific computing problems.</p>
 </div>
 
 
@@ -220,15 +211,14 @@ on the <a class="reference external" href="www.google.com">usage cases page.</a>
 </ul>
 </li>
 <li><a class="reference internal" href="#tutorials">Tutorials</a><ul>
-<li><a class="reference internal" href="#tutorial-0-quickstart">Tutorial 0 - Quickstart</a></li>
-<li><a class="reference internal" href="#tutorial-1-basic-usage">Tutorial 1 - Basic usage</a></li>
-<li><a class="reference internal" href="#tutorial-2-advanced-usage">Tutorial 2 - Advanced usage</a></li>
-<li><a class="reference internal" href="#a-comprehensive-guide-to-rocketsled">A Comprehensive Guide to <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code></a></li>
+<li><a class="reference internal" href="#tutorial-0-quickstart"><code class="docutils literal notranslate"><span class="pre">Tutorial</span> <span class="pre">0</span> <span class="pre">-</span> <span class="pre">Quickstart</span></code></a></li>
+<li><a class="reference internal" href="#tutorial-1-basic-usage"><code class="docutils literal notranslate"><span class="pre">Tutorial</span> <span class="pre">1</span> <span class="pre">-</span> <span class="pre">Basic</span> <span class="pre">usage</span></code></a></li>
+<li><a class="reference internal" href="#tutorial-2-advanced-usage"><code class="docutils literal notranslate"><span class="pre">Tutorial</span> <span class="pre">2</span> <span class="pre">-</span> <span class="pre">Advanced</span> <span class="pre">usage</span></code></a></li>
+<li><a class="reference internal" href="#a-comprehensive-guide-to-rocketsled"><code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">Comprehensive</span> <span class="pre">Guide</span> <span class="pre">to</span> <span class="pre">rocketsled</span></code></a></li>
 <li><a class="reference internal" href="#documentation">Documentation</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#usage-cases">Usage Cases</a></li>
-<li><a class="reference internal" href="#acknowledgments-and-references">Acknowledgments and References</a></li>
+<li><a class="reference internal" href="#use-cases">Use Cases</a></li>
 </ul>
 
   <div role="note" aria-label="source link">
