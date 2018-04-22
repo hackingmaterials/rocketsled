@@ -1,0 +1,22 @@
+rocketsled.auto\_sleds package
+==============================
+
+Submodules
+----------
+
+rocketsled.auto\_sleds.ei0 module
+---------------------------------
+
+.. automodule:: rocketsled.auto_sleds.ei0
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: rocketsled.auto_sleds
+    :members:
+    :undoc-members:
+    :show-inheritance:

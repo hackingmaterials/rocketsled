@@ -1,0 +1,38 @@
+rocketsled.benchmarks package
+=============================
+
+Submodules
+----------
+
+rocketsled.benchmarks.ALEXGRAPHER module
+----------------------------------------
+
+.. automodule:: rocketsled.benchmarks.ALEXGRAPHER
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rocketsled.benchmarks.rastrigin module
+--------------------------------------
+
+.. automodule:: rocketsled.benchmarks.rastrigin
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rocketsled.benchmarks.skopttest module
+--------------------------------------
+
+.. automodule:: rocketsled.benchmarks.skopttest
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: rocketsled.benchmarks
+    :members:
+    :undoc-members:
+    :show-inheritance:
