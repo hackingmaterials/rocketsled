@@ -1,9 +1,14 @@
 from __future__ import unicode_literals, print_function, division
 
+"""
+Running a rocketsled optimization where the objective function has a categorical
+argument. 
+"""
+
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
 from rocketsled import OptTask
-from rocketsled.examples.example_tasks import MixedCalculateTask
+from rocketsled.examples.tasks import MixedCalculateTask
 
 opt_label = "opt_categorical"
 
@@ -15,13 +20,13 @@ def wf_creator(x):
     # CalculateTask writes _y_opt field to the spec internally.
 
     firework1 = Firework([MixedCalculateTask(),
-                          OptTask(wf_creator='rocketsled.examples.'
-                                             'test_categorical.wf_creator',
+                          OptTask(wf_creator='rocketsled.examples.categorical.'
+                                             'wf_creator',
                                   dimensions=fw1_dim,
                                   host='localhost',
                                   port=27017,
                                   name='rsled',
-                                  get_z='rocketsled.examples.test_categorical.'
+                                  get_z='rocketsled.examples.categorical.'
                                         'get_z',
                                   duplicate_check=True,
                                   opt_label=opt_label)],

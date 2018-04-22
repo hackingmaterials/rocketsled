@@ -13,7 +13,7 @@ kwarg to store optimization data based on a Firework's LaunchPad object.
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
 from rocketsled import OptTask
-from rocketsled.examples.example_tasks import MixedCalculateTask
+from rocketsled.examples.tasks import MixedCalculateTask
 import random
 
 opt_label = "opt_extras"
@@ -27,11 +27,11 @@ def wf_creator(x, launchpad, my_arg, my_kwarg=1):
     # CalculateTask writes _y_opt field to the spec internally.
 
     firework1 = Firework([MixedCalculateTask(),
-                          OptTask(wf_creator='rocketsled.examples.test_extras.'
+                          OptTask(wf_creator='rocketsled.examples.extras.'
                                              'wf_creator',
                                   dimensions=fw1_dim,
-                                  get_z='rocketsled.examples.test_extras.get_z',
-                                  predictor='rocketsled.examples.test_extras.'
+                                  get_z='rocketsled.examples.extras.get_z',
+                                  predictor='rocketsled.examples.extras.'
                                             'example_predictor',
                                   max=True,
                                   lpad=launchpad,
@@ -41,7 +41,6 @@ def wf_creator(x, launchpad, my_arg, my_kwarg=1):
                                   opt_label=opt_label,
                                   retrain_interval=5)],
                          spec=fw1_spec)
-
     return Workflow([firework1])
 
 
@@ -52,9 +51,9 @@ def get_z(x):
 # how an example custom optimization function could be used
 # replace the code inside example_predictor with your favorite optimizer
 
-def example_predictor(X_space_total):
+def example_predictor(XZ_explored, Y, x_dims, XZ_unexplored):
     # custom optimizer code goes here
-    return random.choice(X_space_total)
+    return random.choice(XZ_unexplored)
 
 def run_workflows():
     TESTDB_NAME = 'rsled'

@@ -1,0 +1,229 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Welcome to the rocketsled quickstart! &#8212; rocketsled 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+ 
+<link href='https://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 0.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <p><em>Note: This quickstart assumes a limited knowledge of FireWorks. If you already have a workflow built, see the examples or the more advanced tutorials.</em></p>
+<div class="section" id="welcome-to-the-rocketsled-quickstart">
+<h1>Welcome to the <code class="code docutils literal notranslate"><span class="pre">rocketsled</span></code> quickstart!<a class="headerlink" href="#welcome-to-the-rocketsled-quickstart" title="Permalink to this headline">¶</a></h1>
+<p>If you have a Python function to optimize, the easiest way to get started is to use rocketsled’s <code class="code docutils literal notranslate"><span class="pre">auto_setup</span></code>. Auto-setup wraps any Python function in a FireWork, adds a Firework containing an OptTask optimization, and creates a workflow ready for launch.</p>
+<p>Let’s get an optimization running on your local machine. First, make sure a <code class="code docutils literal notranslate"><span class="pre">mongod</span></code> instance is running.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ mongod
+</pre></div>
+</div>
+<div class="section" id="define-objective-function">
+<h2>Define objective function<a class="headerlink" href="#define-objective-function" title="Permalink to this headline">¶</a></h2>
+<p>Great! Now lets define a trivial objective function f(x) for this demo. Your actual objective function will be <strong>much</strong> more complex than this.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The objective function must accept a vector and return a scalar.</span>
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="define-constraints">
+<h2>Define constraints<a class="headerlink" href="#define-constraints" title="Permalink to this headline">¶</a></h2>
+<p>Let’s constrain this function in each of its dimensions in the format rocketsled uses. Each dimension is represented as a 2-tuple for (low, high), and is placed in a list. So if we want to constrain x1 to integers between 1-100, x2 to integers between 200-300, and x3 to floats between 5.0-10.0:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dimensions</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="p">(</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>These constraints ensure the function has a maximum value of 6,000.</p>
+</div>
+<div class="section" id="using-auto-setup-on-a-function">
+<h2>Using <code class="code docutils literal notranslate"><span class="pre">auto_setup</span></code> on a function<a class="headerlink" href="#using-auto-setup-on-a-function" title="Permalink to this headline">¶</a></h2>
+<p>Now we can use <code class="code docutils literal notranslate"><span class="pre">auto_setup</span></code> to write a file which will</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Write a workflow creator that can:<ol class="loweralpha">
+<li>Run your function in a FireWork</li>
+<li>Run the optimization algorithm in a separate FireWork</li>
+</ol>
+</li>
+<li>The file will be able to launch Fireworks right away.</li>
+</ol>
+</div></blockquote>
+<p>Let’s now write a script that will maximize our objective function using the default Bayesian predictor, based on scikit-learn’s RandomForestRegressor.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rocketsled</span> <span class="kn">import</span> <span class="n">auto_setup</span>
+
+<span class="c1"># Define the db where the LaunchPad and optimization data will be stored</span>
+<span class="c1"># The &#39;opt_label&#39; field defines the name of the optimization collection</span>
+<span class="n">dbinfo</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;my_db&quot;</span><span class="p">,</span> <span class="s2">&quot;port&quot;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span> <span class="s2">&quot;opt_label&quot;</span><span class="p">:</span> <span class="s2">&quot;quickstart&quot;</span><span class="p">}</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">auto_setup</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dimensions</span><span class="p">,</span> <span class="n">wfname</span><span class="o">=</span><span class="s2">&quot;quickstart&quot;</span><span class="p">,</span> <span class="n">maximize</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">dbinfo</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>File successfully created!
+Find your auto sled at /Users/home/rocketsled/rocketsled/auto_sleds/quickstart.py
+</pre></div>
+</div>
+</div>
+<div class="section" id="check-out-and-run-the-auto-sled">
+<h2>Check out and run the auto sled<a class="headerlink" href="#check-out-and-run-the-auto-sled" title="Permalink to this headline">¶</a></h2>
+<p>Let’s go to this directory and look at the file, which will look similar to this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">unicode_literals</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This is an automatically created script from auto_setup.</span>
+<span class="sd">If you are not comfortable working with FireWorks and PyTask, do NOT move this</span>
+<span class="sd">file out this directory or rename it if you want to run this workflow!</span>
+
+<span class="sd">If you are comfortable working with FireWorks and PyTask, feel free to edit</span>
+<span class="sd">and/or move this file to suit your needs. See the OptTask documentation and the</span>
+<span class="sd">examples for more information on setting up workflow creators.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">fireworks</span> <span class="kn">import</span> <span class="n">PyTask</span><span class="p">,</span> <span class="n">Firework</span><span class="p">,</span> <span class="n">Workflow</span><span class="p">,</span> <span class="n">LaunchPad</span>
+<span class="kn">from</span> <span class="nn">fireworks.core.rocket_launcher</span> <span class="kn">import</span> <span class="n">rapidfire</span>
+<span class="kn">from</span> <span class="nn">rocketsled.utils</span> <span class="kn">import</span> <span class="n">deserialize</span><span class="p">,</span> <span class="n">random_guess</span>
+<span class="kn">from</span> <span class="nn">rocketsled</span> <span class="kn">import</span> <span class="n">OptTask</span>
+
+
+<span class="c1"># This is your function, imported to rocketsled to use with PyTask.</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">deserialize</span><span class="p">(</span><span class="s1">&#39;/Users/ardunn/quickstart.f&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">wf_creator</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">spec</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;_x_opt&#39;</span><span class="p">:</span><span class="n">x</span><span class="p">}</span>
+    <span class="n">pt</span> <span class="o">=</span> <span class="n">PyTask</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="s1">&#39;rocketsled.auto_sleds.quickstart.f&#39;</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;_y_opt&#39;</span><span class="p">])</span>
+    <span class="n">ot</span> <span class="o">=</span> <span class="n">OptTask</span><span class="p">(</span><span class="n">opt_label</span><span class="o">=</span><span class="s1">&#39;quickstart&#39;</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="p">(</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)],</span> <span class="n">wf_creator</span><span class="o">=</span><span class="s1">&#39;rocketsled.auto_sleds.quickstart.wf_creator&#39;</span><span class="p">,</span> <span class="n">maximize</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">27017</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_db&#39;</span><span class="p">)</span>
+    <span class="n">fw0</span> <span class="o">=</span> <span class="n">Firework</span><span class="p">([</span><span class="n">pt</span><span class="p">],</span> <span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;PyTaskFW&#39;</span><span class="p">)</span>
+    <span class="n">fw1</span> <span class="o">=</span> <span class="n">Firework</span><span class="p">([</span><span class="n">ot</span><span class="p">],</span> <span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;RocketsledFW&#39;</span><span class="p">)</span>
+    <span class="n">wf</span> <span class="o">=</span> <span class="n">Workflow</span><span class="p">([</span><span class="n">fw0</span><span class="p">,</span> <span class="n">fw1</span><span class="p">],</span> <span class="p">{</span><span class="n">fw0</span><span class="p">:</span> <span class="p">[</span><span class="n">fw1</span><span class="p">],</span> <span class="n">fw1</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;quickstart @ &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">wf</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="c1"># Make sure the launchpad below is correct, and make changes if necessary if</span>
+    <span class="c1"># it does not match the OptTask db ^^^:</span>
+    <span class="n">lpad</span> <span class="o">=</span> <span class="n">LaunchPad</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">27017</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_db&#39;</span><span class="p">)</span>
+    <span class="c1"># lpad.reset(password=None, require_password=False)</span>
+
+    <span class="c1"># Define your workflow to start...</span>
+    <span class="n">wf1</span> <span class="o">=</span> <span class="n">wf_creator</span><span class="p">(</span><span class="n">random_guess</span><span class="p">([(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="p">(</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)]))</span>
+
+    <span class="c1"># Add it to the launchpad and launch!</span>
+    <span class="n">lpad</span><span class="o">.</span><span class="n">add_wf</span><span class="p">(</span><span class="n">wf1</span><span class="p">)</span>
+    <span class="c1"># rapidfire(lpad, nlaunches=5, sleep_time=0)</span>
+</pre></div>
+</div>
+<p>What rocketsled is doing here is fairly straightfoward. <code class="code docutils literal notranslate"><span class="pre">wf_creator</span></code> returns an optimization loop Workflow containing your objective function Firework and the optimization Firework. Then it adds it to the launchpad and launches it!</p>
+<p>Your workflow on the launchpad looks like this:</p>
+<a class="reference internal image-reference" href="_images/quickstart_lp.png"><img alt="quickstart_viz" src="_images/quickstart_lp.png" style="width: 1200px;" /></a>
+<p>Your objective function is contained in PyTaskFW. The optimization is done in RocketsledFW. When both Fireworks have completed, RocketsledFW launches another workflow based on the next best predicted x value.</p>
+<p>Uncomment the <code class="code docutils literal notranslate"><span class="pre">lpad.reset</span></code> line if necessary (i.e., if this database is not already a FireWorks db or you don’t mind resetting it). Uncomment the last line if you’d like to launch right away! Let’s change nlaunches to 100, to run the first 100 Fireworks (50 optimization loops).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">rapidfire</span><span class="p">(</span><span class="n">lpad</span><span class="p">,</span> <span class="n">nlaunches</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">sleep_time</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="visualize-the-optimization-results">
+<h2>Visualize the optimization results<a class="headerlink" href="#visualize-the-optimization-results" title="Permalink to this headline">¶</a></h2>
+<p>Rocketsled comes with a simple function for creating a matplotlib optimization plot.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rocketsled</span> <span class="kn">import</span> <span class="n">visualize</span>
+<span class="kn">from</span> <span class="nn">fireworks</span> <span class="kn">import</span> <span class="n">LaunchPad</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.figsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
+<span class="n">lp</span> <span class="o">=</span> <span class="n">LaunchPad</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">27017</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_db&#39;</span><span class="p">)</span>
+<span class="n">visualize</span><span class="p">(</span><span class="n">lp</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">quickstart</span><span class="p">,</span> <span class="n">maximize</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/quickstart_viz1.png"><img alt="quickstart_viz" src="_images/quickstart_viz1.png" style="width: 1200px;" /></a>
+<p>The best found value is shown in green.
+Although for this basic example we are using relatively few search points (default 1,000) and no acquisition function for the Bayesian optimization (acq=None, default), you should still find that the maximum found is 90-99% of the true maximum, 6,000.</p>
+<p>Congrats! We’ve just worked through the deployment and execution of an entire workflow. For a tutorial on using pre-existing workflows with FireWorks, go <a class="reference internal" href="basic.html"><span class="doc">here.</span></a></p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to the <code class="code docutils literal notranslate"><span class="pre">rocketsled</span></code> quickstart!</a><ul>
+<li><a class="reference internal" href="#define-objective-function">Define objective function</a></li>
+<li><a class="reference internal" href="#define-constraints">Define constraints</a></li>
+<li><a class="reference internal" href="#using-auto-setup-on-a-function">Using <code class="code docutils literal notranslate"><span class="pre">auto_setup</span></code> on a function</a></li>
+<li><a class="reference internal" href="#check-out-and-run-the-auto-sled">Check out and run the auto sled</a></li>
+<li><a class="reference internal" href="#visualize-the-optimization-results">Visualize the optimization results</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/quickstart.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 0.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, HackingMaterials.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
+    </div>
+
+  </body>
+</html>

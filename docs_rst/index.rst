@@ -50,7 +50,7 @@ error handling) across **arbitrary computing resources**.
 
 ``rocketsled`` is intended to be "plug-and-play": simply "plug-in" an expensive
 objective function or workflow, constraints, and (optionally) a black box optimization algorithm,
-and rocketsled + FireWorks handles the rest.
+and rocketsled + FireWorks automatically creates the optimization loop.
 
 
 A visual explanation...
@@ -162,7 +162,7 @@ Tutorials
 *Tutorials 1 and 2 require some knowledge of Fireworks. If you aren't comfortable with Fireworks, please work through the tutorials* `here <https://hackingmaterials.lbl.gov/fireworks/>`_.
 
 
-Tutorial 0 - Quickstart
+:doc:`Tutorial 0 - Quickstart </quickstart>`
 -----------------------
 
 In the quickstart, we show how to use rocketsled's ``auto_setup`` to get
@@ -170,9 +170,7 @@ up and running quickly, starting only with an objective function written in Pyth
 
 **Time to complete**: 2-5 min
 
-`Quickstart link will be here. <https://www.google.com>`_
-
-Tutorial 1 - Basic usage
+:doc:`Tutorial 1 - Basic usage </basic>`
 ------------------------
 
 In this tutorial we demonstrate how to get a basic optimization loop up and
@@ -180,18 +178,15 @@ running with a FireWorks workflow.
 
 **Time to complete**: 10 min
 
-`Basic tutorial link will be here <https://www.google.com>`_
 
-Tutorial 2 - Advanced usage
+:doc:`Tutorial 2 - Advanced usage </advanced>`
 ---------------------------
 In this tutorial we explore the more advanced capabilities of ``OptTask``.
 
 **Time to complete**: 20 min
 
-`Advanced tutorial link will be here <https://www.google.com>`_
 
-
-A Comprehensive Guide to ``rocketsled``
+:doc:`A Comprehensive Guide to rocketsled </guide>`
 ---------------------------------------
 
 Find a comprehensive guide to using rocketsled at the link below. The guide
@@ -199,29 +194,18 @@ exhaustively documents the possible arguments to ``OptTask`` and provides at lea
 one example of each. If working through the tutorials did not answer your
 question, you'll most likely find your answer here.
 
-`Comprehensive guide link will be here <https://www.google.com>`_
-
-
 Documentation
 -------------
 
-Find the auto-generated documentation here. Beware! Only for the brave.
-
-`Documentation link will be here <https://www.google.com>`_
+Find the auto-generated documentation :doc:`here </modules>`. Beware! Only for the brave.
 
 
 ===========
-Usage Cases
+Use Cases
 ===========
 
-Rocketsled is applicable to many types of computing problems. Find some examples
-on the `usage cases page. <www.google.com>`_
+Rocketsled is applicable to many types of scientific computing problems.
 
-
-==============================
-Acknowledgments and References
-==============================
-Forthcoming...
 
 
 
