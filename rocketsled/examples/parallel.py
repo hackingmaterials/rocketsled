@@ -8,7 +8,7 @@ import os
 from fireworks import Workflow, Firework, LaunchPad
 from rocketsled import OptTask
 from rocketsled.utils import random_guess
-from rocketsled.examples.example_tasks import SumTask
+from rocketsled.examples.tasks import SumTask
 
 dims = [(1, 5), (1, 5), (1, 5)]
 
@@ -19,7 +19,7 @@ def wf_creator(x):
     Z_dim = dims
 
     firework1 = Firework([SumTask(),
-                          OptTask(wf_creator='rocketsled.test_parallel.wf_creator',
+                          OptTask(wf_creator='rocketsled.parallel.wf_creator',
                                   dimensions=Z_dim,
                                   host='localhost',
                                   port=27017,

@@ -1,10 +1,16 @@
 from __future__ import unicode_literals, print_function, division
 
+"""
+An example of running optimizations in batches. For example, submitting 5
+workflows, running them, optimizing, and then submitting the next best 5 
+workflows to the launchpad. 
+"""
+
 from fireworks import Workflow, Firework, LaunchPad
 from fireworks.core.rocket_launcher import rapidfire
 from rocketsled import OptTask
 from rocketsled.utils import random_guess
-from rocketsled.examples.example_tasks import SumTask
+from rocketsled.examples.tasks import SumTask
 
 opt_label = "opt_batch"
 X_dim = [(1, 5), (1, 5), (1, 5)]
@@ -15,7 +21,7 @@ def wf_creator(x):
 
     # CalculateTask writes _y_opt field to the spec internally.
     firework1 = Firework([SumTask(),
-                          OptTask(wf_creator='rocketsled.examples.test_batch.'
+                          OptTask(wf_creator='rocketsled.examples.batch.'
                                              'wf_creator',
                                   dimensions=X_dim,
                                   host='localhost',
