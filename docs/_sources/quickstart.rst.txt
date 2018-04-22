@@ -18,7 +18,7 @@ Let's get an optimization running on your local machine. First, make sure a :cod
 Define objective function
 -------------------------
 
-Great! Now lets open up examplesdefine a trivial objective function f(x) for this demo. Your actual objective function will be **much** more complex than this.
+Great! Now lets define a trivial objective function f(x) for this demo. Your actual objective function will be **much** more complex than this.
 
 .. code-block:: python
 
@@ -163,4 +163,4 @@ The best found value is shown in green.
 Although for this basic example we are using relatively few search points (default 1,000) and no acquisition function for the Bayesian optimization (acq=None, default), you should still find that the maximum found is 90-99% of the true maximum, 6,000.
 
 
-Congrats! We've just worked through the deployment and execution of an entire optimized exploration. For a tutorial on using pre-existing workflows with FireWorks, go :doc:`here. </basic>`
+Congrats! We've just worked through the deployment and execution of an entire workflow. For a tutorial on using pre-existing workflows with FireWorks, go :doc:`here. </basic>`
