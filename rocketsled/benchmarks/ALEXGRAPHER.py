@@ -15,7 +15,7 @@ import math
 
 dtypes = Dtypes()
 
-def visualize(csets, maximize, labels, colors, fontfamily="serif"):
+def visualize(csets, maximize, labels, colors, fontfamily="serif", limit=0):
     opt = max if maximize else min
 
     for l, cset in enumerate(csets):
@@ -24,7 +24,7 @@ def visualize(csets, maximize, labels, colors, fontfamily="serif"):
             fx = []
             i = []
             best = []
-            for doc in c.find({'index': {'$exists': 1}}):
+            for doc in c.find({'index': {'$exists': 1}}).limit(limit):
                 fx.append(doc['y'])
                 i.append(doc['index'])
                 best.append(opt(fx))
@@ -48,13 +48,14 @@ def visualize(csets, maximize, labels, colors, fontfamily="serif"):
     return plt
 
 
+
 def ran_run(func, dims, runs, comps_per_run, maximize):
     opt = max if maximize else min
     best = np.zeros((runs, comps_per_run))
     for r in range(runs):
         print("RUN {} of {}".format(r, runs))
         rany = np.zeros(comps_per_run)
-        ranx = list(ds(dims))
+        ranx = np.transpose([np.random.uniform(low=dim[0], high=dim[1], size=comps_per_run) for dim in dims])
         for c in range(comps_per_run):
             rany[c] = func(ranx[c])
         for c in range(1, comps_per_run):
@@ -62,6 +63,7 @@ def ran_run(func, dims, runs, comps_per_run, maximize):
         best[r] = rany
     meanbest = np.mean(best, axis=0)
     return ([i + 1 for i in range(comps_per_run)], meanbest)
+
 
 def ds(dims):
     total_dimspace = []
@@ -94,31 +96,34 @@ def rastrigindim (dim):
 
 if __name__ == "__main__":
     dim = [(-5.0, 10.0), (0.0, 15.0)] # branin
-    # dim = [(-2.048, 2.048), (-2.048, 2.048), (-2.048, 2.048), (-2.048, 2.048), (-2.048, 2.048)]
 
-    # auto_setup(wfunc, dim, wfname='none0', opt_label='none0', host='localhost', acq=None, name="acqtest", port=27017, predictor="RandomForestRegressor", n_search_points=1000)
-    # auto_setup(wfunc, dim, wfname='none1', opt_label='none1', host='localhost', acq=None, name="acqtest", port=27017, predictor="RandomForestRegressor", n_search_points=1000)
-    # auto_setup(wfunc, dim, wfname='none2', opt_label='none2', host='localhost', acq=None, name="acqtest", port=27017, predictor="RandomForestRegressor", n_search_points=1000)
-    # auto_setup(wfunc, dim, wfname='none3', opt_label='none3', host='localhost', acq=None, name="acqtest", port=27017, predictor="RandomForestRegressor", n_search_points=1000)
+    # for i in range(100):
+    #     auto_setup(branin, dim, wfname='bran{}'.format(i), opt_label='none{}'.format(i), host='localhost', acq=None, name='bran', port=27017, n_bootstraps=1000, predictor="RandomForestRegressor", n_search_points=10000)
 
 
-    # auto_setup(wfunc, dim, wfname='ei0', opt_label='ei0', launch_ready=True, host='localhost', acq='ei', name="acqtest", port=27017, n_bootstraps=300, predictor="RandomForestRegressor", n_search_points=1000)
-    # auto_setup(branin, dim, wfname='stochtest', opt_label='st', launch_ready=True, host='localhost', name="acqtest", port=27017, predictor="rocketsled.algo.stochastic_rbf", n_search_points=1000)
+    # ranx, rany = ran_run(branin, dim, runs=1000, comps_per_run=50, maximize=False)
+    # df = pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ALEXGRAPHER_ran_bran.csv")
 
-    for i in range(100):
-        auto_setup(branin, dim, wfname='papertest{}'.format(i), opt_label='ei{}'.format(i), host='localhost', acq='ei', name="papertest", port=27017, n_bootstraps=1000, predictor="RandomForestRegressor", n_search_points=1000)
-
-    # auto_setup(wfunc, dim, wfname='ran', opt_label='ran', host='localhost', name="acqtest4", port=27017, predictor="random")
-
-    # lpad = LaunchPad(host='localhost', port=27017, name='acq')
-
-    # ranx, rany = ran_run(wfunc, dim, runs=1000, comps_per_run=50, maximize=False)
-    # df = pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ALEXGRAPHER_ran.csv")
-    # df = pd.DataFrame.from_csv("ALEXGRAPHER_ran.csv")
+    # lpad = LaunchPad(host='localhost', port=27017, name='bran')
+    # df = pd.DataFrame.from_csv("ALEXGRAPHER_ran_bran.csv")
     # ranx = df['x']
     # rany = df['y']
-    # ei_runs = [getattr(lpad.db, "ei{}".format(i))for i in range(10)]
-    # plt = visualize([ei_runs], False, labels=['EI'], colors=['blue'])
+    # ei_runs = [getattr(lpad.db, "non{}".format(i))for i in range(100)]
+    # plt = visualize([ei_runs], False, labels=['EI'], colors=['blue'], limit=50)
     # plt.plot(ranx, rany, color='black')
     # print(min(rany))
     # plt.show()
+
+
+    #BRANIN
+    # ranx, rany = ran_run(branin, dim, runs=10000, comps_per_run=50, maximize=False)
+    # df = pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ALEXGRAPHER_ran_bran.csv")
+    lpad = LaunchPad(host='localhost', port=27017, name='bran')
+    df = pd.DataFrame.from_csv("ALEXGRAPHER_ran_bran.csv")
+    ranx = df['x']
+    rany = df['y']
+    hi_runs = [getattr(lpad.db, "nonE{}".format(i)) for i in range(100)]
+    plt = visualize([hi_runs], False, labels=['HI'], colors=['blue'], limit=10)
+    plt.plot(ranx, rany, color='black')
+    print(min(rany))
+    plt.show()
