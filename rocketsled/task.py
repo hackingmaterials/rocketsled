@@ -597,13 +597,12 @@ class OptTask(FireTaskBase):
                                                              xz_dims)
                             # todo: Figure out if scaling categorical data makes
                             # todo: optimizer better
-                            # scaling = False if self._is_discrete(
-                            #     dims=xz_dims, criteria='any') else True
-                            scaling = True
+                            scaling = False if self._is_discrete(
+                                dims=xz_dims, criteria='any') else True
                             XZ_onehot = self._predict(
                                 XZ_explored, Y, XZ_unexplored,
                                 model(*predargs, **predkwargs), maximize,
-                                batch_size, scaling=scaling)
+                                batch_size, scaling)
                             XZ_new = [self._postprocess(xz_onehot, xz_dims) for
                                       xz_onehot in XZ_onehot]
 
@@ -972,8 +971,7 @@ class OptTask(FireTaskBase):
                                        {'$set': {'lock': new_lock,
                                                  'queue': queue}})
 
-    def _predict(self, X, Y, space, model, maximize, n_predictions,
-                 scaling=False):
+    def _predict(self, X, Y, space, model, maximize, n_predictions, scaling):
         """
         Scikit-learn compatible model for stepwise optimization. It uses a
         regressive predictor evaluated on remaining points in a discrete space.
@@ -1030,17 +1028,17 @@ class OptTask(FireTaskBase):
                                  "hyper_opt parameter to None for GridSearchCV "
                                  "and to any integer larger than 1 for "
                                  "n iterations of RandomizedSearchCV.")
-            hp_selector.fit(X, Y)
+            hp_selector.fit(X_scaled, Y)
             model = model.__class__(**hp_selector.best_params_)
 
-        if self.acq is None or len(X) < 10:
-            model.fit(X, Y)
-            values = model.predict(scaled).tolist()
+        if self.acq is None or len(X_scaled) < 10:
+            model.fit(X_scaled, Y)
+            values = model.predict(space_scaled).tolist()
             evaluator = heapq.nlargest if maximize else heapq.nsmallest
         else:
             # Use the acquistion function values
-            values = acquire(self.acq, X, Y, scaled, model, maximize,
-                             self.n_boots)
+            values = acquire(self.acq, X_scaled, Y, space_scaled, model,
+                             maximize, self.n_boots)
             evaluator = heapq.nlargest
 
         #todo: possible batch duplicates if two x predict the same y?
