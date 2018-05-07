@@ -15,8 +15,7 @@ import math
 
 dtypes = Dtypes()
 
-def visualize(csets, maximize, labels, colors, fontfamily="serif", limit=0):
-    opt = max if maximize else min
+def visualize(csets, opt, labels, colors, fontfamily="serif", limit=0):
 
     for l, cset in enumerate(csets):
         bestbig = []
@@ -30,27 +29,26 @@ def visualize(csets, maximize, labels, colors, fontfamily="serif", limit=0):
                 best.append(opt(fx))
             bestbig.append(best)
 
-        for b in bestbig:
-            print(b)
+        # for b in bestbig:
+        #     print(b)
 
         mean = np.mean(bestbig, axis=0)
         std = np.std(bestbig, axis=0)
         avgbest = opt(mean)
-        print(avgbest)
+        # print(avgbest)
         plt.plot(i, mean, label=" Avg best {}: {}".format(labels[l], avgbest), color=colors[l])
-        # plt.fill_between(i, mean - std, mean + std, color=colors[l], alpha=0.2)
+        plt.fill_between(i, mean - std, mean + std, color=colors[l], alpha=0.2)
 
     plt.rc('font', family=fontfamily)
-    plt.yscale("log")
+    # plt.yscale("log")
     plt.xlabel("fx evaluation")
     plt.ylabel("fx value")
     plt.legend()
-    return plt
+    return (mean[-1], std[-1])
 
 
 
-def ran_run(func, dims, runs, comps_per_run, maximize):
-    opt = max if maximize else min
+def ran_run(func, dims, opt, runs, comps_per_run):
     best = np.zeros((runs, comps_per_run))
     for r in range(runs):
         print("RUN {} of {}".format(r, runs))
@@ -64,26 +62,6 @@ def ran_run(func, dims, runs, comps_per_run, maximize):
     meanbest = np.mean(best, axis=0)
     return ([i + 1 for i in range(comps_per_run)], meanbest)
 
-
-def ds(dims):
-    total_dimspace = []
-    for dim in dims:
-        if len(dim) == 2:
-            lower = dim[0]
-            upper = dim[1]
-            if type(lower) in dtypes.ints:
-                # Then the dimension is of the form (lower, upper)
-                dimspace = list(range(lower, upper + 1))
-            elif type(lower) in dtypes.floats:
-                    dimspace = [random.uniform(lower, upper) for _ in range(1000)]
-            else:  # The dimension is a discrete finite string list of two entries
-                dimspace = dim
-        else:  # the dimension is a list of categories or discrete integer/float entries
-            dimspace = dim
-        random.shuffle(dimspace)
-        total_dimspace.append(dimspace)
-    space = [[xi] for xi in total_dimspace[0]] if len(dims) == 1 else product(*total_dimspace)
-    return space
 
 
 def rastrigin(X):
@@ -103,7 +81,7 @@ if __name__ == "__main__":
 
     # ranx, rany = ran_run(branin, dim, runs=1000, comps_per_run=50, maximize=False)
     # df = pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ALEXGRAPHER_ran_bran.csv")
-
+    #
     # lpad = LaunchPad(host='localhost', port=27017, name='bran')
     # df = pd.DataFrame.from_csv("ALEXGRAPHER_ran_bran.csv")
     # ranx = df['x']
@@ -115,15 +93,16 @@ if __name__ == "__main__":
     # plt.show()
 
 
-    #BRANIN
-    # ranx, rany = ran_run(branin, dim, runs=10000, comps_per_run=50, maximize=False)
-    # df = pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ALEXGRAPHER_ran_bran.csv")
-    lpad = LaunchPad(host='localhost', port=27017, name='bran')
-    df = pd.DataFrame.from_csv("ALEXGRAPHER_ran_bran.csv")
-    ranx = df['x']
-    rany = df['y']
-    hi_runs = [getattr(lpad.db, "nonE{}".format(i)) for i in range(100)]
-    plt = visualize([hi_runs], False, labels=['HI'], colors=['blue'], limit=10)
-    plt.plot(ranx, rany, color='black')
-    print(min(rany))
-    plt.show()
+    # BRANIN
+    ranx, rany = ran_run(branin, dim, min, runs=10000, comps_per_run=50)
+    # pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ran_bran.csv")
+    # lpad = LaunchPad(host='localhost', port=27017, name='bran')
+    # df = pd.DataFrame.from_csv("ran_bran.csv")
+    # ranx = df['x']
+    # rany = df['y']
+    # hi_runs = [getattr(lpad.db, "none{}".format(i)) for i in range(100)]
+    # bm, bs = visualize([hi_runs], min, labels=['HI'], colors=['blue'], limit=50)
+    # plt.plot(ranx, rany, color='black')
+    # print "BEST RANDOM", min(rany)
+    # print "BEST OPT", bm, "+-", bs
+    # plt.show()
