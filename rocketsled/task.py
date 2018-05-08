@@ -684,6 +684,9 @@ class OptTask(FireTaskBase):
                                 # x vector
                                 x_new, z_new = xz_new[:len(x)], xz_new[len(x):]
 
+                                # Python3/new bson type conversion for numpy
+                                y = float(y)
+
                                 # if it is a duplicate (such as a forced
                                 # identical first guess)
                                 forced_dupe = self.c.find_one({'x': x})
@@ -1002,11 +1005,13 @@ class OptTask(FireTaskBase):
         # Scale data if all floats for dimensions
         if scaling:
             scaler = StandardScaler()
-            scaler.fit(X + space)
-            X = scaler.transform(X)
-            scaled = scaler.transform(space)
+            train_set = np.vstack((X, space))
+            scaler.fit(train_set)
+            X_scaled = scaler.transform(X)
+            space_scaled = scaler.transform(space)
         else:
-            scaled = space
+            X_scaled = X
+            space_scaled = space
 
         if self.param_grid and len(X) > 10:
             predictor_name = model.__class__.__name__
