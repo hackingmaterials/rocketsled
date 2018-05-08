@@ -86,6 +86,25 @@ def random_guess(dimensions, dtypes=Dtypes()):
                             "categorical or numerical type".format(type(upper)))
     return random_vector
 
+
+def latex_float(f):
+    """
+    Convert floating point number into latex-formattable string for visualize.
+    Might relocate to viz.py
+
+    Args:
+        f (float): A floating point number
+
+    Returns:
+        float_str (str): A latex-formatted string representing f.
+    """
+    float_str = "{0:.3g}".format(f)
+    if "e" in float_str:
+        base, exponent = float_str.split("e")
+        return r"{0} \times 10^{{{1}}}".format(base, int(exponent))
+    else:
+        return float_str
+
 def pareto(Y):
     """
     Returns the indices of Pareto-optimal solutions.
