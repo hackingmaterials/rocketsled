@@ -4,7 +4,6 @@ import datetime
 import numpy as np
 from matplotlib import pyplot as plt
 from skopt.benchmarks import branin, hart6
-from scipy.optimize import rosen
 from rocketsled import auto_setup
 from rocketsled.utils import Dtypes
 import random
@@ -64,19 +63,27 @@ def ran_run(func, dims, opt, runs, comps_per_run):
 
 
 
-def rastrigin(X):
+def rast(X):
     return 10*len(X) + sum([(x**2 - 10 * np.cos(2 * math.pi * x)) for x in X])
 
-def rastrigindim (dim):
+def rastdim (dim):
     return [(-5.12, 5.12)] * dim
 
 def hartdim(dim):
     return [(0.0, 1.0)] * dim
 
+def rose(x):
+    x = np.asarray(x)
+    r = np.sum(100.0 * (x[1:] - x[:-1]**2.0)**2.0 + (1 - x[:-1])**2.0, axis=0)
+    return r
+
+def rosedim(dim):
+    return [(-2.048, 2.048)] * dim
+
 if __name__ == "__main__":
 
 
-    # BRANIN RF
+    # BRANIN 2D RF
     # dim = [(-5.0, 10.0), (0.0, 15.0)] # branin
     # # for i in range(100):
     # #     auto_setup(branin, dim, wfname='bran{}'.format(i), opt_label='ei{}'.format(i), host='localhost', acq='ei', name='bran', port=27017, n_bootstraps=1000, predictor="RandomForestRegressor", n_search_points=10000)
@@ -95,13 +102,32 @@ if __name__ == "__main__":
     # plt.show()
 
 
-    # Hartmann6D RF
-    dim = hartdim(6)  # branin
-    for i in range(100):
-        auto_setup(hart6, dim, wfname='hart{}'.format(i), opt_label='ei{}'.format(i), host='localhost', acq='ei', name='hart', port=27017, n_bootstraps=1000, predictor="RandomForestRegressor", n_search_points=10000)
+    # ROSEN 2D RF
+    # dim = rosedim(2)
+    # for i in range(100):
+    #     auto_setup(rose, dim, wfname='rose{}'.format(i), opt_label='ei{}'.format(i), host='localhost', acq='ei', name='rose', port=27017, n_bootstraps=1000, predictor="RandomForestRegressor", n_search_points=10000)
+    #
+    # ranx, rany = ran_run(rose, dim, min, runs=10000, comps_per_run=50)
+    # pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ran_rose.csv")
+    # lpad = LaunchPad(host='localhost', port=27017, name='rose')
+    # df = pd.DataFrame.from_csv("ran_rose.csv")
+    # ranx = df['x']
+    # rany = df['y']
+    # ei_runs = [getattr(lpad.db, "ei{}".format(i)) for i in range(100)]
+    # bm, bs = visualize([ei_runs], min, labels=['EI'], colors=['blue'], limit=50)
+    # plt.plot(ranx, rany, color='black')
+    # print "BEST RANDOM", min(rany)
+    # print "BEST OPT", bm, "+-", bs
+    # plt.show()
 
-    ranx, rany = ran_run(hart6, dim, min, runs=10000, comps_per_run=50)
-    pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ran_hart.csv")
+
+    # Hartmann6D RF
+    # dim = hartdim(6)
+    # for i in range(100):
+    #     auto_setup(hart6, dim, wfname='hart{}'.format(i), opt_label='ei{}'.format(i), host='localhost', acq='ei', name='hart', port=27017, n_bootstraps=1000, predictor="RandomForestRegressor", n_search_points=10000)
+    #
+    # ranx, rany = ran_run(hart6, dim, min, runs=10000, comps_per_run=50)
+    # pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ran_hart.csv")
     # lpad = LaunchPad(host='localhost', port=27017, name='hart')
     # df = pd.DataFrame.from_csv("ran_hart.csv")
     # ranx = df['x']
@@ -112,3 +138,21 @@ if __name__ == "__main__":
     # print "BEST RANDOM", min(rany)
     # print "BEST OPT", bm, "+-", bs
     # plt.show()
+
+    # RASTRIGIN 50D
+    dim = rastdim(50)
+    for i in range(100):
+        auto_setup(rast, dim, wfname='rast{}'.format(i), opt_label='ei{}'.format(i), host='localhost', acq='ei', name='rast', port=27017, n_bootstraps=1000, predictor="RandomForestRegressor", n_search_points=10000)
+
+    ranx, rany = ran_run(rast, dim, min, runs=10000, comps_per_run=50)
+    pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ran_rast.csv")
+    lpad = LaunchPad(host='localhost', port=27017, name='rast')
+    df = pd.DataFrame.from_csv("ran_rast.csv")
+    ranx = df['x']
+    rany = df['y']
+    ei_runs = [getattr(lpad.db, "ei{}".format(i)) for i in range(100)]
+    bm, bs = visualize([ei_runs], min, labels=['EI'], colors=['blue'], limit=50)
+    plt.plot(ranx, rany, color='black')
+    print "BEST RANDOM", min(rany)
+    print "BEST OPT", bm, "+-", bs
+    plt.show()
