@@ -106,8 +106,8 @@ if __name__ == "__main__":
     # df = pd.DataFrame.from_csv("ran_hart.csv")
     # ranx = df['x']
     # rany = df['y']
-    # hi_runs = [getattr(lpad.db, "ei{}".format(i)) for i in range(100)]
-    # bm, bs = visualize([hi_runs], min, labels=['EI'], colors=['blue'], limit=50)
+    # ei_runs = [getattr(lpad.db, "ei{}".format(i)) for i in range(100)]
+    # bm, bs = visualize([ei_runs], min, labels=['EI'], colors=['blue'], limit=50)
     # plt.plot(ranx, rany, color='black')
     # print "BEST RANDOM", min(rany)
     # print "BEST OPT", bm, "+-", bs
