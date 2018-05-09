@@ -78,10 +78,15 @@ def rose(x):
     return r
 
 def rosedim(dim):
-    return [(-2.048, 2.048)] * dim
+    return [(-5.0, 10.0)] * dim
+
+
+def schaffer(x):
+    return 0.5 + ((math.sin(x[0]**2 - x[1]**2))**2 - 0.5)/\
+           ((1.0 + .001 * (x[0]**2 + x[1]**2)) ** 2)
+
 
 if __name__ == "__main__":
-
 
     # BRANIN 2D RF
     # dim = [(-5.0, 10.0), (0.0, 15.0)] # branin
@@ -114,7 +119,7 @@ if __name__ == "__main__":
     # ranx = df['x']
     # rany = df['y']
     # ei_runs = [getattr(lpad.db, "ei{}".format(i)) for i in range(100)]
-    # bm, bs = visualize([ei_runs], min, labels=['EI'], colors=['blue'], limit=50)
+    # bm, bs = visualize([ei_runs], min, labels=['EI'], colors=['blue'], limit=29)
     # plt.plot(ranx, rany, color='black')
     # print "BEST RANDOM", min(rany)
     # print "BEST OPT", bm, "+-", bs
@@ -140,19 +145,37 @@ if __name__ == "__main__":
     # plt.show()
 
     # RASTRIGIN 50D
-    dim = rastdim(50)
-    for i in range(100):
-        auto_setup(rast, dim, wfname='rast{}'.format(i), opt_label='ei{}'.format(i), host='localhost', acq='ei', name='rast', port=27017, n_bootstraps=1000, predictor="RandomForestRegressor", n_search_points=10000)
+    # dim = rastdim(50)
+    # for i in range(100):
+    #     auto_setup(rast, dim, wfname='rast{}'.format(i), opt_label='ei{}'.format(i), host='localhost', acq='ei', name='rast', port=27017, n_bootstraps=1000, predictor="RandomForestRegressor", n_search_points=10000)
+    #
+    # ranx, rany = ran_run(rast, dim, min, runs=10000, comps_per_run=50)
+    # pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ran_rast.csv")
+    # lpad = LaunchPad(host='localhost', port=27017, name='rast')
+    # df = pd.DataFrame.from_csv("ran_rast.csv")
+    # ranx = df['x']
+    # rany = df['y']
+    # ei_runs = [getattr(lpad.db, "ei{}".format(i)) for i in range(100)]
+    # bm, bs = visualize([ei_runs], min, labels=['EI'], colors=['blue'], limit=50)
+    # plt.plot(ranx, rany, color='black')
+    # print "BEST RANDOM", min(rany)
+    # print "BEST OPT", bm, "+-", bs
+    # plt.show()
 
-    ranx, rany = ran_run(rast, dim, min, runs=10000, comps_per_run=50)
-    pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ran_rast.csv")
-    lpad = LaunchPad(host='localhost', port=27017, name='rast')
-    df = pd.DataFrame.from_csv("ran_rast.csv")
-    ranx = df['x']
-    rany = df['y']
-    ei_runs = [getattr(lpad.db, "ei{}".format(i)) for i in range(100)]
-    bm, bs = visualize([ei_runs], min, labels=['EI'], colors=['blue'], limit=50)
-    plt.plot(ranx, rany, color='black')
-    print "BEST RANDOM", min(rany)
-    print "BEST OPT", bm, "+-", bs
-    plt.show()
+    # SCHAFFER N4 2D
+    dim = [(-100.0, 100.0), (-100.0, 100.0)]
+    for i in range(100):
+        auto_setup(schaffer, dim, wfname='scha{}'.format(i), opt_label='ei{}'.format(i), host='localhost', acq='ei', name='scha', port=27017, n_bootstraps=1000, predictor="RandomForestRegressor", n_search_points=10000)
+
+    ranx, rany = ran_run(schaffer, dim, min, runs=10000, comps_per_run=50)
+    pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ran_scha.csv")
+    # lpad = LaunchPad(host='localhost', port=27017, name='scha')
+    # df = pd.DataFrame.from_csv("ran_scha.csv")
+    # ranx = df['x']
+    # rany = df['y']
+    # ei_runs = [getattr(lpad.db, "ei{}".format(i)) for i in range(100)]
+    # bm, bs = visualize([ei_runs], min, labels=['EI'], colors=['blue'], limit=50)
+    # plt.plot(ranx, rany, color='black')
+    # print "BEST RANDOM", min(rany)
+    # print "BEST OPT", bm, "+-", bs
+    # plt.show()
