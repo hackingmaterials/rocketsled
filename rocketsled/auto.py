@@ -98,6 +98,11 @@ def auto_setup(func, dimensions, wfname=None, launch_ready=False, **kwargs):
 
         funcpath = "rocketsled.auto_sleds." + wfname + ".f"
 
+        # for the name of the workflow,
+        # prevent fws name indexing from causing bson errors with large dims
+        # also prevents webgui ugliness with large dims
+        pointstr = " @ ' + str(x)" if len(dimensions) < 5 else "'"
+
         with open(filename, 'w') as f:
             try:
                 f.write("from __future__ import unicode_literals\n")
@@ -128,7 +133,7 @@ def auto_setup(func, dimensions, wfname=None, launch_ready=False, **kwargs):
                 f.write("    fw1 = Firework([ot], spec=spec, "
                         "name='RocketsledFW')\n")
                 f.write("    wf = Workflow([fw0, fw1], {fw0: [fw1], fw1: []},"
-                        " name='" + wfname + " @ ' + str(x))\n")
+                        " name='" + wfname + pointstr + ")\n")
                 f.write("    return wf\n")
                 f.write("\n\nif __name__=='__main__': \n\n")
                 f.write("    # Make sure the launchpad below is correct, and "
