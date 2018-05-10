@@ -153,11 +153,13 @@ class OptTask(FireTaskBase):
         random_proba (int): Suggests a random guess with this probability. Must
             be a float between 0.0 (no random guesses) and 1.0 (totally random).
 
-        Extra features:
+        Features:
         get_z (string): the fully-qualified name of a function which, given a x
             vector, returns another vector z which provides extra information
             to the machine learner. The features defined in z are not used to
-            run the workflow creator.
+            run the workflow, but are used for learning. If z_features are
+            enabled, ONLY z features will be used for learning (x vectors
+            essentially become tags or identifiers only).
             Examples: 
                 get_z = 'my_module.my_fun'
                 get_z = '/path/to/folder/containing/my_package.my_module.my_fun'
@@ -226,9 +228,7 @@ class OptTask(FireTaskBase):
         _n_cats (int): The number of categorical dimensions.
         _encoding_info (dict): Data for converting between one-hot encoded data
             and categorical data.
-        _pareto (bool): Whether to use the pareto fronier to optimize with
-            respect to multiple objectives. This is automatically determined
-            from the form of the variables set in the spec.
+        _xlen (int): Length of the x vector.
     """
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
@@ -319,6 +319,7 @@ class OptTask(FireTaskBase):
                         # required args
                         wf_creator = deserialize(self['wf_creator'])
                         x_dims = self['dimensions']
+                        self._xlen = len(x_dims)
 
                         # predictor definition
                         if 'predictor' in self:
@@ -376,7 +377,7 @@ class OptTask(FireTaskBase):
                         if 'get_z' in self and self['get_z'] is not None:
                             self.get_z = deserialize(self['get_z'])
                         else:
-                            self.get_z = lambda input_vector: []
+                            self.get_z = lambda *args, **kwargs: []
                         if 'get_z_args' in self:
                             get_z_args = self['get_z_args']
                         else:
@@ -524,10 +525,6 @@ class OptTask(FireTaskBase):
                             XZ_explored[i] = doc['x'] + doc['z']
                             Y[i] = doc['y']
 
-                        if isinstance(Y[0], (list, tuple)):
-                            self._pareto = True
-                        else:
-                            self._pareto = False
                         X_space = self._discretize_space(x_dims)
                         X_space = list(X_space) if persistent_z else X_space
                         X_unexplored = []
@@ -569,10 +566,10 @@ class OptTask(FireTaskBase):
                                 raise TypeError("A comprehensive list of points"
                                                 " was exhausted but the "
                                                 "dimensions are not discrete.")
+                        z_dims = self._z_dims(XZ_unexplored, self._xlen)
+                        xz_dims = x_dims + z_dims
 
-                        xz_dims = x_dims + self._z_dims(XZ_unexplored, len(x))
-
-                        # run machine learner on Z and X features
+                        # run machine learner on Z or X features
                         plist = [RandomForestRegressor,
                                  GaussianProcessRegressor, AdaBoostRegressor,
                                  ExtraTreesRegressor, GradientBoostingRegressor,
@@ -597,8 +594,15 @@ class OptTask(FireTaskBase):
                                                              xz_dims)
                             # todo: Figure out if scaling categorical data makes
                             # todo: optimizer better
-                            scaling = False if self._is_discrete(
-                                dims=xz_dims, criteria='any') else True
+
+                            # Scale to
+                            if 'get_z' in self:
+                                scaling = False if self._is_discrete(
+                                    dims=z_dims, criteria='any') else True
+                            else:
+                                scaling = False if self._is_discrete(
+                                    dims=x_dims, criteria='any') else True
+
                             XZ_onehot = self._predict(
                                 XZ_explored, Y, XZ_unexplored,
                                 model(*predargs, **predkwargs), maximize,
@@ -682,7 +686,8 @@ class OptTask(FireTaskBase):
                             for xz_new in XZ_new:
                                 # separate 'predicted' z features from the new
                                 # x vector
-                                x_new, z_new = xz_new[:len(x)], xz_new[len(x):]
+                                x_new, z_new = xz_new[:self._xlen], \
+                                               xz_new[self._xlen:]
 
                                 # Python3/new bson type conversion for numpy
                                 y = float(y)
@@ -1002,7 +1007,12 @@ class OptTask(FireTaskBase):
                 objective function.
         """
 
-        # Scale data if all floats for dimensions
+        # If get_z defined, only use z features!
+        if 'get_z' in self:
+            X = np.asarray(X)[:, self._xlen:]
+            space = np.asarray(space)[:, self._xlen:]
+
+        # Scale data if all floats for dimensions in question
         if scaling:
             scaler = StandardScaler()
             train_set = np.vstack((X, space))
