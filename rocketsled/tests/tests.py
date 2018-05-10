@@ -354,13 +354,6 @@ class TestWorkflows(unittest.TestCase):
             except Exception:
                 pass
 
-        # Remove straggler FW.json file, if it exists...
-        fwjson_fp = os.path.dirname(os.path.realpath(__file__)) + '/FW.json'
-        try:
-            os.remove(fwjson_fp)
-        except Exception:
-            pass
-
 def suite():
     wf_test_suite = unittest.TestSuite()
     for tn in test_names:
