@@ -35,6 +35,7 @@ def wf_creator(x, launchpad, my_arg, my_kwarg=1):
                                             'example_predictor',
                                   max=True,
                                   lpad=launchpad,
+                                  random_proba = 0.5,
                                   wf_creator_args=[launchpad, my_arg * 3],
                                   wf_creator_kwargs={'my_kwarg': my_kwarg * 2},
                                   duplicate_check=True,
@@ -46,7 +47,7 @@ def wf_creator(x, launchpad, my_arg, my_kwarg=1):
 
 # An optional function which returns extra information 'z' from unique vector 'x'
 def get_z(x):
-    return [x[0] * 2, x[2] ** 3]
+    return x + [x[0] * 2.1, x[2] ** 3.4]
 
 # how an example custom optimization function could be used
 # replace the code inside example_predictor with your favorite optimizer
@@ -66,7 +67,7 @@ def run_workflows():
 
     # if n_launches > 24 for this particular example, the search space will be
     # exhausted and OptTask will throw an exception
-    rapidfire(launchpad, nlaunches=23, sleep_time=0)
+    rapidfire(launchpad, nlaunches=24, sleep_time=0)
 
     # tear down database
     # launchpad.connection.drop_database(TESTDB_NAME)
