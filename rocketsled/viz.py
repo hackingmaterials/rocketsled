@@ -184,6 +184,10 @@ def analyze(collection):
                              "ensure only one optimization is used for this "
                              "collection!"
                              "".format(collection, d, dim))
+    dimdoc = collection.find_one({'index': {'$exists': 1},
+                                'y': {'$exists': 1, "$ne": "reserved"}})
+    xdim = [type(d) for d in dimdoc['x']]
+    zdim = [type(d) for d in dimdoc['z']]
     n_opts = sum(predictors.values())
     n_reserved = collection.find({'y': 'reserved'}).count()
     breakdown = ""
@@ -195,19 +199,20 @@ def analyze(collection):
         lockstr = "DB not locked by any process (no current optimization)."
     else:
         lockstr = "DB locked by PID {}".format(lock)
-
-    fmtstr = "Problem dimension: {}\n" \
-             "Dimension Datatypes: {}\n" \
+    zlearn = "" if not zdim else "Only Z data is being used for learning."
+    fmtstr = "Problem dimension: \n    * X dimensions ({}): {}\n" \
+             "    * Z dimensions ({}): {}\n" \
+             "{}\n" \
              "Number of Optimizations: {}\n" \
              "Optimizers used (by percentage of optimizations): \n{}" \
              "Number of reserved guesses: {}\n" \
              "Number of waiting optimizations: {}\n" \
-             "{}\n".format(len(dim), dim, n_opts, breakdown, n_reserved, qlen,
-                           lockstr)
+             "{}\n".format(len(xdim), xdim, len(zdim), zdim, zlearn, n_opts,
+                           breakdown, n_reserved, qlen, lockstr)
     return fmtstr
 
 
 if __name__ == "__main__":
     from fireworks import LaunchPad
-    lpad = LaunchPad(host='localhost', port=27017, name='hart')
-    visualize(lpad.db.ei90)
+    lpad = LaunchPad(host='localhost', port=27017, name='rsled')
+    visualize(lpad.db.opt_extras)
