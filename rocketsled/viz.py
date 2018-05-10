@@ -209,5 +209,5 @@ def analyze(collection):
 
 if __name__ == "__main__":
     from fireworks import LaunchPad
-    lpad = LaunchPad(host='localhost', port=27017, name='bran')
-    visualize(lpad.db.ei10, maximize=False, latexify=True)
+    lpad = LaunchPad(host='localhost', port=27017, name='hart')
+    visualize(lpad.db.ei90)
