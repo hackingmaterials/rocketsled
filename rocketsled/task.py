@@ -228,7 +228,8 @@ class OptTask(FireTaskBase):
         _n_cats (int): The number of categorical dimensions.
         _encoding_info (dict): Data for converting between one-hot encoded data
             and categorical data.
-        _xlen (int): Length of the x vector.
+        _xdim_spec ([str]): Specifications about the datatype of the x
+            dimensions.
     """
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
@@ -319,7 +320,6 @@ class OptTask(FireTaskBase):
                         # required args
                         wf_creator = deserialize(self['wf_creator'])
                         x_dims = self['dimensions']
-                        self._xlen = len(x_dims)
 
                         # predictor definition
                         if 'predictor' in self:
@@ -451,7 +451,7 @@ class OptTask(FireTaskBase):
                         # workflow.
                         self.c.delete_one({'x': x, 'y': 'reserved'})
                         self.dtypes = Dtypes()
-                        self._check_dims(x_dims)
+                        self.xdim_spec = self._check_dims(x_dims)
 
                         # fetch additional attributes for constructing ML model
                         z = self.get_z(x, *get_z_args, **get_z_kwargs)
@@ -531,7 +531,6 @@ class OptTask(FireTaskBase):
                         for xi in X_space:
                             xj = list(xi)
                             if xj not in X_explored and xj not in reserved:
-                            # if self.c.find({'x': xj}).count() == 0 and xj != x:
                                 X_unexplored.append(xj)
                                 if len(X_unexplored) == self.n_searchpts:
                                     break
@@ -566,7 +565,7 @@ class OptTask(FireTaskBase):
                                 raise TypeError("A comprehensive list of points"
                                                 " was exhausted but the "
                                                 "dimensions are not discrete.")
-                        z_dims = self._z_dims(XZ_unexplored, self._xlen)
+                        z_dims = self._z_dims(XZ_unexplored, len(x_dims))
                         xz_dims = x_dims + z_dims
 
                         # run machine learner on Z or X features
@@ -579,19 +578,19 @@ class OptTask(FireTaskBase):
 
                         if random_proba:
                             if random_proba > 1.0 or random_proba < 0.0 or \
-                                random_proba not in self.dtypes.floats:
-                                raise ValueError("The probability of a random"
+                                type(random_proba) not in self.dtypes.floats:
+                                raise ValueError("The probability of a random "
                                                  "guess is between 0.0 and 1.0."
-                                                 "Please enter a float in this "
-                                                 "range")
+                                                 " Please enter a float in this"
+                                                 " range")
                             if np.random.rand() < random_proba:
                                 predictor = 'random'
 
                         if predictor in self.predictors:
                             model = self.predictors[predictor]
-                            XZ_explored = self._preprocess(XZ_explored, xz_dims)
-                            XZ_unexplored = self._preprocess(XZ_unexplored,
-                                                             xz_dims)
+                            XZ_explored = self._encode(XZ_explored, xz_dims)
+                            XZ_unexplored = self._encode(XZ_unexplored,
+                                                         xz_dims)
                             # todo: Figure out if scaling categorical data makes
                             # todo: optimizer better
 
@@ -607,7 +606,7 @@ class OptTask(FireTaskBase):
                                 XZ_explored, Y, XZ_unexplored,
                                 model(*predargs, **predkwargs), maximize,
                                 batch_size, scaling)
-                            XZ_new = [self._postprocess(xz_onehot, xz_dims) for
+                            XZ_new = [self._decode(xz_onehot, xz_dims) for
                                       xz_onehot in XZ_onehot]
 
                         elif predictor == 'random':
@@ -619,10 +618,10 @@ class OptTask(FireTaskBase):
                             # Used when a custom predictor cannot natively use
                             # categorical info
                             if encode_categorical:
-                                XZ_explored = self._preprocess(XZ_explored,
-                                                               xz_dims)
-                                XZ_unexplored = self._preprocess(XZ_unexplored,
-                                                                 xz_dims)
+                                XZ_explored = self._encode(XZ_explored,
+                                                           xz_dims)
+                                XZ_unexplored = self._encode(XZ_unexplored,
+                                                             xz_dims)
 
                             try:
                                 predictor_fun = deserialize(predictor)
@@ -686,8 +685,8 @@ class OptTask(FireTaskBase):
                             for xz_new in XZ_new:
                                 # separate 'predicted' z features from the new
                                 # x vector
-                                x_new, z_new = xz_new[:self._xlen], \
-                                               xz_new[self._xlen:]
+                                x_new, z_new = xz_new[:len(x_dims)], \
+                                               xz_new[len(x_dims):]
 
                                 # Python3/new bson type conversion for numpy
                                 y = float(y)
@@ -848,6 +847,7 @@ class OptTask(FireTaskBase):
             None
         """
         dims_types = [list, tuple]
+        dim_spec = []
 
         if type(dims) not in dims_types:
             raise TypeError("The dimensions must be a list or tuple.")
@@ -863,6 +863,29 @@ class OptTask(FireTaskBase):
                                     "used with OptTask. A list of acceptable "
                                     "datatypes is {}".format(entry, dim,
                                                              self.dtypes.all))
+                for dset in [self.dtypes.ints,
+                             self.dtypes.floats,
+                             self.dtypes.others]:
+                    if type(entry) not in dset and type(dim[0]) in dset:
+                        raise TypeError("The dimension {} contains heterogeneous"
+                                        " types: {} and {}".format(dim,
+                                                                  type(dim[0]),
+                                                                  type(entry)))
+            if isinstance(dim, list):
+                if type(dim[0]) in self.dtypes.ints:
+                    dim_spec.append("int_set")
+                elif type(dim[0]) in self.dtypes.floats:
+                    dim_spec.append("float_set")
+                elif type(dim[0]) in self.dtypes.others:
+                    dim_spec.append("categorical {}".format(len(dim)))
+            elif isinstance(dim, tuple):
+                if type(dim[0]) in self.dtypes.ints:
+                    dim_spec.append("int_range")
+                elif type(dim[0]) in self.dtypes.floats:
+                    dim_spec.append("float_range")
+                elif type(dim[0]) in self.dtypes.others:
+                    dim_spec.append("categorical {}".format(len(dim)))
+        return dim_spec
 
     def _is_discrete(self, dims, criteria='all'):
         """
@@ -985,8 +1008,8 @@ class OptTask(FireTaskBase):
         regressive predictor evaluated on remaining points in a discrete space.
 
         Since sklearn modules cannot deal with categorical data, categorical
-        data is preprocessed by _preprocess before being passed to _predict,
-        and predicted x vectors are postprocessed by _postprocess to convert to
+        data is preprocessed by _encode before being passed to _predict,
+        and predicted x vectors are postprocessed by _decode to convert to
         the original categorical dimensions.
 
         Args:
@@ -1007,11 +1030,6 @@ class OptTask(FireTaskBase):
                 objective function.
         """
 
-        # If get_z defined, only use z features!
-        if 'get_z' in self:
-            X = np.asarray(X)[:, self._xlen:]
-            space = np.asarray(space)[:, self._xlen:]
-
         # Scale data if all floats for dimensions in question
         if scaling:
             scaler = StandardScaler()
@@ -1022,6 +1040,17 @@ class OptTask(FireTaskBase):
         else:
             X_scaled = X
             space_scaled = space
+
+        # If get_z defined, only use z features!
+        if 'get_z' in self:
+            encoded_xlen = 0
+            for t in self.xdim_spec:
+                if "int" in t or "float" in t:
+                    encoded_xlen += 1
+                else:
+                    encoded_xlen += int(t[-1])
+            X_scaled = np.asarray(X_scaled)[:, encoded_xlen:]
+            space_scaled = np.asarray(space_scaled)[:, encoded_xlen:]
 
         if self.param_grid and len(X) > 10:
             predictor_name = model.__class__.__name__
@@ -1062,7 +1091,7 @@ class OptTask(FireTaskBase):
         indices = [values.index(p) for p in predictions]
         return [space[i] for i in indices]
 
-    def _preprocess(self, X, dims):
+    def _encode(self, X, dims):
         """
         Transforms data containing categorical information to "one-hot" encoded
         data, since sklearn cannot process categorical data on its own.
@@ -1101,7 +1130,7 @@ class OptTask(FireTaskBase):
                 self._n_cats += 1
         return X
 
-    def _postprocess(self, new_x, dims):
+    def _decode(self, new_x, dims):
         """
         Convert a "one-hot" encoded point (the predicted guess) back to the
         original categorical dimensions.
