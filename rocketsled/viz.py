@@ -15,7 +15,7 @@ __email__ = "ardunn@lbl.gov"
 
 def visualize(collection, maximize=False, showbest=True, showmean=True,
               latexify=False, fontfamily="serif", mode='show',
-              scale='linear', analysis=True):
+              scale='linear', analysis=True, objective_number=None):
     """
     Visualize the progress of an optimization.
 
@@ -38,6 +38,8 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
         scale (str): Whether to scale the plot's y axis according to log ('log')
             or 'linear' scale.
         analysis (bool): If True, stdouts info from analyze().
+        objective_number (int): If this is a multiobjective optimization, tells
+            the index of the objective you want to visualize.
 
     Returns:
         Either None, a matplotlib plot, or a pymongo iterator. See 'mode' for
@@ -62,7 +64,10 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
     t0 = time.time()
 
     for doc in collection.find({'index': {'$exists': 1}}):
-        fx.append(doc['y'])
+        if objective_number is not None:
+            fx.append(doc['y'][objective_number])
+        else:
+            fx.append(doc['y'])
         i.append(doc['index'])
         best.append(opt(fx))
         mean.append(np.mean(fx))
@@ -122,8 +127,10 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
 
             artext = artext[:-2] + "]"
             if maximize:
+                print("max(f(x)) is {}".format(best_val))
                 print("argmax(f(x)) is {}".format(b['x']))
             else:
+                print("min(f(x)) is {}".format(best_val))
                 print("argmin(f(x)) is {}".format(b['x']))
             plt.annotate(artext,
                          xy=(b['index'] + 0.5, best_val),
@@ -215,4 +222,4 @@ def analyze(collection):
 if __name__ == "__main__":
     from fireworks import LaunchPad
     lpad = LaunchPad(host='localhost', port=27017, name='rsled')
-    visualize(lpad.db.opt_extras)
+    visualize(lpad.db.opt_multi2, objective_number=0, maximize=False)
