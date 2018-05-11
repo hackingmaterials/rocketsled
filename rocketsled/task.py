@@ -1132,7 +1132,7 @@ class OptTask(FireTaskBase):
                     for j, pfj in enumerate(pf):
                         # select minimum positive distance to pareto point
                         # even if maximizing
-                        mins[j] = min(mui - pfj) if maximize else min(pfj - mui)
+                        mins[j] = min(pfj - mui) if maximize else min(mui - pfj)
                     dmaximin[i] = max(mins)
                 pi_product = np.prod(values, axis=1)
                 values = pi_product * dmaximin
