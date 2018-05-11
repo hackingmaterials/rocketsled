@@ -28,7 +28,7 @@ __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
 
 test_names = ['test_basic', 'test_custom_predictor', 'test_complex',
-              'test_duplicates', 'test_get_z']
+              'test_duplicates', 'test_get_z', 'test_multi', 'test_parallel']
 
 @explicit_serialize
 class BasicTestTask(FireTaskBase):
@@ -46,6 +46,15 @@ class AccuracyTask(FireTaskBase):
     def run_task(self, fw_spec):
         x = fw_spec['_x_opt']
         y = x[0] * x[1] / x[2]
+        return FWAction(update_spec={'_y_opt': y})
+
+@explicit_serialize
+class MultiTestTask(FireTaskBase):
+    _fw_name = "MultiTestTask"
+
+    def run_task(self, fw_spec):
+        x = fw_spec['_x_opt']
+        y = [np.sum(x[:-1]), np.prod(x[:-1])]
         return FWAction(update_spec={'_y_opt': y})
 
 def wf_creator_basic(x, launchpad):
@@ -194,6 +203,23 @@ def wf_creator_parallel(x, launchpad):
     firework1 = Firework([at, ot], spec=spec)
     return Workflow([firework1])
 
+def wf_creator_multiobjective(x, launchpad):
+    """
+    Testing a multiobjective optimization.
+    """
+
+    spec = {'_x_opt': x}
+    dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
+    mt = MultiTestTask()
+    ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_multiobjective',
+                 dimensions=dims,
+                 predictor='RandomForestRegressor',
+                 predictor_kwargs={'random_state': 1},
+                 lpad=launchpad,
+                 wf_creator_args=[launchpad],
+                 opt_label='test_multi')
+    firework1 = Firework([mt, ot], spec=spec)
+    return Workflow([firework1])
 
 def custom_predictor(*args, **kwargs):
     return [3, 12.0, 'green']
@@ -334,6 +360,22 @@ class TestWorkflows(unittest.TestCase):
             X_unique.append(doc['x'])
         self.assertEqual(len(X_unique), 125)
 
+    def test_multi(self):
+        self.lp.reset(password=None, require_password=False)
+        self.lp.add_wf(wf_creator_multiobjective([5, 11, 'blue'], self.lp))
+        launch_rocket(self.lp)
+
+        col = self.db.test_multi
+        manager = col.find_one({'y': {'$exists': 0}})
+        done = col.find_one({'y': {'$exists': 1, '$ne': 'reserved'}})
+        reserved = col.find_one({'y': 'reserved'})
+
+        self.assertEqual(col.find({}).count(), 3)
+        self.assertEqual(manager['lock'], None)
+        self.assertEqual(manager['queue'], [])
+        self.assertEqual(done['x'], [5, 11, 'blue'])
+        self.assertEqual(done['index'], 1)
+        self.assertEqual(len(done['y']), 2)
 
     def tearDown(self):
         try:
@@ -365,3 +407,4 @@ def suite():
 
 if __name__ == "__main__":
     unittest.main()
+
