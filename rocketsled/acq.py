@@ -14,7 +14,7 @@ __author__ = "Alexander Dunn"
 __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
 
-def acquire(acq, X, Y, space, model, maximize, nstraps):
+def acquire(acq, X, Y, space, model, maximize, nstraps, return_means=False):
     """
     A high level function for calculating acquisition values. Includes a
     strategy for estimating mean values and uncertainty with bootstrapping;
@@ -62,7 +62,10 @@ def acquire(acq, X, Y, space, model, maximize, nstraps):
         Y = -1 * np.asarray(Y)
         mu = -1 * mu
 
-    return acqf(min(Y), mu, std).tolist()
+    if return_means:
+        return (acqf(min(Y), mu, std).tolist(), mu)
+    else:
+        return acqf(min(Y), mu, std).tolist()
 
 def ppredict(X, Y, space, model):
     """
@@ -114,7 +117,7 @@ def ei(fmin, mu, std):
 
 def pi(fmin, mu, std):
     """
-    Returns expected improvement values.
+    Returns probability of improvement values.
 
     Args:
         fmin (float): Minimum value of the objective function known thus far.
@@ -133,18 +136,8 @@ def pi(fmin, mu, std):
 
 def lcb(fmin, mu, std):
     """
-    Returns expected improvement values.
-
-    Args:
-        fmin (float): Minimum value of the objective function known thus far.
-        mu (numpy array):  Mean value of bootstrapped predictions for each y.
-        std (numpy array): Standard deviation of bootstrapped predictions for
-            each y.
-
-    Returns:
-        vals (numpy array): Acquisition values.
-
-        """
+??????
+    """
     # todo: this is broken. :(
     beta = 1.96
     return mu - beta * std
