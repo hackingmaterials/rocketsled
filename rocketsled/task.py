@@ -28,7 +28,7 @@ from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction, LaunchPad
 from rocketsled.acq import acquire
-from rocketsled.utils import deserialize, Dtypes
+from rocketsled.utils import deserialize, Dtypes, pareto
 try:
     # for Python 3.6-
     import cPickle as pickle
@@ -240,7 +240,7 @@ class OptTask(FireTaskBase):
                        'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs',
                        'encode_categorical', 'duplicate_check', 'max',
                        'batch_size', 'tolerance', 'hyper_opt', 'param_grid',
-                       'timeout', 'n_bootstraps']
+                       'timeout', 'n_boots']
 
     def run_task(self, fw_spec):
         """
@@ -350,7 +350,8 @@ class OptTask(FireTaskBase):
                             self.n_searchpts = 1000
                         if 'acq' in self:
                             self.acq = self['acq']
-                            if self.acq not in [None, 'ei', 'pi', 'lcb']:
+                            acq_funcs  =[None, 'ei', 'pi', 'lcb', 'maximin']
+                            if self.acq not in acq_funcs:
                                 raise ValueError(
                                     "Invalid acquisition function. Use 'ei', "
                                     "'pi', 'lcb', or None.")
@@ -443,6 +444,24 @@ class OptTask(FireTaskBase):
                         x = list(fw_spec['_x_opt'])
                         y = fw_spec['_y_opt']
 
+                        if isinstance(y, (list, tuple)):
+                            if len(y) == 1:
+                                y = y[0]
+
+                            self.n_objs = len(y)
+                            if self.acq not in ("maximin", None):
+                                raise ValueError(
+                                    "{} is not a valid acquisition function for "
+                                    "multiobjective optimization".format(
+                                        self.acq))
+                        else:
+                            if self.acq == "maximin":
+                                raise ValueError(
+                                    "Maximin is not a valid acquisition "
+                                    "function for single objective "
+                                    "optimization.")
+                            self.n_objs = 1
+
                         # If process A suggests a certain guess and runs it,
                         # process B may suggest the same guess while process A
                         # is running its new workflow. Therefore, process A must
@@ -451,7 +470,7 @@ class OptTask(FireTaskBase):
                         # workflow.
                         self.c.delete_one({'x': x, 'y': 'reserved'})
                         self.dtypes = Dtypes()
-                        self.xdim_spec = self._check_dims(x_dims)
+                        self._xdim_spec = self._check_dims(x_dims)
 
                         # fetch additional attributes for constructing ML model
                         z = self.get_z(x, *get_z_args, **get_z_kwargs)
@@ -689,7 +708,10 @@ class OptTask(FireTaskBase):
                                                xz_new[len(x_dims):]
 
                                 # Python3/new bson type conversion for numpy
-                                y = float(y)
+                                if self.n_objs == 1:
+                                    y = float(y)
+                                else:
+                                    y = list(y)
 
                                 # if it is a duplicate (such as a forced
                                 # identical first guess)
@@ -698,11 +720,15 @@ class OptTask(FireTaskBase):
                                 acqmap = {"ei": "Expected Improvement",
                                           "pi": "Probability of Improvement",
                                           "lcb": "Lower Confidence Boundary",
-                                          None: "Highest Value"}
+                                          None: "Highest Value",
+                                          "maximin": "Maximin Expected "
+                                                     "Improvement"}
                                 if predictor in self.predictors:
                                     predictorstr = predictor + \
                                                    " with acquisition: " + \
                                                    acqmap[self.acq]
+                                    if self.n_objs > 1:
+                                        predictorstr += " using {} objectives".format(self.n_objs)
                                 else:
                                     predictorstr = predictor
                                 if forced_dupe:
@@ -745,10 +771,13 @@ class OptTask(FireTaskBase):
                                         "".format(x_new))
 
                     except TypeError as E:
-                        warnings.warn("Process {} timed out while computing "
-                                      "next guess, with exception {}"
+                        warnings.warn("Process {} probably timed out while "
+                                      "computing next guess, with exception {}."
+                                      " Try shortening the training time or "
+                                      "lengthening the timeout for OptTask!"
                                       "".format(pid, E), RuntimeWarning)
-                        continue
+                        raise E
+                        # continue
 
                     self.pop_lock(manager_id)
                     X_new = [xz_new[:len(x)] for xz_new in XZ_new]
@@ -1014,7 +1043,8 @@ class OptTask(FireTaskBase):
 
         Args:
             X ([list]): List of vectors containing input training data.
-            Y (list): List of scalars containing output training data.
+            Y (list): List of scalars containing output training data. Can
+                be a list of vectors if undergoing multiobjective optimization.
             space ([list]): List of vectors containing all unexplored inputs.
                 Should be preprocessed.
             model (sklearn model): The regressor used for predicting the next
@@ -1041,10 +1071,13 @@ class OptTask(FireTaskBase):
             X_scaled = X
             space_scaled = space
 
+        n_explored = len(X)
+        n_unexplored = len(space)
+
         # If get_z defined, only use z features!
         if 'get_z' in self:
             encoded_xlen = 0
-            for t in self.xdim_spec:
+            for t in self._xdim_spec:
                 if "int" in t or "float" in t:
                     encoded_xlen += 1
                 else:
@@ -1052,37 +1085,58 @@ class OptTask(FireTaskBase):
             X_scaled = np.asarray(X_scaled)[:, encoded_xlen:]
             space_scaled = np.asarray(space_scaled)[:, encoded_xlen:]
 
-        if self.param_grid and len(X) > 10:
-            predictor_name = model.__class__.__name__
-            if predictor_name not in self.predictors:
-                raise ValueError("Cannot perform automatic hyperparameter "
-                                 "search with custom optimizer.")
-            if not self.hyper_opt:
-                n_combos = reduce(mul, [len(p) for p in
-                                        list(self.param_grid.values())], 1)
-                hp_selector = GridSearchCV(model, self.param_grid,
-                                           n_jobs=n_combos)
-            elif self.hyper_opt>=1:
-                hp_selector = RandomizedSearchCV(model, self.param_grid,
-                                                 n_iter=self.hyper_opt,
-                                                 n_jobs=self.hyper_opt)
-            else:
-                raise ValueError("Automatic hyperparameter optimization must be"
-                                 " either grid or random. Please set the "
-                                 "hyper_opt parameter to None for GridSearchCV "
-                                 "and to any integer larger than 1 for "
-                                 "n iterations of RandomizedSearchCV.")
-            hp_selector.fit(X_scaled, Y)
-            model = model.__class__(**hp_selector.best_params_)
 
-        if self.acq is None or len(X_scaled) < 10:
-            model.fit(X_scaled, Y)
-            values = model.predict(space_scaled).tolist()
-            evaluator = heapq.nlargest if maximize else heapq.nsmallest
+        if self.n_objs == 1:
+            # Single objective
+            if self.param_grid and n_explored > 10:
+                model = self._hyperparameter_opt(model, X_scaled, Y)
+
+            if self.acq is None or n_explored < 10:
+                model.fit(X_scaled, Y)
+                values = model.predict(space_scaled).tolist()
+                evaluator = heapq.nlargest if maximize else heapq.nsmallest
+            else:
+                # Use the acquistion function values
+                values = acquire(self.acq, X_scaled, Y, space_scaled, model,
+                                 maximize, self.n_boots)
+                evaluator = heapq.nlargest
         else:
-            # Use the acquistion function values
-            values = acquire(self.acq, X_scaled, Y, space_scaled, model,
-                             maximize, self.n_boots)
+            # Multi-objective
+            Y = np.asarray(Y)
+            values = np.zeros((n_unexplored, self.n_objs))
+            mu = np.zeros((n_unexplored, self.n_objs))
+            for i in range(self.n_objs):
+                yobj = [y[i] for y in Y]
+                if self.param_grid and n_explored > 10:
+                    model = self._hyperparameter_opt(model, X_scaled, yobj)
+                if self.acq is None or n_explored < 10:
+                    model.fit(X_scaled, yobj)
+                    values[:, i] = model.predict(space_scaled)
+                elif self.acq == "maximin":
+                    mu[:, i], values[:, i] = acquire("pi", X_scaled, yobj,
+                                                     space_scaled, model,
+                                                     maximize, self.n_boots,
+                                                     return_means=True)
+            if self.acq is None:
+                # In exploitative strategy, randomly weight pareto optimial
+                # predictions!
+                values = pareto(values, maximize=maximize) * \
+                         np.random.uniform(0, 1, n_unexplored)
+            else:
+                assert(self.acq == "maximin")
+                pf = Y[pareto(Y, maximize=maximize)]
+                dmaximin = np.zeros(n_unexplored)
+                for i, mui in enumerate(mu):
+                    # include a zero in mins in case no pareto improvement
+                    mins = np.zeros(len(pf) + 1)
+                    for j, pfj in enumerate(pf):
+                        # select minimum positive distance to pareto point
+                        # even if maximizing
+                        mins[j] = min(mui - pfj) if maximize else min(pfj - mui)
+                    dmaximin[i] = max(mins)
+                pi_product = np.prod(values, axis=1)
+                values = pi_product * dmaximin
+            values = values.tolist()
             evaluator = heapq.nlargest
 
         #todo: possible batch duplicates if two x predict the same y?
@@ -1090,6 +1144,30 @@ class OptTask(FireTaskBase):
         predictions = evaluator(n_predictions, values)
         indices = [values.index(p) for p in predictions]
         return [space[i] for i in indices]
+
+    def _hyperparameter_opt(self, model, X, Y):
+        predictor_name = model.__class__.__name__
+        if predictor_name not in self.predictors:
+            raise ValueError("Cannot perform automatic hyperparameter "
+                             "search with custom optimizer.")
+        if not self.hyper_opt:
+            n_combos = reduce(mul, [len(p) for p in
+                                    list(self.param_grid.values())], 1)
+            hp_selector = GridSearchCV(model, self.param_grid,
+                                       n_jobs=n_combos)
+        elif self.hyper_opt >= 1:
+            hp_selector = RandomizedSearchCV(model, self.param_grid,
+                                             n_iter=self.hyper_opt,
+                                             n_jobs=self.hyper_opt)
+        else:
+            raise ValueError("Automatic hyperparameter optimization must be"
+                             " either grid or random. Please set the "
+                             "hyper_opt parameter to None for GridSearchCV "
+                             "and to any integer larger than 1 for "
+                             "n iterations of RandomizedSearchCV.")
+        hp_selector.fit(X, Y)
+        model = model.__class__(**hp_selector.best_params_)
+        return model
 
     def _encode(self, X, dims):
         """
