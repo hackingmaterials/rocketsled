@@ -296,20 +296,22 @@ class TestWorkflows(unittest.TestCase):
         self.assertEqual(loop2['z'], [9, 144.0])
 
     def test_accuracy(self):
-        self.lp.reset(password=None, require_password=False)
-        self.lp.add_wf(wf_creator_accuracy([1, 10.1, 30.1], self.lp))
-        for _ in range(20):
-            launch_rocket(self.lp)
-        # We want to maximize the function. The minimum is 0.5, and the maximum
-        # is 10.
-        avg_random_best = 7.23002918931 # calculated with 1,000,000 calcs
-        best = None
-        for doc in self.db.test_accuracy.find({'y': {'$exists': 1,
-                                                     '$ne': 'reserved'}},
-                                              sort=[('y', pymongo.DESCENDING)],
-                                              limit=1):
-            best = doc['y']
-        self.assertGreater(best, avg_random_best)
+        best = [None] * 10
+        for n in range(10):
+            self.lp.reset(password=None, require_password=False)
+            self.lp.add_wf(wf_creator_accuracy([1, 10.1, 30.1], self.lp))
+            for _ in range(20):
+                launch_rocket(self.lp)
+            # We want to maximize the function. The minimum is 0.5, and the
+            # maximum is 10.
+            avg_random_best = 7.23002918931 # calculated with 1,000,000 calcs
+            for doc in self.db.test_accuracy.find({'y': {'$exists': 1,
+                                                         '$ne': 'reserved'}},
+                                                  sort=[('y',
+                                                         pymongo.DESCENDING)],
+                                                  limit=1):
+                best[n] = doc['y']
+        self.assertGreater(np.mean(best), avg_random_best)
 
     def test_parallel(self):
         n_procs = 10
