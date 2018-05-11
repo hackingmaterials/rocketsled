@@ -6,7 +6,7 @@ Utility functions for OptTask.
 
 import imp
 import random
-from numpy import sctypes
+import numpy as np
 
 __author__ = "Alexander Dunn"
 __version__ = "0.1"
@@ -19,7 +19,7 @@ class Dtypes(object):
     """
 
     def __init__(self):
-        d = sctypes
+        d = np.sctypes
         self.ints = d['int'] + d['uint'] + [int]
         self.floats = d['float'] + [float]
         self.reals = self.ints + self.floats
@@ -105,7 +105,7 @@ def latex_float(f):
     else:
         return float_str
 
-def pareto(Y):
+def pareto(Y, maximize=False):
     """
     Returns the indices of Pareto-optimal solutions.
 
@@ -116,5 +116,16 @@ def pareto(Y):
     Returns:
         list - The indices of the entries which are Pareto-optimal
     """
-    pass
+    Y = np.asarray(Y)
+    po = np.ones(Y.shape[0], dtype = bool)
+    for i, c in enumerate(Y):
+        if maximize:
+            po[i] = np.all(np.any(Y>=c, axis=1))
+        else:
+            po[i] = np.all(np.any(Y<=c, axis=1))
+    return po
 
+if __name__ == "__main__":
+    test = np.asarray([[5,5],[2,2],[1,4],[3,2]])
+    print(test[pareto(test, maximize=False)])
+    print(test[pareto(test, maximize=True)])
