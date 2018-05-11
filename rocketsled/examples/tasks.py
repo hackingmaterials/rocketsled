@@ -36,3 +36,12 @@ class MixedCalculateTask(FireTaskBase):
         score -= 20 if D == 'green' else 0
 
         return FWAction(update_spec={'_y_opt': score})
+
+@explicit_serialize
+class MultiTask(FireTaskBase):
+    _fw_name = "MultiTask"
+
+    def run_task(self, fw_spec):
+        x = fw_spec['_x_opt']
+        y = [np.sum(x), np.prod(x)]
+        return FWAction(update_spec={'_y_opt': y})
