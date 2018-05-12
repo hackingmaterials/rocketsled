@@ -38,10 +38,20 @@ class MixedCalculateTask(FireTaskBase):
         return FWAction(update_spec={'_y_opt': score})
 
 @explicit_serialize
-class MultiTask(FireTaskBase):
-    _fw_name = "MultiTask"
+class MultiTask2(FireTaskBase):
+    _fw_name = "MultiTask2"
 
     def run_task(self, fw_spec):
         x = fw_spec['_x_opt']
         y = [np.sum(x), np.prod(x)]
+        return FWAction(update_spec={'_y_opt': y})
+
+@explicit_serialize
+class MultiTask6(FireTaskBase):
+    _fw_name = "MultiTask6"
+
+    def run_task(self, fw_spec):
+        x = fw_spec['_x_opt']
+        y = [np.sum(x), np.prod(x), x[0] ** x[2],
+             3.0 * x[1] ** 2 - 4 * x[0] - x[2], max(x), x[0] - x[1] + x[2]]
         return FWAction(update_spec={'_y_opt': y})
