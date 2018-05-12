@@ -27,8 +27,8 @@ Required Arguments
 Optional Arguments
 =======================================
 
-The following arguments all have defaults already been defined in OptTask
--------------------------------------------------------------------------
+The following arguments all have defaults been defined in OptTask
+-----------------------------------------------------------------
 
 Database Setup
 ______________

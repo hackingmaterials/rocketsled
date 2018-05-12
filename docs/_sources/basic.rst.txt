@@ -96,7 +96,6 @@ Visualize Results
 
 .. image:: _static/basic_viz.png
    :alt: basic_viz
-   :width: 1200px
 
 
 Great! We just ran 10 optimization loops using the default optimization procedure, minimizing our objective function workflow (just :code:`SumTask()` in this case.
