@@ -129,8 +129,9 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
                 best_label = "Best value: f(x) = {:.2E}".format(best_val)
             best = collection.find({'y': best_val})
             for b in best:
+                bl = None if n_objs > 1 else best_label
                 ax.scatter([b['index']], [best_val], color='darkgreen', s=50,
-                            linewidth=3, label=best_label, facecolors='none',
+                            linewidth=3, label=bl, facecolors='none',
                             edgecolors='darkgreen')
 
                 artext = "$x = $ [" if latexify else "x = ["
@@ -169,7 +170,8 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
             ax.scatter(pareto_i, pareto_fx, color='red', label="Pareto optimal",
                        s=20)
 
-        ax.set_title("Objective {}: {}".format(obj + 1, best_label))
+        if n_objs > 1:
+            ax.set_title("Objective {}: {}".format(obj + 1, best_label))
         ax.set_yscale(scale)
 
     plt.gcf().set_size_inches(10, 10)
@@ -260,4 +262,4 @@ def analyze(collection):
 if __name__ == "__main__":
     from fireworks import LaunchPad
     lpad = LaunchPad(host='localhost', port=27017, name='rsled')
-    visualize(lpad.db.opt_multi)
+    visualize(lpad.db.opt_default)
