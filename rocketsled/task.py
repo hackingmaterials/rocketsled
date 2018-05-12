@@ -354,7 +354,8 @@ class OptTask(FireTaskBase):
                             if self.acq not in acq_funcs:
                                 raise ValueError(
                                     "Invalid acquisition function. Use 'ei', "
-                                    "'pi', 'lcb', or None.")
+                                    "'pi', 'lcb', 'maximin' (multiobjective), "
+                                    "or None.")
                         else:
                             self.acq = None
                         if 'n_boots' in self:
