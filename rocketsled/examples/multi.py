@@ -2,13 +2,13 @@ from __future__ import unicode_literals, print_function, unicode_literals
 
 """
 This is an example of multiobjective optimization. It is the same as the basic
-example, Instead of returning the sum of the input array, our objective function
-returns the sum and product of the input array. We want to maximize both of
-these quantities.
+example, but instead of just returning the sum of the input array, our objective
+function returns the sum and product of the input array. We want to maximize 
+both of these quantities.
 
-Best solutions are identified as those having at
-least one objective value better or equal to any other in the set; these
-points are called "Pareto optimal". 
+Best solutions are identified as those having at least one objective value 
+better or equal to any other in the set; these points are called "Pareto 
+optimal". 
 
 From a user perspective, operation is the same as for single objective 
 optimization; however, different acquisition functions are available. Use 
@@ -43,8 +43,6 @@ def wf_creator(x):
                                   dimensions=X_dim,
                                   host='localhost',
                                   port=27017,
-                                  acq='maximin',
-                                  n_boots=100,
                                   opt_label='opt_multi',
                                   name='rsled')],
                           spec=spec)
@@ -53,9 +51,9 @@ def wf_creator(x):
 def run_workflows():
     TESTDB_NAME = 'rsled'
     launchpad = LaunchPad(name=TESTDB_NAME)
-    launchpad.reset(password='2018-05-10')
+    launchpad.reset(password='2018-05-11')
     launchpad.add_wf(wf_creator([5.0, 5.0, 2.0]))
-    rapidfire(launchpad, nlaunches=50, sleep_time=0)
+    rapidfire(launchpad, nlaunches=10, sleep_time=0)
 
     # tear down database
     # launchpad.connection.drop_database(TESTDB_NAME)
