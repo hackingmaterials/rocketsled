@@ -14,12 +14,12 @@ __author__ = "Alexander Dunn"
 __version__ = "0.1"
 __email__ = "ardunn@lbl.gov"
 
-def acquire(acq, X, Y, space, model, maximize, nstraps, return_means=False):
+def acquire(acq, X, Y, space, model, nstraps, return_means=False):
     """
     A high level function for calculating acquisition values. Includes a
     strategy for estimating mean values and uncertainty with bootstrapping;
     Independently train with different sets of data, and predict over the same
-    space of unknown points.
+    space of unknown points. Assumes minimization!
 
     Args:
         acq (str): The acquisition function ('ei', 'pi', or 'lcb')
@@ -29,8 +29,6 @@ def acquire(acq, X, Y, space, model, maximize, nstraps, return_means=False):
             is the 'test' set.
         model (BaseEstimator object): sklearn estimator object. Must have .fit
             and .predict methods.
-        maximize (bool): Whether to look for points to maximize or points to
-            minimize.
         nstraps (int): The number of bootstrap samplings, with replacement,
             which will be performed. This is also the number of regressor
             fittings and predictions which will be performed.
@@ -57,10 +55,6 @@ def acquire(acq, X, Y, space, model, maximize, nstraps, return_means=False):
         acqf = lcb
     else:
         raise ValueError("Unknown acquisition function: {}!".format(acq))
-
-    if maximize:
-        Y = -1 * np.asarray(Y)
-        mu = -1 * mu
 
     if return_means:
         return (acqf(min(Y), mu, std).tolist(), mu)

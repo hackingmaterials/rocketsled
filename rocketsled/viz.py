@@ -184,7 +184,7 @@ def analyze(collection):
         if not dim:
             dim = d
         elif dim != d:
-            raise ValueError("It appears the optimization contained in {} is"
+            warnings.warn("It appears the optimization contained in {} is"
                              "broken, as the x + z dims do not match between"
                              "doc index ({}) and index 0 ({}). To fix, remove"
                              "documents of dissimilar x or z length/type. and "
@@ -222,4 +222,5 @@ def analyze(collection):
 if __name__ == "__main__":
     from fireworks import LaunchPad
     lpad = LaunchPad(host='localhost', port=27017, name='rsled')
-    visualize(lpad.db.opt_multi2, objective_number=0, maximize=False)
+    visualize(lpad.db.opt_multi, objective_number=1)
+    # visualize(lpad.db.opt_default, maximize=False)
