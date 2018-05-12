@@ -6,6 +6,7 @@ Subpackages
 
 .. toctree::
 
+    rocketsled.auto_sleds
     rocketsled.examples
 
 Submodules
@@ -23,14 +24,6 @@ rocketsled.auto module
 ----------------------
 
 .. automodule:: rocketsled.auto
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-rocketsled.opt module
----------------------
-
-.. automodule:: rocketsled.opt
     :members:
     :undoc-members:
     :show-inheritance:

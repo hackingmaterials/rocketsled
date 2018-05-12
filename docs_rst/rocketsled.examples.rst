@@ -4,58 +4,66 @@ rocketsled.examples package
 Submodules
 ----------
 
-rocketsled.examples.example\_tasks module
------------------------------------------
+rocketsled.examples.auto module
+-------------------------------
 
-.. automodule:: rocketsled.examples.example_tasks
+.. automodule:: rocketsled.examples.auto
     :members:
     :undoc-members:
     :show-inheritance:
 
-rocketsled.examples.test\_auto module
--------------------------------------
+rocketsled.examples.basic module
+--------------------------------
 
-.. automodule:: rocketsled.examples.test_auto
+.. automodule:: rocketsled.examples.basic
     :members:
     :undoc-members:
     :show-inheritance:
 
-rocketsled.examples.test\_basic module
+rocketsled.examples.batch module
+--------------------------------
+
+.. automodule:: rocketsled.examples.batch
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rocketsled.examples.categorical module
 --------------------------------------
 
-.. automodule:: rocketsled.examples.test_basic
+.. automodule:: rocketsled.examples.categorical
     :members:
     :undoc-members:
     :show-inheritance:
 
-rocketsled.examples.test\_batch module
---------------------------------------
+rocketsled.examples.extras module
+---------------------------------
 
-.. automodule:: rocketsled.examples.test_batch
+.. automodule:: rocketsled.examples.extras
     :members:
     :undoc-members:
     :show-inheritance:
 
-rocketsled.examples.test\_categorical module
---------------------------------------------
+rocketsled.examples.multi module
+--------------------------------
 
-.. automodule:: rocketsled.examples.test_categorical
+.. automodule:: rocketsled.examples.multi
     :members:
     :undoc-members:
     :show-inheritance:
 
-rocketsled.examples.test\_extras module
----------------------------------------
+rocketsled.examples.parallel module
+-----------------------------------
 
-.. automodule:: rocketsled.examples.test_extras
+.. automodule:: rocketsled.examples.parallel
     :members:
     :undoc-members:
     :show-inheritance:
 
-rocketsled.examples.test\_parallel module
------------------------------------------
+rocketsled.examples.tasks module
+--------------------------------
 
-.. automodule:: rocketsled.examples.test_parallel
+.. automodule:: rocketsled.examples.tasks
     :members:
     :undoc-members:
     :show-inheritance:
