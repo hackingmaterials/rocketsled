@@ -26,7 +26,7 @@ def wf_creator(x):
     spec = {'_x_opt':x}
     X_dim = [(1, 5), (1, 5), (1, 5)]
 
-    # CalculateTask writes _y_opt field to the spec internally.
+    # SumTask writes _y_opt field to the spec internally.
 
     firework1 = Firework([SumTask(),
                           OptTask(wf_creator='rocketsled.examples.basic.'
