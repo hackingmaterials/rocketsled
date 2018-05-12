@@ -135,6 +135,8 @@ class OptTask(FireTaskBase):
             train, and predict values when generating uncertainty estimates for
             prediction. Only used if acq specified. At least 10 data points must
             be present for bootstrapping.
+        random_proba (int): Suggests a random guess with this probability. Must
+            be a float between 0.0 (no random guesses) and 1.0 (totally random).
 
         Hyperparameter search:
         param_grid (dict): The sklearn-style dictionary to use for
@@ -148,10 +150,6 @@ class OptTask(FireTaskBase):
             RandomizedSearchCV. A value of None means exhaustive search with
             GridSearchCV. param_grid must be defined to use this option.
             All searches are performed in parallel, if possible.
-
-        Balancing exploration and exploitation
-        random_proba (int): Suggests a random guess with this probability. Must
-            be a float between 0.0 (no random guesses) and 1.0 (totally random).
 
         Features:
         get_z (string): the fully-qualified name of a function which, given a x
