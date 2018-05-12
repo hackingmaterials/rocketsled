@@ -40,6 +40,85 @@
   <p><em>Tutorial 1 requires some knowledge of Fireworks. If you aren’t comfortable with Fireworks, please work through the tutorials</em> <a class="reference external" href="https://hackingmaterials.lbl.gov/fireworks/">here</a>.</p>
 <div class="section" id="basic-tutorial">
 <h1>Basic Tutorial<a class="headerlink" href="#basic-tutorial" title="Permalink to this headline">¶</a></h1>
+<p>In the quickstart, we use <code class="code docutils literal notranslate"><span class="pre">auto_setup</span></code> to put a Python function in a Firework and create an optimization loop, then launch it, run it, and examine the results.
+If evaluating your objective function is more complex, it is useful to put it in a FireWorks workflow, where individual parts of the expensive workflow can be handled more precisely.
+In this tutorial, we’ll walk through setting up an optimization loop if you already have a workflow that evaluates your objective function.</p>
+<p>This tutorial can be found in <code class="code docutils literal notranslate"><span class="pre">rocketsled/examples/basic.py</span></code>.</p>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p><strong>What’s the minimum I need to run a workflow?</strong></p>
+<p>Rocketsled is designed to be a “plug and play” framework, meaning “plug in” your workflow and search space. The requirements are:</p>
+<ul class="simple">
+<li><strong>Workflow creator function</strong>: takes in a vector of workflow input parameters <code class="code docutils literal notranslate"><span class="pre">x</span></code>  and returns a Fireworks workflow based on those parameters, including optimization. Specified with the <code class="code docutils literal notranslate"><span class="pre">wf_creator</span></code> arg to OptTask. OptTask should be located somewhere in the workflow that <code class="code docutils literal notranslate"><span class="pre">wf_creator</span></code> returns.</li>
+<li><strong>‘_x_opt’ and ‘_y_opt’ fields in spec</strong>: the parameters the workflow is run with and the output metric, in the spec of the Firework containing <code class="code docutils literal notranslate"><span class="pre">OptTask</span></code></li>
+<li><strong>Dimensions of the search space</strong>: A list of the spaces dimensions, where each dimension is defined by <code class="code docutils literal notranslate"><span class="pre">(higher,</span> <span class="pre">lower)</span></code> form (for  float/ int)  or [“a”, “comprehensive”, “list”] form for categories. Specified with the <code class="code docutils literal notranslate"><span class="pre">dimensions</span></code> argument to OptTask</li>
+<li><strong>MongoDB collection to store data</strong>: Each optimization problem should have its own collection. Specify with <code class="code docutils literal notranslate"><span class="pre">host</span></code>, <code class="code docutils literal notranslate"><span class="pre">port</span></code>, and <code class="code docutils literal notranslate"><span class="pre">name</span></code> arguments to OptTask, or with a Launchpad object (via <code class="code docutils literal notranslate"><span class="pre">lpad</span></code> arg to OptTask).</li>
+</ul>
+</div>
+<div class="section" id="making-a-workflow-function">
+<h2>Making a Workflow Function<a class="headerlink" href="#making-a-workflow-function" title="Permalink to this headline">¶</a></h2>
+<p>We are going to use a workflow containing one Firework and two tasks - a task that takes the sum of the input vector, and OptTask.
+Let’s create a <strong>workflow creator function</strong>, the most important part. This function takes an input vector, and returns a workflow based on that vector.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fireworks.core.rocket_launcher</span> <span class="kn">import</span> <span class="n">rapidfire</span>
+<span class="kn">from</span> <span class="nn">fireworks</span> <span class="kn">import</span> <span class="n">Workflow</span><span class="p">,</span> <span class="n">Firework</span><span class="p">,</span> <span class="n">LaunchPad</span>
+<span class="kn">from</span> <span class="nn">rocketsled</span> <span class="kn">import</span> <span class="n">OptTask</span>
+<span class="kn">from</span> <span class="nn">rocketsled.examples.tasks</span> <span class="kn">import</span> <span class="n">SumTask</span>
+
+<span class="c1"># a workflow creator function which takes x and returns a workflow based on x</span>
+<span class="k">def</span> <span class="nf">wf_creator</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+
+    <span class="n">spec</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;_x_opt&#39;</span><span class="p">:</span><span class="n">x</span><span class="p">}</span>
+    <span class="n">X_dim</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)]</span>
+
+    <span class="c1"># SumTask writes _y_opt field to the spec internally.</span>
+
+    <span class="n">firework1</span> <span class="o">=</span> <span class="n">Firework</span><span class="p">([</span><span class="n">SumTask</span><span class="p">(),</span>
+                          <span class="n">OptTask</span><span class="p">(</span><span class="n">wf_creator</span><span class="o">=</span><span class="s1">&#39;rocketsled.examples.basic.&#39;</span>
+                                             <span class="s1">&#39;wf_creator&#39;</span><span class="p">,</span>
+                                  <span class="n">dimensions</span><span class="o">=</span><span class="n">X_dim</span><span class="p">,</span>
+                                  <span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
+                                  <span class="n">port</span><span class="o">=</span><span class="mi">27017</span><span class="p">,</span>
+                                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;rsled&#39;</span><span class="p">)],</span>
+                          <span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Workflow</span><span class="p">([</span><span class="n">firework1</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><strong>We define the info OptTask needs by passing it keyword arguments.</strong> The most important ones are:</p>
+<ul class="simple">
+<li><strong>wf_creator</strong>: The full path to the workflow creator function. Can also be specified in non-module form, e.g., <code class="code docutils literal notranslate"><span class="pre">/my/path/to/module.py</span></code></li>
+<li><strong>dimensions</strong>: The dimensions of your search space</li>
+</ul>
+<p>The remaining arguments define where we want to store the optimization data. The default optimization collection is <code class="code docutils literal notranslate"><span class="pre">opt_default</span></code>; you can change it with the <code class="code docutils literal notranslate"><span class="pre">opt_label</span></code> argument to OptTask.
+By default, OptTask minimizes your objective function.</p>
+</div>
+<div class="section" id="launch">
+<h2>Launch!<a class="headerlink" href="#launch" title="Permalink to this headline">¶</a></h2>
+<p>To start the optimization, we run the code below, and we use the point <code class="code docutils literal notranslate"><span class="pre">[5,</span> <span class="pre">5,</span> <span class="pre">2]</span></code> as our initial guess.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">run_workflows</span><span class="p">():</span>
+    <span class="n">TESTDB_NAME</span> <span class="o">=</span> <span class="s1">&#39;rsled&#39;</span>
+    <span class="n">launchpad</span> <span class="o">=</span> <span class="n">LaunchPad</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">TESTDB_NAME</span><span class="p">)</span>
+    <span class="c1"># launchpad.reset(password=None, require_password=False)</span>
+    <span class="n">launchpad</span><span class="o">.</span><span class="n">add_wf</span><span class="p">(</span><span class="n">wf_creator</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">]))</span>
+    <span class="n">rapidfire</span><span class="p">(</span><span class="n">launchpad</span><span class="p">,</span> <span class="n">nlaunches</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">sleep_time</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">run_workflows</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="visualize-results">
+<h2>Visualize Results<a class="headerlink" href="#visualize-results" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fireworks</span> <span class="kn">import</span> <span class="n">LaunchPad</span>
+<span class="kn">from</span> <span class="nn">rocketsled</span> <span class="kn">import</span> <span class="n">visualize</span>
+
+<span class="n">lpad</span> <span class="o">=</span> <span class="n">LaunchPad</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">27017</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;rsled&#39;</span><span class="p">)</span>
+<span class="n">visualize</span><span class="p">(</span><span class="n">lpad</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">opt_default</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/basic_viz.png"><img alt="basic_viz" src="_images/basic_viz.png" style="width: 1200px;" /></a>
+<p>Great! We just ran 10 optimization loops using the default optimization procedure, minimizing our objective function workflow (just <code class="code docutils literal notranslate"><span class="pre">SumTask()</span></code> in this case.
+See the <a class="reference internal" href="guide.html"><span class="doc">guide</span></a> to see the full capabilities of OptTask!, the <a class="reference internal" href="advanced.html"><span class="doc">advanced tutorial</span></a>, or the examples in the /examples directory.</p>
+</div>
 </div>
 
 
@@ -48,6 +127,17 @@
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Basic Tutorial</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#making-a-workflow-function">Making a Workflow Function</a></li>
+<li><a class="reference internal" href="#launch">Launch!</a></li>
+<li><a class="reference internal" href="#visualize-results">Visualize Results</a></li>
+</ul>
+</li>
+</ul>
+
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">

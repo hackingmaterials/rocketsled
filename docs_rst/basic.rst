@@ -4,3 +4,100 @@
 Basic Tutorial
 =======================================
 
+In the quickstart, we use :code:`auto_setup` to put a Python function in a Firework and create an optimization loop, then launch it, run it, and examine the results.
+If evaluating your objective function is more complex, it is useful to put it in a FireWorks workflow, where individual parts of the expensive workflow can be handled more precisely.
+In this tutorial, we'll walk through setting up an optimization loop if you already have a workflow that evaluates your objective function.
+
+This tutorial can be found in :code:`rocketsled/examples/basic.py`.
+
+
+Overview
+--------
+**What's the minimum I need to run a workflow?**
+
+Rocketsled is designed to be a "plug and play" framework, meaning "plug in" your workflow and search space. The requirements are:
+
+* **Workflow creator function**: takes in a vector of workflow input parameters :code:`x`  and returns a Fireworks workflow based on those parameters, including optimization. Specified with the :code:`wf_creator` arg to OptTask. OptTask should be located somewhere in the workflow that :code:`wf_creator` returns.
+* **'_x_opt' and '_y_opt' fields in spec**: the parameters the workflow is run with and the output metric, in the spec of the Firework containing :code:`OptTask`
+* **Dimensions of the search space**: A list of the spaces dimensions, where each dimension is defined by :code:`(higher, lower)` form (for  float/ int)  or ["a", "comprehensive", "list"] form for categories. Specified with the :code:`dimensions` argument to OptTask
+* **MongoDB collection to store data**: Each optimization problem should have its own collection. Specify with :code:`host`, :code:`port`, and :code:`name` arguments to OptTask, or with a Launchpad object (via :code:`lpad` arg to OptTask).
+
+
+Making a Workflow Function
+--------------------------
+
+We are going to use a workflow containing one Firework and two tasks - a task that takes the sum of the input vector, and OptTask.
+Let's create a **workflow creator function**, the most important part. This function takes an input vector, and returns a workflow based on that vector.
+
+
+.. code-block:: python
+
+    from fireworks.core.rocket_launcher import rapidfire
+    from fireworks import Workflow, Firework, LaunchPad
+    from rocketsled import OptTask
+    from rocketsled.examples.tasks import SumTask
+
+    # a workflow creator function which takes x and returns a workflow based on x
+    def wf_creator(x):
+
+        spec = {'_x_opt':x}
+        X_dim = [(1, 5), (1, 5), (1, 5)]
+
+        # SumTask writes _y_opt field to the spec internally.
+
+        firework1 = Firework([SumTask(),
+                              OptTask(wf_creator='rocketsled.examples.basic.'
+                                                 'wf_creator',
+                                      dimensions=X_dim,
+                                      host='localhost',
+                                      port=27017,
+                                      name='rsled')],
+                              spec=spec)
+        return Workflow([firework1])
+
+
+**We define the info OptTask needs by passing it keyword arguments.** The most important ones are:
+
+* **wf_creator**: The full path to the workflow creator function. Can also be specified in non-module form, e.g., :code:`/my/path/to/module.py`
+* **dimensions**: The dimensions of your search space
+
+The remaining arguments define where we want to store the optimization data. The default optimization collection is :code:`opt_default`; you can change it with the :code:`opt_label` argument to OptTask.
+By default, OptTask minimizes your objective function.
+
+
+Launch!
+-------
+To start the optimization, we run the code below, and we use the point :code:`[5, 5, 2]` as our initial guess.
+
+.. code-block:: python
+
+    def run_workflows():
+        TESTDB_NAME = 'rsled'
+        launchpad = LaunchPad(name=TESTDB_NAME)
+        # launchpad.reset(password=None, require_password=False)
+        launchpad.add_wf(wf_creator([5, 5, 2]))
+        rapidfire(launchpad, nlaunches=10, sleep_time=0)
+
+    if __name__ == "__main__":
+        run_workflows()
+
+
+
+Visualize Results
+-----------------
+.. code-block:: python
+
+    from fireworks import LaunchPad
+    from rocketsled import visualize
+
+    lpad = LaunchPad(host='localhost', port=27017, name='rsled')
+    visualize(lpad.db.opt_default)
+
+
+.. image:: _static/basic_viz.png
+   :alt: basic_viz
+   :width: 1200px
+
+
+Great! We just ran 10 optimization loops using the default optimization procedure, minimizing our objective function workflow (just :code:`SumTask()` in this case.
+See the :doc:`guide </guide>` to see the full capabilities of OptTask!, the :doc:`advanced tutorial </advanced>`, or the examples in the /examples directory.

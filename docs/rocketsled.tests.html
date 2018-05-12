@@ -45,12 +45,34 @@
 <div class="section" id="module-rocketsled.tests.tests">
 <span id="rocketsled-tests-tests-module"></span><h2>rocketsled.tests.tests module<a class="headerlink" href="#module-rocketsled.tests.tests" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
+<dt id="rocketsled.tests.tests.AccuracyTask">
+<em class="property">class </em><code class="descclassname">rocketsled.tests.tests.</code><code class="descname">AccuracyTask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.tests.AccuracyTask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fireworks.core.firework.FireTaskBase</span></code></p>
+<dl class="method">
+<dt id="rocketsled.tests.tests.AccuracyTask.run_task">
+<code class="descname">run_task</code><span class="sig-paren">(</span><em>fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.tests.AccuracyTask.run_task" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="rocketsled.tests.tests.BasicTestTask">
 <em class="property">class </em><code class="descclassname">rocketsled.tests.tests.</code><code class="descname">BasicTestTask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.tests.BasicTestTask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fireworks.core.firework.FireTaskBase</span></code></p>
 <dl class="method">
 <dt id="rocketsled.tests.tests.BasicTestTask.run_task">
 <code class="descname">run_task</code><span class="sig-paren">(</span><em>fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.tests.BasicTestTask.run_task" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="rocketsled.tests.tests.MultiTestTask">
+<em class="property">class </em><code class="descclassname">rocketsled.tests.tests.</code><code class="descname">MultiTestTask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.tests.MultiTestTask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fireworks.core.firework.FireTaskBase</span></code></p>
+<dl class="method">
+<dt id="rocketsled.tests.tests.MultiTestTask.run_task">
+<code class="descname">run_task</code><span class="sig-paren">(</span><em>fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.tests.MultiTestTask.run_task" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -70,6 +92,11 @@
 <code class="descname">tearDown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.tests.TestWorkflows.tearDown" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook method for deconstructing the test fixture after testing it.</p>
 </dd></dl>
+
+<dl class="method">
+<dt id="rocketsled.tests.tests.TestWorkflows.test_accuracy">
+<code class="descname">test_accuracy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.tests.TestWorkflows.test_accuracy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.tests.TestWorkflows.test_basic">
@@ -96,6 +123,16 @@
 <code class="descname">test_get_z</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.tests.TestWorkflows.test_get_z" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="method">
+<dt id="rocketsled.tests.tests.TestWorkflows.test_multi">
+<code class="descname">test_multi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.tests.TestWorkflows.test_multi" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="rocketsled.tests.tests.TestWorkflows.test_parallel">
+<code class="descname">test_parallel</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.tests.TestWorkflows.test_parallel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="function">
@@ -112,6 +149,13 @@
 <dt id="rocketsled.tests.tests.suite">
 <code class="descclassname">rocketsled.tests.tests.</code><code class="descname">suite</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.tests.suite" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="function">
+<dt id="rocketsled.tests.tests.wf_creator_accuracy">
+<code class="descclassname">rocketsled.tests.tests.</code><code class="descname">wf_creator_accuracy</code><span class="sig-paren">(</span><em>x</em>, <em>launchpad</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.tests.wf_creator_accuracy" title="Permalink to this definition">¶</a></dt>
+<dd><p>An expensive test ensuring the default predictor actually performs better
+than the average random case on the function defined in AccuracyTask.</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="rocketsled.tests.tests.wf_creator_basic">
@@ -158,6 +202,19 @@ fw3 (optimization)</p>
 <code class="descclassname">rocketsled.tests.tests.</code><code class="descname">wf_creator_get_z</code><span class="sig-paren">(</span><em>x</em>, <em>launchpad</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.tests.wf_creator_get_z" title="Permalink to this definition">¶</a></dt>
 <dd><p>Testing a basic workflow with one Firework, and two FireTasks with a get_z
 function. Also tests that duplicate checking is working with get_z.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rocketsled.tests.tests.wf_creator_multiobjective">
+<code class="descclassname">rocketsled.tests.tests.</code><code class="descname">wf_creator_multiobjective</code><span class="sig-paren">(</span><em>x</em>, <em>launchpad</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.tests.wf_creator_multiobjective" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing a multiobjective optimization.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rocketsled.tests.tests.wf_creator_parallel">
+<code class="descclassname">rocketsled.tests.tests.</code><code class="descname">wf_creator_parallel</code><span class="sig-paren">(</span><em>x</em>, <em>launchpad</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.tests.wf_creator_parallel" title="Permalink to this definition">¶</a></dt>
+<dd><p>An expensive test ensuring the database is locked and released
+correctly during optimization.</p>
 </dd></dl>
 
 <dl class="function">

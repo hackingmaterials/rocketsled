@@ -101,6 +101,8 @@ Features of ``rocketsled``
     + discontinuous spaces (subsets of entire spaces)
 
 * 10 Built-in "out-of-the-box" sklearn-based tunable Bayesian optimizers
+    + single objective
+    + multi objective
 
 * Support for nearly any custom optimizer written in Python (Bayesian and non-Bayesian)
 
@@ -109,6 +111,8 @@ Features of ``rocketsled``
 * Tuneable control of training and prediction performance, across many kinds of computer resources
 
 * Avoids submitting duplicate workflows, even when workflows run with massive parallelism
+
+* Customization of optimization scheme (sequential, batch, etc.)
 
 * Automatic hyperparameter optimization
 
@@ -168,7 +172,7 @@ Tutorials
 In the quickstart, we show how to use rocketsled's ``auto_setup`` to get
 up and running quickly, starting only with an objective function written in Python.
 
-**Time to complete**: 2-5 min
+**Time to complete**: 5 min
 
 :doc:`Tutorial 1 - Basic usage </basic>`
 ------------------------
@@ -176,7 +180,7 @@ up and running quickly, starting only with an objective function written in Pyth
 In this tutorial we demonstrate how to get a basic optimization loop up and
 running with a FireWorks workflow.
 
-**Time to complete**: 10 min
+**Time to complete**: 5 min
 
 
 :doc:`Tutorial 2 - Advanced usage </advanced>`
