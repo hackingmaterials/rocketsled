@@ -729,7 +729,8 @@ class OptTask(FireTaskBase):
                                                    " with acquisition: " + \
                                                    acqmap[self.acq]
                                     if self.n_objs > 1:
-                                        predictorstr += " using {} objectives".format(self.n_objs)
+                                        predictorstr += " using {} objectives" \
+                                                        "".format(self.n_objs)
                                 else:
                                     predictorstr = predictor
                                 if forced_dupe:
