@@ -120,9 +120,9 @@ def pareto(Y, maximize=False):
     po = np.ones(Y.shape[0], dtype = bool)
     for i, c in enumerate(Y):
         if maximize:
-            po[i] = np.all(np.any(Y>=c, axis=1))
-        else:
             po[i] = np.all(np.any(Y<=c, axis=1))
+        else:
+            po[i] = np.all(np.any(Y>=c, axis=1))
     return po
 
 if __name__ == "__main__":

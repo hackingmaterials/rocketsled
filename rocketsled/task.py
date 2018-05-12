@@ -1085,59 +1085,91 @@ class OptTask(FireTaskBase):
             X_scaled = np.asarray(X_scaled)[:, encoded_xlen:]
             space_scaled = np.asarray(space_scaled)[:, encoded_xlen:]
 
+        Y = np.asarray(Y)
 
         if self.n_objs == 1:
             # Single objective
+            if maximize:
+                Y = -1.0 * Y
+
             if self.param_grid and n_explored > 10:
                 model = self._hyperparameter_opt(model, X_scaled, Y)
 
             if self.acq is None or n_explored < 10:
                 model.fit(X_scaled, Y)
                 values = model.predict(space_scaled).tolist()
-                evaluator = heapq.nlargest if maximize else heapq.nsmallest
+                evaluator = heapq.nsmallest
             else:
                 # Use the acquistion function values
                 values = acquire(self.acq, X_scaled, Y, space_scaled, model,
-                                 maximize, self.n_boots)
+                                 self.n_boots)
                 evaluator = heapq.nlargest
         else:
             # Multi-objective
-            Y = np.asarray(Y)
-            values = np.zeros((n_unexplored, self.n_objs))
-            mu = np.zeros((n_unexplored, self.n_objs))
-            for i in range(self.n_objs):
-                yobj = [y[i] for y in Y]
-                if self.param_grid and n_explored > 10:
-                    model = self._hyperparameter_opt(model, X_scaled, yobj)
-                if self.acq is None or n_explored < 10:
+            if self.acq is None or n_explored < 10:
+                values = np.zeros((n_unexplored, self.n_objs))
+                for i in range(self.n_objs):
+                    yobj = [y[i] for y in Y]
+                    if self.param_grid and n_explored > 10:
+                        model = self._hyperparameter_opt(model, X_scaled, yobj)
                     model.fit(X_scaled, yobj)
                     values[:, i] = model.predict(space_scaled)
-                elif self.acq == "maximin":
-                    mu[:, i], values[:, i] = acquire("pi", X_scaled, yobj,
-                                                     space_scaled, model,
-                                                     maximize, self.n_boots,
-                                                     return_means=True)
-            if self.acq is None:
                 # In exploitative strategy, randomly weight pareto optimial
                 # predictions!
                 values = pareto(values, maximize=maximize) * \
                          np.random.uniform(0, 1, n_unexplored)
+                evaluator = heapq.nlargest
             else:
+                # Adapted from Multiobjective Optimization of Expensive Blackbox
+                # Functions via Expected Maximin Improvement
+                # by Joshua D. Svenson, Thomas J. Santner
+
+                if maximize:
+                    Y = -1.0 * Y
+
                 assert(self.acq == "maximin")
+                mu = np.zeros((n_unexplored, self.n_objs))
+                values = np.zeros((n_unexplored, self.n_objs))
+                for i in range(self.n_objs):
+                    yobj = [y[i] for y in Y]
+                    if self.param_grid and n_explored > 10:
+                        model = self._hyperparameter_opt(model, X_scaled, yobj)
+                    values[:, i], mu[:, i]  = acquire("pi", X_scaled, yobj,
+                                                     space_scaled, model,
+                                                     self.n_boots,
+                                                     return_means=True)
                 pf = Y[pareto(Y, maximize=maximize)]
                 dmaximin = np.zeros(n_unexplored)
                 for i, mui in enumerate(mu):
                     # include a zero in mins in case no pareto improvement
-                    mins = np.zeros(len(pf) + 1)
+                    mins = np.zeros(len(pf))
                     for j, pfj in enumerate(pf):
                         # select minimum positive distance to pareto point
-                        # even if maximizing
-                        mins[j] = min(pfj - mui) if maximize else min(mui - pfj)
+                        mins[j] = min(mui - pfj)
                     dmaximin[i] = max(mins)
+
+
+                if len(dmaximin[dmaximin < 0.0]) != 0:
+                    # Predicted pareto-optimal solutions are negative so far
+                    # If we are here, it means there are still predicted pareto
+                    # optimal solutions. This procedure is as shown in original
+                    # EI paper.
+                    dmaximin = dmaximin * -1.0
+                    dmaximin = dmaximin.clip(min=0)
+                else:
+                    # Addition if there are no predicted pareto solutions.
+                    # Without this, all dmaximin values are zero if no predicted
+                    # pareto solutions. With this, dmaximin values are inverted
+                    # to find the 'least bad' non-pareto optimal value.
+                    # Only using the 'if' block above will result in pure
+                    # exploration (random) if no pareto-optimal solutions
+                    # are predicted.
+                    dmaximin = 1.0 / dmaximin
+
                 pi_product = np.prod(values, axis=1)
                 values = pi_product * dmaximin
+                evaluator = heapq.nlargest
             values = values.tolist()
-            evaluator = heapq.nlargest
 
         #todo: possible batch duplicates if two x predict the same y?
         #todo: .index() will find the first one twice
