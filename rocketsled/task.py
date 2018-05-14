@@ -1141,11 +1141,13 @@ class OptTask(FireTaskBase):
                 pf = Y[pareto(Y, maximize=maximize)]
                 dmaximin = np.zeros(n_unexplored)
                 for i, mui in enumerate(mu):
-                    # include a zero in mins in case no pareto improvement
                     mins = np.zeros(len(pf))
                     for j, pfj in enumerate(pf):
-                        # select minimum positive distance to pareto point
+                        # select max distance to pareto point (improvements
+                        # are negative) among objectives
                         mins[j] = min(mui - pfj)
+                    # minimum among all pareto points of the maximum improvement
+                    # among objectives. Min and max are reversed bc. minimization
                     dmaximin[i] = max(mins)
 
 
