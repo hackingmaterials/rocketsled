@@ -38,7 +38,7 @@ Let's create a **workflow creator function**, the most important part. This func
     from fireworks import Workflow, Firework, LaunchPad
     from rocketsled import OptTask
     from rocketsled.examples.tasks import SumTask
-
+invoke
     # a workflow creator function which takes x and returns a workflow based on x
     def wf_creator(x):
 

@@ -64,25 +64,32 @@ Let’s create a <strong>workflow creator function</strong>, the most important 
 <span class="kn">from</span> <span class="nn">fireworks</span> <span class="kn">import</span> <span class="n">Workflow</span><span class="p">,</span> <span class="n">Firework</span><span class="p">,</span> <span class="n">LaunchPad</span>
 <span class="kn">from</span> <span class="nn">rocketsled</span> <span class="kn">import</span> <span class="n">OptTask</span>
 <span class="kn">from</span> <span class="nn">rocketsled.examples.tasks</span> <span class="kn">import</span> <span class="n">SumTask</span>
-
-<span class="c1"># a workflow creator function which takes x and returns a workflow based on x</span>
-<span class="k">def</span> <span class="nf">wf_creator</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-
-    <span class="n">spec</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;_x_opt&#39;</span><span class="p">:</span><span class="n">x</span><span class="p">}</span>
-    <span class="n">X_dim</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)]</span>
-
-    <span class="c1"># SumTask writes _y_opt field to the spec internally.</span>
-
-    <span class="n">firework1</span> <span class="o">=</span> <span class="n">Firework</span><span class="p">([</span><span class="n">SumTask</span><span class="p">(),</span>
-                          <span class="n">OptTask</span><span class="p">(</span><span class="n">wf_creator</span><span class="o">=</span><span class="s1">&#39;rocketsled.examples.basic.wf_creator&#39;</span><span class="p">,</span>
-                                  <span class="n">dimensions</span><span class="o">=</span><span class="n">X_dim</span><span class="p">,</span>
-                                  <span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
-                                  <span class="n">port</span><span class="o">=</span><span class="mi">27017</span><span class="p">,</span>
-                                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;rsled&#39;</span><span class="p">)],</span>
-                          <span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">Workflow</span><span class="p">([</span><span class="n">firework1</span><span class="p">])</span>
 </pre></div>
 </div>
+<dl class="docutils">
+<dt>invoke</dt>
+<dd><p class="first"># a workflow creator function which takes x and returns a workflow based on x
+def wf_creator(x):</p>
+<blockquote class="last">
+<div><p>spec = {‘_x_opt’:x}
+X_dim = [(1, 5), (1, 5), (1, 5)]</p>
+<p># SumTask writes _y_opt field to the spec internally.</p>
+<dl class="docutils">
+<dt>firework1 = Firework([SumTask(),</dt>
+<dd><dl class="first docutils">
+<dt>OptTask(wf_creator=’rocketsled.examples.basic.wf_creator’,</dt>
+<dd>dimensions=X_dim,
+host=’localhost’,
+port=27017,
+name=’rsled’)],</dd>
+</dl>
+<p class="last">spec=spec)</p>
+</dd>
+</dl>
+<p>return Workflow([firework1])</p>
+</div></blockquote>
+</dd>
+</dl>
 <p><strong>We define the info OptTask needs by passing it keyword arguments.</strong> The required arguments are:</p>
 <ul class="simple">
 <li><strong>wf_creator</strong>: The full path to the workflow creator function. Can also be specified in non-module form, e.g., <code class="code docutils literal notranslate"><span class="pre">/my/path/to/module.py</span></code></li>
