@@ -59,7 +59,8 @@ class OptTask(FireTaskBase):
     next best guess.
 
     Required args:
-        wf_creator (function): returns a workflow based on a unique vector, x.
+        wf_creator (str): Module path ot a function that returns a workflow
+            based on a unique vector, x.
         dimensions ([tuple]): each 2-tuple in the list defines one dimension in
             the search space in (low, high) format.
             For categorical or discontinuous dimensions, includes all possible
@@ -1180,6 +1181,19 @@ class OptTask(FireTaskBase):
         return [space[i] for i in indices]
 
     def _hyperparameter_opt(self, model, X, Y):
+        """
+        Runs hyperparamter optimization on a model given X and Y. Reads the grid
+        and optimization strategy from self attrs.
+
+        Args:
+            model (sklearn BaseEstimator): An sklearn model
+            X ([list] or numpy array): A 2D array of samples (rows) by features
+                (columns).
+            Y (list): A vector of outputs (samples)
+
+        Returns:
+            sklearn BaseEstimator model with optimizer hyperparameters.
+        """
         predictor_name = model.__class__.__name__
         if predictor_name not in self.predictors:
             raise ValueError("Cannot perform automatic hyperparameter "
