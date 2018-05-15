@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Advanced Tutorial &#8212; rocketsled 0.1 documentation</title>
+    <title>Advanced Tutorial - 15-20 min &#8212; rocketsled 0.1 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" src="_static/documentation_options.js"></script>
@@ -38,16 +38,22 @@
           <div class="body" role="main">
             
   <p><em>Tutorial 2 requires some knowledge of Fireworks. If you aren’t comfortable with Fireworks, please work through the tutorials</em> <a class="reference external" href="https://hackingmaterials.lbl.gov/fireworks/">here</a>.</p>
-<div class="section" id="advanced-tutorial">
-<h1>Advanced Tutorial<a class="headerlink" href="#advanced-tutorial" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="advanced-tutorial-15-20-min">
+<h1>Advanced Tutorial - 15-20 min<a class="headerlink" href="#advanced-tutorial-15-20-min" title="Permalink to this headline">¶</a></h1>
+<p><strong>Real optimization problems are messy</strong>; often, there is a mixture of continuous (floating point),
+discrete (integer), and categorical dimensions. The search space may be discontinuous, where only certain combinations of inputs are allowed.
+The objective function might have multiple, competing
+objectives to optimize. It may be unclear which predictors - that is, the
+algorithms that use previous inputs and outputs to suggest the next guess - will be effective, and whether their
+training or prediction itself be computationally prohibitive. Furthermore, the way we label points for human
+interpretation might have little use for prediction, but features derived from these labels might be very useful for learning.</p>
+<p>OptTask has optional arguments which address each of these issues. A few are listed here, and the rest are in the comprehensive guide. For the most part, they are designed to work both in combination and independently.</p>
 <p>In this tutorial, we will explore some of the more advanced capabilities of OptTask, including:</p>
 <ul class="simple">
 <li>Multiobjective optimiation</li>
 <li><dl class="first docutils">
 <dt>Changing predictors</dt>
 <dd><ul class="first last">
-<li>Custom predictors</li>
-<li>Built-in predictors</li>
 <li>Acquisition functions for improving performance</li>
 <li>Reducing prediction time</li>
 <li>Customizing exploration</li>
@@ -57,7 +63,143 @@
 </li>
 <li>Using z (extra) features</li>
 </ul>
-<p>This tutorial is coming soon!</p>
+<div class="section" id="defining-the-problem">
+<h2>Defining the Problem<a class="headerlink" href="#defining-the-problem" title="Permalink to this headline">¶</a></h2>
+<p>Let’s imagine we are designing a fin for a new rocket. <strong>We have three parameters we can tune</strong>:</p>
+<ul class="simple">
+<li>Fin length - Defined between 16cm - 145cm</li>
+<li>Fin angle - Defined between 0.0 - 90.0 degrees</li>
+<li>Fin type - Either industry standard, dolphin, or shark type.</li>
+</ul>
+<p><strong>We’ll say a good fin has 3 characteristics (objective metrics)</strong>:</p>
+<ul class="simple">
+<li>Low cost</li>
+<li>Low drag</li>
+<li>Low probability of failure</li>
+</ul>
+<p>We evaluate the performance of a candidate design by nondeterministically simulating the aerodynamics and market performance with an expensive simulation.
+A mock version of such a simulation is found in <code class="code docutils literal notranslate"><span class="pre">ComplexMultiObjTask</span></code> in <code class="code docutils literal notranslate"><span class="pre">/examples/tasks.py</span></code>.</p>
+</div>
+<div class="section" id="creating-the-workflow">
+<h2>Creating the Workflow<a class="headerlink" href="#creating-the-workflow" title="Permalink to this headline">¶</a></h2>
+<p>The workflow we are creating is two Fireworks; one containing the simulation, and one containing OptTask.</p>
+<a class="reference internal image-reference" href="_images/multiobj_fws.png"><img alt="mutliobj_fws" class="align-center" src="_images/multiobj_fws.png" style="width: 800px;" /></a>
+<p>The y written to the spec by the simulation firework is a list, not a scalar as in previous examples. OptTaask will automatically consider this a multi-objective optimization.</p>
+<p>Note that <strong>OptTask can go anywhere in your workflow as long as it can read _x_opt and _y_opt from the spec!</strong>
+<em>Note: The first firework passes the required _x_opt and _y_opt keys to the optimization firework with the FWAction update_spec arg.</em></p>
+<p>The code we use to define the workflow creator is similar to that found in the quickstart and basic tutorials:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fireworks.core.rocket_launcher</span> <span class="kn">import</span> <span class="n">rapidfire</span>
+<span class="kn">from</span> <span class="nn">fireworks</span> <span class="kn">import</span> <span class="n">Workflow</span><span class="p">,</span> <span class="n">Firework</span><span class="p">,</span> <span class="n">LaunchPad</span>
+<span class="kn">from</span> <span class="nn">rocketsled</span> <span class="kn">import</span> <span class="n">OptTask</span>
+<span class="kn">from</span> <span class="nn">rocketsled.examples.tasks</span> <span class="kn">import</span> <span class="n">ComplexMultiObjTask</span>
+
+
+<span class="k">def</span> <span class="nf">wf_creator</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">X_dim</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">145</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">90.0</span><span class="p">),</span> <span class="p">[</span><span class="s2">&quot;industry standard&quot;</span><span class="p">,</span> <span class="s2">&quot;shark fin&quot;</span><span class="p">,</span> <span class="s2">&quot;dolphin fin&quot;</span><span class="p">]]</span>
+    <span class="n">simulation</span> <span class="o">=</span> <span class="n">Firework</span><span class="p">([</span><span class="n">ComplexMultiObjTask</span><span class="p">()],</span> <span class="n">spec</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;_x_opt&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">},</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;simulation&quot;</span><span class="p">)</span>
+    <span class="n">optimization</span> <span class="o">=</span> <span class="n">Firework</span><span class="p">([</span><span class="n">OptTask</span><span class="p">(</span><span class="n">wf_creator</span><span class="o">=</span><span class="s1">&#39;rocketsled.examples.complex.wf_creator&#39;</span><span class="p">,</span>
+                 <span class="n">dimensions</span><span class="o">=</span><span class="n">X_dim</span><span class="p">,</span>
+                 <span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
+                 <span class="n">port</span><span class="o">=</span><span class="mi">27017</span><span class="p">,</span>
+                 <span class="n">opt_label</span><span class="o">=</span><span class="s2">&quot;opt_complex&quot;</span><span class="p">,</span>
+                 <span class="n">acq</span><span class="o">=</span><span class="s2">&quot;maximin&quot;</span><span class="p">,</span>
+                 <span class="n">predictor</span><span class="o">=</span><span class="s2">&quot;GaussianProcessRegressor&quot;</span><span class="p">,</span>
+                 <span class="n">get_z</span><span class="o">=</span><span class="s1">&#39;rocketsled.examples.complex.get_z&#39;</span><span class="p">,</span>
+                 <span class="n">name</span><span class="o">=</span><span class="s1">&#39;rsled&#39;</span><span class="p">)],</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;optimization&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Workflow</span><span class="p">([</span><span class="n">simulation</span><span class="p">,</span> <span class="n">optimization</span><span class="p">],</span> <span class="p">{</span><span class="n">simulation</span><span class="p">:</span> <span class="n">optimization</span><span class="p">})</span>
+
+<span class="k">def</span> <span class="nf">get_z</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">fin_len</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">fin_angle</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">useful_feature1</span> <span class="o">=</span> <span class="n">fin_len</span> <span class="o">+</span> <span class="n">fin_angle</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">useful_feature2</span> <span class="o">=</span> <span class="n">fin_angle</span> <span class="o">+</span> <span class="n">fin_len</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="p">[</span><span class="n">useful_feature1</span><span class="p">,</span> <span class="n">useful_feature2</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The new arguments to OptTask are:</p>
+<ul class="simple">
+<li><code class="code docutils literal notranslate"><span class="pre">predictor</span></code> - A different built in predictor is used for this optimization. A full list of builtin predictors (and guide for using custom predictors) is shown in the comprehensive guide.</li>
+<li><code class="code docutils literal notranslate"><span class="pre">acq</span></code> - Acquisition functions help us get better results during optimization (generally) than pure exploitation, but may be more computationally intensive. The acquisition function used here is specifically for multi-objective optimization; for single objectives, check the comprehensive guide.</li>
+<li><code class="code docutils literal notranslate"><span class="pre">n_searchpts</span></code> - Tuning the number of points for prediction affects optimizer performance and computational efficiency (the two are often inversely correlated). Also use <code class="code docutils literal notranslate"><span class="pre">n_trainpts</span></code> to restrict the number of points used for training from completed runs.</li>
+<li><code class="code docutils literal notranslate"><span class="pre">get_z</span></code> - Encapsulate empirical knowledge with get_z. From physical laws, we postulate two useful features, which we put in a vector called “z”. When <code class="code docutils literal notranslate"><span class="pre">get_z</span></code> is enabled, x is only used as a label (<strong>not for learning</strong>), unless explicitly returned by get_z. In this case, x might be useful for learning, so we’ll return it.</li>
+</ul>
+<p>We can launch 250 optimization loop runs with:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">run_workflows</span><span class="p">():</span>
+    <span class="n">TESTDB_NAME</span> <span class="o">=</span> <span class="s1">&#39;rsled&#39;</span>
+    <span class="n">launchpad</span> <span class="o">=</span> <span class="n">LaunchPad</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">TESTDB_NAME</span><span class="p">)</span>
+    <span class="n">launchpad</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">password</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">require_password</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">launchpad</span><span class="o">.</span><span class="n">add_wf</span><span class="p">(</span><span class="n">wf_creator</span><span class="p">([</span><span class="mi">60</span><span class="p">,</span> <span class="mf">45.0</span><span class="p">,</span> <span class="s2">&quot;industry standard&quot;</span><span class="p">]))</span>
+    <span class="n">rapidfire</span><span class="p">(</span><span class="n">launchpad</span><span class="p">,</span> <span class="n">nlaunches</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">sleep_time</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">run_workflows</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="examining-results">
+<h2>Examining results<a class="headerlink" href="#examining-results" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fireworks</span> <span class="kn">import</span> <span class="n">LaunchPad</span>
+<span class="kn">from</span> <span class="nn">rocketsled</span> <span class="kn">import</span> <span class="n">visualize</span>
+
+<span class="n">lpad</span> <span class="o">=</span> <span class="n">LaunchPad</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">27017</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;rsled&#39;</span><span class="p">)</span>
+<span class="n">visualize</span><span class="p">(</span><span class="n">lpad</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">opt_complex</span><span class="p">,</span> <span class="n">print_pareto</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="s1">&#39;log&#39;</span><span class="p">,</span> <span class="n">showmean</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>There is some useful stdout produced by <code class="code docutils literal notranslate"><span class="pre">visualize</span></code>, including a complete list of the optimal objective value points (meaning non-dominated in any given objective), also known as the <strong>Pareto Frontier</strong>.
+The points on the Pareto frontier need not have the minimum values for any one of the objectives; however, the absolute best found values for each objective are shown as well.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>min<span class="o">(</span>f<span class="o">(</span>x<span class="o">))</span> objective <span class="m">0</span> is <span class="m">2</span>.4716663906 at <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">16</span>, <span class="m">0</span>.9794468723495431, u<span class="s1">&#39;industry standard&#39;</span><span class="o">]</span>
+min<span class="o">(</span>f<span class="o">(</span>x<span class="o">))</span> objective <span class="m">1</span> is <span class="m">3</span>.74337173135 at <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">16</span>, <span class="m">0</span>.06040480720271191, u<span class="s1">&#39;dolphin fin&#39;</span><span class="o">]</span>
+min<span class="o">(</span>f<span class="o">(</span>x<span class="o">))</span> objective <span class="m">2</span> is <span class="m">0</span>.0104429576126 at <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">142</span>, <span class="m">1</span>.2608356066742255, u<span class="s1">&#39;industry standard&#39;</span><span class="o">]</span>
+
+Problem dimension:
+    * X dimensions <span class="o">(</span><span class="m">3</span><span class="o">)</span>: <span class="o">[</span>&lt;<span class="nb">type</span> <span class="s1">&#39;int&#39;</span>&gt;, &lt;<span class="nb">type</span> <span class="s1">&#39;float&#39;</span>&gt;, &lt;<span class="nb">type</span> <span class="s1">&#39;unicode&#39;</span>&gt;<span class="o">]</span>
+    * Z dimensions <span class="o">(</span><span class="m">5</span><span class="o">)</span>: <span class="o">[</span>&lt;<span class="nb">type</span> <span class="s1">&#39;int&#39;</span>&gt;, &lt;<span class="nb">type</span> <span class="s1">&#39;float&#39;</span>&gt;, &lt;<span class="nb">type</span> <span class="s1">&#39;unicode&#39;</span>&gt;, &lt;<span class="nb">type</span> <span class="s1">&#39;float&#39;</span>&gt;, &lt;<span class="nb">type</span> <span class="s1">&#39;float&#39;</span>&gt;<span class="o">]</span>
+Only Z data is being used <span class="k">for</span> learning.
+Number of Optimizations: <span class="m">250</span>
+Optimizers used <span class="o">(</span>by percentage of optimizations<span class="o">)</span>:
+    * <span class="m">100</span>.00%: GaussianProcessRegressor with acquisition: Maximin Expected Improvement using <span class="m">3</span> objectives
+Number of reserved guesses: <span class="m">1</span>
+Number of waiting optimizations: <span class="m">0</span>
+DB not locked by any process <span class="o">(</span>no current optimization<span class="o">)</span>.
+
+Pareto Frontier: <span class="m">30</span> points
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">2</span>.471666390596957, <span class="m">27</span>.48238986848395, <span class="m">0</span>.4448868032547827<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">16</span>, <span class="m">0</span>.9794468723495431, u<span class="s1">&#39;industry standard&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">93</span>.01859724025691, <span class="m">1623</span>.9392203207517, <span class="m">0</span>.11086881838942292<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">116</span>, <span class="m">13</span>.26932017507497, u<span class="s1">&#39;industry standard&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">20</span>.263988323874553, <span class="m">405</span>.15607152348605, <span class="m">0</span>.25007134344442905<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">49</span>, <span class="m">6</span>.227551501995968, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">12</span>.127316307413249, <span class="m">226</span>.5705263013419, <span class="m">0</span>.28016039923073677<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">37</span>, <span class="m">4</span>.284994178298564, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">42</span>.32583374856372, <span class="m">394</span>.0840359770293, <span class="m">0</span>.23860336541319574<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">76</span>, <span class="m">3</span>.3002668184681063, u<span class="s1">&#39;industry standard&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">19</span>.790663261912012, <span class="m">700</span>.4097477732201, <span class="m">0</span>.26463786067587647<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">47</span>, <span class="m">15</span>.546544052561718, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">10</span>.2168227961067, <span class="m">130</span>.60557338489392, <span class="m">0</span>.2872835850667972<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">34</span>, <span class="m">2</span>.153086684368809, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">56</span>.85262300070313, <span class="m">436</span>.41896887230035, <span class="m">0</span>.15027333987286837<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">87</span>, <span class="m">2</span>.429843874399414, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">72</span>.38543355551161, <span class="m">191</span>.62631972759323, <span class="m">0</span>.22769551246826705<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">79</span>, <span class="m">1</span>.3306954053381337, u<span class="s1">&#39;dolphin fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">36</span>.08999149122292, <span class="m">852</span>.5869436000326, <span class="m">0</span>.2072757141556187<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">67</span>, <span class="m">10</span>.950527222513989, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">4</span>.183289647037304, <span class="m">34</span>.99182801945318, <span class="m">0</span>.32071198427784786<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">21</span>, <span class="m">0</span>.6944844687799834, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">6</span>.228008499929818, <span class="m">67</span>.91202551642581, <span class="m">0</span>.30783624358171<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">26</span>, <span class="m">1</span>.294856929696876, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">8</span>.973748107281045, <span class="m">39</span>.19531111781273, <span class="m">0</span>.29224810030963994<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">32</span>, <span class="m">0</span>.3810165150936706, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">2</span>.527642158007039, <span class="m">15</span>.702700032050892, <span class="m">0</span>.3336259028104275<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">16</span>, <span class="m">0</span>.3355654235898753, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">8</span>.7308090242463, <span class="m">142</span>.19720382324883, <span class="m">0</span>.29521862570256696<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">31</span>, <span class="m">2</span>.906278222483265, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">126</span>.20031698441441, <span class="m">3019</span>.484417324195, <span class="m">0</span>.05251518595418252<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">133</span>, <span class="m">21</span>.540269010022485, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">116</span>.07496718360396, <span class="m">1849</span>.7972768675982, <span class="m">0</span>.05863417948265865<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">131</span>, <span class="m">12</span>.953946970009913, u<span class="s1">&#39;industry standard&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">46</span>.77918527129666, <span class="m">1253</span>.2940813234145, <span class="m">0</span>.186696724157924<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">77</span>, <span class="m">15</span>.29799176872524, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">88</span>.88302026836072, <span class="m">1918</span>.8872308046193, <span class="m">0</span>.10128441729749994<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">110</span>, <span class="m">15</span>.250278680499424, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">7</span>.710723548287516, <span class="m">118</span>.25680233360677, <span class="m">0</span>.30028408634821974<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">29</span>, <span class="m">2</span>.47714858689301, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">26</span>.685736420234065, <span class="m">850</span>.9827854258534, <span class="m">0</span>.2408425996095338<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">56</span>, <span class="m">15</span>.18143648127198, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">2</span>.8274978546887954, <span class="m">18</span>.72563173907369, <span class="m">0</span>.3310416362821108<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">17</span>, <span class="m">0</span>.3930853690817204, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">133</span>.33546429969246, <span class="m">445</span>.1188547596248, <span class="m">0</span>.010442957612568495<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">142</span>, <span class="m">1</span>.2608356066742255, u<span class="s1">&#39;industry standard&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">3</span>.8076194945316377, <span class="m">3</span>.743371731347361, <span class="m">0</span>.44482781143780603<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">16</span>, <span class="m">0</span>.06040480720271191, u<span class="s1">&#39;dolphin fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">76</span>.14424925941366, <span class="m">483</span>.3414876831859, <span class="m">0</span>.11141517427055053<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">102</span>, <span class="m">2</span>.1210371818169915, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">67</span>.71434523904519, <span class="m">1284</span>.663645968029, <span class="m">0</span>.13471025173127132<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">95</span>, <span class="m">10</span>.799906903283864, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">102</span>.63207167405578, <span class="m">874</span>.4375707299264, <span class="m">0</span>.07717805945487849<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">123</span>, <span class="m">4</span>.617255237438416, u<span class="s1">&#39;industry standard&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">60</span>.94129655936235, <span class="m">868</span>.258686604232, <span class="m">0</span>.14422557214075377<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">90</span>, <span class="m">6</span>.546645334584239, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">75</span>.7058035188604, <span class="m">1397</span>.80346543294, <span class="m">0</span>.11937654419706178<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">101</span>, <span class="m">10</span>.98190876732162, u<span class="s1">&#39;shark fin&#39;</span><span class="o">]</span>
+f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <span class="o">[</span><span class="m">54</span>.82841730962141, <span class="m">909</span>.1474088353508, <span class="m">0</span>.20529359285755197<span class="o">]</span> @ <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">87</span>, <span class="m">9</span>.260464582964612, u<span class="s1">&#39;industry standard&#39;</span><span class="o">]</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/multiobj_log.png"><img alt="mutliobj_log" class="align-center" src="_images/multiobj_log.png" style="width: 800px;" /></a>
+<p>The parameters <code class="code docutils literal notranslate"><span class="pre">x=[21,</span> <span class="pre">0.6945,</span> <span class="pre">'shark</span> <span class="pre">fin']</span></code> give a Pareto-optimal output of <code class="code docutils literal notranslate"><span class="pre">f(x)=[4.18,</span> <span class="pre">35.0,</span> <span class="pre">0.32]</span></code>, which, while not optimal in any one metric, provide a robust compromise.</p>
+<p>See the <a class="reference internal" href="guide.html"><span class="doc">comprehensive guide</span></a> for a full list of options and arguments to OptTask!</p>
+</div>
 </div>
 
 
@@ -66,6 +208,16 @@
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Advanced Tutorial - 15-20 min</a><ul>
+<li><a class="reference internal" href="#defining-the-problem">Defining the Problem</a></li>
+<li><a class="reference internal" href="#creating-the-workflow">Creating the Workflow</a></li>
+<li><a class="reference internal" href="#examining-results">Examining results</a></li>
+</ul>
+</li>
+</ul>
+
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">

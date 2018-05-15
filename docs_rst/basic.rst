@@ -1,10 +1,10 @@
 *Tutorial 1 requires some knowledge of Fireworks. If you aren't comfortable with Fireworks, please work through the tutorials* `here <https://hackingmaterials.lbl.gov/fireworks/>`_.
 
 =======================================
-Basic Tutorial
+Basic Tutorial - 5-10 min
 =======================================
 
-In the quickstart, we use :code:`auto_setup` to put a Python function in a Firework and create an optimization loop, then launch it, run it, and examine the results.
+In the quickstart, we use auto_setup to put a Python function in a Firework and create an optimization loop, then launch it, run it, and examine the results.
 If evaluating your objective function is more complex, it is useful to put it in a FireWorks workflow, where individual parts of the expensive workflow can be handled more precisely.
 In this tutorial, we'll walk through setting up an optimization loop if you already have a workflow that evaluates your objective function.
 
@@ -18,13 +18,15 @@ Overview
 Rocketsled is designed to be a "plug and play" framework, meaning "plug in" your workflow and search space. The requirements are:
 
 * **Workflow creator function**: takes in a vector of workflow input parameters :code:`x`  and returns a Fireworks workflow based on those parameters, including optimization. Specified with the :code:`wf_creator` arg to OptTask. OptTask should be located somewhere in the workflow that :code:`wf_creator` returns.
-* **'_x_opt' and '_y_opt' fields in spec**: the parameters the workflow is run with and the output metric, in the spec of the Firework containing :code:`OptTask`
+* **'_x_opt' and '_y_opt' fields in spec**: the parameters the workflow is run with and the output metric, in the spec of the Firework containing :code:`OptTask`. x must be a vector (list), and y can be a vector (list) or scalar (float).
 * **Dimensions of the search space**: A list of the spaces dimensions, where each dimension is defined by :code:`(higher, lower)` form (for  float/ int)  or ["a", "comprehensive", "list"] form for categories. Specified with the :code:`dimensions` argument to OptTask
 * **MongoDB collection to store data**: Each optimization problem should have its own collection. Specify with :code:`host`, :code:`port`, and :code:`name` arguments to OptTask, or with a Launchpad object (via :code:`lpad` arg to OptTask).
 
 
 Making a Workflow Function
 --------------------------
+The easiest way to get started with rocketsled using your own workflows is to modify one of the examples.
+
 
 We are going to use a workflow containing one Firework and two tasks - a task that takes the sum of the input vector, and OptTask.
 Let's create a **workflow creator function**, the most important part. This function takes an input vector, and returns a workflow based on that vector.
@@ -46,8 +48,7 @@ Let's create a **workflow creator function**, the most important part. This func
         # SumTask writes _y_opt field to the spec internally.
 
         firework1 = Firework([SumTask(),
-                              OptTask(wf_creator='rocketsled.examples.basic.'
-                                                 'wf_creator',
+                              OptTask(wf_creator='rocketsled.examples.basic.wf_creator',
                                       dimensions=X_dim,
                                       host='localhost',
                                       port=27017,
@@ -56,7 +57,7 @@ Let's create a **workflow creator function**, the most important part. This func
         return Workflow([firework1])
 
 
-**We define the info OptTask needs by passing it keyword arguments.** The most important ones are:
+**We define the info OptTask needs by passing it keyword arguments.** The required arguments are:
 
 * **wf_creator**: The full path to the workflow creator function. Can also be specified in non-module form, e.g., :code:`/my/path/to/module.py`
 * **dimensions**: The dimensions of your search space
@@ -99,4 +100,4 @@ Visualize Results
 
 
 Great! We just ran 10 optimization loops using the default optimization procedure, minimizing our objective function workflow (just :code:`SumTask()` in this case.
-See the :doc:`guide </guide>` to see the full capabilities of OptTask!, the :doc:`advanced tutorial </advanced>`, or the examples in the /examples directory.
+See the :doc:`guide </guide>` to see the full capabilities of OptTask!, the :doc:`advanced tutorial </advanced>`, or the examples in the :code:`/examples` directory.
