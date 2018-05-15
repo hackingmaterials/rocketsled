@@ -52,10 +52,10 @@ The workflow we are creating is two Fireworks; one containing the simulation, an
    :align: center
 
 
-The y written to the spec by the simulation firework is a list, not a scalar as in previous examples. OptTaask will automatically consider this a multi-objective optimization.
+The y written to the spec by the simulation firework is a list, not a scalar as in previous examples. OptTask will automatically consider this a multi-objective optimization.
 
 Note that **OptTask can go anywhere in your workflow as long as it can read _x_opt and _y_opt from the spec!**
-*Note: The first firework passes the required _x_opt and _y_opt keys to the optimization firework with the FWAction update_spec arg.*
+*In this example, the first firework passes the required _x_opt and _y_opt keys to the optimization firework with the FWAction update_spec arg.*
 
 The code we use to define the workflow creator is similar to that found in the quickstart and basic tutorials:
 
@@ -72,15 +72,15 @@ The code we use to define the workflow creator is similar to that found in the q
         X_dim = [(16, 145), (0.0, 90.0), ["industry standard", "shark fin", "dolphin fin"]]
         simulation = Firework([ComplexMultiObjTask()], spec={'_x_opt': x}, name="simulation")
         optimization = Firework([OptTask(wf_creator='rocketsled.examples.complex.wf_creator',
-                     dimensions=X_dim,
-                     host='localhost',
-                     port=27017,
-                     opt_label="opt_complex",
-                     acq="maximin",
-                     predictor="GaussianProcessRegressor",
-                     get_z='rocketsled.examples.complex.get_z',
-                     name='rsled')],
-            name="optimization")
+                                 dimensions=X_dim,
+                                 host='localhost',
+                                 port=27017,
+                                 opt_label="opt_complex",
+                                 acq="maximin",
+                                 predictor="GaussianProcessRegressor",
+                                 get_z='rocketsled.examples.complex.get_z',
+                                 name='rsled')],
+                        name="optimization")
         return Workflow([simulation, optimization], {simulation: optimization})
 
     def get_z(x):

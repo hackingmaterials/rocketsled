@@ -203,13 +203,3 @@ Documentation
 
 Find the auto-generated documentation :doc:`here </modules>`. Beware! Only for the brave.
 
-
-===========
-Use Cases
-===========
-
-Rocketsled is applicable to many types of scientific computing problems.
-
-
-
-
