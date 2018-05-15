@@ -180,8 +180,11 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
 
     if print_pareto and n_objs > 1:
         print("Pareto Frontier: {} points".format(len(pareto_set)))
-        for i, p in enumerate(pareto_set):
-            print(p)
+        pareto_y = [doc['y'] for doc in docs if doc['y'] in pareto_set]
+        pareto_x = [doc['x'] for doc in docs if doc['y'] in pareto_set]
+
+        for i, _ in enumerate(pareto_set):
+            print("f(x) = {} @ x = {}".format(pareto_y[i], pareto_x[i]))
 
     if n_objs % N_COLS != 0 and n_objs > N_COLS:
         for i in range(n_objs % N_COLS, N_COLS):
@@ -262,4 +265,4 @@ def analyze(collection):
 if __name__ == "__main__":
     from fireworks import LaunchPad
     lpad = LaunchPad(host='localhost', port=27017, name='rsled')
-    visualize(lpad.db.opt_default)
+    visualize(lpad.db.opt_complex, print_pareto=True, scale='log', showmean=False)
