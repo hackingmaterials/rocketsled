@@ -1,12 +1,12 @@
 *Note: This quickstart assumes a limited knowledge of FireWorks. If you already have a workflow built, see the examples or the more advanced tutorials.*
 
 
-=======================================
-Welcome to the :code:`rocketsled` quickstart!
-=======================================
+=====================================================
+Welcome to the :code:`rocketsled` quickstart! - 5 min
+=====================================================
 
 
-If you have a Python function to optimize, the easiest way to get started is to use rocketsled's :code:`auto_setup`. Auto-setup wraps any Python function in a FireWork, adds a Firework containing an OptTask optimization, and creates a workflow ready for launch.
+If you have a Python function to optimize, the easiest way to get started is to use rocketsled's auto_setup. Auto-setup wraps any Python function in a FireWork - an execution wrapper -, creates a Firework containing an OptTask optimization, and creates a workflow optimization loop linking the two Fireworks which is ready for launch.
 
 Let's get an optimization running on your local machine. First, make sure a :code:`mongod` instance is running.
 
@@ -18,7 +18,7 @@ Let's get an optimization running on your local machine. First, make sure a :cod
 Define objective function
 -------------------------
 
-Great! Now lets open up examplesdefine a trivial objective function f(x) for this demo. Your actual objective function will be **much** more complex than this.
+Great! Now lets define a trivial objective function f(x) for this demo. Your actual objective function will be **much** more complex than this.
 
 .. code-block:: python
 
@@ -29,7 +29,7 @@ Great! Now lets open up examplesdefine a trivial objective function f(x) for thi
 Define constraints
 ------------------
 
-Let's constrain this function in each of its dimensions in the format rocketsled uses. Each dimension is represented as a 2-tuple for (low, high), and is placed in a list. So if we want to constrain x1 to integers between 1-100, x2 to integers between 200-300, and x3 to floats between 5.0-10.0:
+Let's constrain this function in each of its dimensions. With rocketsled, each dimension is represented as a 2-tuple for (low, high), and is placed in a list. So if we want to constrain x :sub:`0` to integers between 1-100, x :sub:`1` to integers between 200-300, and x :sub:`3` to floats between 5.0-10.0:
 
 .. code-block:: python
 
@@ -39,21 +39,21 @@ Let's constrain this function in each of its dimensions in the format rocketsled
 These constraints ensure the function has a maximum value of 6,000.
 
 
-Using :code:`auto_setup` on a function
+Using auto_setup on a function
 --------------------------------
 
-Now we can use :code:`auto_setup` to write a file which will
+Now we can use :code:`auto_setup` to write a file containing
 
-   1. Write a workflow creator that can:
+   1. A workflow creator that can:
 
       a. Run your function in a FireWork
 
       b. Run the optimization algorithm in a separate FireWork
 
-   2. The file will be able to launch Fireworks right away.
+   2. Commands launch your workflow.
 
 
-Let's now write a script that will maximize our objective function using the default Bayesian predictor, based on scikit-learn's RandomForestRegressor.
+Lets' maximize our objective function using rocketsled's default predictor, based on scikit-learn's RandomForestRegressor.
 
 .. code-block:: python
 
@@ -75,7 +75,7 @@ Let's now write a script that will maximize our objective function using the def
 Check out and run the auto sled
 --------------------------------
 
-Let's go to this directory and look at the file, which will look similar to this:
+Let's go to this directory and look at the file, which should look similar to this:
 
 .. code-block:: python
 
@@ -122,7 +122,7 @@ Let's go to this directory and look at the file, which will look similar to this
         lpad.add_wf(wf1)
         # rapidfire(lpad, nlaunches=5, sleep_time=0)
 
-What rocketsled is doing here is fairly straightfoward. :code:`wf_creator` returns an optimization loop Workflow containing your objective function Firework and the optimization Firework. Then it adds it to the launchpad and launches it!
+:code:`wf_creator` returns an optimization loop Workflow containing your objective function Firework and the optimization Firework. Then it adds it to the launchpad and launches it!
 
 Your workflow on the launchpad looks like this:
 
@@ -149,9 +149,7 @@ Rocketsled comes with a simple function for creating a matplotlib optimization p
 
     from rocketsled import visualize
     from fireworks import LaunchPad
-    import matplotlib
 
-    matplotlib.rcParams['figure.figsize'] = (15, 12)
     lp = LaunchPad(host='localhost', port=27017, name='my_db')
     visualize(lp.db.quickstart, maximize=True)
 

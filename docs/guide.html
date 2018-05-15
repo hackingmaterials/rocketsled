@@ -39,130 +39,515 @@
             
   <div class="section" id="comprehensive-guide">
 <h1>Comprehensive Guide<a class="headerlink" href="#comprehensive-guide" title="Permalink to this headline">¶</a></h1>
-<p>This is a comprehensive guide detailing the arguments which OptTask accepts.
-This is best used as a reference guide, since most arguments to OptTask work
-in combination with most others.</p>
-<p>This guide is coming soon!</p>
+<p>This is a comprehensive guide detailing the arguments which OptTask accepts, and, since OptTask is defined by its arguments, general usage tips.
+This is best used as a reference guide after looking through the examples and tutorials.</p>
 </div>
 <div class="section" id="required-arguments">
 <h1>Required Arguments<a class="headerlink" href="#required-arguments" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="wf-creator">
 <h2><code class="code docutils literal notranslate"><span class="pre">wf_creator</span></code><a class="headerlink" href="#wf-creator" title="Permalink to this headline">¶</a></h2>
+<p>This is a string which defines the function returning your optimization loop workflow. The function represented by this string must</p>
+<ol class="arabic simple">
+<li>Accept x</li>
+<li><dl class="first docutils">
+<dt>Return a Fireworks workflow based on x (i.e., x sets some parameters in the workflow)</dt>
+<dd><ol class="first last loweralpha">
+<li>The workflow must contain OptTask</li>
+<li>The Firework containing OptTask must have spec fields ‘_x_opt’ and ‘_y_opt’ containing your x optimization vector and y optimization vector/scalar. A vector used for y is considered a multiobjective optimization.</li>
+</ol>
+</dd>
+</dl>
+</li>
+</ol>
+<p>The workflow that is returned should have OptTask contained somewhere in it. Since OptTask is in the workflow, this is somewhat recursive.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">wf_creator</span><span class="o">=</span><span class="s1">&#39;my_package.my_module.my_wf_creator&#39;</span>
+</pre></div>
+</div>
+<p>Alternatively, you can use a function contained in a file not in registered module. While this may work, it is <strong>NOT</strong> recommended!</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">wf_creator</span><span class="o">=</span><span class="s1">&#39;/path/to/my_module.my_wf_creator&#39;</span>
+</pre></div>
+</div>
+<p>See the basic tutorial or the <code class="code docutils literal notranslate"><span class="pre">examples</span></code> folder for examples of writing wf_creator functions.</p>
 </div>
 <div class="section" id="dimensions">
 <h2><code class="code docutils literal notranslate"><span class="pre">dimensions</span></code><a class="headerlink" href="#dimensions" title="Permalink to this headline">¶</a></h2>
+<p>A list of tuples or lists defining the constraints of the search space. 2-tuples of floats or ints are considered <em>ranges</em> of the form (low, high), and will search all possible entries in between.
+Lists of strings are considered comprehensive domains of categorical dimensions, where there is no spatial relation between entries. Lists of length &gt; 2 of integers and floats are considered discontinuous dimensions.
+In discontinuous searches, all possible combinations of discontinuous dimension values can be searched.</p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 3 integer dimensions defined by ranges. There are 125 possibilities in this search space.</span>
+<span class="n">dimensions</span><span class="o">=</span><span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)]</span>
+
+<span class="c1"># 3 float dimensions</span>
+<span class="n">dimensions</span><span class="o">=</span><span class="p">[(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">)]</span>
+
+<span class="c1"># 3 categorical dimensions</span>
+<span class="n">dimensions</span><span class="o">=</span><span class="p">[[</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;tiger&quot;</span><span class="p">,</span> <span class="s2">&quot;bear&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;M&quot;</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">,</span> <span class="s2">&quot;W&quot;</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">,</span> <span class="s2">&quot;F&quot;</span><span class="p">]]</span>
+
+<span class="c1"># A combination of categorial and ranged number dimensions</span>
+<span class="n">dimensions</span><span class="o">=</span><span class="p">[(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">12.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="p">[</span><span class="s2">&quot;badger&quot;</span><span class="p">,</span> <span class="s2">&quot;antelope&quot;</span><span class="p">]]</span>
+
+<span class="c1"># Discontinuous dimensions</span>
+<span class="n">dimensions</span><span class="o">=</span><span class="p">[[</span><span class="mf">1.332</span><span class="p">,</span> <span class="mf">4.565</span><span class="p">,</span> <span class="mf">19.030</span><span class="p">],</span> <span class="p">[</span><span class="mf">221.222</span><span class="p">,</span> <span class="mf">221.0283</span><span class="p">,</span> <span class="mf">221.099</span><span class="p">]]</span>
+</pre></div>
+</div>
+<p><em>Note: If your search space cannot be described by dimensions alone (i.e., it is a set of discontinuous points which can’t be described by ranges or combinatorically, as above, see the ‘space’ argument</em></p>
 </div>
 </div>
 <div class="section" id="optional-arguments">
 <h1>Optional Arguments<a class="headerlink" href="#optional-arguments" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="the-following-arguments-all-have-defaults-been-defined-in-opttask">
-<h2>The following arguments all have defaults been defined in OptTask<a class="headerlink" href="#the-following-arguments-all-have-defaults-been-defined-in-opttask" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="the-following-arguments-all-have-defaults-defined-in-opttask">
+<h2>The following arguments all have defaults defined in OptTask<a class="headerlink" href="#the-following-arguments-all-have-defaults-defined-in-opttask" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="database-setup">
 <h3>Database Setup<a class="headerlink" href="#database-setup" title="Permalink to this headline">¶</a></h3>
+<p>When setting up the database, one MongoDB collection is needed to store optimization data. We recommend using the database
+you use for your production FireWorks workflows, using a collection name not already used by Fireworks. By default, the collection
+name will be opt_default.</p>
+<p>There are 3 main ways to specify where to store optimization data:</p>
+<ol class="arabic simple">
+<li>Use <code class="code docutils literal notranslate"><span class="pre">host</span></code>, <code class="code docutils literal notranslate"><span class="pre">port</span></code>, and <code class="code docutils literal notranslate"><span class="pre">name</span></code></li>
+<li>Use <code class="code docutils literal notranslate"><span class="pre">lpad</span></code></li>
+<li>Let launchapd auto_load, if applicable.</li>
+</ol>
 </div>
 </div>
 <div class="section" id="host">
 <h2><code class="code docutils literal notranslate"><span class="pre">host</span></code><a class="headerlink" href="#host" title="Permalink to this headline">¶</a></h2>
+<p>The host of the MongoDB instance you are going to store optimization data in. port and name must also be specified if this is specified.</p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># host should be a string</span>
+<span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span>
+
+<span class="c1"># remote</span>
+<span class="n">host</span><span class="o">=</span><span class="s1">&#39;my_webserver.com&#39;</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="port">
 <h2><code class="code docutils literal notranslate"><span class="pre">port</span></code><a class="headerlink" href="#port" title="Permalink to this headline">¶</a></h2>
+<p>The port of the MongodDB instance you are going to store optimization data in. host and name must also be specified if this is specified.</p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Port should be an integer</span>
+<span class="n">port</span><span class="o">=</span><span class="mi">27017</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="name">
 <h2><code class="code docutils literal notranslate"><span class="pre">name</span></code><a class="headerlink" href="#name" title="Permalink to this headline">¶</a></h2>
+<p>The name of the MongoDB database you are going to store optimization data in. port and host must also be specified.</p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># name should be a string</span>
+<span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;my_db&quot;</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="lpad">
 <h2><code class="code docutils literal notranslate"><span class="pre">lpad</span></code><a class="headerlink" href="#lpad" title="Permalink to this headline">¶</a></h2>
+<p>A FireWorks launchpad object. Used in lieu of host, port, and name.</p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lpad</span><span class="o">=</span><span class="n">LaunchPad</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">27017</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;rsled&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="opt-label">
 <h2><code class="code docutils literal notranslate"><span class="pre">opt_label</span></code><a class="headerlink" href="#opt-label" title="Permalink to this headline">¶</a></h2>
+<p>The name of the collection where optimization data will be stored. Make sure only rocketsled data is stored in this collection!</p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1">#opt_label should be a string</span>
+<span class="n">opt_label</span><span class="o">=</span><span class="s2">&quot;my_opt_collection&quot;</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="db-extras">
 <h2><code class="code docutils literal notranslate"><span class="pre">db_extras</span></code><a class="headerlink" href="#db-extras" title="Permalink to this headline">¶</a></h2>
+<p>Kwargs to be passed to the mongodb client, as a dictionary. For example, SSL data or username/password.</p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1">#db_extras should be a dict containing kwargs to MongoClient</span>
+<span class="n">db_extras</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;username&#39;</span><span class="p">:</span> <span class="s1">&#39;myuser&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span><span class="p">:</span> <span class="s1">&#39;mypassword&#39;</span><span class="p">,</span> <span class="s1">&#39;maxPoolSize&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">}</span>
+</pre></div>
+</div>
 <div class="section" id="predictors">
 <h3>Predictors<a class="headerlink" href="#predictors" title="Permalink to this headline">¶</a></h3>
+<p>Predictors power rocketsled’s optimization. Choose one of the built-in predictors or use a custom function.</p>
 </div>
 </div>
 <div class="section" id="predictor">
 <h2><code class="code docutils literal notranslate"><span class="pre">predictor</span></code><a class="headerlink" href="#predictor" title="Permalink to this headline">¶</a></h2>
+<p>A string naming a function which, given a list of explored points and unexplored points, returns an optimized guess.</p>
+<p><strong>Builtins</strong></p>
+<p>Included sklearn-based predictors are:</p>
+<ul class="simple">
+<li>‘RandomForestRegressor’,</li>
+<li>‘AdaBoostRegressor’,</li>
+<li>‘ExtraTreesRegressor’,</li>
+<li>‘GradientBoostingRegressor’,</li>
+<li>‘GaussianProcessRegressor’,</li>
+<li>‘LinearRegression’,</li>
+<li>‘SGDRegressor’,</li>
+<li>‘MLPRegressor’,</li>
+<li>‘KernelRidge’,</li>
+<li>‘SVR’</li>
+</ul>
+<p>Defaults to ‘RandomForestRegressor’</p>
+<p><strong>Custom</strong></p>
+<p>A string of the fully qualified name of your predictor. The predictor function
+itself should have the form:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">my_predictor</span><span class="p">(</span><span class="n">XZ_explored</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">x_dims</span><span class="p">,</span> <span class="n">XZ_unexplored</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a prediction for the next best guess. The returned guess will</span>
+<span class="sd">    be used to construct a new workflow with the workflow creator function.</span>
+
+<span class="sd">    The argument names need not be the same shown here, although their</span>
+<span class="sd">    position must remain the same.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        XZ_explored ([list]): A list of lists; 2D array of samples (rows)</span>
+<span class="sd">            by features (columns) of points already evaluated in the search</span>
+<span class="sd">            space. This is training data.</span>
+<span class="sd">        Y (list): A vector of samples; this is the training output.</span>
+<span class="sd">        x_dims (list): The dimensions of the search space</span>
+<span class="sd">        XZ_unexplored([list[): A list of lists; 2D array of samples (rows)</span>
+<span class="sd">            by features (columns) of points to be predicted. This is the &#39;test&#39;</span>
+<span class="sd">            or prediction dataset.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        x (list): A vector representing the set of parameters for the next best</span>
+<span class="sd">            guess</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Here is an example custom predictor</span>
+    <span class="n">X_train</span> <span class="o">=</span> <span class="n">XZ_explored</span>
+    <span class="n">y_train</span> <span class="o">=</span> <span class="n">Y</span>
+    <span class="n">X_test</span> <span class="o">=</span> <span class="n">XZ_unexplored</span>
+    <span class="n">SVR</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+    <span class="n">possible_values</span> <span class="o">=</span> <span class="n">SVR</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+    <span class="n">best_x</span> <span class="o">=</span> <span class="n">custom_find_best_val_function</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">possible_values</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">best_x</span>
+</pre></div>
+</div>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example builtin predictor:</span>
+<span class="n">predictor</span><span class="o">=</span><span class="s1">&#39;SVR&#39;</span>
+
+<span class="c1"># Example custom predictor:</span>
+<span class="n">predictor</span><span class="o">=</span><span class="s1">&#39;my_package.my_module.my_predictor&#39;</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="predictor-args">
 <h2><code class="code docutils literal notranslate"><span class="pre">predictor_args</span></code><a class="headerlink" href="#predictor-args" title="Permalink to this headline">¶</a></h2>
+<p>Additional positional arguments to the chosen predictor, whether it be builtin or custom, as a list.</p>
+<p>For builtin predictors, arguments are passed to the sklearn BaseEstimator.
+For custom predictors, arguments are passed directly to the predictor function after all default arguments are passed (see ‘predictors’ argument above for the default arguments).</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">predictor_args</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mf">7.9</span><span class="p">,</span> <span class="s2">&quot;some_positional_hyperparam_value&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>For more info, see the extras.py example.</p>
 </div>
 <div class="section" id="predictor-kwargs">
 <h2><code class="code docutils literal notranslate"><span class="pre">predictor_kwargs</span></code><a class="headerlink" href="#predictor-kwargs" title="Permalink to this headline">¶</a></h2>
+<p>Additional keyword arguments to the chosen predictor, whether it be builtin or custom, as a dictionary.</p>
+<p>For builtin predictors, arguments are passed to the sklearn BaseEstimator.
+For custom predictors, arguments are passed directly to the predictor function.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example builtin predictor: The regressor you chose as predictor should accept these arguments!</span>
+<span class="n">predictor_args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;n_estimators&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span> <span class="s2">&quot;criterion&quot;</span><span class="p">:</span> <span class="s2">&quot;mse&quot;</span><span class="p">}</span>
+
+<span class="c1"># Example custom predictor:</span>
+<span class="n">predictor</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;my_kwarg1&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span> <span class="s2">&quot;my_kwarg2&quot;</span><span class="p">:</span> <span class="s2">&quot;brown&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>For more info, see the extras.py example.</p>
 <div class="section" id="predictor-performance">
 <h3>Predictor Performance<a class="headerlink" href="#predictor-performance" title="Permalink to this headline">¶</a></h3>
+<p>Options in this section are used for</p>
+<ol class="arabic simple">
+<li>Improving optimization performance</li>
+<li>Reducing search space</li>
+<li>Balancing exploitaton and exploration</li>
+</ol>
 </div>
 </div>
 <div class="section" id="n-searchpts">
 <h2><code class="code docutils literal notranslate"><span class="pre">n_searchpts</span></code><a class="headerlink" href="#n-searchpts" title="Permalink to this headline">¶</a></h2>
+<p>The number of points to be predicted in the search space when choosing the next best point.
+Choosing more points to search may increase the effectiveness of the optimization, but will require more computational power to predict. The default is 1000 points.
+if the size of the domain is discrete and less than <code class="code docutils literal notranslate"><span class="pre">n_searchpts</span></code>, all the remaining points in the domain will be predicted.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># n_searchpts should be an int</span>
+<span class="n">n_searchpts</span><span class="o">=</span><span class="mi">10000</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="n-trainpts">
 <h2><code class="code docutils literal notranslate"><span class="pre">n_trainpts</span></code><a class="headerlink" href="#n-trainpts" title="Permalink to this headline">¶</a></h2>
+<p>The number of already explored points to be chosen for training, sampled at random without replacement from the explored space. Default is None, meaning all available points will be used for training.
+Reduce the number of points to decrease training times.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># n_searchpts should be an int</span>
+<span class="n">n_trainpts</span><span class="o">=</span><span class="mi">10000</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="space">
 <h2><code class="code docutils literal notranslate"><span class="pre">space</span></code><a class="headerlink" href="#space" title="Permalink to this headline">¶</a></h2>
+<p>The fully specified path of a pickle file containing a list of all possible searchable x vectors (tuples).
+Use this argument if you have a space which cannot be defined sufficiently by <code class="code docutils literal notranslate"><span class="pre">dimensions</span></code>.</p>
+<p><em>Note: The dimensions argument is still needed. Make sure dimensions encapsulates the full range of points in the space specified here</em></p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The pickle file should contain a list of tuples</span>
+<span class="n">space</span><span class="o">=</span><span class="s1">&#39;/Users/myuser/myfolder/myspace.p&#39;</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="acq">
 <h2><code class="code docutils literal notranslate"><span class="pre">acq</span></code><a class="headerlink" href="#acq" title="Permalink to this headline">¶</a></h2>
+<p>The acquisition function to use for Bayesian optimization with builtin predictors. Using an acquisition function leverages what we know about the objective function and statistical estimates to balance exploration and exploitation.
+Using this option will increase the effectiveness of optimization, but more optimization overhead will be used (see below for tips).</p>
+<p>Choose from the following options:</p>
+<p><strong>Single objective:</strong></p>
+<ul class="simple">
+<li>None: The highest predicted point is picked. Fully exploitive.</li>
+<li>‘ei’: Expected improvement (Recommended)</li>
+<li>‘pi’: Probability of Improvment</li>
+<li>‘lcb’: Lower confidence bound</li>
+</ul>
+<p><strong>Multi objective:</strong>
+* None: The points which are predicted to be Pareo-optimal are picked with equal probability. Fully exploitative.
+* ‘maximin’: An acquisition function similar to Expected Improvement which combines the minimum gain in the maximum objective dimension over the entire Pareto-fronteir with the probability of improvmeent.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The acquisition function should be a string or None</span>
+<span class="n">acq</span><span class="o">=</span><span class="s1">&#39;ei&#39;</span>
+</pre></div>
+</div>
+<p><strong>Tip:</strong> For all builtin predictors besides Gaussian processes, bootstrapping is required (for statistical estimates),
+which can be computationally intensive. If you’re using acquisition functions and need quick predictions, we recommend
+GaussianProcessRegeressor as a predictor.</p>
 </div>
 <div class="section" id="n-boots">
 <h2><code class="code docutils literal notranslate"><span class="pre">n_boots</span></code><a class="headerlink" href="#n-boots" title="Permalink to this headline">¶</a></h2>
+<p>The number of bootstrap samples and retrains/re-predictions used for bootstrapping when estimating uncertainty.
+When calculating acquisition values, for all builtin predictors besides Gaussian processes, bootstrapping is required (for statistical estimates).</p>
+<p>Increasing <code class="code docutils literal notranslate"><span class="pre">n_boots</span></code> will linearly increase training time and prediction times, but will increase prediction performance if using an acquisition function.
+The default n_boots is 500, although higher is better!</p>
+<p>All bootstrapped training and acquisition is performed in parallel, if possible.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The number of bootstraps should be an integer.</span>
+<span class="n">n_boots</span><span class="o">=</span><span class="mi">1000</span>
+</pre></div>
 </div>
-<div class="section" id="radom-proba">
-<h2><code class="code docutils literal notranslate"><span class="pre">radom_proba</span></code><a class="headerlink" href="#radom-proba" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="random-proba">
+<h2><code class="code docutils literal notranslate"><span class="pre">random_proba</span></code><a class="headerlink" href="#random-proba" title="Permalink to this headline">¶</a></h2>
+<p>Randomly guess with this probability. A value of 1.0 is random guessing only. A value of 0.0 (default) will never random guess.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The random probability of a guess should be a float.</span>
+<span class="n">random_proba</span><span class="o">=</span><span class="mf">0.1</span>
+</pre></div>
+</div>
 <div class="section" id="hyperparameter-search">
 <h3>Hyperparameter Search<a class="headerlink" href="#hyperparameter-search" title="Permalink to this headline">¶</a></h3>
+<p>When using builtin predictors, rocketsled can perform automatic hyperparameter searches to optimize the chosen
+sklearn estimator before using it to select the next best point. Using hyperparameter optimization at each step
+in sequential optimization can have a significant effect on the predictive accuracy (i.e., optimization performance!) of SVR and many other models!</p>
 </div>
 </div>
 <div class="section" id="param-grid">
 <h2><code class="code docutils literal notranslate"><span class="pre">param_grid</span></code><a class="headerlink" href="#param-grid" title="Permalink to this headline">¶</a></h2>
+<p>The sklearn-style dictionary to use for hyperparameter optimization search. Each key should correspond to
+a regressor parameter name, and each value should be a list of possible settings for the parameter key.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># For example, when using RandomForestRegressor</span>
+<span class="n">param_grid</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;n_estimators&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">],</span> <span class="s2">&quot;max_features&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;sqrt&quot;</span><span class="p">,</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">]}</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="hyper-opt">
 <h2><code class="code docutils literal notranslate"><span class="pre">hyper_opt</span></code><a class="headerlink" href="#hyper-opt" title="Permalink to this headline">¶</a></h2>
+<p>Defines how hyperparamter search is performed. An int of 1 or greater defines the number of parameter combos to try with
+RandomizedSearchCV. A value of None or 0 means exhaustive search with GridSearchCV. <code class="code docutils literal notranslate"><span class="pre">param_grid</span></code> must be defined to use this option.
+All searches are performed in parallel, if possible.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hyper_opt should be an integer or None</span>
+<span class="n">hyper_opt</span><span class="o">=</span><span class="mi">200</span>
+
+<span class="c1"># An exhaustive grid search can be performed</span>
+<span class="n">hyper_opt</span><span class="o">=</span><span class="mi">0</span>
+</pre></div>
+</div>
 <div class="section" id="features">
 <h3>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h3>
+<p>Using features <em>derived</em> from x can provide more information to predictors. These
+extra features, which do not uniquely define the workflow but are nonetheless useful, are called “z”.</p>
 </div>
 </div>
 <div class="section" id="get-z">
 <h2><code class="code docutils literal notranslate"><span class="pre">get_z</span></code><a class="headerlink" href="#get-z" title="Permalink to this headline">¶</a></h2>
+<p>The string representing a function that, when given a vector x, return any number of derived features. Derived features can be
+any of the types rocketsled can handle (float, int, categorical).</p>
+<p>The features defined in z are not used to run the workflow, but are used for learning. If z features are
+enabled, ONLY z features will be used for learning (x vectors essentially become tags or identifiers only).
+To use x features and z features, simply add x features to the returned z vector.</p>
+<p>Dimensions are not necessary when using get_z.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># A module containing the get_z function</span>
+<span class="n">get_z</span><span class="o">=</span><span class="s1">&#39;my_package.my_module.my_fun&#39;</span>
+
+<span class="c1"># Alternatively...</span>
+<span class="n">get_z</span><span class="o">=</span><span class="s1">&#39;/path/to/folder/containing/my_package.my_module.my_fun&#39;</span>
+</pre></div>
+</div>
+<p>Here’s an example of the form get_z should take as a function</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># my_module.py</span>
+
+<span class="c1"># Features are derived from the x vector, but do not uniquely define it.</span>
+<span class="k">def</span> <span class="nf">get_z</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="n">some_featurization_function</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">**</span> <span class="mf">3.0</span><span class="p">]</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="get-z-args">
 <h2><code class="code docutils literal notranslate"><span class="pre">get_z_args</span></code><a class="headerlink" href="#get-z-args" title="Permalink to this headline">¶</a></h2>
+<p>Positional arguments to pass to get_z. These are passed to get_z after x, the necessary default argument.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># get_z_args should be a list of positional args</span>
+<span class="n">get_z_args</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;somearg&quot;</span><span class="p">,</span> <span class="mi">14</span><span class="p">]</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="get-z-kwargs">
 <h2><code class="code docutils literal notranslate"><span class="pre">get_z_kwargs</span></code><a class="headerlink" href="#get-z-kwargs" title="Permalink to this headline">¶</a></h2>
+<p>Keyword args to pass to get_z.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># get_z_kwargs should be a dict of kwargs</span>
+<span class="n">get_z_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;somekwarg&#39;</span><span class="p">:</span> <span class="mi">12</span><span class="p">}</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="persistent-z">
 <h2><code class="code docutils literal notranslate"><span class="pre">persistent_z</span></code><a class="headerlink" href="#persistent-z" title="Permalink to this headline">¶</a></h2>
+<p>The filename (pickle file) which should be used to
+store persistent z calculations. Specify this argument if
+calculating z for many (n_searchpts) is not trivial and will
+cost time in computing. With this argument specified, each z will
+only be calculated once. Defaults to None, meaning that all
+unexplored z are re-calculated each iteration.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># persistent_z defines the file where OptTask will write all z guesses.</span>
+<span class="n">persistent_z</span> <span class="o">=</span> <span class="s1">&#39;/path/to/persistent_z_guesses.p&#39;</span>
+</pre></div>
+</div>
 <div class="section" id="miscellaneous">
 <h3>Miscellaneous<a class="headerlink" href="#miscellaneous" title="Permalink to this headline">¶</a></h3>
 </div>
 </div>
 <div class="section" id="wf-creator-args">
 <h2><code class="code docutils literal notranslate"><span class="pre">wf_creator_args</span></code><a class="headerlink" href="#wf-creator-args" title="Permalink to this headline">¶</a></h2>
+<p>Positional args to pass to the wf_creator alongside the new x vector.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># positional args should be a list</span>
+<span class="n">wf_creator_args</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;my_creator_arg&quot;</span><span class="p">,</span> <span class="mi">12</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>See extras.py for an example.</p>
 </div>
 <div class="section" id="wf-creator-kwargs">
 <h2><code class="code docutils literal notranslate"><span class="pre">wf_creator_kwargs</span></code><a class="headerlink" href="#wf-creator-kwargs" title="Permalink to this headline">¶</a></h2>
+<p>Keyword arguments to pass to the wf_creator, as a dict.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># kwargs to pass to the wf_creator</span>
+<span class="n">wf_creator_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;my_wf_creator_kwarg&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>See extras.py for an example.</p>
 </div>
 <div class="section" id="encode-categorical">
 <h2><code class="code docutils literal notranslate"><span class="pre">encode_categorical</span></code><a class="headerlink" href="#encode-categorical" title="Permalink to this headline">¶</a></h2>
+<p>Automatic One-Hot encoding of categorical input for custom predictors.</p>
+<p>If using a custom predictor, explored and unexplored spaces will be passed to
+the predictor as strings, if categorical dimensions exist. With <code class="code docutils literal notranslate"><span class="pre">encode_categorical=True</span></code>,
+the custom predictor will recieve only numerical input (although it may be a combination of
+ints and floats). Default is False, meaning no categorical encoding.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">encode_categorical</span><span class="o">=</span><span class="bp">True</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="duplicate-check">
 <h2><code class="code docutils literal notranslate"><span class="pre">duplicate_check</span></code><a class="headerlink" href="#duplicate-check" title="Permalink to this headline">¶</a></h2>
+<p>Ensure custom predictors do not submit duplicates (even in parallel).</p>
+<p>Builtin predictors do not suggest duplicates, even when many workflows are running in parallel, since rocketsled
+locks the optimization db sequentially. However, custom predictors may suggest duplicates. Enabling duplicate
+checking will prevent duplicate workflows from being run (the meaning of “duplicate” can be refined with <code class="code docutils literal notranslate"><span class="pre">tolerances</span></code>)
+when using custom predictors. Suggested duplicates are discarded and random guesses from the remaining unexplored space are used instead.</p>
+<p>Default is no duplicate check; if a duplicate is suggested, an error is raised.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># duplicate_check is a bool</span>
+<span class="n">duplicate_check</span><span class="o">=</span><span class="bp">True</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="tolerances">
 <h2><code class="code docutils literal notranslate"><span class="pre">tolerances</span></code><a class="headerlink" href="#tolerances" title="Permalink to this headline">¶</a></h2>
+<p>The numerical tolerance of each feature when duplicate checking, as a list per dimension.
+For categorical features, put ‘None’</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># if our dimensions are [(1, 100), [&#39;red&#39;, &#39;blue&#39;], (2.0, 20.0)]</span>
+<span class="c1"># and we want the first param to be a duplicate only if it is an exact match</span>
+<span class="c1"># and the third param to be a duplicate if it is within 1e-6, then</span>
+<span class="n">tolerances</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">]</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="maximize">
 <h2><code class="code docutils literal notranslate"><span class="pre">maximize</span></code><a class="headerlink" href="#maximize" title="Permalink to this headline">¶</a></h2>
+<p>If true, makes optimization tend toward maximum values instead of minimum ones.</p>
+<p>By default, false.</p>
+<p>For multiobjective optimization, the maximization rule applies to all objective metrics.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">maximize</span><span class="o">=</span><span class="bp">True</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="batch-size">
 <h2><code class="code docutils literal notranslate"><span class="pre">batch_size</span></code><a class="headerlink" href="#batch-size" title="Permalink to this headline">¶</a></h2>
+<p>Rocketsled is capable of batch optimization, meaning that N workflows are run, then a single optimization is run, and then another N workflows are submitted using the  N best guesses from the optimization.
+Enabling batch optimization is useful if you do not want to wait for many sequential optimizations, or if little information is gained from each workflow evaluation but you are running many cheap workflows.
+The <code class="code docutils literal notranslate"><span class="pre">batch_size</span></code> parameter determines the batch size; default 1.</p>
+<a class="reference internal image-reference" href="_images/batch.png"><img alt="batch" src="_images/batch.png" style="width: 1200px;" /></a>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># optimize every 20th job, then submit another 20 workflows to the launchpad</span>
+<span class="n">batch_size</span><span class="o">=</span><span class="mi">20</span>
+</pre></div>
+</div>
+<p>See batch.py example for a demonstration.</p>
+<p><em>Note: Enabling large batch sizes may cause synchronicity issues. For example, rocketsled waits for all batch calcs to finish before running
+another batch. If one calc fails, the batch optimization will fail.</em></p>
 </div>
 <div class="section" id="timeout">
 <h2><code class="code docutils literal notranslate"><span class="pre">timeout</span></code><a class="headerlink" href="#timeout" title="Permalink to this headline">¶</a></h2>
+<p>The number of seconds to wait before resetting the lock on the db.</p>
+<p>Rocketsled can leave the db locked for long periods of time (causing all other optimizations in parallel to stall) if
+a process exits unexpectedly, loses connection with the optimization collection, or takes an extended (5+ min) time to train
+and predict. The db can be temporarily released from lock, but if there is a systematic error, rocketsled will not be able to
+make predictions while the db is perpetually locked and reset.</p>
+<p>Choosing a sensible timeout will prevent rocketsled from wasting throughput when making predictions.</p>
+<p>If your predictions are unexpectedly exiting or rocketsled is consistently voiding predictions (not submitting new workflows),
+your problem is most likely with the timeout setting.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># If a prediction is expected to take no more than 5 min, we want to set the timeout accordingly.</span>
+<span class="n">timeout</span><span class="o">=</span><span class="mi">300</span> <span class="c1">#seconds</span>
+</pre></div>
 </div>
+</div>
+</div>
+<div class="section" id="auto-setup">
+<h1>Auto setup<a class="headerlink" href="#auto-setup" title="Permalink to this headline">¶</a></h1>
+<p>If you just have an expensive python function you’d like to put in a workflow, and not a complex workflow itself, don’t forget auto_setup!
+See the <a class="reference internal" href="quickstart.html"><span class="doc">quickstart</span></a> for more information on auto_setup.</p>
 </div>
 
 
@@ -180,7 +565,7 @@ in combination with most others.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#optional-arguments">Optional Arguments</a><ul>
-<li><a class="reference internal" href="#the-following-arguments-all-have-defaults-been-defined-in-opttask">The following arguments all have defaults been defined in OptTask</a><ul>
+<li><a class="reference internal" href="#the-following-arguments-all-have-defaults-defined-in-opttask">The following arguments all have defaults defined in OptTask</a><ul>
 <li><a class="reference internal" href="#database-setup">Database Setup</a></li>
 </ul>
 </li>
@@ -204,7 +589,7 @@ in combination with most others.</p>
 <li><a class="reference internal" href="#space"><code class="code docutils literal notranslate"><span class="pre">space</span></code></a></li>
 <li><a class="reference internal" href="#acq"><code class="code docutils literal notranslate"><span class="pre">acq</span></code></a></li>
 <li><a class="reference internal" href="#n-boots"><code class="code docutils literal notranslate"><span class="pre">n_boots</span></code></a></li>
-<li><a class="reference internal" href="#radom-proba"><code class="code docutils literal notranslate"><span class="pre">radom_proba</span></code></a><ul>
+<li><a class="reference internal" href="#random-proba"><code class="code docutils literal notranslate"><span class="pre">random_proba</span></code></a><ul>
 <li><a class="reference internal" href="#hyperparameter-search">Hyperparameter Search</a></li>
 </ul>
 </li>
@@ -230,6 +615,7 @@ in combination with most others.</p>
 <li><a class="reference internal" href="#timeout"><code class="code docutils literal notranslate"><span class="pre">timeout</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#auto-setup">Auto setup</a></li>
 </ul>
 
   <div role="note" aria-label="source link">

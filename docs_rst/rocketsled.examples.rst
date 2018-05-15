@@ -36,6 +36,14 @@ rocketsled.examples.categorical module
     :undoc-members:
     :show-inheritance:
 
+rocketsled.examples.complex module
+----------------------------------
+
+.. automodule:: rocketsled.examples.complex
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 rocketsled.examples.extras module
 ---------------------------------
 
