@@ -11,7 +11,7 @@ from matplotlib import pyplot as plt
 from rocketsled.utils import Dtypes, latex_float, pareto
 
 __author__ = "Alexander Dunn"
-__version__ = "0.1"
+__version__ = "1.0"
 __email__ = "ardunn@lbl.gov"
 
 def visualize(collection, maximize=False, showbest=True, showmean=True,

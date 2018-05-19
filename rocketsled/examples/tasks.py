@@ -10,6 +10,10 @@ from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction
 import numpy as np
 
+__author__ = "Alexander Dunn"
+__version__ = "1.0"
+__email__ = "ardunn@lbl.gov"
+
 
 @explicit_serialize
 class SumTask(FireTaskBase):

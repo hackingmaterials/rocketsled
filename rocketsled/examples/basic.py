@@ -15,11 +15,6 @@ from rocketsled import OptTask
 from rocketsled.examples.tasks import SumTask
 
 
-__author__ = "Alexander Dunn"
-__version__ = "0.1"
-__email__ = "ardunn@lbl.gov"
-
-
 # a workflow creator function which takes x and returns a workflow based on x
 def wf_creator(x):
 
