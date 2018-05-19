@@ -51,15 +51,14 @@ What does rocketsled do?
 ============================
 
 rocketsled functions as a **black box optimizer** for a sequential optimization
-loop; it requires no internal knowledge of a function for optimization. More importantly though, rocketsled **retains the workflow management abilties** of FireWorks (provenance, dynamic workflows, duplicate detection and correction,
-error handling) across **arbitrary computing resources**. rocketsled is intended to be "plug-and-play": simply "plug-in" an expensive
-objective function or workflow, parameter constraints, and (optionally) a black box optimization algorithm, and rocketsled + FireWorks automatically creates an optimization loop.
+loop; it requires no internal knowledge of a function for optimization. rocketsled also **retains the workflow management abilties** of FireWorks (provenance, dynamic workflows, duplicate detection and correction,
+error handling) across **arbitrary computing resources**. rocketsled is intended to be "plug-and-play": simply plug-in an objective function or workflow, parameter constraints, and (optionally) a black box optimization algorithm, and rocketsled automatically creates an optimization loop in FireWorks.
 
 
 A visual explanation...
 -----------------------
 
-rocketsled is designed for optimization tasks with sequential (or semi-sequential) improvement. For example, a typical workflow without optimization might look like this:
+A typical workflow without optimization might look like this:
 
 .. image:: _static/singlewf.png
    :alt: basicwf
