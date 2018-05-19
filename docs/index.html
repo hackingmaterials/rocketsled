@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>rocketsled &#8212; rocketsled 0.1 documentation</title>
+    <title>rocketsled &#8212; rocketsled 1.0 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" src="_static/documentation_options.js"></script>
@@ -28,7 +28,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">rocketsled 0.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="#">rocketsled 1.0 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -40,59 +40,66 @@
   <a class="reference internal image-reference" href="_images/rsfw.png"><img alt="rocketsled logo" class="align-center" src="_images/rsfw.png" style="width: 600px;" /></a>
 <p>rocketsled is a flexible, automatic
 <a class="reference external" href="https://github.com/hackingmaterials/rocketsled">(open source)</a> optimization
-framework <em>“on rails”</em> for serious high throughput computation.</p>
+framework <em>“on rails”</em> for high throughput computation.</p>
 <p>rocketsled is an extension of
 <a class="reference external" href="https://github.com/materialsproject/fireworks">FireWorks</a> workflow software,
 written in Python.</p>
 <div class="section" id="is-rocketsled-for-me">
 <h1>Is rocketsled for me?<a class="headerlink" href="#is-rocketsled-for-me" title="Permalink to this headline">¶</a></h1>
-<p>Is your computational problem:</p>
-<div class="section" id="expensive-and-or-complex">
-<h2>1. Expensive and/or complex?<a class="headerlink" href="#expensive-and-or-complex" title="Permalink to this headline">¶</a></h2>
+<p><strong>Is your computational problem:</strong></p>
+<div class="section" id="expensive-and-or-complex-require-hpc-and-workflow-tools">
+<h2>1. Expensive and/or complex (require HPC and workflow tools)?<a class="headerlink" href="#expensive-and-or-complex-require-hpc-and-workflow-tools" title="Permalink to this headline">¶</a></h2>
 <blockquote>
-<div><strong>Does it require high performance computing +  workflow tools?</strong></div></blockquote>
+<div><a class="reference internal image-reference" href="_images/server.png"><img alt="server" class="align-center" src="_images/server.png" style="width: 400px;" /></a>
+</div></blockquote>
 </div>
-<div class="section" id="run-in-high-throughput">
-<h2>2. Run in high-throughput?<a class="headerlink" href="#run-in-high-throughput" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="run-in-high-throughput-many-similar-parallel-or-serial-workflows">
+<h2>2. Run in high-throughput (many similar, parallel or serial workflows)?<a class="headerlink" href="#run-in-high-throughput-many-similar-parallel-or-serial-workflows" title="Permalink to this headline">¶</a></h2>
 <blockquote>
-<div><strong>Many similar workflows running concurrently?</strong></div></blockquote>
+<div><img alt="dht" class="align-center" src="_images/diagram_highthroughput.png" />
+</div></blockquote>
 </div>
-<div class="section" id="limited-by-an-allocation-of-cpu-hours">
-<h2>3. Limited by an allocation of CPU hours?<a class="headerlink" href="#limited-by-an-allocation-of-cpu-hours" title="Permalink to this headline">¶</a></h2>
-<blockquote>
-<div><strong>Want the most “bang for your buck”?</strong></div></blockquote>
+<div class="section" id="limited-by-problem-size-or-allocation">
+<h2>3. Limited by problem size or allocation?<a class="headerlink" href="#limited-by-problem-size-or-allocation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="want-to-get-the-most-bang-for-your-buck-with-optimization">
+<h3>Want to get the most “bang for your buck” with optimization?<a class="headerlink" href="#want-to-get-the-most-bang-for-your-buck-with-optimization" title="Permalink to this headline">¶</a></h3>
 <p>If you answered yes to these three questions, <em>keep reading!</em></p>
-<p>If you have a complex, multi-iteration task to execute on high performance
-computers, and you would like to <em>automatically</em> reduce the number of expensive
-calculations needed to run your task, <strong>rocketsled is for you.</strong></p>
+<p><strong>rocketsled</strong> is a framework which can <em>automatically</em> improve the results of your complex, high-throughput tasks using optimization.
+Furthermore, it is designed to be as extensible as possible across many computer architectures, optimization schemes, and problem specifications.</p>
+</div>
 </div>
 </div>
 <div class="section" id="what-does-rocketsled-do">
 <h1>What does rocketsled do?<a class="headerlink" href="#what-does-rocketsled-do" title="Permalink to this headline">¶</a></h1>
-<p><code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> functions as a <strong>black box optimizer</strong> for a sequential optimization
-loop; it requires no knowledge of a function in order to optimize it.</p>
-<p>More importantly though, rocketsled <strong>retains the workflow management abilties</strong> of FireWorks (provenance, dynamic workflows, duplicate detection and correction,
-error handling) across <strong>arbitrary computing resources</strong>.</p>
-<p><code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> is intended to be “plug-and-play”: simply “plug-in” an expensive
-objective function or workflow, constraints, and (optionally) a black box optimization algorithm,
-and rocketsled + FireWorks automatically creates the optimization loop.</p>
+<p>rocketsled functions as a <strong>black box optimizer</strong> for a sequential optimization
+loop; it requires no internal knowledge of a function for optimization. More importantly though, rocketsled <strong>retains the workflow management abilties</strong> of FireWorks (provenance, dynamic workflows, duplicate detection and correction,
+error handling) across <strong>arbitrary computing resources</strong>. rocketsled is intended to be “plug-and-play”: simply “plug-in” an expensive
+objective function or workflow, parameter constraints, and (optionally) a black box optimization algorithm, and rocketsled + FireWorks automatically creates an optimization loop.</p>
 <div class="section" id="a-visual-explanation">
 <h2>A visual explanation…<a class="headerlink" href="#a-visual-explanation" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> is designed for optimization tasks with sequential improvement. For example, a typical workflow without optimization might look like this:</p>
+<p>rocketsled is designed for optimization tasks with sequential (or semi-sequential) improvement. For example, a typical workflow without optimization might look like this:</p>
 <img alt="basicwf" class="align-center" src="_images/singlewf.png" />
-<p>Input parameters are given to the first job (Firework). This begins the workflow, and a useful output result is given. The workflow is repeated as desired, often across many compute nodes in parallel.</p>
+<p>Input parameters are given to the first job (Firework). This begins the workflow, and a useful output result is given. The workflow is repeated as desired with different input parameters, often across many compute nodes in parallel, in an attempt to compute favorable outputs.</p>
 <a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
 <a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
 <a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
 <a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
 <p>Randomly selecting the next sets of input parameters to run is <em>inefficient</em>, since we will execute many workflows, including those with unfavorable results. To reduce the required number of computed workflows, we need to <em>intelligently</em> choose new input parameters with an <strong>optimization loop.</strong></p>
-<p>This is where <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> comes in handy. <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code> is a sub-job (FireTask) called <code class="docutils literal notranslate"><span class="pre">OptTask</span></code>, which can go in any Firework in the workflow, and which uses <code class="docutils literal notranslate"><span class="pre">sklearn</span></code> regressors to predict the best <em>input</em> parameters for the next iteration, store them in a MongoDB database, and automatically submit a new workflow to compute the next output.</p>
+<p>This is where rocketsled comes in handy. rocketsled is a sub-job (FireTask) which can go in any Firework in the workflow, and uses an sklearn-based Bayesian strategy to predict the best <em>input</em> parameters for the next iteration, store them in a MongoDB database, and automatically submit a new workflow to compute the next output.</p>
 <img alt="basicwf" class="align-center" src="_images/singlewf_withrs.png" />
+</div>
+<div class="section" id="example-use-cases">
+<h2>Example use cases<a class="headerlink" href="#example-use-cases" title="Permalink to this headline">¶</a></h2>
+<p>rocketsled has many example use cases for adaptive computational design.</p>
+<p><strong>Searching 19,000 possible for new energy materials using expensive first-principles physics calculations:</strong> rocketsled enabled increased efficiency (wrt. random and empirical rules) in searching a large space of input parameters (materials) for renewable energy water splitting perovskites using Density Functional Theory calculations.</p>
+<a class="reference internal image-reference" href="_images/3dmap_mend.png"><img alt="3d" src="_images/3dmap_mend.png" style="width: 390px;" /></a>
+<a class="reference internal image-reference" href="_images/perovskites_zoomin.png"><img alt="perov" src="_images/perovskites_zoomin.png" style="width: 400px;" /></a>
+<p><strong>(Forthcoming) Selecting the best machine learning model for large-scale data mining:</strong> rocketsled can be used for selecting the best machine learning models (and their hyperparameters) in cases where each training + cross-validation can be a computationally expensive task.</p>
 </div>
 <div class="section" id="features-of-rocketsled">
 <h2>Features of <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code><a class="headerlink" href="#features-of-rocketsled" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>One-line setup tools</li>
+<li>One-line python setup tools</li>
 <li>Persistent storage and optimization tracking</li>
 <li>Automatic workflow submission and management with FireWorks</li>
 <li><dl class="first docutils">
@@ -199,13 +206,17 @@ question, you’ll most likely find your answer here.</p>
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Is rocketsled for me?</a><ul>
-<li><a class="reference internal" href="#expensive-and-or-complex">1. Expensive and/or complex?</a></li>
-<li><a class="reference internal" href="#run-in-high-throughput">2. Run in high-throughput?</a></li>
-<li><a class="reference internal" href="#limited-by-an-allocation-of-cpu-hours">3. Limited by an allocation of CPU hours?</a></li>
+<li><a class="reference internal" href="#expensive-and-or-complex-require-hpc-and-workflow-tools">1. Expensive and/or complex (require HPC and workflow tools)?</a></li>
+<li><a class="reference internal" href="#run-in-high-throughput-many-similar-parallel-or-serial-workflows">2. Run in high-throughput (many similar, parallel or serial workflows)?</a></li>
+<li><a class="reference internal" href="#limited-by-problem-size-or-allocation">3. Limited by problem size or allocation?</a><ul>
+<li><a class="reference internal" href="#want-to-get-the-most-bang-for-your-buck-with-optimization">Want to get the most “bang for your buck” with optimization?</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#what-does-rocketsled-do">What does rocketsled do?</a><ul>
 <li><a class="reference internal" href="#a-visual-explanation">A visual explanation…</a></li>
+<li><a class="reference internal" href="#example-use-cases">Example use cases</a></li>
 <li><a class="reference internal" href="#features-of-rocketsled">Features of <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code></a></li>
 </ul>
 </li>
@@ -257,7 +268,7 @@ question, you’ll most likely find your answer here.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">rocketsled 0.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="#">rocketsled 1.0 documentation</a> &#187;</li> 
       </ul>
     </div>
 
