@@ -10,6 +10,10 @@ Automatically set up a file to execute a rocketsled optimization given:
 All output will be organized inside the "auto_sleds" directory. 
 """
 
+__author__ = "Alexander Dunn"
+__version__ = "1.0"
+__email__ = "ardunn@lbl.gov"
+
 import os
 import sys
 import datetime

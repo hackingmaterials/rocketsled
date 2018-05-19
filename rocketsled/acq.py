@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.externals.joblib import Parallel, delayed
 
 __author__ = "Alexander Dunn"
-__version__ = "0.1"
+__version__ = "1.0"
 __email__ = "ardunn@lbl.gov"
 
 def acquire(acq, X, Y, space, model, nstraps, return_means=False):

@@ -13,11 +13,6 @@ from rocketsled import OptTask
 from rocketsled.examples.tasks import ComplexMultiObjTask
 
 
-__author__ = "Alexander Dunn"
-__version__ = "0.1"
-__email__ = "ardunn@lbl.gov"
-
-
 def wf_creator(x):
     X_dim = [(16, 145), (0.0, 90.0),
              ["industry standard", "shark fin", "dolphin fin"]]

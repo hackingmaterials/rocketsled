@@ -24,7 +24,7 @@ from fw_tutorials.firetask.addition_task import AdditionTask
 from rocketsled.task import OptTask, ExhaustedSpaceError
 
 __author__ = "Alexander Dunn"
-__version__ = "0.1"
+__version__ = "1.0"
 __email__ = "ardunn@lbl.gov"
 
 test_names = ['test_basic', 'test_custom_predictor', 'test_complex',
