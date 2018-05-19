@@ -6,10 +6,8 @@
    :align: center
 
 rocketsled is a flexible, automatic
-`(open source) <https://github.com/hackingmaterials/rocketsled>`_ optimization
-framework *"on rails"* for high throughput computation.
-
-rocketsled is an extension of
+`(open source) <https://github.com/hackingmaterials/rocketsled>`_ adaptive optimization
+framework *"on rails"* for high throughput computation. rocketsled is an extension of
 `FireWorks <https://github.com/materialsproject/fireworks>`_ workflow software,
 written in Python.
 
@@ -33,6 +31,7 @@ Is rocketsled for me?
        :alt: dht
        :align: center
 
+
 3. Limited by problem size or allocation?
 -----------------------------------------
 Want to get the most "bang for your buck" with optimization?
@@ -41,8 +40,8 @@ _____________________________________________________________
 
 If you answered yes to these three questions, *keep reading!*
 
-**rocketsled** is a framework which can *automatically* improve the results of your complex, high-throughput tasks using optimization.
-Furthermore, it is designed to be as extensible as possible across many computer architectures, optimization schemes, and problem specifications.
+**rocketsled** is an optimization framework which can *automatically* improve the results of your complex, high-throughput tasks using previous results.
+It is designed to be as extensible as possible across many computer architectures, optimization schemes, and problem specifications.
 
 
 
@@ -50,21 +49,26 @@ Furthermore, it is designed to be as extensible as possible across many computer
 What does rocketsled do?
 ============================
 
-rocketsled functions as a **black box optimizer** for a sequential optimization
-loop; it requires no internal knowledge of a function for optimization. rocketsled also **retains the workflow management abilties** of FireWorks (provenance, dynamic workflows, duplicate detection and correction,
-error handling) across **arbitrary computing resources**. rocketsled is intended to be "plug-and-play": simply plug-in an objective function or workflow, parameter constraints, and (optionally) a black box optimization algorithm, and rocketsled automatically creates an optimization loop in FireWorks.
+rocketsled functions as a **black box optimizer** for a sequential optimization loop; it solves problems of the form:
+
+.. image:: _static/opt.png
+   :alt: opt
+   :align: center
+
+rocketsled requires no internal knowledge of f(x) for optimization. rocketsled is designed for problems where each evaluation of f(x) is highly complex, is computationally expensive, requires workflow software, or is all of the above.
+**rocketsled is intended to be "plug-and-play": simply plug-in an objective function or workflow f(x) and search domain D, and rocketsled automatically creates an optimization loop in FireWorks which can be easily (and dynamically) managed across arbitray computing resources.**
 
 
 A visual explanation...
 -----------------------
 
-A typical workflow without optimization might look like this:
+A typical workflow f(x) without optimization might look like this:
 
 .. image:: _static/singlewf.png
    :alt: basicwf
    :align: center
 
-Input parameters are given to the first job (Firework). This begins the workflow, and a useful output result is given. The workflow is repeated as desired with different input parameters, often across many compute nodes in parallel, in an attempt to compute favorable outputs.
+Input parameters (x) are given to the first job (Firework). This begins the workflow, and a useful output f(x) = y result is given. The workflow is repeated as desired with different input parameters, often across many compute nodes in parallel, in an attempt to compute favorable outputs.
 
 .. image:: _static/miniwf.png
    :alt: basicwf
@@ -79,7 +83,7 @@ Input parameters are given to the first job (Firework). This begins the workflow
    :alt: basicwf
    :width: 150px
 
-Randomly selecting the next sets of input parameters to run is *inefficient*, since we will execute many workflows, including those with unfavorable results. To reduce the required number of computed workflows, we need to *intelligently* choose new input parameters with an **optimization loop.**
+Randomly selecting the next x to run is *inefficient*, since we will execute many workflows, including those with unfavorable results. To increase computational efficiency, we need to *intelligently* choose new x with an **optimization loop.**
 
 This is where rocketsled comes in handy. rocketsled is a sub-job (FireTask) which can go in any Firework in the workflow, and uses an sklearn-based Bayesian strategy to predict the best *input* parameters for the next iteration, store them in a MongoDB database, and automatically submit a new workflow to compute the next output.
 
@@ -90,7 +94,7 @@ This is where rocketsled comes in handy. rocketsled is a sub-job (FireTask) whic
 
 Example use cases
 -----------------
-rocketsled has many example use cases for adaptive computational design.
+rocketsled has many example use cases for adaptive computational problems.
 
 
 **Searching 19,000 possible for new energy materials using expensive first-principles physics calculations:** rocketsled enabled increased efficiency (wrt. random and empirical rules) in searching a large space of input parameters (materials) for renewable energy water splitting perovskites using Density Functional Theory calculations.
@@ -105,25 +109,30 @@ rocketsled has many example use cases for adaptive computational design.
 
 **(Forthcoming) Selecting the best machine learning model for large-scale data mining:** rocketsled can be used for selecting the best machine learning models (and their hyperparameters) in cases where each training + cross-validation can be a computationally expensive task.
 
+.. image:: _static/ml.png
+   :alt: ml
+   :align: center
+   :width: 600px
+
 
 
 Features of ``rocketsled``
 --------------------------
 
-* One-line python setup tools
+* **One-line python setup tools**
 
 * Persistent storage and optimization tracking
 
-* Automatic workflow submission and management with FireWorks
+* **Automatic workflow submission and management with FireWorks**
 
-* Ability to handle complex search spaces, including:
+* **Ability to handle complex search spaces, including:**
     + discrete (categorical, integer) dimensions
     + continuous dimensions
     + discontinuous spaces (subsets of entire spaces)
 
 * 10 Built-in "out-of-the-box" sklearn-based tunable Bayesian optimizers
     + single objective
-    + multi objective
+    + **multi objective**
 
 * Support for nearly any custom optimizer written in Python (Bayesian and non-Bayesian)
 

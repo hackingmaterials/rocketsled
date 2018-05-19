@@ -38,7 +38,7 @@ Let's create a **workflow creator function**, the most important part. This func
     from fireworks import Workflow, Firework, LaunchPad
     from rocketsled import OptTask
     from rocketsled.examples.tasks import SumTask
-invoke
+
     # a workflow creator function which takes x and returns a workflow based on x
     def wf_creator(x):
 
@@ -57,7 +57,10 @@ invoke
         return Workflow([firework1])
 
 
-**We define the info OptTask needs by passing it keyword arguments.** The required arguments are:
+We define the info OptTask needs by passing it keyword arguments.
+_________________________________________________________________
+
+The required arguments are:
 
 * **wf_creator**: The full path to the workflow creator function. Can also be specified in non-module form, e.g., :code:`/my/path/to/module.py`
 * **dimensions**: The dimensions of your search space
@@ -100,4 +103,4 @@ Visualize Results
 
 
 Great! We just ran 10 optimization loops using the default optimization procedure, minimizing our objective function workflow (just :code:`SumTask()` in this case.
-See the :doc:`guide </guide>` to see the full capabilities of OptTask!, the :doc:`advanced tutorial </advanced>`, or the examples in the :code:`/examples` directory.
+See the :doc:`guide </guide>` to see the full capabilities of OptTask, the :doc:`advanced tutorial </advanced>`, or the examples in the :code:`/examples` directory.

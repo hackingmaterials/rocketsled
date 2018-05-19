@@ -5,7 +5,7 @@ Advanced Tutorial - 15-20 min
 =======================================
 
 **Real optimization problems are messy**; often, there is a mixture of continuous (floating point),
-discrete (integer), and categorical dimensions. The search space may be discontinuous, where only certain combinations of inputs are allowed.
+discrete (integer), and categorical dimensions which specify the search domain. The search space may be discontinuous, where only certain combinations of inputs are allowed.
 The objective function might have multiple, competing
 objectives to optimize. It may be unclear which predictors - that is, the
 algorithms that use previous inputs and outputs to suggest the next guess - will be effective, and whether their
