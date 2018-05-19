@@ -39,9 +39,8 @@
             
   <a class="reference internal image-reference" href="_images/rsfw.png"><img alt="rocketsled logo" class="align-center" src="_images/rsfw.png" style="width: 600px;" /></a>
 <p>rocketsled is a flexible, automatic
-<a class="reference external" href="https://github.com/hackingmaterials/rocketsled">(open source)</a> optimization
-framework <em>“on rails”</em> for high throughput computation.</p>
-<p>rocketsled is an extension of
+<a class="reference external" href="https://github.com/hackingmaterials/rocketsled">(open source)</a> adaptive optimization
+framework <em>“on rails”</em> for high throughput computation. rocketsled is an extension of
 <a class="reference external" href="https://github.com/materialsproject/fireworks">FireWorks</a> workflow software,
 written in Python.</p>
 <div class="section" id="is-rocketsled-for-me">
@@ -64,45 +63,47 @@ written in Python.</p>
 <div class="section" id="want-to-get-the-most-bang-for-your-buck-with-optimization">
 <h3>Want to get the most “bang for your buck” with optimization?<a class="headerlink" href="#want-to-get-the-most-bang-for-your-buck-with-optimization" title="Permalink to this headline">¶</a></h3>
 <p>If you answered yes to these three questions, <em>keep reading!</em></p>
-<p><strong>rocketsled</strong> is a framework which can <em>automatically</em> improve the results of your complex, high-throughput tasks using optimization.
-Furthermore, it is designed to be as extensible as possible across many computer architectures, optimization schemes, and problem specifications.</p>
+<p><strong>rocketsled</strong> is an optimization framework which can <em>automatically</em> improve the results of your complex, high-throughput tasks using previous results.
+It is designed to be as extensible as possible across many computer architectures, optimization schemes, and problem specifications.</p>
 </div>
 </div>
 </div>
 <div class="section" id="what-does-rocketsled-do">
 <h1>What does rocketsled do?<a class="headerlink" href="#what-does-rocketsled-do" title="Permalink to this headline">¶</a></h1>
-<p>rocketsled functions as a <strong>black box optimizer</strong> for a sequential optimization
-loop; it requires no internal knowledge of a function for optimization. rocketsled also <strong>retains the workflow management abilties</strong> of FireWorks (provenance, dynamic workflows, duplicate detection and correction,
-error handling) across <strong>arbitrary computing resources</strong>. rocketsled is intended to be “plug-and-play”: simply plug-in an objective function or workflow, parameter constraints, and (optionally) a black box optimization algorithm, and rocketsled automatically creates an optimization loop in FireWorks.</p>
+<p>rocketsled functions as a <strong>black box optimizer</strong> for a sequential optimization loop; it solves problems of the form:</p>
+<img alt="opt" class="align-center" src="_images/opt.png" />
+<p>rocketsled requires no internal knowledge of f(x) for optimization. rocketsled is designed for problems where each evaluation of f(x) is highly complex, is computationally expensive, requires workflow software, or is all of the above.
+<strong>rocketsled is intended to be “plug-and-play”: simply plug-in an objective function or workflow f(x) and search domain D, and rocketsled automatically creates an optimization loop in FireWorks which can be easily (and dynamically) managed across arbitray computing resources.</strong></p>
 <div class="section" id="a-visual-explanation">
 <h2>A visual explanation…<a class="headerlink" href="#a-visual-explanation" title="Permalink to this headline">¶</a></h2>
-<p>A typical workflow without optimization might look like this:</p>
+<p>A typical workflow f(x) without optimization might look like this:</p>
 <img alt="basicwf" class="align-center" src="_images/singlewf.png" />
-<p>Input parameters are given to the first job (Firework). This begins the workflow, and a useful output result is given. The workflow is repeated as desired with different input parameters, often across many compute nodes in parallel, in an attempt to compute favorable outputs.</p>
+<p>Input parameters (x) are given to the first job (Firework). This begins the workflow, and a useful output f(x) = y result is given. The workflow is repeated as desired with different input parameters, often across many compute nodes in parallel, in an attempt to compute favorable outputs.</p>
 <a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
 <a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
 <a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
 <a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
-<p>Randomly selecting the next sets of input parameters to run is <em>inefficient</em>, since we will execute many workflows, including those with unfavorable results. To reduce the required number of computed workflows, we need to <em>intelligently</em> choose new input parameters with an <strong>optimization loop.</strong></p>
+<p>Randomly selecting the next x to run is <em>inefficient</em>, since we will execute many workflows, including those with unfavorable results. To increase computational efficiency, we need to <em>intelligently</em> choose new x with an <strong>optimization loop.</strong></p>
 <p>This is where rocketsled comes in handy. rocketsled is a sub-job (FireTask) which can go in any Firework in the workflow, and uses an sklearn-based Bayesian strategy to predict the best <em>input</em> parameters for the next iteration, store them in a MongoDB database, and automatically submit a new workflow to compute the next output.</p>
 <img alt="basicwf" class="align-center" src="_images/singlewf_withrs.png" />
 </div>
 <div class="section" id="example-use-cases">
 <h2>Example use cases<a class="headerlink" href="#example-use-cases" title="Permalink to this headline">¶</a></h2>
-<p>rocketsled has many example use cases for adaptive computational design.</p>
+<p>rocketsled has many example use cases for adaptive computational problems.</p>
 <p><strong>Searching 19,000 possible for new energy materials using expensive first-principles physics calculations:</strong> rocketsled enabled increased efficiency (wrt. random and empirical rules) in searching a large space of input parameters (materials) for renewable energy water splitting perovskites using Density Functional Theory calculations.</p>
 <a class="reference internal image-reference" href="_images/3dmap_mend.png"><img alt="3d" src="_images/3dmap_mend.png" style="width: 390px;" /></a>
 <a class="reference internal image-reference" href="_images/perovskites_zoomin.png"><img alt="perov" src="_images/perovskites_zoomin.png" style="width: 400px;" /></a>
 <p><strong>(Forthcoming) Selecting the best machine learning model for large-scale data mining:</strong> rocketsled can be used for selecting the best machine learning models (and their hyperparameters) in cases where each training + cross-validation can be a computationally expensive task.</p>
+<a class="reference internal image-reference" href="_images/ml.png"><img alt="ml" class="align-center" src="_images/ml.png" style="width: 600px;" /></a>
 </div>
 <div class="section" id="features-of-rocketsled">
 <h2>Features of <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code><a class="headerlink" href="#features-of-rocketsled" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>One-line python setup tools</li>
+<li><strong>One-line python setup tools</strong></li>
 <li>Persistent storage and optimization tracking</li>
-<li>Automatic workflow submission and management with FireWorks</li>
+<li><strong>Automatic workflow submission and management with FireWorks</strong></li>
 <li><dl class="first docutils">
-<dt>Ability to handle complex search spaces, including:</dt>
+<dt><strong>Ability to handle complex search spaces, including:</strong></dt>
 <dd><ul class="first last">
 <li>discrete (categorical, integer) dimensions</li>
 <li>continuous dimensions</li>
@@ -115,7 +116,7 @@ error handling) across <strong>arbitrary computing resources</strong>. rocketsle
 <dt>10 Built-in “out-of-the-box” sklearn-based tunable Bayesian optimizers</dt>
 <dd><ul class="first last">
 <li>single objective</li>
-<li>multi objective</li>
+<li><strong>multi objective</strong></li>
 </ul>
 </dd>
 </dl>
