@@ -36,7 +36,7 @@ def visualize(csets, opt, labels, colors, fontfamily="serif", limit=0):
         avgbest = opt(mean)
         # print(avgbest)
         plt.plot(i, mean, label=" Avg best {}: {}".format(labels[l], avgbest), color=colors[l])
-        # plt.fill_between(i, mean - std, mean + std, color=colors[l], alpha=0.2)
+        plt.fill_between(i, mean - std, mean + std, color=colors[l], alpha=0.2)
 
     plt.rc('font', family=fontfamily)
     plt.yscale("log")
@@ -94,17 +94,17 @@ if __name__ == "__main__":
     # #     auto_setup(branin, dim, wfname='bran{}'.format(i), opt_label='ei{}'.format(i), host='localhost', acq='ei', name='bran', port=27017, n_bootstraps=1000, predictor="RandomForestRegressor", n_search_points=10000)
     #
     # # ranx, rany = ran_run(branin, dim, min, runs=10000, comps_per_run=50)
-    # # pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ran_bran.csv")
-    # lpad = LaunchPad(host='localhost', port=27017, name='bran')
-    # df = pd.DataFrame.from_csv("ran_bran.csv")
-    # ranx = df['x']
-    # rany = df['y']
-    # hi_runs = [getattr(lpad.db, "ei{}".format(i)) for i in range(100)]
-    # bm, bs = visualize([hi_runs], min, labels=['EI'], colors=['blue'], limit=50)
-    # plt.plot(ranx, rany, color='black')
-    # print "BEST RANDOM", min(rany)
-    # print "BEST OPT", bm, "+-", bs
-    # plt.show()
+    # pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ran_bran.csv")
+    lpad = LaunchPad(host='localhost', port=27017, name='bran')
+    df = pd.DataFrame.from_csv("ran_bran.csv")
+    ranx = df['x']
+    rany = df['y']
+    hi_runs = [getattr(lpad.db, "ei{}".format(i)) for i in range(100)]
+    bm, bs = visualize([hi_runs], min, labels=['EI'], colors=['blue'], limit=50)
+    plt.plot(ranx, rany, color='black')
+    print "BEST RANDOM", min(rany)
+    print "BEST OPT", bm, "+-", bs
+    plt.show()
 
 
     # ROSEN 2D RF
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     # ranx = df['x']
     # rany = df['y']
     # ei_runs = [getattr(lpad.db, "ei{}".format(i)) for i in range(100)]
-    # bm, bs = visualize([ei_runs], min, labels=['EI'], colors=['blue'], limit=29)
+    # bm, bs = visualize([ei_runs], min, labels=['EI'], colors=['blue'], limit=50)
     # plt.plot(ranx, rany, color='black')
     # print "BEST RANDOM", min(rany)
     # print "BEST OPT", bm, "+-", bs
@@ -144,6 +144,8 @@ if __name__ == "__main__":
     # print "BEST OPT", bm, "+-", bs
     # plt.show()
 
+
+
     # RASTRIGIN 50D
     # dim = rastdim(50)
     # for i in range(100):
@@ -163,12 +165,12 @@ if __name__ == "__main__":
     # plt.show()
 
     # SCHAFFER N4 2D
-    dim = [(-100.0, 100.0), (-100.0, 100.0)]
-    for i in range(100):
-        auto_setup(schaffer, dim, wfname='scha{}'.format(i), opt_label='ei{}'.format(i), host='localhost', acq='ei', name='scha', port=27017, n_bootstraps=1000, predictor="RandomForestRegressor", n_search_points=10000)
-
-    ranx, rany = ran_run(schaffer, dim, min, runs=10000, comps_per_run=50)
-    pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ran_scha.csv")
+    # dim = [(-100.0, 100.0), (-100.0, 100.0)]
+    # for i in range(100):
+    #     auto_setup(schaffer, dim, wfname='scha{}'.format(i), opt_label='ei{}'.format(i), host='localhost', acq='ei', name='scha', port=27017, n_bootstraps=1000, predictor="RandomForestRegressor", n_search_points=10000)
+    #
+    # ranx, rany = ran_run(schaffer, dim, min, runs=10000, comps_per_run=50)
+    # pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ran_scha.csv")
     # lpad = LaunchPad(host='localhost', port=27017, name='scha')
     # df = pd.DataFrame.from_csv("ran_scha.csv")
     # ranx = df['x']

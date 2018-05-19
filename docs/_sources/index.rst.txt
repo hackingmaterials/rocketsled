@@ -7,7 +7,7 @@
 
 rocketsled is a flexible, automatic
 `(open source) <https://github.com/hackingmaterials/rocketsled>`_ optimization
-framework *"on rails"* for serious high throughput computation.
+framework *"on rails"* for high throughput computation.
 
 rocketsled is an extension of
 `FireWorks <https://github.com/materialsproject/fireworks>`_ workflow software,
@@ -17,52 +17,55 @@ written in Python.
 =========================
 Is rocketsled for me?
 =========================
-Is your computational problem:
+**Is your computational problem:**
 
-1. Expensive and/or complex?
-----------------------------
-    **Does it require high performance computing +  workflow tools?**
+1. Expensive and/or complex (require HPC and workflow tools)?
+--------------------------------------------------------------
+    .. image:: _static/server.png
+       :alt: server
+       :align: center
+       :width: 400px
 
-2. Run in high-throughput?
---------------------------
-    **Many similar workflows running concurrently?**
 
-3. Limited by an allocation of CPU hours?
+2. Run in high-throughput (many similar, parallel or serial workflows)?
+-----------------------------------------------------------------------
+    .. image:: _static/diagram_highthroughput.png
+       :alt: dht
+       :align: center
+
+3. Limited by problem size or allocation?
 -----------------------------------------
-    **Want the most "bang for your buck"?**
+Want to get the most "bang for your buck" with optimization?
+_____________________________________________________________
 
 
 If you answered yes to these three questions, *keep reading!*
 
-If you have a complex, multi-iteration task to execute on high performance
-computers, and you would like to *automatically* reduce the number of expensive
-calculations needed to run your task, **rocketsled is for you.**
+**rocketsled** is a framework which can *automatically* improve the results of your complex, high-throughput tasks using optimization.
+Furthermore, it is designed to be as extensible as possible across many computer architectures, optimization schemes, and problem specifications.
+
+
 
 ============================
 What does rocketsled do?
 ============================
 
-``rocketsled`` functions as a **black box optimizer** for a sequential optimization
-loop; it requires no knowledge of a function in order to optimize it.
-
-More importantly though, rocketsled **retains the workflow management abilties** of FireWorks (provenance, dynamic workflows, duplicate detection and correction,
-error handling) across **arbitrary computing resources**.
-
-``rocketsled`` is intended to be "plug-and-play": simply "plug-in" an expensive
-objective function or workflow, constraints, and (optionally) a black box optimization algorithm,
-and rocketsled + FireWorks automatically creates the optimization loop.
+rocketsled functions as a **black box optimizer** for a sequential optimization
+loop; it requires no internal knowledge of a function for optimization. More importantly though, rocketsled **retains the workflow management abilties** of FireWorks (provenance, dynamic workflows, duplicate detection and correction,
+error handling) across **arbitrary computing resources**. rocketsled is intended to be "plug-and-play": simply "plug-in" an expensive
+objective function or workflow, parameter constraints, and (optionally) a black box optimization algorithm, and rocketsled + FireWorks automatically creates an optimization loop.
 
 
 A visual explanation...
 -----------------------
 
-``rocketsled`` is designed for optimization tasks with sequential improvement. For example, a typical workflow without optimization might look like this:
+rocketsled is designed for optimization tasks with sequential (or semi-sequential) improvement. For example, a typical workflow without optimization might look like this:
 
 .. image:: _static/singlewf.png
    :alt: basicwf
    :align: center
 
-Input parameters are given to the first job (Firework). This begins the workflow, and a useful output result is given. The workflow is repeated as desired, often across many compute nodes in parallel.
+Input parameters are given to the first job (Firework). This begins the workflow, and a useful output result is given. The workflow is repeated as desired with different input parameters, often across many compute nodes in parallel, in an attempt to compute favorable outputs.
 
 .. image:: _static/miniwf.png
    :alt: basicwf
@@ -79,17 +82,36 @@ Input parameters are given to the first job (Firework). This begins the workflow
 
 Randomly selecting the next sets of input parameters to run is *inefficient*, since we will execute many workflows, including those with unfavorable results. To reduce the required number of computed workflows, we need to *intelligently* choose new input parameters with an **optimization loop.**
 
-This is where ``rocketsled`` comes in handy. ``rocketsled`` is a sub-job (FireTask) called ``OptTask``, which can go in any Firework in the workflow, and which uses ``sklearn`` regressors to predict the best *input* parameters for the next iteration, store them in a MongoDB database, and automatically submit a new workflow to compute the next output.
+This is where rocketsled comes in handy. rocketsled is a sub-job (FireTask) which can go in any Firework in the workflow, and uses an sklearn-based Bayesian strategy to predict the best *input* parameters for the next iteration, store them in a MongoDB database, and automatically submit a new workflow to compute the next output.
 
 .. image:: _static/singlewf_withrs.png
    :alt: basicwf
    :align: center
 
 
+Example use cases
+-----------------
+rocketsled has many example use cases for adaptive computational design.
+
+
+**Searching 19,000 possible for new energy materials using expensive first-principles physics calculations:** rocketsled enabled increased efficiency (wrt. random and empirical rules) in searching a large space of input parameters (materials) for renewable energy water splitting perovskites using Density Functional Theory calculations.
+
+.. image:: _static/3dmap_mend.png
+   :alt: 3d
+   :width: 390px
+.. image:: _static/perovskites_zoomin.png
+   :alt: perov
+   :width: 400px
+
+
+**(Forthcoming) Selecting the best machine learning model for large-scale data mining:** rocketsled can be used for selecting the best machine learning models (and their hyperparameters) in cases where each training + cross-validation can be a computationally expensive task.
+
+
+
 Features of ``rocketsled``
 --------------------------
 
-* One-line setup tools
+* One-line python setup tools
 
 * Persistent storage and optimization tracking
 
