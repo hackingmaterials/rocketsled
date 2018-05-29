@@ -663,7 +663,7 @@ The :code:`batch_size` parameter determines the batch size; default 1.
 
 .. image:: _static/batch.png
    :alt: batch
-   :width: 1200px
+   :width: 600px
 
 
 **Example**
