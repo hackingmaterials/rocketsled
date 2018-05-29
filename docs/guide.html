@@ -517,7 +517,7 @@ For categorical features, put ‘None’</p>
 <p>Rocketsled is capable of batch optimization, meaning that N workflows are run, then a single optimization is run, and then another N workflows are submitted using the  N best guesses from the optimization.
 Enabling batch optimization is useful if you do not want to wait for many sequential optimizations, or if little information is gained from each workflow evaluation but you are running many cheap workflows.
 The <code class="code docutils literal notranslate"><span class="pre">batch_size</span></code> parameter determines the batch size; default 1.</p>
-<a class="reference internal image-reference" href="_images/batch.png"><img alt="batch" src="_images/batch.png" style="width: 1200px;" /></a>
+<a class="reference internal image-reference" href="_images/batch.png"><img alt="batch" src="_images/batch.png" style="width: 600px;" /></a>
 <p><strong>Example</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># optimize every 20th job, then submit another 20 workflows to the launchpad</span>
 <span class="n">batch_size</span><span class="o">=</span><span class="mi">20</span>
