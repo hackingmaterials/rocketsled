@@ -22,7 +22,7 @@ Is rocketsled for me?
     .. image:: _static/server.png
        :alt: server
        :align: center
-       :width: 400px
+       :width: 250px
 
 
 2. Run in high-throughput (many similar, parallel or serial workflows)?
@@ -30,6 +30,8 @@ Is rocketsled for me?
     .. image:: _static/diagram_highthroughput.png
        :alt: dht
        :align: center
+       :width: 350px
+
 
 
 3. Limited by problem size or allocation?
@@ -44,7 +46,6 @@ If you answered yes to these three questions, *keep reading!*
 It is designed to be as extensible as possible across many computer architectures, optimization schemes, and problem specifications.
 
 
-
 ============================
 What does rocketsled do?
 ============================
@@ -54,6 +55,7 @@ rocketsled functions as a **black box optimizer** for a sequential optimization 
 .. image:: _static/opt.png
    :alt: opt
    :align: center
+   :width: 300px
 
 rocketsled requires no internal knowledge of f(x) for optimization. rocketsled is designed for problems where each evaluation of f(x) is highly complex, is computationally expensive, requires workflow software, or is all of the above.
 **rocketsled is intended to be "plug-and-play": simply plug-in an objective function or workflow f(x) and search domain D, and rocketsled automatically creates an optimization loop in FireWorks which can be easily (and dynamically) managed across arbitray computing resources.**
@@ -64,11 +66,13 @@ A visual explanation...
 
 A typical workflow f(x) without optimization might look like this:
 
-.. image:: _static/singlewf.png
+.. image:: _static/diagram_fireworks.png
    :alt: basicwf
    :align: center
+   :width: 250px
 
 Input parameters (x) are given to the first job (Firework). This begins the workflow, and a useful output f(x) = y result is given. The workflow is repeated as desired with different input parameters, often across many compute nodes in parallel, in an attempt to compute favorable outputs.
+
 
 .. image:: _static/miniwf.png
    :alt: basicwf
@@ -85,11 +89,17 @@ Input parameters (x) are given to the first job (Firework). This begins the work
 
 Randomly selecting the next x to run is *inefficient*, since we will execute many workflows, including those with unfavorable results. To increase computational efficiency, we need to *intelligently* choose new x with an **optimization loop.**
 
-This is where rocketsled comes in handy. rocketsled is a sub-job (FireTask) which can go in any Firework in the workflow, and uses an sklearn-based Bayesian strategy to predict the best *input* parameters for the next iteration, store them in a MongoDB database, and automatically submit a new workflow to compute the next output.
-
-.. image:: _static/singlewf_withrs.png
+.. image:: _static/diagram_highthroughput2.png
    :alt: basicwf
    :align: center
+   :width: 800px
+
+This is where rocketsled comes in handy. rocketsled is a sub-job (FireTask) which can go in any Firework in the workflow, and uses an sklearn-based Bayesian strategy to predict the best *input* parameters for the next iteration, store them in a MongoDB database, and automatically submit a new workflow to compute the next output.
+
+.. image:: _static/rsfwdiagram.png
+   :alt: basicwf
+   :align: center
+   :width: 400px
 
 
 Example use cases
@@ -101,10 +111,10 @@ rocketsled has many example use cases for adaptive computational problems.
 
 .. image:: _static/3dmap_mend.png
    :alt: 3d
-   :width: 390px
+   :width: 500px
 .. image:: _static/perovskites_zoomin.png
    :alt: perov
-   :width: 400px
+   :width: 500px
 
 
 **(Forthcoming) Selecting the best machine learning model for large-scale data mining:** rocketsled can be used for selecting the best machine learning models (and their hyperparameters) in cases where each training + cross-validation can be a computationally expensive task.
@@ -112,7 +122,7 @@ rocketsled has many example use cases for adaptive computational problems.
 .. image:: _static/ml.png
    :alt: ml
    :align: center
-   :width: 600px
+   :width: 800px
 
 
 
@@ -124,6 +134,9 @@ Features of ``rocketsled``
 * Persistent storage and optimization tracking
 
 * **Automatic workflow submission and management with FireWorks**
+    + Parallel execution of objective functions on HPC resources
+    + Works with many queue systems
+    + Several optimization execution schemes
 
 * **Ability to handle complex search spaces, including:**
     + discrete (categorical, integer) dimensions
