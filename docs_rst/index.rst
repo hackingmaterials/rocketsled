@@ -30,7 +30,7 @@ Is rocketsled for me?
     .. image:: _static/diagram_highthroughput.png
        :alt: dht
        :align: center
-       :width: 350px
+       :width: 550px
 
 
 
