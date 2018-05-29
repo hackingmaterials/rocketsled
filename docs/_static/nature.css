@@ -47,6 +47,8 @@ div.body {
     color: #000000;
     padding: 0 30px 30px 30px;
     font-size: 0.95em;
+    max-width: 1200px
+
 }
 
 div.footer {
@@ -79,10 +81,13 @@ div.related a {
 div.sphinxsidebar {
     font-size: 0.9em;
     line-height: 1.5em;
+    max-width: 400px;
+
 }
 
 div.sphinxsidebarwrapper{
     padding: 20px 0;
+    max-width: 400px;
 }
 
 div.sphinxsidebar h3,
