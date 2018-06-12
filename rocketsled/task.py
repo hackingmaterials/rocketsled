@@ -714,7 +714,11 @@ class OptTask(FireTaskBase):
                                     if isinstance(y, np.ndarray):
                                         y = y.tolist()
                                     else:
-                                        y = list(y)
+                                        try:
+                                            # if it is a list of np types
+                                            y = [yi.item() for yi in y]
+                                        except AttributeError:
+                                            y = list()
 
                                 # if it is a duplicate (such as a forced
                                 # identical first guess)
@@ -749,6 +753,14 @@ class OptTask(FireTaskBase):
                                 else:
                                     # update all the fields, as it is a new
                                     # document
+                                    print("z", z)
+                                    print("y", y)
+                                    print("x", x)
+                                    print("z_new", z_new)
+                                    print("x_new", x_new)
+                                    print(n_completed)
+
+
                                     res = self.c.insert_one(
                                         {'z': z, 'y': y, 'x': x, 'z_new': z_new,
                                          'x_new': x_new,
