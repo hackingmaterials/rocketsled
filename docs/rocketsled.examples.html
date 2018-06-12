@@ -172,7 +172,28 @@
 <dl class="method">
 <dt id="rocketsled.examples.tasks.ComplexMultiObjTask.run_task">
 <code class="descname">run_task</code><span class="sig-paren">(</span><em>fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.tasks.ComplexMultiObjTask.run_task" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>This method gets called when the Firetask is run. It can take in a
+Firework spec, perform some task using that data, and then return an
+output in the form of a FWAction.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>fw_spec (dict): A Firework spec. This comes from the master spec.</dt>
+<dd>In addition, this spec contains a special “_fw_env” key that
+contains the env settings of the FWorker calling this method.
+This provides for abstracting out certain commands or
+settings. For example, “foo” may be named “foo1” in resource
+1 and “foo2” in resource 2. The FWorker env can specify {
+“foo”: “foo1”}, which maps an abstract variable “foo” to the
+relevant “foo1” or “foo2”. You can then write a task that
+uses fw_spec[“_fw_env”][“foo”] that will work across all
+these multiple resources.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>(FWAction)</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -183,7 +204,28 @@
 <dl class="method">
 <dt id="rocketsled.examples.tasks.MixedCalculateTask.run_task">
 <code class="descname">run_task</code><span class="sig-paren">(</span><em>fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.tasks.MixedCalculateTask.run_task" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>This method gets called when the Firetask is run. It can take in a
+Firework spec, perform some task using that data, and then return an
+output in the form of a FWAction.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>fw_spec (dict): A Firework spec. This comes from the master spec.</dt>
+<dd>In addition, this spec contains a special “_fw_env” key that
+contains the env settings of the FWorker calling this method.
+This provides for abstracting out certain commands or
+settings. For example, “foo” may be named “foo1” in resource
+1 and “foo2” in resource 2. The FWorker env can specify {
+“foo”: “foo1”}, which maps an abstract variable “foo” to the
+relevant “foo1” or “foo2”. You can then write a task that
+uses fw_spec[“_fw_env”][“foo”] that will work across all
+these multiple resources.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>(FWAction)</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -194,7 +236,28 @@
 <dl class="method">
 <dt id="rocketsled.examples.tasks.MultiTask2.run_task">
 <code class="descname">run_task</code><span class="sig-paren">(</span><em>fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.tasks.MultiTask2.run_task" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>This method gets called when the Firetask is run. It can take in a
+Firework spec, perform some task using that data, and then return an
+output in the form of a FWAction.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>fw_spec (dict): A Firework spec. This comes from the master spec.</dt>
+<dd>In addition, this spec contains a special “_fw_env” key that
+contains the env settings of the FWorker calling this method.
+This provides for abstracting out certain commands or
+settings. For example, “foo” may be named “foo1” in resource
+1 and “foo2” in resource 2. The FWorker env can specify {
+“foo”: “foo1”}, which maps an abstract variable “foo” to the
+relevant “foo1” or “foo2”. You can then write a task that
+uses fw_spec[“_fw_env”][“foo”] that will work across all
+these multiple resources.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>(FWAction)</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -205,7 +268,28 @@
 <dl class="method">
 <dt id="rocketsled.examples.tasks.MultiTask6.run_task">
 <code class="descname">run_task</code><span class="sig-paren">(</span><em>fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.tasks.MultiTask6.run_task" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>This method gets called when the Firetask is run. It can take in a
+Firework spec, perform some task using that data, and then return an
+output in the form of a FWAction.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>fw_spec (dict): A Firework spec. This comes from the master spec.</dt>
+<dd>In addition, this spec contains a special “_fw_env” key that
+contains the env settings of the FWorker calling this method.
+This provides for abstracting out certain commands or
+settings. For example, “foo” may be named “foo1” in resource
+1 and “foo2” in resource 2. The FWorker env can specify {
+“foo”: “foo1”}, which maps an abstract variable “foo” to the
+relevant “foo1” or “foo2”. You can then write a task that
+uses fw_spec[“_fw_env”][“foo”] that will work across all
+these multiple resources.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>(FWAction)</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -216,7 +300,28 @@
 <dl class="method">
 <dt id="rocketsled.examples.tasks.SumTask.run_task">
 <code class="descname">run_task</code><span class="sig-paren">(</span><em>fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.tasks.SumTask.run_task" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>This method gets called when the Firetask is run. It can take in a
+Firework spec, perform some task using that data, and then return an
+output in the form of a FWAction.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>fw_spec (dict): A Firework spec. This comes from the master spec.</dt>
+<dd>In addition, this spec contains a special “_fw_env” key that
+contains the env settings of the FWorker calling this method.
+This provides for abstracting out certain commands or
+settings. For example, “foo” may be named “foo1” in resource
+1 and “foo2” in resource 2. The FWorker env can specify {
+“foo”: “foo1”}, which maps an abstract variable “foo” to the
+relevant “foo1” or “foo2”. You can then write a task that
+uses fw_spec[“_fw_env”][“foo”] that will work across all
+these multiple resources.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>(FWAction)</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -288,7 +393,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, HackingMaterials.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
     </div>
 
   </body>

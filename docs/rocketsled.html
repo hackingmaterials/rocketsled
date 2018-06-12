@@ -43,6 +43,15 @@
 <h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="rocketsled.benchmarks.html">rocketsled.benchmarks package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rocketsled.benchmarks.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rocketsled.benchmarks.html#rocketsled-benchmarks-alexgrapher-module">rocketsled.benchmarks.ALEXGRAPHER module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rocketsled.benchmarks.html#module-rocketsled.benchmarks.rastrigin">rocketsled.benchmarks.rastrigin module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rocketsled.benchmarks.html#module-rocketsled.benchmarks.rbopttest">rocketsled.benchmarks.rbopttest module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rocketsled.benchmarks.html#rocketsled-benchmarks-skopttest-module">rocketsled.benchmarks.skopttest module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rocketsled.benchmarks.html#module-rocketsled.benchmarks">Module contents</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="rocketsled.examples.html">rocketsled.examples package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="rocketsled.examples.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rocketsled.examples.html#module-rocketsled.examples.auto">rocketsled.examples.auto module</a></li>
@@ -55,6 +64,12 @@
 <li class="toctree-l2"><a class="reference internal" href="rocketsled.examples.html#module-rocketsled.examples.parallel">rocketsled.examples.parallel module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rocketsled.examples.html#module-rocketsled.examples.tasks">rocketsled.examples.tasks module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rocketsled.examples.html#module-rocketsled.examples">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rocketsled.tests.html">rocketsled.tests package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rocketsled.tests.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rocketsled.tests.html#module-rocketsled.tests.tests">rocketsled.tests.tests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rocketsled.tests.html#module-rocketsled.tests">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -217,13 +232,13 @@ lpad, host, port, name, opt_label, acq, predictor, etc…</dd>
 <dl class="exception">
 <dt id="rocketsled.task.DimensionMismatchError">
 <em class="property">exception </em><code class="descclassname">rocketsled.task.</code><code class="descname">DimensionMismatchError</code><a class="headerlink" href="#rocketsled.task.DimensionMismatchError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">exceptions.Exception</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
 </dd></dl>
 
 <dl class="exception">
 <dt id="rocketsled.task.ExhaustedSpaceError">
 <em class="property">exception </em><code class="descclassname">rocketsled.task.</code><code class="descname">ExhaustedSpaceError</code><a class="headerlink" href="#rocketsled.task.ExhaustedSpaceError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">exceptions.Exception</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
@@ -443,7 +458,7 @@ _encoding_info (dict): Data for converting between one-hot encoded data</p>
 </dl>
 <dl class="attribute">
 <dt id="rocketsled.task.OptTask.optional_params">
-<code class="descname">optional_params</code><em class="property"> = [u'host', u'port', u'name', u'lpad', u'opt_label', u'db_extras', u'predictor', u'predictor_args', u'predictor_kwargs', u'n_search_points', u'n_train_points', u'acq', u'random_interval', u'space', u'get_z', u'get_z_args', u'get_z_kwargs', u'wf_creator_args', u'wf_creator_kwargs', u'encode_categorical', u'duplicate_check', u'max', u'batch_size', u'tolerance', u'hyper_opt', u'param_grid', u'timeout', u'n_boots']</em><a class="headerlink" href="#rocketsled.task.OptTask.optional_params" title="Permalink to this definition">¶</a></dt>
+<code class="descname">optional_params</code><em class="property"> = ['host', 'port', 'name', 'lpad', 'opt_label', 'db_extras', 'predictor', 'predictor_args', 'predictor_kwargs', 'n_search_points', 'n_train_points', 'acq', 'random_interval', 'space', 'get_z', 'get_z_args', 'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs', 'encode_categorical', 'duplicate_check', 'max', 'batch_size', 'tolerance', 'hyper_opt', 'param_grid', 'timeout', 'n_boots']</em><a class="headerlink" href="#rocketsled.task.OptTask.optional_params" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -461,7 +476,7 @@ processes from the queue to the lock.</p>
 
 <dl class="attribute">
 <dt id="rocketsled.task.OptTask.required_params">
-<code class="descname">required_params</code><em class="property"> = [u'wf_creator', u'dimensions']</em><a class="headerlink" href="#rocketsled.task.OptTask.required_params" title="Permalink to this definition">¶</a></dt>
+<code class="descname">required_params</code><em class="property"> = ['wf_creator', 'dimensions']</em><a class="headerlink" href="#rocketsled.task.OptTask.required_params" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -487,12 +502,12 @@ optimized guess.</dd>
 <dl class="class">
 <dt id="rocketsled.utils.Dtypes">
 <em class="property">class </em><code class="descclassname">rocketsled.utils.</code><code class="descname">Dtypes</code><a class="headerlink" href="#rocketsled.utils.Dtypes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Defines the datatypes available for optimization.</p>
 <dl class="method">
 <dt id="rocketsled.utils.Dtypes.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.Dtypes.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>x.__init__(…) initializes x; see help(type(x)) for signature</p>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 </dd></dl>
@@ -587,7 +602,7 @@ lpad.db.opt123</dd>
 
 <dl class="function">
 <dt id="rocketsled.viz.visualize">
-<code class="descclassname">rocketsled.viz.</code><code class="descname">visualize</code><span class="sig-paren">(</span><em>collection</em>, <em>maximize=False</em>, <em>showbest=True</em>, <em>showmean=True</em>, <em>latexify=False</em>, <em>fontfamily=u'serif'</em>, <em>scale=u'linear'</em>, <em>analysis=True</em>, <em>print_pareto=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.viz.visualize" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rocketsled.viz.</code><code class="descname">visualize</code><span class="sig-paren">(</span><em>collection</em>, <em>maximize=False</em>, <em>showbest=True</em>, <em>showmean=True</em>, <em>latexify=False</em>, <em>fontfamily='serif'</em>, <em>scale='linear'</em>, <em>analysis=True</em>, <em>print_pareto=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.viz.visualize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Visualize the progress of an optimization.</p>
 <dl class="docutils">
 <dt>Args:</dt>
@@ -691,7 +706,7 @@ details.</dd>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, HackingMaterials.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
     </div>
 
   </body>

@@ -48,7 +48,7 @@
 <div class="section" id="define-objective-function">
 <h2>Define objective function<a class="headerlink" href="#define-objective-function" title="Permalink to this headline">¶</a></h2>
 <p>Great! Now lets define a trivial objective function f(x) for this demo. Your actual objective function will be <strong>much</strong> more complex than this.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The objective function must accept a vector and return a scalar.</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The objective function must accept a vector and return a scalar/vector.</span>
 <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
 </pre></div>
@@ -56,7 +56,7 @@
 </div>
 <div class="section" id="define-constraints">
 <h2>Define constraints<a class="headerlink" href="#define-constraints" title="Permalink to this headline">¶</a></h2>
-<p>Let’s constrain this function in each of its dimensions. With rocketsled, each dimension is represented as a 2-tuple for (low, high), and is placed in a list. So if we want to constrain x <sub>0</sub> to integers between 1-100, x <sub>1</sub> to integers between 200-300, and x <sub>3</sub> to floats between 5.0-10.0:</p>
+<p>Let’s constrain this function in each of its dimensions. With rocketsled, each bounded dimension is represented as a 2-tuple for (low, high), and is placed in a list. So if we want to constrain x <sub>0</sub> to integers between 1-100, x <sub>1</sub> to integers between 200-300, and x <sub>3</sub> to floats between 5.0-10.0:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dimensions</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="p">(</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)]</span>
 </pre></div>
 </div>
@@ -72,7 +72,7 @@
 <li>Run the optimization algorithm in a separate FireWork</li>
 </ol>
 </li>
-<li>Commands launch your workflow.</li>
+<li>Commands to launch your workflow.</li>
 </ol>
 </div></blockquote>
 <p>Lets’ maximize our objective function using rocketsled’s default predictor, based on scikit-learn’s RandomForestRegressor.</p>
@@ -220,7 +220,7 @@ Although for this basic example we are using relatively few search points (defau
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, HackingMaterials.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
     </div>
 
   </body>

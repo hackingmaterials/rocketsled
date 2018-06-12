@@ -20,6 +20,14 @@ rocketsled.benchmarks.rastrigin module
     :undoc-members:
     :show-inheritance:
 
+rocketsled.benchmarks.rbopttest module
+--------------------------------------
+
+.. automodule:: rocketsled.benchmarks.rbopttest
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 rocketsled.benchmarks.skopttest module
 --------------------------------------
 
