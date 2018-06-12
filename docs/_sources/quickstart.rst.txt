@@ -22,14 +22,14 @@ Great! Now lets define a trivial objective function f(x) for this demo. Your act
 
 .. code-block:: python
 
-    # The objective function must accept a vector and return a scalar.
+    # The objective function must accept a vector and return a scalar/vector.
     def f(x):
         return x[0] * x[1] / x[2]
 
 Define constraints
 ------------------
 
-Let's constrain this function in each of its dimensions. With rocketsled, each dimension is represented as a 2-tuple for (low, high), and is placed in a list. So if we want to constrain x :sub:`0` to integers between 1-100, x :sub:`1` to integers between 200-300, and x :sub:`3` to floats between 5.0-10.0:
+Let's constrain this function in each of its dimensions. With rocketsled, each bounded dimension is represented as a 2-tuple for (low, high), and is placed in a list. So if we want to constrain x :sub:`0` to integers between 1-100, x :sub:`1` to integers between 200-300, and x :sub:`3` to floats between 5.0-10.0:
 
 .. code-block:: python
 
@@ -50,7 +50,7 @@ Now we can use :code:`auto_setup` to write a file containing
 
       b. Run the optimization algorithm in a separate FireWork
 
-   2. Commands launch your workflow.
+   2. Commands to launch your workflow.
 
 
 Lets' maximize our objective function using rocketsled's default predictor, based on scikit-learn's RandomForestRegressor.

@@ -6,7 +6,9 @@ Subpackages
 
 .. toctree::
 
+    rocketsled.benchmarks
     rocketsled.examples
+    rocketsled.tests
 
 Submodules
 ----------

@@ -102,5 +102,5 @@ Visualize Results
    :alt: basic_viz
 
 
-Great! We just ran 10 optimization loops using the default optimization procedure, minimizing our objective function workflow (just :code:`SumTask()` in this case.
+Great! We just ran 10 optimization loops using the default optimization procedure, minimizing our objective function workflow (just :code:`SumTask()` in this case).
 See the :doc:`guide </guide>` to see the full capabilities of OptTask, the :doc:`advanced tutorial </advanced>`, or the examples in the :code:`/examples` directory.
