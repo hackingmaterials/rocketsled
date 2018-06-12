@@ -753,14 +753,6 @@ class OptTask(FireTaskBase):
                                 else:
                                     # update all the fields, as it is a new
                                     # document
-                                    print("z", z)
-                                    print("y", y)
-                                    print("x", x)
-                                    print("z_new", z_new)
-                                    print("x_new", x_new)
-                                    print(n_completed)
-
-
                                     res = self.c.insert_one(
                                         {'z': z, 'y': y, 'x': x, 'z_new': z_new,
                                          'x_new': x_new,
