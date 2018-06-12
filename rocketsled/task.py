@@ -711,7 +711,10 @@ class OptTask(FireTaskBase):
                                 if self.n_objs == 1:
                                     y = float(y)
                                 else:
-                                    y = list(y)
+                                    if isinstance(y, np.ndarray):
+                                        y = y.tolist()
+                                    else:
+                                        y = list(y)
 
                                 # if it is a duplicate (such as a forced
                                 # identical first guess)
