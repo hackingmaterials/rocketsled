@@ -321,32 +321,14 @@ class OptTask(FireTaskBase):
                         x_dims = self['dimensions']
 
                         # predictor definition
-                        if 'predictor' in self:
-                            predictor = self['predictor']
-                        else:
-                            predictor = 'RandomForestRegressor'
-                        if 'predictor_args' in self:
-                            predargs = self['predictor_args']
-                        else:
-                            predargs = []
-                        if 'predictor_kwargs' in self:
-                            predkwargs = self['predictor_kwargs']
-                        else:
-                            predkwargs = {}
+                        predictor = self.get('predictor', 'RandomForestRegressor')
+                        predargs = self.get('predictor_args', [])
+                        predkwargs = self.get('predictor_kwargs', {})
 
                         # predictor performance
-                        if 'random_proba' in self:
-                            random_proba = self['random_proba']
-                        else:
-                            random_proba = 0.0
-                        if 'n_trainpts' in self:
-                            n_trainpts = self['n_trainpts']
-                        else:
-                            n_trainpts = None
-                        if 'n_searchpts' in self:
-                            self.n_searchpts = self['n_searchpts']
-                        else:
-                            self.n_searchpts = 1000
+                        random_proba = self.get('random_proba', 0.0)
+                        n_trainpts = self.get('n_trainpts', None)
+                        self.n_searchpts = self.get('n_searchpts', 1000)
                         if 'acq' in self:
                             self.acq = self['acq']
                             acq_funcs  =[None, 'ei', 'pi', 'lcb', 'maximin']
@@ -357,20 +339,11 @@ class OptTask(FireTaskBase):
                                     "or None.")
                         else:
                             self.acq = None
-                        if 'n_boots' in self:
-                            self.n_boots = self['n_boots']
-                        else:
-                            self.n_boots = 500
+                        self.n_boots = self.get('n_boots', 500)
 
-                        # hyperparameter optimization
-                        if 'hyper_opt' in self:
-                            self.hyper_opt = self['hyper_opt']
-                        else:
-                            self.hyper_opt = None
-                        if 'param_grid' in self:
-                            self.param_grid = self['param_grid']
-                        else:
-                            self.param_grid = None
+                        # hyper-hyperparameter optimization
+                        self.hyper_opt = self.get('hyper_opt', None)
+                        self.param_grid = self.get('param_grid', None)
                         if self.hyper_opt and not self.param_grid:
                             raise ValueError("Please specify a param_grid.")
 
@@ -379,48 +352,18 @@ class OptTask(FireTaskBase):
                             self.get_z = deserialize(self['get_z'])
                         else:
                             self.get_z = lambda *args, **kwargs: []
-                        if 'get_z_args' in self:
-                            get_z_args = self['get_z_args']
-                        else:
-                            get_z_args = []
-                        if 'get_z_kwargs' in self:
-                            get_z_kwargs = self['get_z_kwargs']
-                        else:
-                            get_z_kwargs = {}
-                        if 'persistent_z' in self:
-                            persistent_z = self['persistent_z']
-                        else:
-                            persistent_z = None
+                        get_z_args = self.get('get_z_args', [])
+                        get_z_kwargs = self.get('get_z_kwargs', {})
+                        persistent_z = self.get('persistent_z', None)
 
                         # miscellaneous
-                        if 'wf_creator_args' in self:
-                            wf_creator_args = self['wf_creator_args']
-                        else:
-                            wf_creator_args = []
-                        if 'wf_creator_kwargs' in self:
-                            wf_creator_kwargs = self['wf_creator_kwargs']
-                        else:
-                            wf_creator_kwargs = {}
-                        if 'encode_categorical' in self:
-                            encode_categorical = self['encode_categorical']
-                        else:
-                            encode_categorical = False
-                        if 'duplicate_check' in self:
-                            duplicate_check = self['duplicate_check']
-                        else:
-                            duplicate_check = False
-                        if 'tolerances' in self:
-                            tolerances = self['tolerances']
-                        else:
-                            tolerances = None
-                        if 'maximize' in self:
-                            maximize = self['maximize']
-                        else:
-                            maximize = False
-                        if 'batch_size' in self:
-                            batch_size = self['batch_size']
-                        else:
-                            batch_size = 1
+                        wf_creator_args = self.get('wf_creator_args', [])
+                        wf_creator_kwargs = self.get('wf_creator_kwargs', {})
+                        encode_categorical = self.get('encode_categorical', False)
+                        duplicate_check = self.get('duplicate_check', False)
+                        tolerances = self.get('tolerances', None)
+                        maximize = self.get('maximize', False)
+                        batch_size = self.get('batch_size', 1)
 
                         for kwname, kwdict in \
                                 {'wf_creator_kwargs': wf_creator_kwargs,
