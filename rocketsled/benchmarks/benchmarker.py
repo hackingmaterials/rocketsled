@@ -194,7 +194,6 @@ if __name__ == "__main__":
                    predictor="GaussianProcessRegressor", n_search_points=10000)
 
     # Now its the time to actually run everything. Open a terminal in this directory
-    # This contains all the auto-setup files to run all your workflows
     # > cenv3                                   # whatever virtualenv command you use
     # > lpad init                               # use all default options, except for "name", which should be bran_gp. This creates the launchpad file for the db which holds all optimization data
     # > lpad -l bran_gp.yaml reset              # press Y if warned, this just initializes the database
@@ -203,17 +202,17 @@ if __name__ == "__main__":
     # > cd ../benchmarks
     # We have 2 fireworks in each workflow (one evaluating f(x) and one optimization). And we have 50 optimization loops
     # to run for each of 100 runs. So there are 10,000 workflows to be run, total. To run them,
-    # > rlaunch -l bran_gp.yaml multi 4 --nlaunches 2501
-    # This command runs 4 parallel processes each launching 2500 fireworks. In total, this is 10004 fireworks.
+    # > rlaunch -l bran_gp.yaml multi 4 --nlaunches 2525
+    # This command runs 4 parallel processes each launching 2500 fireworks. In total, this is 10100 fireworks.
 
     # Load results for random Branin optimization
     # df = pd.DataFrame.read_csv("ran_bran.csv")
     # ranx = df['x']
     # rany = df['y']
 
-    # Plot
+    # Plot (won't work if each
     # lpad = LaunchPad(host='localhost', port=27017, name=db_name)
-    # bm, bs = visualize([ei_runs], min, labels=['EI'], colors=['blue'], limit=100)
+    # bm, bs = visualize([ei_runs], min, labels=['EI'], colors=['blue'], limit=50)
     # plt.plot(ranx, rany, color='black', label="Random")
     # plt.tight_layout()
     # plt.legend()
