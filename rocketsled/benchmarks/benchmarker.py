@@ -210,7 +210,7 @@ if __name__ == "__main__":
     # ranx = df['x']
     # rany = df['y']
 
-    # Plot (won't work if each
+    # Plot 
     # lpad = LaunchPad(host='localhost', port=27017, name=db_name)
     # bm, bs = visualize([ei_runs], min, labels=['EI'], colors=['blue'], limit=50)
     # plt.plot(ranx, rany, color='black', label="Random")
