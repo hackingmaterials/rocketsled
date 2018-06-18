@@ -67,7 +67,7 @@ def visualize(csets, opt, labels, colors, fontfamily="serif", limit=0):
 
         mean = np.mean(bestbig, axis=0)
         std = np.std(bestbig, axis=0)
-        avgbest = opt(mean)
+        # avgbest = opt(mean)
         # print(avgbest)
         plt.plot(i, mean, label="RS RF", color=colors[l])
         # plt.fill_between(i, mean - std, mean + std, color=colors[l], alpha=0.2)
@@ -78,8 +78,6 @@ def visualize(csets, opt, labels, colors, fontfamily="serif", limit=0):
     # plt.yscale("log")
     plt.xlabel("f(x) evaluation")
     plt.ylabel("minimum f(x) value")
-    plt.title("Hartmann 6D Function")
-    plt.legend()
     return (mean[-1], std[-1])
 
 
@@ -186,12 +184,12 @@ if __name__ == "__main__":
     n_runs = 100
     db_name = 'bran_gp'
 
-    for i in range(n_runs):
+    # for i in range(n_runs):
         # Set all your run options here. See the available options in the OptTask doc or the online comprehensive guide
-        auto_setup(branin, branindim, wfname='bran_gp{}'.format(i),
-                   opt_label='ei{}'.format(i), host='localhost', acq='ei',
-                   name=db_name, port=27017, n_bootstraps=1000,
-                   predictor="GaussianProcessRegressor", n_search_points=10000)
+        # auto_setup(branin, branindim, wfname='bran_gp{}'.format(i),
+        #            opt_label='ei{}'.format(i), host='localhost', acq='ei',
+        #            name=db_name, port=27017, n_bootstraps=1000,
+        #            predictor="GaussianProcessRegressor", n_search_points=10000)
 
     # Now its the time to actually run everything. Open a terminal in this directory
     # > cenv3                                   # whatever virtualenv command you use
@@ -206,18 +204,21 @@ if __name__ == "__main__":
     # This command runs 4 parallel processes each launching 2500 fireworks. In total, this is 10100 fireworks.
 
     # Load results for random Branin optimization
-    # df = pd.DataFrame.read_csv("ran_bran.csv")
-    # ranx = df['x']
-    # rany = df['y']
+    df = pd.read_csv("ran_bran.csv")
+    ranx = df['x']
+    rany = df['y']
 
-    # Plot 
-    # lpad = LaunchPad(host='localhost', port=27017, name=db_name)
-    # bm, bs = visualize([ei_runs], min, labels=['EI'], colors=['blue'], limit=50)
-    # plt.plot(ranx, rany, color='black', label="Random")
-    # plt.tight_layout()
-    # plt.legend()
-    # print("BEST RANDOM", min(rany))
-    # print("BEST OPT", bm, "+-", bs)
+    # Plot
+    lpad = LaunchPad(host='localhost', port=27017, name=db_name)
+    ei_runs = [getattr(lpad.db, "ei{}".format(i)) for i in range(100)]
+    bm, bs = visualize([ei_runs], min, labels=['EI'], colors=['blue'], limit=50)
+    plt.plot(ranx, rany, color='black', label="Random")
+    plt.tight_layout()
+    plt.legend()
+    plt.title("Branin Hoo Function Minimization")
+    plt.show()
+    print("BEST RANDOM", min(rany))
+    print("BEST OPT", bm, "+-", bs)
 
 
 
