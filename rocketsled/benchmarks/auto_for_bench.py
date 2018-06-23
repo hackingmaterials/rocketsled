@@ -23,7 +23,7 @@ from fireworks.utilities.fw_utilities import FW_BLOCK_FORMAT
 from rocketsled.utils import deserialize
 
 
-def auto_setup(func, dimensions, wfname=None, launch_ready=False, **kwargs):
+def auto_setup(func, dimensions, wfname=None, launch_ready=False, imports=None, **kwargs):
     """
     Automatically set up a FireWorks-based optimization loop with OptTask with
     you own function.
@@ -120,6 +120,8 @@ def auto_setup(func, dimensions, wfname=None, launch_ready=False, **kwargs):
                         "See the OptTask documentation and the\nexamples for more "
                         "information on setting up workflow creators.\n")
                 f.write('"""\n')
+                for i in imports:
+                    f.write(i + "\n")
                 f.write("from fireworks import PyTask, Firework, Workflow, "
                         "LaunchPad\n")
                 f.write("from fireworks.core.rocket_launcher import rapidfire\n")

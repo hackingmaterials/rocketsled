@@ -12,6 +12,7 @@ from fireworks import LaunchPad
 from itertools import product
 import pandas as pd
 import math
+from sklearn.gaussian_process.kernels import Matern, RationalQuadratic, ExpSineSquared, DotProduct, RBF
 
 
 """
@@ -34,22 +35,29 @@ benchmark these functions should be super easy and not require any of this.
 
 dtypes = Dtypes()
 
-def visualize(csets, opt, labels, colors, fontfamily="serif", limit=0):
+def visualize(optimizer_names, func, fontfamily="serif", limit=50, style="abs_error", log=True, fill=False):
     """
     Visualize a built-in optimizer's performance by reading the set of mongo
     collections, analyzing data, and plotting in matplotlib.
 
     Args:
-        csets:
-        opt:
-        labels:
-        colors:
+        optimizer_names:
+        func:
         fontfamily:
         limit:
+        style:
+        log:
+        fill:
 
     Returns:
 
     """
+    opt = min
+    means = []
+    stds = []
+    csets = load_csets(func, optimizer_names=optimizer_names)
+    labels, colors = load_labels_and_colors(optimizer_names)
+    fmin = load_fmin(func)
     for l, cset in enumerate(csets):
         bestbig = []
         for c in cset:
@@ -59,27 +67,43 @@ def visualize(csets, opt, labels, colors, fontfamily="serif", limit=0):
             for doc in c.find({'index': {'$exists': 1}}).limit(limit):
                 fx.append(doc['y'])
                 i.append(doc['index'])
-                best.append(opt(fx))
+
+                if style=="abs_error":
+                    best.append(abs(opt(fx) - fmin))
+                elif style=="value":
+                    best.append(opt(fx))
+                else:
+                    raise ValueError("Invalid style for plot")
+
             bestbig.append(best)
 
         # for b in bestbig:
-        #     print(b)
-        # print([len(bestbig)])
+        #     print(len(b))
 
         mean = np.mean(bestbig, axis=0)
         std = np.std(bestbig, axis=0)
+        means.append(mean[-1])
+        stds.append(std[-1])
         # avgbest = opt(mean)
         # print(avgbest)
-        plt.plot(i, mean, label=labels[l], color=colors[l])
-        plt.fill_between(i, mean - std, mean + std, color=colors[l], alpha=0.2)
+        # print(labels[l], colors[l])
+        plt.plot(i, mean, label=r"{}: {}$\pm${}".format(labels[l],  "{0:.3f}".format(mean[-1]), "{0:.3f}".format(std[-1])), color=colors[l])
+        if fill:
+            plt.fill_between(i, mean - std, mean + std, color=colors[l], alpha=0.2)
 
-    plt.rc('font', family=fontfamily)
-    fig = plt.gcf()
-    fig.set_size_inches(4, 3)
-    # plt.yscale("log")
-    plt.xlabel("f(x) evaluation")
-    plt.ylabel("minimum f(x) value")
-    return (mean[-1], std[-1])
+    # plt.rc('font', family=fontfamily)
+    plt.title("{} Function Minimization".format(load_fname(func)))
+    if log==True:
+        plt.yscale("log")
+    plt.xlabel(r"$f(x)$ evaluation")
+    if style=="abs_error":
+        plt.ylabel(r"Absolute Error")
+    elif style=="value":
+        plt.ylabel(r"Minimum $f(x)$ value found")
+    else:
+        raise ValueError("Invalid style for plot")
+    # return (means, stds)
+    return plt
 
 
 def gather_stats(cset, opt, limit=0):
@@ -172,6 +196,57 @@ def schaffer(x):
     return 0.5 + ((math.sin(x[0]**2 - x[1]**2))**2 - 0.5)/\
            ((1.0 + .001 * (x[0]**2 + x[1]**2)) ** 2)
 
+def plot_random(plt, func, returnval="abs_error", limit=50):
+    df = pd.read_csv("ran_{}.csv".format(func))
+    ranx = df['x']
+    rany = df['y']
+    fmin = load_fmin(func)
+    ranx = ranx[:limit]
+    rany = rany[:limit]
+    if returnval == "abs_error":
+        rany = np.abs(rany.as_matrix() - (fmin * np.ones(rany.shape)))
+    elif returnval == "value":
+        pass
+    else:
+        raise ValueError("Invalid return value type")
+    plt.plot(ranx, rany, color='black', label=r"Random: {}$\pm${}".format(
+            "{0:.3f}".format(np.mean(rany)), "{0:.3f}".format(np.std(rany))))
+    return plt
+
+def load_fmin(func):
+    fminmap = {'bran': 0.397887, 'hart': -3.32237, 'rose': 0}
+    return fminmap[func]
+
+def load_fname(func):
+    fnamemap = {'bran': "Branin-Hoo", "hart":"Hartmann 6D", "rose": "Rosenbrock 2D"}
+    return fnamemap[func]
+
+def load_csets(func, optimizer_names):
+    """
+    Load sets of collections for visualizing rocketsled optimization benchmarks
+    Args:
+        optimizer_names:
+        func:
+
+    Returns:
+
+    """
+    csets = []
+    lpad = LaunchPad(host='localhost', port=27017, name=func)
+    for on in optimizer_names:
+        csets.append([getattr(lpad.db, "{}{}".format(on, i)) for i in range(100)])
+    return csets
+
+def load_labels_and_colors(optimizer_names):
+    colors = []
+    labels = []
+    colormap = {'gp': "blue", "gphyper": "purple", "rf": "green"}
+    labelmap = {'gp': 'RS GP', 'gphyper': 'RS GP w/ hyperopt', 'rf': 'RS RF'}
+    for on in optimizer_names:
+        colors.append(colormap[on])
+        labels.append(labelmap[on])
+    return labels, colors
+
 
 if __name__ == "__main__":
 
@@ -183,14 +258,19 @@ if __name__ == "__main__":
 
     # define the number of full GP benchmarks we want to repeat
     n_runs = 100
-    db_name = 'bran'
+    f_name = 'rose'
+    opt_name = 'gphyper'
+    param_grid = {"n_restarts_optimizer": [10],
+                  "kernel": [['Matern', {}], ['Matern', {'nu':2.5}], ['Matern', {'nu':0.5}], ['RationalQuadratic', {}], ['DotProduct', {}], ['RBF', {}]]}
 
     # Set all your run options here. See the available options in the OptTask doc or the online comprehensive guide
     for i in range(n_runs):
-        auto_setup(branin, branindim, wfname='bran_gp{}'.format(i),
-                   opt_label='prioritytest{}'.format(i), host='localhost', acq='ei',
-                   name=db_name, port=27017, n_bootstraps=1000,
-                   predictor="GaussianProcessRegressor", n_search_points=10000)
+        auto_setup(rose, rosedim(2), wfname='{}_{}{}'.format(f_name, opt_name, i),
+                   imports=['from sklearn.gaussian_process.kernels import Matern, RationalQuadratic, ExpSineSquared, DotProduct'],
+                   opt_label='{}{}'.format(opt_name, i), host='localhost', acq='ei',
+                   name=f_name, port=27017, n_bootstraps=1000,
+                   predictor="GaussianProcessRegressor", n_search_points=10000,
+                   hyper_opt=None, param_grid = param_grid)
 
     # Now its the time to actually run everything. Open a terminal in this directory
     # > cenv3                                   # whatever virtualenv command you use
@@ -207,25 +287,6 @@ if __name__ == "__main__":
     # Regenerate random results, if needed
     # ranx, rany = ran_run(branin, branindim, min, runs=100000, comps_per_run=50)
     # pd.DataFrame({'x': ranx, 'y': rany}).to_csv("ran_bran.csv")
-
-    # Load previous random results, if already generated
-    # df = pd.read_csv("ran_bran.csv")
-    # ranx = df['x']
-    # rany = df['y']
-
-    # Plot
-    # lpad = LaunchPad(host='localhost', port=27017, name=db_name)
-    # runs = [getattr(lpad.db, "gp{}".format(i)) for i in range(100)]
-    # bm, bs = visualize([runs], min, labels=['GP + EI'], colors=['blue'], limit=50)
-    # plt.plot(ranx, rany, color='black', label="Random")
-    # plt.tight_layout()
-    # plt.legend()
-    # plt.title("Branin Hoo Function Minimization")
-    # print("BEST RANDOM", min(rany))
-    # print("BEST OPT", bm, "+-", bs)
-    # plt.show()
-
-
 
 
 
