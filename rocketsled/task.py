@@ -101,6 +101,7 @@ class OptTask(FireTaskBase):
                 'MLPRegressor',
                 'KernelRidge',
                 'SVR'
+            To use a random gues, use 'random'
             Defaults to 'RandomForestRegressor'
             Example builtin predictor: predictor = 'SVR'
             Example custom predictor: predictor = 'my_module.my_predictor'
@@ -1145,6 +1146,18 @@ class OptTask(FireTaskBase):
             sklearn BaseEstimator model with optimizer hyperparameters.
         """
         predictor_name = model.__class__.__name__
+
+        if "kernel" in self.param_grid:
+            import importlib
+            kernel_sets = self.param_grid['kernel']
+            mod = importlib.import_module('sklearn.gaussian_process.kernels')
+            for i, ks in enumerate(kernel_sets):
+                kernel = getattr(mod, ks[0])
+                args = ks[1]
+                self.param_grid["kernel"][i] = kernel(**args)
+
+        print(self.param_grid)
+
         if predictor_name not in self.predictors:
             raise ValueError("Cannot perform automatic hyperparameter "
                              "search with custom optimizer.")
