@@ -206,6 +206,8 @@ Included sklearn-based predictors are:
 
 Defaults to 'RandomForestRegressor'
 
+To use a random guess, choose 'random'.
+
 **Custom**
 
 A string of the fully qualified name of your predictor. The predictor function
