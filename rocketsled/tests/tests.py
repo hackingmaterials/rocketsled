@@ -386,6 +386,12 @@ class TestWorkflows(unittest.TestCase):
         self.assertEqual(done['index'], 1)
         self.assertEqual(len(done['y']), 2)
 
+        # Loop 2, to make sure optimizations will keep running
+        launch_rocket(self.lp)
+        self.assertEqual(col.count_documents({}), 4)
+        self.assertEqual(manager['lock'], None)
+        self.assertEqual(manager['queue'], [])
+
     def tearDown(self):
         try:
             self.lp.reset(password=None, require_password=False)
