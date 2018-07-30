@@ -247,7 +247,7 @@ class TestWorkflows(unittest.TestCase):
         done = col.find_one({'y': {'$exists': 1, '$ne': 'reserved'}})
         reserved = col.find_one({'y': 'reserved'})
 
-        self.assertEqual(col.find({}).count(), 3)
+        self.assertEqual(col.count_documents({}), 3)
         self.assertEqual(manager['lock'], None)
         self.assertEqual(manager['queue'], [])
         self.assertEqual(done['x'], [5, 11, 'blue'])
@@ -263,7 +263,7 @@ class TestWorkflows(unittest.TestCase):
         done = col.find_one({'y': {'$exists': 1, '$ne': 'reserved'}})
         reserved = col.find_one({'y': 'reserved'})
 
-        self.assertEqual(col.find({}).count(), 3)
+        self.assertEqual(col.count_documents({}), 3)
         self.assertEqual(manager['lock'], None)
         self.assertEqual(manager['queue'], [])
         self.assertEqual(done['x'], [5, 11, 'blue'])
@@ -278,13 +278,12 @@ class TestWorkflows(unittest.TestCase):
             launch_rocket(self.lp)
 
         col = self.db.test_complex
-        loop1 = col.find({'index': 1})   # should return one doc, for first WF
-        loop2 = col.find({'index': 2})   # should return one doc, for second WF
-        reserved = col.find({'y': 'reserved'})
-        self.assertEqual(col.find({}).count(), 4)
-        self.assertEqual(reserved.count(), 1)
-        self.assertEqual(loop1.count(), 1)
-        self.assertEqual(loop2.count(), 1)
+        self.assertEqual(col.count_documents({}), 4)
+        self.assertEqual(col.count_documents({'y': 'reserved'}), 1)
+        # should return one doc, for first WF
+        self.assertEqual(col.count_documents({'index': 1}), 1)  # loop 1
+        # should return one doc, for second WF
+        self.assertEqual(col.count_documents({'index': 2}), 1)  # loop 2
 
     def test_duplicates(self):
         self.lp.reset(password=None, require_password=False)
@@ -293,17 +292,15 @@ class TestWorkflows(unittest.TestCase):
             launch_rocket(self.lp)
 
         col = self.db.test_duplicates
-        loop1 = col.find({'x': [5, 11, 'blue']})
+
+
+        self.assertEqual(col.count_documents({}), 4)
+        self.assertEqual(col.count_documents({'y': 'reserved'}), 1)
         # should return one doc, for the first WF
-
-        loop2 = col.find({'x': [3, 12, 'green']})
+        self.assertEqual(col.count_documents({'x': [5, 11, 'blue']}), 1)
         # should return one doc, for the second WF
-
-        reserved = col.find({'y': 'reserved'})
-        self.assertEqual(col.find({}).count(), 4)
-        self.assertEqual(reserved.count(), 1)
-        self.assertEqual(loop1.count(), 1)
-        self.assertEqual(loop2.count(), 1) # no duplicates are in the db
+        # no duplicates are in the db
+        self.assertEqual(col.count_documents({'x': [3, 12, 'green']}), 1)
 
     def test_get_z(self):
         self.lp.reset(password=None, require_password=False)
@@ -351,7 +348,7 @@ class TestWorkflows(unittest.TestCase):
             pass
 
         self.assertEqual(
-            self.db.test_parallel.find({'y': {'$exists': 1}}).count(), 125)
+            self.db.test_parallel.count_documents({'y': {'$exists': 1}}), 125)
 
         X_unique = []
         for doc in self.db.test_parallel.find({'x_new': {"$exists": 1}}):
@@ -370,7 +367,7 @@ class TestWorkflows(unittest.TestCase):
         done = col.find_one({'y': {'$exists': 1, '$ne': 'reserved'}})
         reserved = col.find_one({'y': 'reserved'})
 
-        self.assertEqual(col.find({}).count(), 3)
+        self.assertEqual(col.count_documents({}), 3)
         self.assertEqual(manager['lock'], None)
         self.assertEqual(manager['queue'], [])
         self.assertEqual(done['x'], [5, 11, 'blue'])
