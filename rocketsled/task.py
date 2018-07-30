@@ -317,323 +317,7 @@ class OptTask(FireTaskBase):
 
                 elif lock == pid:
                     try:
-                        # required args
-                        wf_creator = deserialize(self['wf_creator'])
-                        x_dims = self['dimensions']
-
-                        # predictor definition
-                        predictor = self.get('predictor', 'RandomForestRegressor')
-                        predargs = self.get('predictor_args', [])
-                        predkwargs = self.get('predictor_kwargs', {})
-
-                        # predictor performance
-                        random_proba = self.get('random_proba', 0.0)
-                        n_trainpts = self.get('n_trainpts', None)
-                        self.n_searchpts = self.get('n_searchpts', 1000)
-                        if 'acq' in self:
-                            self.acq = self['acq']
-                            acq_funcs  =[None, 'ei', 'pi', 'lcb', 'maximin']
-                            if self.acq not in acq_funcs:
-                                raise ValueError(
-                                    "Invalid acquisition function. Use 'ei', "
-                                    "'pi', 'lcb', 'maximin' (multiobjective), "
-                                    "or None.")
-                        else:
-                            self.acq = None
-                        self.n_boots = self.get('n_boots', 500)
-
-                        # hyper-hyperparameter optimization
-                        self.hyper_opt = self.get('hyper_opt', None)
-                        self.param_grid = self.get('param_grid', None)
-                        if self.hyper_opt and not self.param_grid:
-                            raise ValueError("Please specify a param_grid.")
-
-                        # extra features
-                        if 'get_z' in self and self['get_z'] is not None:
-                            self.get_z = deserialize(self['get_z'])
-                        else:
-                            self.get_z = lambda *args, **kwargs: []
-                        get_z_args = self.get('get_z_args', [])
-                        get_z_kwargs = self.get('get_z_kwargs', {})
-                        persistent_z = self.get('persistent_z', None)
-
-                        # miscellaneous
-                        wf_creator_args = self.get('wf_creator_args', [])
-                        wf_creator_kwargs = self.get('wf_creator_kwargs', {})
-                        encode_categorical = self.get('encode_categorical', False)
-                        duplicate_check = self.get('duplicate_check', False)
-                        tolerances = self.get('tolerances', None)
-                        maximize = self.get('maximize', False)
-                        batch_size = self.get('batch_size', 1)
-
-                        for kwname, kwdict in \
-                                {'wf_creator_kwargs': wf_creator_kwargs,
-                                 'get_z_kwargs': get_z_kwargs,
-                                 'predictor_kwargs': predkwargs}.items():
-                            if not isinstance(kwdict, dict):
-                                raise TypeError("{} should be a dictonary of "
-                                                "keyword arguments."
-                                                "".format(kwname))
-
-                        for argname, arglist in \
-                                {'wf_creator_args': wf_creator_args,
-                                 'get_z_args': get_z_args,
-                                 'predictor_args': predargs}.items():
-                            if not isinstance(arglist, list) or \
-                                    isinstance(arglist, tuple):
-                                raise TypeError("{} should be a list/tuple of "
-                                                "positional arguments"
-                                                "".format(argname))
-
-                        x = list(fw_spec['_x_opt'])
-                        y = fw_spec['_y_opt']
-
-                        if isinstance(y, (list, tuple)):
-                            if len(y) == 1:
-                                y = y[0]
-
-                            self.n_objs = len(y)
-                            if self.acq not in ("maximin", None):
-                                raise ValueError(
-                                    "{} is not a valid acquisition function for "
-                                    "multiobjective optimization".format(
-                                        self.acq))
-                        else:
-                            if self.acq == "maximin":
-                                raise ValueError(
-                                    "Maximin is not a valid acquisition "
-                                    "function for single objective "
-                                    "optimization.")
-                            self.n_objs = 1
-
-                        # If process A suggests a certain guess and runs it,
-                        # process B may suggest the same guess while process A
-                        # is running its new workflow. Therefore, process A must
-                        # reserve the guess. Line below releases reservation on
-                        # this document in case of workflow failure or end of
-                        # workflow.
-                        self.c.delete_one({'x': x, 'y': 'reserved'})
-                        self.dtypes = Dtypes()
-                        self._xdim_spec = self._check_dims(x_dims)
-
-                        # fetch additional attributes for constructing ML model
-                        z = self.get_z(x, *get_z_args, **get_z_kwargs)
-
-                        # use all possible training points as default
-                        n_completed = self.c.find(self._completed).count()
-                        if not n_trainpts or n_trainpts > n_completed:
-                            n_trainpts = n_completed
-
-                        # check if opimization should be done, if in batch mode
-                        batch_mode = False if batch_size==1 else True
-                        batch_ready = n_completed not in (0, 1) and \
-                                      (n_completed + 1) % batch_size == 0
-
-                        if batch_mode and not batch_ready:
-                            # 'None' predictor means this job was not used for
-                            # an optimization run.
-                            if self.c.find_one({'x': x}):
-                                if self.c.find_one({'x': x, 'y': 'reserved'}):
-                                    # For reserved guesses: update everything
-                                    self.c.find_one_and_update(
-                                        {'x': x, 'y': 'reserved'},
-                                        {'$set': {'y': y, 'z': z, 'z_new': [],
-                                                  'x_new': [],
-                                                  'predictor': None,
-                                                  'index': n_completed + 1}
-                                         })
-
-                                else:
-                                    # For completed guesses (ie, this workflow
-                                    # is a forced duplicate), do not update
-                                    # index, but update everything else
-                                    self.c.find_one_and_update(
-                                        {'x': x},
-                                        {'$set': {'y': y, 'z': z, 'z_new': [],
-                                                  'x_new': [],
-                                                  'predictor': None}
-                                         })
-                            else:
-                                # For new guesses: insert x, y, z, index,
-                                # predictor, and dummy new guesses
-                                self.c.insert_one({'x': x, 'y': y, 'z': z,
-                                                   'x_new': [], 'z_new': [],
-                                                   'predictor': None,
-                                                   'index': n_completed + 1})
-                            self.pop_lock(manager_id)
-                            return None
-
-                        # Mongo aggregation framework may give duplicate
-                        # documents, so we cannot use $sample to randomize
-                        # the training points used
-                        explored_indices = random.sample(
-                            range(1, n_completed + 1), n_trainpts)
-                        explored_docs = self.c.find(
-                            {'index': {'$in': explored_indices}},
-                            batch_size=10000)
-                        reserved_docs = self.c.find({'y': 'reserved'},
-                                                    batch_size=10000)
-                        reserved = []
-                        for doc in reserved_docs:
-                            reserved.append(doc['x'])
-                        Y = [None] * n_completed
-                        Y.append(y)
-                        X_explored = [None] * n_completed
-                        X_explored.append(x)
-                        z = list(z)
-                        XZ_explored = [None] * n_completed
-                        XZ_explored.append(x + z)
-                        for i, doc in enumerate(explored_docs):
-                            X_explored[i] = doc['x']
-                            XZ_explored[i] = doc['x'] + doc['z']
-                            Y[i] = doc['y']
-
-                        X_space = self._discretize_space(x_dims)
-                        X_space = list(X_space) if persistent_z else X_space
-                        X_unexplored = []
-                        for xi in X_space:
-                            xj = list(xi)
-                            if xj not in X_explored and xj not in reserved:
-                                X_unexplored.append(xj)
-                                if len(X_unexplored) == self.n_searchpts:
-                                    break
-
-                        if persistent_z:
-                            if path.exists(persistent_z):
-                                with open(persistent_z, 'rb') as f:
-                                    xz_map = pickle.load(f)
-                            else:
-                                xz_map = {tuple(xi): self.get_z(xi, *get_z_args,
-                                                                **get_z_kwargs)
-                                          for xi in X_space}
-                                with open(persistent_z, 'wb') as f:
-                                    pickle.dump(xz_map, f)
-
-                            XZ_unexplored = [xi + xz_map[tuple(xi)] for xi in
-                                             X_unexplored]
-                        else:
-                            XZ_unexplored = [xi + self.get_z(xi, *get_z_args,
-                                                             **get_z_kwargs)
-                                             for xi in X_unexplored]
-
-                        # if there are no more unexplored points in the entire
-                        # space, either they have been explored (ie have x, y,
-                        # and z) or have been reserved.
-                        if len(XZ_unexplored) < 1:
-                            if self._is_discrete(x_dims, criteria='all'):
-                                raise ExhaustedSpaceError("The discrete space "
-                                                          "has been searched "
-                                                          "exhaustively.")
-                            else:
-                                raise TypeError("A comprehensive list of points"
-                                                " was exhausted but the "
-                                                "dimensions are not discrete.")
-                        z_dims = self._z_dims(XZ_unexplored, len(x_dims))
-                        xz_dims = x_dims + z_dims
-
-                        # run machine learner on Z or X features
-                        plist = [RandomForestRegressor,
-                                 GaussianProcessRegressor, AdaBoostRegressor,
-                                 ExtraTreesRegressor, GradientBoostingRegressor,
-                                 LinearRegression, SGDRegressor, MLPRegressor,
-                                 KernelRidge, SVR]
-                        self.predictors = {p.__name__: p for p in plist}
-
-                        if random_proba:
-                            if random_proba > 1.0 or random_proba < 0.0 or \
-                                type(random_proba) not in self.dtypes.floats:
-                                raise ValueError("The probability of a random "
-                                                 "guess is between 0.0 and 1.0."
-                                                 " Please enter a float in this"
-                                                 " range")
-                            if np.random.rand() < random_proba:
-                                predictor = 'random'
-
-                        if predictor in self.predictors:
-                            model = self.predictors[predictor]
-                            XZ_explored = self._encode(XZ_explored, xz_dims)
-                            XZ_unexplored = self._encode(XZ_unexplored,
-                                                         xz_dims)
-                            # todo: Figure out if scaling categorical data makes
-                            # todo: optimizer better
-
-                            # Scale to
-                            if 'get_z' in self:
-                                scaling = False if self._is_discrete(
-                                    dims=z_dims, criteria='any') else True
-                            else:
-                                scaling = False if self._is_discrete(
-                                    dims=x_dims, criteria='any') else True
-
-                            XZ_onehot = self._predict(
-                                XZ_explored, Y, XZ_unexplored,
-                                model(*predargs, **predkwargs), maximize,
-                                batch_size, scaling)
-                            XZ_new = [self._decode(xz_onehot, xz_dims) for
-                                      xz_onehot in XZ_onehot]
-
-                        elif predictor == 'random':
-                            XZ_new = random.sample(XZ_unexplored, batch_size)
-
-                        else:
-                            # If using a custom predictor, automatically convert
-                            # categorical info to one-hot encoded ints.
-                            # Used when a custom predictor cannot natively use
-                            # categorical info
-                            if encode_categorical:
-                                XZ_explored = self._encode(XZ_explored,
-                                                           xz_dims)
-                                XZ_unexplored = self._encode(XZ_unexplored,
-                                                             xz_dims)
-
-                            try:
-                                predictor_fun = deserialize(predictor)
-                            except Exception as E:
-                                raise NameError("The custom predictor {} didnt "
-                                                "import correctly!\n{}"
-                                                "".format(predictor, E))
-
-                            XZ_new = predictor_fun(XZ_explored, Y, x_dims,
-                                                   XZ_unexplored, *predargs,
-                                                   **predkwargs)
-                            if not isinstance(XZ_new[0], (list, tuple)):
-                                XZ_new = [XZ_new]
-
-                        # duplicate checking for custom optimizer functions
-                        if duplicate_check:
-
-                            #todo: fix batch_mode duplicate checking
-                            if batch_mode:
-                                raise Exception("Dupicate checking in batch "
-                                                "mode for custom predictors is "
-                                                "not yet supported")
-
-                            if predictor not in self.predictors and \
-                                    predictor != 'random':
-                                X_new = [xz_new[:len(x)] for xz_new in XZ_new]
-                                X_explored = [xz[:len(x)] for xz in XZ_explored]
-
-                                if tolerances:
-                                    for n, x_new in enumerate(X_new):
-                                        if self._tolerance_check(
-                                                x_new, X_explored,
-                                                tolerances=tolerances):
-                                            XZ_new[n] = random.choice(
-                                                XZ_unexplored)
-
-                                else:
-                                    if self._is_discrete(x_dims):
-                                        # test only for x, not xz because custom
-                                        #  predicted z may not be accounted for
-                                        for n, x_new in enumerate(X_new):
-                                            if x_new in X_explored or x_new == x:
-                                                XZ_new[n] = random.choice(
-                                                    XZ_unexplored)
-                                    else:
-                                        raise ValueError("Define tolerances "
-                                                         "parameter to "
-                                                         "duplicate check "
-                                                         "floats.")
+                        x, y, z, x_dims, XZ_new, predictor, n_completed = self.optimize(fw_spec, manager_id)
                     except Exception:
                         self.pop_lock(manager_id)
                         raise
@@ -645,82 +329,7 @@ class OptTask(FireTaskBase):
                             self.c.find(self._manager).count() == 0:
                             continue
                         else:
-                            for xz_new in XZ_new:
-                                # separate 'predicted' z features from the new
-                                # x vector
-                                x_new, z_new = xz_new[:len(x_dims)], \
-                                               xz_new[len(x_dims):]
-
-                                # Python3/new bson type conversion for numpy
-                                if self.n_objs == 1:
-                                    y = float(y)
-                                else:
-                                    if isinstance(y, np.ndarray):
-                                        y = y.tolist()
-                                    else:
-                                        try:
-                                            # if it is a list of np types
-                                            y = [yi.item() for yi in y]
-                                        except AttributeError:
-                                            y = list()
-
-                                # if it is a duplicate (such as a forced
-                                # identical first guess)
-                                forced_dupe = self.c.find_one({'x': x})
-
-                                acqmap = {"ei": "Expected Improvement",
-                                          "pi": "Probability of Improvement",
-                                          "lcb": "Lower Confidence Boundary",
-                                          None: "Highest Value",
-                                          "maximin": "Maximin Expected "
-                                                     "Improvement"}
-                                if predictor in self.predictors:
-                                    predictorstr = predictor + \
-                                                   " with acquisition: " + \
-                                                   acqmap[self.acq]
-                                    if self.n_objs > 1:
-                                        predictorstr += " using {} objectives" \
-                                                        "".format(self.n_objs)
-                                else:
-                                    predictorstr = predictor
-                                if forced_dupe:
-                                    # only update the fields which should be
-                                    # updated
-                                    self.c.find_one_and_update(
-                                        {'x': x},
-                                        {'$set': {'y': y, 'z': z,
-                                                  'z_new': z_new,
-                                                  'x_new': x_new,
-                                                  'predictor': predictorstr}
-                                         })
-                                    opt_id = forced_dupe['_id']
-                                else:
-                                    # update all the fields, as it is a new
-                                    # document
-                                    res = self.c.insert_one(
-                                        {'z': z, 'y': y, 'x': x, 'z_new': z_new,
-                                         'x_new': x_new,
-                                         'predictor': predictorstr,
-                                         'index': n_completed + 1})
-                                    opt_id = res.inserted_id
-
-                                # ensure previously fin. workflow results are
-                                # not overwritten by concurrent predictions
-                                if self.c.find(
-                                        {'x': x_new, 'y': {'$exists': 1,
-                                                           '$ne': 'reserved'}
-                                         }).count() == 0:
-                                    # reserve the new x to prevent parallel
-                                    # processes from registering it as
-                                    # unexplored, since the next iteration of
-                                    # this process will be exploring it
-                                    self.c.insert_one({'x': x_new,
-                                                       'y': 'reserved'})
-                                else:
-                                    raise ValueError(
-                                        "The predictor suggested a guess which"
-                                        " has already been tried: {}"
-                                        "".format(x_new))
+                            opt_id = self.stash(x, y, z, x_dims, XZ_new, predictor, n_completed)
 
                     except TypeError as E:
                         warnings.warn("Process {} probably timed out while "
@@ -733,6 +342,16 @@ class OptTask(FireTaskBase):
 
                     self.pop_lock(manager_id)
                     X_new = [xz_new[:len(x)] for xz_new in XZ_new]
+                    wf_creator = deserialize(self['wf_creator'])
+                    wf_creator_args = self.get('wf_creator_args', [])
+                    wf_creator_kwargs = self.get('wf_creator_kwargs', {})
+
+                    if not isinstance(wf_creator_args, (list, tuple)):
+                        raise TypeError("wr_creator_args should be a list/tuple of positional arguments.")
+
+                    if not isinstance(wf_creator_kwargs, dict):
+                        raise TypeError("wr_creator_kwargs should be a dictionary of keyword arguments.")
+
                     new_wfs = [wf_creator(x_new, *wf_creator_args,
                                           **wf_creator_kwargs)
                                for x_new in X_new]
@@ -750,9 +369,404 @@ class OptTask(FireTaskBase):
                                            )
 
             elif run == max_runs*max_resets:
-                raise StandardError("The manager is still stuck after "
+                raise Exception("The manager is still stuck after "
                                     "resetting. Make sure no stalled processes "
                                     "are in the queue.")
+
+    def optimize(self, fw_spec, manager_id):
+        # required args
+        x_dims = self['dimensions']
+
+        # predictor definition
+        predictor = self.get('predictor', 'RandomForestRegressor')
+        predargs = self.get('predictor_args', [])
+        predkwargs = self.get('predictor_kwargs', {})
+
+        # predictor performance
+        random_proba = self.get('random_proba', 0.0)
+        n_trainpts = self.get('n_trainpts', None)
+        self.n_searchpts = self.get('n_searchpts', 1000)
+        if 'acq' in self:
+            self.acq = self['acq']
+            acq_funcs = [None, 'ei', 'pi', 'lcb', 'maximin']
+            if self.acq not in acq_funcs:
+                raise ValueError(
+                    "Invalid acquisition function. Use 'ei', "
+                    "'pi', 'lcb', 'maximin' (multiobjective), "
+                    "or None.")
+        else:
+            self.acq = None
+        self.n_boots = self.get('n_boots', 500)
+
+        # hyper-hyperparameter optimization
+        self.hyper_opt = self.get('hyper_opt', None)
+        self.param_grid = self.get('param_grid', None)
+        if self.hyper_opt and not self.param_grid:
+            raise ValueError("Please specify a param_grid.")
+
+        # extra features
+        if 'get_z' in self and self['get_z'] is not None:
+            self.get_z = deserialize(self['get_z'])
+        else:
+            self.get_z = lambda *args, **kwargs: []
+        get_z_args = self.get('get_z_args', [])
+        get_z_kwargs = self.get('get_z_kwargs', {})
+        persistent_z = self.get('persistent_z', None)
+
+        # miscellaneous
+        encode_categorical = self.get('encode_categorical', False)
+        duplicate_check = self.get('duplicate_check', False)
+        tolerances = self.get('tolerances', None)
+        maximize = self.get('maximize', False)
+        batch_size = self.get('batch_size', 1)
+
+        for kwname, kwdict in \
+                {'get_z_kwargs': get_z_kwargs,
+                 'predictor_kwargs': predkwargs}.items():
+            if not isinstance(kwdict, dict):
+                raise TypeError("{} should be a dictonary of "
+                                "keyword arguments."
+                                "".format(kwname))
+
+        for argname, arglist in \
+                {'get_z_args': get_z_args,
+                 'predictor_args': predargs}.items():
+            if not isinstance(arglist, (list, tuple)):
+                raise TypeError("{} should be a list/tuple of "
+                                "positional arguments"
+                                "".format(argname))
+
+        x = list(fw_spec['_x_opt'])
+        y = fw_spec['_y_opt']
+
+        if isinstance(y, (list, tuple)):
+            if len(y) == 1:
+                y = y[0]
+
+            self.n_objs = len(y)
+            if self.acq not in ("maximin", None):
+                raise ValueError(
+                    "{} is not a valid acquisition function for "
+                    "multiobjective optimization".format(
+                        self.acq))
+        else:
+            if self.acq == "maximin":
+                raise ValueError(
+                    "Maximin is not a valid acquisition "
+                    "function for single objective "
+                    "optimization.")
+            self.n_objs = 1
+
+        # If process A suggests a certain guess and runs it,
+        # process B may suggest the same guess while process A
+        # is running its new workflow. Therefore, process A must
+        # reserve the guess. Line below releases reservation on
+        # this document in case of workflow failure or end of
+        # workflow.
+        self.c.delete_one({'x': x, 'y': 'reserved'})
+        self.dtypes = Dtypes()
+        self._xdim_spec = self._check_dims(x_dims)
+
+        # fetch additional attributes for constructing ML model
+        z = self.get_z(x, *get_z_args, **get_z_kwargs)
+
+        # use all possible training points as default
+        n_completed = self.c.find(self._completed).count()
+        if not n_trainpts or n_trainpts > n_completed:
+            n_trainpts = n_completed
+
+        # check if opimization should be done, if in batch mode
+        batch_mode = False if batch_size == 1 else True
+        batch_ready = n_completed not in (0, 1) and \
+                      (n_completed + 1) % batch_size == 0
+
+        if batch_mode and not batch_ready:
+            # 'None' predictor means this job was not used for
+            # an optimization run.
+            if self.c.find_one({'x': x}):
+                if self.c.find_one({'x': x, 'y': 'reserved'}):
+                    # For reserved guesses: update everything
+                    self.c.find_one_and_update(
+                        {'x': x, 'y': 'reserved'},
+                        {'$set': {'y': y, 'z': z, 'z_new': [],
+                                  'x_new': [],
+                                  'predictor': None,
+                                  'index': n_completed + 1}
+                         })
+
+                else:
+                    # For completed guesses (ie, this workflow
+                    # is a forced duplicate), do not update
+                    # index, but update everything else
+                    self.c.find_one_and_update(
+                        {'x': x},
+                        {'$set': {'y': y, 'z': z, 'z_new': [],
+                                  'x_new': [],
+                                  'predictor': None}
+                         })
+            else:
+                # For new guesses: insert x, y, z, index,
+                # predictor, and dummy new guesses
+                self.c.insert_one({'x': x, 'y': y, 'z': z,
+                                   'x_new': [], 'z_new': [],
+                                   'predictor': None,
+                                   'index': n_completed + 1})
+            self.pop_lock(manager_id)
+            return None
+
+        # Mongo aggregation framework may give duplicate
+        # documents, so we cannot use $sample to randomize
+        # the training points used
+        explored_indices = random.sample(
+            range(1, n_completed + 1), n_trainpts)
+        explored_docs = self.c.find(
+            {'index': {'$in': explored_indices}},
+            batch_size=10000)
+        reserved_docs = self.c.find({'y': 'reserved'},
+                                    batch_size=10000)
+        reserved = []
+        for doc in reserved_docs:
+            reserved.append(doc['x'])
+        Y = [None] * n_completed
+        Y.append(y)
+        X_explored = [None] * n_completed
+        X_explored.append(x)
+        z = list(z)
+        XZ_explored = [None] * n_completed
+        XZ_explored.append(x + z)
+        for i, doc in enumerate(explored_docs):
+            X_explored[i] = doc['x']
+            XZ_explored[i] = doc['x'] + doc['z']
+            Y[i] = doc['y']
+
+        X_space = self._discretize_space(x_dims)
+        X_space = list(X_space) if persistent_z else X_space
+        X_unexplored = []
+        for xi in X_space:
+            xj = list(xi)
+            if xj not in X_explored and xj not in reserved:
+                X_unexplored.append(xj)
+                if len(X_unexplored) == self.n_searchpts:
+                    break
+
+        if persistent_z:
+            if path.exists(persistent_z):
+                with open(persistent_z, 'rb') as f:
+                    xz_map = pickle.load(f)
+            else:
+                xz_map = {tuple(xi): self.get_z(xi, *get_z_args,
+                                                **get_z_kwargs)
+                          for xi in X_space}
+                with open(persistent_z, 'wb') as f:
+                    pickle.dump(xz_map, f)
+
+            XZ_unexplored = [xi + xz_map[tuple(xi)] for xi in
+                             X_unexplored]
+        else:
+            XZ_unexplored = [xi + self.get_z(xi, *get_z_args,
+                                             **get_z_kwargs)
+                             for xi in X_unexplored]
+
+        # if there are no more unexplored points in the entire
+        # space, either they have been explored (ie have x, y,
+        # and z) or have been reserved.
+        if len(XZ_unexplored) < 1:
+            if self._is_discrete(x_dims, criteria='all'):
+                raise ExhaustedSpaceError("The discrete space "
+                                          "has been searched "
+                                          "exhaustively.")
+            else:
+                raise TypeError("A comprehensive list of points"
+                                " was exhausted but the "
+                                "dimensions are not discrete.")
+        z_dims = self._z_dims(XZ_unexplored, len(x_dims))
+        xz_dims = x_dims + z_dims
+
+        # run machine learner on Z or X features
+        plist = [RandomForestRegressor,
+                 GaussianProcessRegressor, AdaBoostRegressor,
+                 ExtraTreesRegressor, GradientBoostingRegressor,
+                 LinearRegression, SGDRegressor, MLPRegressor,
+                 KernelRidge, SVR]
+        self.predictors = {p.__name__: p for p in plist}
+
+        if random_proba:
+            if random_proba > 1.0 or random_proba < 0.0 or \
+                    type(random_proba) not in self.dtypes.floats:
+                raise ValueError("The probability of a random "
+                                 "guess is between 0.0 and 1.0."
+                                 " Please enter a float in this"
+                                 " range")
+            if np.random.rand() < random_proba:
+                predictor = 'random'
+
+        if predictor in self.predictors:
+            model = self.predictors[predictor]
+            XZ_explored = self._encode(XZ_explored, xz_dims)
+            XZ_unexplored = self._encode(XZ_unexplored,
+                                         xz_dims)
+            # todo: Figure out if scaling categorical data makes
+            # todo: optimizer better
+
+            # Scale to
+            if 'get_z' in self:
+                scaling = False if self._is_discrete(
+                    dims=z_dims, criteria='any') else True
+            else:
+                scaling = False if self._is_discrete(
+                    dims=x_dims, criteria='any') else True
+
+            XZ_onehot = self._predict(
+                XZ_explored, Y, XZ_unexplored,
+                model(*predargs, **predkwargs), maximize,
+                batch_size, scaling)
+            XZ_new = [self._decode(xz_onehot, xz_dims) for
+                      xz_onehot in XZ_onehot]
+
+        elif predictor == 'random':
+            XZ_new = random.sample(XZ_unexplored, batch_size)
+
+        else:
+            # If using a custom predictor, automatically convert
+            # categorical info to one-hot encoded ints.
+            # Used when a custom predictor cannot natively use
+            # categorical info
+            if encode_categorical:
+                XZ_explored = self._encode(XZ_explored,
+                                           xz_dims)
+                XZ_unexplored = self._encode(XZ_unexplored,
+                                             xz_dims)
+
+            try:
+                predictor_fun = deserialize(predictor)
+            except Exception as E:
+                raise NameError("The custom predictor {} didnt "
+                                "import correctly!\n{}"
+                                "".format(predictor, E))
+
+            XZ_new = predictor_fun(XZ_explored, Y, x_dims,
+                                   XZ_unexplored, *predargs,
+                                   **predkwargs)
+            if not isinstance(XZ_new[0], (list, tuple)):
+                XZ_new = [XZ_new]
+
+        # duplicate checking for custom optimizer functions
+        if duplicate_check:
+
+            # todo: fix batch_mode duplicate checking
+            if batch_mode:
+                raise Exception("Dupicate checking in batch "
+                                "mode for custom predictors is "
+                                "not yet supported")
+
+            if predictor not in self.predictors and \
+                    predictor != 'random':
+                X_new = [xz_new[:len(x)] for xz_new in XZ_new]
+                X_explored = [xz[:len(x)] for xz in XZ_explored]
+
+                if tolerances:
+                    for n, x_new in enumerate(X_new):
+                        if self._tolerance_check(
+                                x_new, X_explored,
+                                tolerances=tolerances):
+                            XZ_new[n] = random.choice(
+                                XZ_unexplored)
+
+                else:
+                    if self._is_discrete(x_dims):
+                        # test only for x, not xz because custom
+                        #  predicted z may not be accounted for
+                        for n, x_new in enumerate(X_new):
+                            if x_new in X_explored or x_new == x:
+                                XZ_new[n] = random.choice(
+                                    XZ_unexplored)
+                    else:
+                        raise ValueError("Define tolerances "
+                                         "parameter to "
+                                         "duplicate check "
+                                         "floats.")
+        return x, y, z, x_dims, XZ_new, predictor, n_completed
+
+    def stash(self, x, y, z, x_dims, XZ_new, predictor, n_completed):
+        for xz_new in XZ_new:
+            # separate 'predicted' z features from the new
+            # x vector
+
+            x_new, z_new = xz_new[:len(x_dims)], \
+                           xz_new[len(x_dims):]
+
+            # Python3/new bson type conversion for numpy
+            if self.n_objs == 1:
+                y = float(y)
+            else:
+                if isinstance(y, np.ndarray):
+                    y = y.tolist()
+                else:
+                    try:
+                        # if it is a list of np types
+                        y = [yi.item() for yi in y]
+                    except AttributeError:
+                        y = list()
+
+            # if it is a duplicate (such as a forced
+            # identical first guess)
+            forced_dupe = self.c.find_one({'x': x})
+
+            acqmap = {"ei": "Expected Improvement",
+                      "pi": "Probability of Improvement",
+                      "lcb": "Lower Confidence Boundary",
+                      None: "Highest Value",
+                      "maximin": "Maximin Expected "
+                                 "Improvement"}
+            if predictor in self.predictors:
+                predictorstr = predictor + \
+                               " with acquisition: " + \
+                               acqmap[self.acq]
+                if self.n_objs > 1:
+                    predictorstr += " using {} objectives" \
+                                    "".format(self.n_objs)
+            else:
+                predictorstr = predictor
+            if forced_dupe:
+                # only update the fields which should be
+                # updated
+                self.c.find_one_and_update(
+                    {'x': x},
+                    {'$set': {'y': y, 'z': z,
+                              'z_new': z_new,
+                              'x_new': x_new,
+                              'predictor': predictorstr}
+                     })
+                opt_id = forced_dupe['_id']
+            else:
+                # update all the fields, as it is a new
+                # document
+                res = self.c.insert_one(
+                    {'z': z, 'y': y, 'x': x, 'z_new': z_new,
+                     'x_new': x_new,
+                     'predictor': predictorstr,
+                     'index': n_completed + 1})
+                opt_id = res.inserted_id
+
+            # ensure previously fin. workflow results are
+            # not overwritten by concurrent predictions
+            if self.c.find(
+                    {'x': x_new, 'y': {'$exists': 1,
+                                       '$ne': 'reserved'}
+                     }).count() == 0:
+                # reserve the new x to prevent parallel
+                # processes from registering it as
+                # unexplored, since the next iteration of
+                # this process will be exploring it
+                self.c.insert_one({'x': x_new,
+                                   'y': 'reserved'})
+            else:
+                raise ValueError(
+                    "The predictor suggested a guess which"
+                    " has already been tried: {}"
+                    "".format(x_new))
+        return opt_id
+
 
     def _setup_db(self, fw_spec):
         """
