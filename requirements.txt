@@ -2,6 +2,6 @@ numpy
 scikit-learn
 scipy
 fireworks
-pymongo
+pymongo==3.7.0
 nose
 matplotlib
