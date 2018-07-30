@@ -85,7 +85,7 @@ def ppredict(X, Y, space, model):
     pmodel.fit(X_train, y_train)
     return pmodel.predict(space)
 
-def ei(fmin, mu, std):
+def ei(fmin, mu, std, xi=0.0):
     """
     Returns expected improvement values.
 
@@ -94,6 +94,7 @@ def ei(fmin, mu, std):
         mu (numpy array):  Mean value of bootstrapped predictions for each y.
         std (numpy array): Standard deviation of bootstrapped predictions for
             each y.
+        xi (float): Amount of expected improvement, optional hyper-parameter.
 
     Returns:
         vals (numpy array): Acquisition values.
@@ -102,14 +103,14 @@ def ei(fmin, mu, std):
     vals = np.zeros_like(mu)
     mask = std > 0
     stdm = std[mask]
-    improve = fmin - mu[mask]
+    improve = fmin - mu[mask] - xi
     vals[mask] = improve * norm.cdf(improve/stdm) + stdm * \
                  norm.pdf(improve/stdm)
     # improve = fmin - mu
     # vals = improve * norm.cdf(improve/std) + std * norm.pdf(improve/std)
     return vals
 
-def pi(fmin, mu, std):
+def pi(fmin, mu, std, xi=0.0):
     """
     Returns probability of improvement values.
 
@@ -118,6 +119,7 @@ def pi(fmin, mu, std):
         mu (numpy array):  Mean value of bootstrapped predictions for each y.
         std (numpy array): Standard deviation of bootstrapped predictions for
             each y.
+        xi (float): Amount of expected improvement, optional hyper-parameter.
 
     Returns:
         vals (numpy array): Acquisition values.
@@ -125,16 +127,23 @@ def pi(fmin, mu, std):
         """
     vals = np.zeros_like(mu)
     mask = std > 0
-    vals[mask] = norm.cdf((fmin - mu[mask])/std[mask])
+    vals[mask] = norm.cdf((fmin - mu[mask] - xi)/std[mask])
     return vals
 
-def lcb(fmin, mu, std):
+def lcb(fmin, mu, std, kappa=1.96):
     """
-??????
+    Returns lower confidence bound estimates.
+        min (float): Minimum value of the objective function known thus far.
+        mu (numpy array):  Mean value of bootstrapped predictions for each y.
+        std (numpy array): Standard deviation of bootstrapped predictions for
+            each y.
+        kappa (float): Controls the variance in the prediction,
+            affecting exploration/exploitation.
+
+    Returns:
+        vals (numpy array): Acquisition values.
     """
-    # todo: this is broken. :(
-    beta = 1.96
-    return mu - beta * std
+    return mu - kappa * std
 
 if __name__ == "__main__":
     pass
