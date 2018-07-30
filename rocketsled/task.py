@@ -29,6 +29,7 @@ from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction, LaunchPad
 from rocketsled.acq import acquire
 from rocketsled.utils import deserialize, Dtypes, pareto
+
 try:
     # for Python 3.6-
     import cPickle as pickle
@@ -41,7 +42,6 @@ try:
     from functools import reduce
 except:
     pass
-
 
 __author__ = "Alexander Dunn"
 __version__ = "1.0"
@@ -259,7 +259,7 @@ class OptTask(FireTaskBase):
         pid = getpid()
         sleeptime = .01
         timeout = self['timeout'] if 'timeout' in self else 500
-        max_runs = int(timeout/sleeptime)
+        max_runs = int(timeout / sleeptime)
         max_resets = 3
         self._setup_db(fw_spec)
 
@@ -317,7 +317,8 @@ class OptTask(FireTaskBase):
 
                 elif lock == pid:
                     try:
-                        x, y, z, x_dims, XZ_new, predictor, n_completed = self.optimize(fw_spec, manager_id)
+                        x, y, z, x_dims, XZ_new, predictor, n_completed = \
+                            self.optimize(fw_spec, manager_id)
                     except Exception:
                         self.pop_lock(manager_id)
                         raise
@@ -326,10 +327,11 @@ class OptTask(FireTaskBase):
                     # pid while this process is computing the next guess
                     try:
                         if self.c.find_one(self._manager)['lock'] != pid or \
-                            self.c.count_documents(self._manager) == 0:
+                                self.c.count_documents(self._manager) == 0:
                             continue
                         else:
-                            opt_id = self.stash(x, y, z, x_dims, XZ_new, predictor, n_completed)
+                            opt_id = self.stash(x, y, z, x_dims, XZ_new,
+                                                predictor, n_completed)
 
                     except TypeError as E:
                         warnings.warn("Process {} probably timed out while "
@@ -347,10 +349,14 @@ class OptTask(FireTaskBase):
                     wf_creator_kwargs = self.get('wf_creator_kwargs', {})
 
                     if not isinstance(wf_creator_args, (list, tuple)):
-                        raise TypeError("wr_creator_args should be a list/tuple of positional arguments.")
+                        raise TypeError(
+                            "wr_creator_args should be a list/tuple of "
+                            "positional arguments.")
 
                     if not isinstance(wf_creator_kwargs, dict):
-                        raise TypeError("wr_creator_kwargs should be a dictionary of keyword arguments.")
+                        raise TypeError(
+                            "wr_creator_kwargs should be a dictionary of "
+                            "keyword arguments.")
 
                     new_wfs = [wf_creator(x_new, *wf_creator_args,
                                           **wf_creator_kwargs)
@@ -363,17 +369,35 @@ class OptTask(FireTaskBase):
                 # Delete the manager that this has created
                 self.c.delete_one({'lock': pid})
 
-            if run in [max_runs*k for k in range(1, max_resets)]:
+            if run in [max_runs * k for k in range(1, max_resets)]:
                 self.c.find_one_and_update(self._manager,
                                            {'$set': {'lock': None, 'queue': []}}
                                            )
 
-            elif run == max_runs*max_resets:
+            elif run == max_runs * max_resets:
                 raise Exception("The manager is still stuck after "
-                                    "resetting. Make sure no stalled processes "
-                                    "are in the queue.")
+                                "resetting. Make sure no stalled processes "
+                                "are in the queue.")
 
     def optimize(self, fw_spec, manager_id):
+        """
+        Run the optimization algorithm.
+
+        Args:
+            fw_spec (dict): The firework spec.
+            manager_id (ObjectId): The MongoDB object id of the manager
+                document.
+
+        Returns:
+            x (iteralbe): The current x guess.
+            y: (iterable): The current y (objective function) value
+            z (iterable): The z vector associated with x
+            x_dims ([list] or [tuple]): The dimensions of the domain
+            XZ_new ([list] or [tuple]): The predicted next best guess(es),
+                including their associated z vectors
+            predictor (str): The name of the predictor used to make XZ_new
+            n_completed (int): The number of completed guesses/workflows
+        """
         # required args
         x_dims = self['dimensions']
 
@@ -391,9 +415,8 @@ class OptTask(FireTaskBase):
             acq_funcs = [None, 'ei', 'pi', 'lcb', 'maximin']
             if self.acq not in acq_funcs:
                 raise ValueError(
-                    "Invalid acquisition function. Use 'ei', "
-                    "'pi', 'lcb', 'maximin' (multiobjective), "
-                    "or None.")
+                    "Invalid acquisition function. Use 'ei', 'pi', 'lcb', "
+                    "'maximin' (multiobjective), or None.")
         else:
             self.acq = None
         self.n_boots = self.get('n_boots', 500)
@@ -424,17 +447,15 @@ class OptTask(FireTaskBase):
                 {'get_z_kwargs': get_z_kwargs,
                  'predictor_kwargs': predkwargs}.items():
             if not isinstance(kwdict, dict):
-                raise TypeError("{} should be a dictonary of "
-                                "keyword arguments."
+                raise TypeError("{} should be a dictonary of keyword arguments."
                                 "".format(kwname))
 
         for argname, arglist in \
                 {'get_z_args': get_z_args,
                  'predictor_args': predargs}.items():
             if not isinstance(arglist, (list, tuple)):
-                raise TypeError("{} should be a list/tuple of "
-                                "positional arguments"
-                                "".format(argname))
+                raise TypeError("{} should be a list/tuple of positional "
+                                "arguments".format(argname))
 
         x = list(fw_spec['_x_opt'])
         y = fw_spec['_y_opt']
@@ -446,15 +467,13 @@ class OptTask(FireTaskBase):
             self.n_objs = len(y)
             if self.acq not in ("maximin", None):
                 raise ValueError(
-                    "{} is not a valid acquisition function for "
-                    "multiobjective optimization".format(
-                        self.acq))
+                    "{} is not a valid acquisition function for multiobjective "
+                    "optimization".format(self.acq))
         else:
             if self.acq == "maximin":
                 raise ValueError(
-                    "Maximin is not a valid acquisition "
-                    "function for single objective "
-                    "optimization.")
+                    "Maximin is not a valid acquisition function for single "
+                    "objective optimization.")
             self.n_objs = 1
 
         # If process A suggests a certain guess and runs it,
@@ -500,30 +519,26 @@ class OptTask(FireTaskBase):
                     # index, but update everything else
                     self.c.find_one_and_update(
                         {'x': x},
-                        {'$set': {'y': y, 'z': z, 'z_new': [],
-                                  'x_new': [],
+                        {'$set': {'y': y, 'z': z, 'z_new': [], 'x_new': [],
                                   'predictor': None}
                          })
             else:
                 # For new guesses: insert x, y, z, index,
                 # predictor, and dummy new guesses
-                self.c.insert_one({'x': x, 'y': y, 'z': z,
-                                   'x_new': [], 'z_new': [],
-                                   'predictor': None,
+                self.c.insert_one({'x': x, 'y': y, 'z': z, 'x_new': [],
+                                   'z_new': [], 'predictor': None,
                                    'index': n_completed + 1})
             self.pop_lock(manager_id)
             return None
 
-        # Mongo aggregation framework may give duplicate
-        # documents, so we cannot use $sample to randomize
-        # the training points used
+        # Mongo aggregation framework may give duplicate documents, so we cannot
+        # use $sample to randomize the training points used
         explored_indices = random.sample(
             range(1, n_completed + 1), n_trainpts)
         explored_docs = self.c.find(
             {'index': {'$in': explored_indices}},
             batch_size=10000)
-        reserved_docs = self.c.find({'y': 'reserved'},
-                                    batch_size=10000)
+        reserved_docs = self.c.find({'y': 'reserved'}, batch_size=10000)
         reserved = []
         for doc in reserved_docs:
             reserved.append(doc['x'])
@@ -554,8 +569,7 @@ class OptTask(FireTaskBase):
                 with open(persistent_z, 'rb') as f:
                     xz_map = pickle.load(f)
             else:
-                xz_map = {tuple(xi): self.get_z(xi, *get_z_args,
-                                                **get_z_kwargs)
+                xz_map = {tuple(xi): self.get_z(xi, *get_z_args, **get_z_kwargs)
                           for xi in X_space}
                 with open(persistent_z, 'wb') as f:
                     pickle.dump(xz_map, f)
@@ -563,8 +577,7 @@ class OptTask(FireTaskBase):
             XZ_unexplored = [xi + xz_map[tuple(xi)] for xi in
                              X_unexplored]
         else:
-            XZ_unexplored = [xi + self.get_z(xi, *get_z_args,
-                                             **get_z_kwargs)
+            XZ_unexplored = [xi + self.get_z(xi, *get_z_args, **get_z_kwargs)
                              for xi in X_unexplored]
 
         # if there are no more unexplored points in the entire
@@ -572,13 +585,11 @@ class OptTask(FireTaskBase):
         # and z) or have been reserved.
         if len(XZ_unexplored) < 1:
             if self._is_discrete(x_dims, criteria='all'):
-                raise ExhaustedSpaceError("The discrete space "
-                                          "has been searched "
-                                          "exhaustively.")
+                raise ExhaustedSpaceError("The discrete space has been searched"
+                                          " exhaustively.")
             else:
-                raise TypeError("A comprehensive list of points"
-                                " was exhausted but the "
-                                "dimensions are not discrete.")
+                raise TypeError("A comprehensive list of pointswas exhausted "
+                                "but the dimensions are not discrete.")
         z_dims = self._z_dims(XZ_unexplored, len(x_dims))
         xz_dims = x_dims + z_dims
 
@@ -593,9 +604,8 @@ class OptTask(FireTaskBase):
         if random_proba:
             if random_proba > 1.0 or random_proba < 0.0 or \
                     type(random_proba) not in self.dtypes.floats:
-                raise ValueError("The probability of a random "
-                                 "guess is between 0.0 and 1.0."
-                                 " Please enter a float in this"
+                raise ValueError("The probability of a random guess is between "
+                                 "0.0 and 1.0. Please enter a float in this"
                                  " range")
             if np.random.rand() < random_proba:
                 predictor = 'random'
@@ -603,8 +613,7 @@ class OptTask(FireTaskBase):
         if predictor in self.predictors:
             model = self.predictors[predictor]
             XZ_explored = self._encode(XZ_explored, xz_dims)
-            XZ_unexplored = self._encode(XZ_unexplored,
-                                         xz_dims)
+            XZ_unexplored = self._encode(XZ_unexplored, xz_dims)
             # todo: Figure out if scaling categorical data makes
             # todo: optimizer better
 
@@ -616,10 +625,9 @@ class OptTask(FireTaskBase):
                 scaling = False if self._is_discrete(
                     dims=x_dims, criteria='any') else True
 
-            XZ_onehot = self._predict(
-                XZ_explored, Y, XZ_unexplored,
-                model(*predargs, **predkwargs), maximize,
-                batch_size, scaling)
+            XZ_onehot = self._predict(XZ_explored, Y, XZ_unexplored,
+                                      model(*predargs, **predkwargs), maximize,
+                                      batch_size, scaling)
             XZ_new = [self._decode(xz_onehot, xz_dims) for
                       xz_onehot in XZ_onehot]
 
@@ -632,21 +640,17 @@ class OptTask(FireTaskBase):
             # Used when a custom predictor cannot natively use
             # categorical info
             if encode_categorical:
-                XZ_explored = self._encode(XZ_explored,
-                                           xz_dims)
-                XZ_unexplored = self._encode(XZ_unexplored,
-                                             xz_dims)
+                XZ_explored = self._encode(XZ_explored, xz_dims)
+                XZ_unexplored = self._encode(XZ_unexplored, xz_dims)
 
             try:
                 predictor_fun = deserialize(predictor)
             except Exception as E:
-                raise NameError("The custom predictor {} didnt "
-                                "import correctly!\n{}"
-                                "".format(predictor, E))
+                raise NameError("The custom predictor {} didnt import "
+                                "correctly!\n{}".format(predictor, E))
 
-            XZ_new = predictor_fun(XZ_explored, Y, x_dims,
-                                   XZ_unexplored, *predargs,
-                                   **predkwargs)
+            XZ_new = predictor_fun(XZ_explored, Y, x_dims, XZ_unexplored,
+                                   *predargs, **predkwargs)
             if not isinstance(XZ_new[0], (list, tuple)):
                 XZ_new = [XZ_new]
 
@@ -655,12 +659,10 @@ class OptTask(FireTaskBase):
 
             # todo: fix batch_mode duplicate checking
             if batch_mode:
-                raise Exception("Dupicate checking in batch "
-                                "mode for custom predictors is "
-                                "not yet supported")
+                raise Exception("Dupicate checking in batch mode for custom "
+                                "predictors is not yet supported")
 
-            if predictor not in self.predictors and \
-                    predictor != 'random':
+            if predictor not in self.predictors and predictor != 'random':
                 X_new = [xz_new[:len(x)] for xz_new in XZ_new]
                 X_explored = [xz[:len(x)] for xz in XZ_explored]
 
@@ -674,26 +676,41 @@ class OptTask(FireTaskBase):
 
                 else:
                     if self._is_discrete(x_dims):
-                        # test only for x, not xz because custom
-                        #  predicted z may not be accounted for
+                        # test only for x, not xz because custom predicted z
+                        # may not be accounted for
                         for n, x_new in enumerate(X_new):
                             if x_new in X_explored or x_new == x:
                                 XZ_new[n] = random.choice(
                                     XZ_unexplored)
                     else:
-                        raise ValueError("Define tolerances "
-                                         "parameter to "
-                                         "duplicate check "
-                                         "floats.")
+                        raise ValueError("Define tolerances parameter to "
+                                         "duplicate check floats.")
         return x, y, z, x_dims, XZ_new, predictor, n_completed
 
     def stash(self, x, y, z, x_dims, XZ_new, predictor, n_completed):
-        for xz_new in XZ_new:
-            # separate 'predicted' z features from the new
-            # x vector
+        """
+        Write documents to database after optimization.
 
-            x_new, z_new = xz_new[:len(x_dims)], \
-                           xz_new[len(x_dims):]
+        Args:
+            x (iteralbe): The current x guess.
+            y: (iterable): The current y (objective function) value
+            z (iterable): The z vector associated with x
+            x_dims ([list] or [tuple]): The dimensions of the domain
+            XZ_new ([list] or [tuple]): The predicted next best guess(es),
+                including their associated z vectors
+            predictor (str): The name of the predictor used to make XZ_new
+            n_completed (int): The number of completed guesses/workflows
+
+        Returns:
+            opt_id (pymongo InsertedOneResult): The result of the insertion
+                of the new optimization document in the database. If multiple
+                opt_ids are valid (ie batch mode is enabled), the last opt_id
+                is returned.
+        """
+
+        for xz_new in XZ_new:
+            # separate 'predicted' z features from the new x vector
+            x_new, z_new = xz_new[:len(x_dims)], xz_new[len(x_dims):]
 
             # Python3/new bson type conversion for numpy
             if self.n_objs == 1:
@@ -719,17 +736,14 @@ class OptTask(FireTaskBase):
                       "maximin": "Maximin Expected "
                                  "Improvement"}
             if predictor in self.predictors:
-                predictorstr = predictor + \
-                               " with acquisition: " + \
-                               acqmap[self.acq]
+                predictorstr = predictor + " with acquisition: " + acqmap[
+                    self.acq]
                 if self.n_objs > 1:
-                    predictorstr += " using {} objectives" \
-                                    "".format(self.n_objs)
+                    predictorstr += " using {} objectives".format(self.n_objs)
             else:
                 predictorstr = predictor
             if forced_dupe:
-                # only update the fields which should be
-                # updated
+                # only update the fields which should be updated
                 self.c.find_one_and_update(
                     {'x': x},
                     {'$set': {'y': y, 'z': z,
@@ -739,34 +753,27 @@ class OptTask(FireTaskBase):
                      })
                 opt_id = forced_dupe['_id']
             else:
-                # update all the fields, as it is a new
-                # document
+                # update all the fields, as it is a new document
                 res = self.c.insert_one(
-                    {'z': z, 'y': y, 'x': x, 'z_new': z_new,
-                     'x_new': x_new,
-                     'predictor': predictorstr,
-                     'index': n_completed + 1})
+                    {'z': z, 'y': y, 'x': x, 'z_new': z_new, 'x_new': x_new,
+                     'predictor': predictorstr, 'index': n_completed + 1})
                 opt_id = res.inserted_id
 
-            # ensure previously fin. workflow results are
-            # not overwritten by concurrent predictions
+            # ensure previously fin. workflow results are not overwritten by
+            # concurrent predictions
             if self.c.count_documents(
                     {'x': x_new, 'y': {'$exists': 1,
                                        '$ne': 'reserved'}
                      }) == 0:
-                # reserve the new x to prevent parallel
-                # processes from registering it as
-                # unexplored, since the next iteration of
-                # this process will be exploring it
-                self.c.insert_one({'x': x_new,
-                                   'y': 'reserved'})
+                # reserve the new x to prevent parallel processes from
+                # registering it as unexplored, since the next iteration of this
+                # process will be exploring it
+                self.c.insert_one({'x': x_new, 'y': 'reserved'})
             else:
                 raise ValueError(
-                    "The predictor suggested a guess which"
-                    " has already been tried: {}"
-                    "".format(x_new))
+                    "The predictor suggested a guess which has already been "
+                    "tried: {}".format(x_new))
         return opt_id
-
 
     def _setup_db(self, fw_spec):
         """
@@ -862,10 +869,11 @@ class OptTask(FireTaskBase):
                              self.dtypes.floats,
                              self.dtypes.others]:
                     if type(entry) not in dset and type(dim[0]) in dset:
-                        raise TypeError("The dimension {} contains heterogeneous"
-                                        " types: {} and {}".format(dim,
-                                                                  type(dim[0]),
-                                                                  type(entry)))
+                        raise TypeError(
+                            "The dimension {} contains heterogeneous"
+                            " types: {} and {}".format(dim,
+                                                       type(dim[0]),
+                                                       type(entry)))
             if isinstance(dim, list):
                 if type(dim[0]) in self.dtypes.ints:
                     dim_spec.append("int_set")
@@ -896,14 +904,14 @@ class OptTask(FireTaskBase):
             (bool) whether the search space is totally discrete.
         """
 
-        if criteria=='all':
+        if criteria == 'all':
             for dim in dims:
                 if type(dim[0]) not in self.dtypes.discrete or \
                         type(dim[1]) not in self.dtypes.discrete:
                     return False
             return True
 
-        elif criteria=='any':
+        elif criteria == 'any':
             for dim in dims:
                 if type(dim[0]) in self.dtypes.discrete or \
                         type(dim[1]) in self.dtypes.discrete:
@@ -953,7 +961,7 @@ class OptTask(FireTaskBase):
                 space[:, i] = np.random.uniform(low=low, high=high, size=nf)
             return space.tolist()
         else:
-            #todo: this could be faster
+            # todo: this could be faster
             total_dimspace = []
             for dim in dims:
                 if isinstance(dim, (tuple, list)) and len(dim) == 2:
@@ -1093,14 +1101,14 @@ class OptTask(FireTaskBase):
                 if maximize:
                     Y = -1.0 * Y
 
-                assert(self.acq == "maximin")
+                assert (self.acq == "maximin")
                 mu = np.zeros((n_unexplored, self.n_objs))
                 values = np.zeros((n_unexplored, self.n_objs))
                 for i in range(self.n_objs):
                     yobj = [y[i] for y in Y]
                     if self.param_grid and n_explored > 10:
                         model = self._hyperparameter_opt(model, X_scaled, yobj)
-                    values[:, i], mu[:, i]  = acquire("pi", X_scaled, yobj,
+                    values[:, i], mu[:, i] = acquire("pi", X_scaled, yobj,
                                                      space_scaled, model,
                                                      self.n_boots,
                                                      return_means=True)
@@ -1115,7 +1123,6 @@ class OptTask(FireTaskBase):
                     # minimum among all pareto points of the maximum improvement
                     # among objectives. Min and max are reversed bc. minimization
                     dmaximin[i] = max(mins)
-
 
                 if len(dmaximin[dmaximin < 0.0]) != 0:
                     # Predicted pareto-optimal solutions are negative so far
@@ -1139,8 +1146,8 @@ class OptTask(FireTaskBase):
                 evaluator = heapq.nlargest
             values = values.tolist()
 
-        #todo: possible batch duplicates if two x predict the same y?
-        #todo: .index() will find the first one twice
+        # todo: possible batch duplicates if two x predict the same y?
+        # todo: .index() will find the first one twice
         predictions = evaluator(n_predictions, values)
         indices = [values.index(p) for p in predictions]
         return [space[i] for i in indices]
