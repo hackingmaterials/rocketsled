@@ -8,7 +8,7 @@ except ImportError:
     from distutils.core import setup
 
 setup(name='rocketsled',
-      version='1.0',
+      version='1.1',
       author = 'Alex Dunn',
       description = 'Black box optimization with Fireworks workflows, on rails',
       packages=['rocketsled'],
