@@ -281,11 +281,11 @@ class OptTask(FireTaskBase):
         # itself into the lock if not active.
 
         for run in range(max_resets * max_runs):
-            managers = self.c.find(self._manager)
+            manager_count = self.c.count_documents(self._manager)
 
-            if managers.count() == 0:
+            if manager_count == 0:
                 self.c.insert_one({'lock': pid, 'queue': []})
-            elif managers.count() == 1:
+            elif manager_count == 1:
 
                 # avoid bootup problems if manager lock is being deleted
                 # concurrently with this check
@@ -326,7 +326,7 @@ class OptTask(FireTaskBase):
                     # pid while this process is computing the next guess
                     try:
                         if self.c.find_one(self._manager)['lock'] != pid or \
-                            self.c.find(self._manager).count() == 0:
+                            self.c.count_documents(self._manager) == 0:
                             continue
                         else:
                             opt_id = self.stash(x, y, z, x_dims, XZ_new, predictor, n_completed)
@@ -471,7 +471,7 @@ class OptTask(FireTaskBase):
         z = self.get_z(x, *get_z_args, **get_z_kwargs)
 
         # use all possible training points as default
-        n_completed = self.c.find(self._completed).count()
+        n_completed = self.c.count_documents(self._completed)
         if not n_trainpts or n_trainpts > n_completed:
             n_trainpts = n_completed
 
@@ -750,10 +750,10 @@ class OptTask(FireTaskBase):
 
             # ensure previously fin. workflow results are
             # not overwritten by concurrent predictions
-            if self.c.find(
+            if self.c.count_documents(
                     {'x': x_new, 'y': {'$exists': 1,
                                        '$ne': 'reserved'}
-                     }).count() == 0:
+                     }) == 0:
                 # reserve the new x to prevent parallel
                 # processes from registering it as
                 # unexplored, since the next iteration of
