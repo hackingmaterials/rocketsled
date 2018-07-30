@@ -91,19 +91,14 @@ class OptTask(FireTaskBase):
         predictor (string): names a function which given a list of explored
             points and unexplored points, returns an optimized guess.
             Included sklearn predictors are:
+                'GaussianProcessRegressor',
                 'RandomForestRegressor',
-                'AdaBoostRegressor',
                 'ExtraTreesRegressor',
                 'GradientBoostingRegressor',
-                'GaussianProcessRegressor',
-                'LinearRegression',
                 'SGDRegressor',
-                'MLPRegressor',
-                'KernelRidge',
-                'SVR'
-            To use a random gues, use 'random'
-            Defaults to 'RandomForestRegressor'
-            Example builtin predictor: predictor = 'SVR'
+            To use a random guess, use 'random'
+            Defaults to 'GaussianProcess'
+            Example builtin predictor: predictor = 'GaussianProcessRegressor'
             Example custom predictor: predictor = 'my_module.my_predictor'
         predictor_args (list): the positional args to be passed to the model
             along with a list of points to be searched. For sklearn-based
@@ -594,11 +589,8 @@ class OptTask(FireTaskBase):
         xz_dims = x_dims + z_dims
 
         # run machine learner on Z or X features
-        plist = [RandomForestRegressor,
-                 GaussianProcessRegressor, AdaBoostRegressor,
-                 ExtraTreesRegressor, GradientBoostingRegressor,
-                 LinearRegression, SGDRegressor, MLPRegressor,
-                 KernelRidge, SVR]
+        plist = [RandomForestRegressor, GaussianProcessRegressor,
+                 ExtraTreesRegressor, GradientBoostingRegressor, SGDRegressor]
         self.predictors = {p.__name__: p for p in plist}
 
         if random_proba:
