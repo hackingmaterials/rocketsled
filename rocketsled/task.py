@@ -683,7 +683,7 @@ class OptTask(FireTaskBase):
                         # if it is a list of np types
                         y = [yi.item() for yi in y]
                     except AttributeError:
-                        y = list()
+                        y = list(y)
 
             # if it is a duplicate (such as a forced
             # identical first guess)
