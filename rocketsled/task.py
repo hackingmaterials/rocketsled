@@ -7,22 +7,15 @@ Please see the documentation for a comprehensive guide on usage.
 """
 import random
 import heapq
-import datetime
 from itertools import product
 from os import getpid, path
 from time import sleep
-from operator import mul
 import warnings
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, \
-    GradientBoostingRegressor, ExtraTreesRegressor
-from sklearn.linear_model import LinearRegression, SGDRegressor
-from sklearn.kernel_ridge import KernelRidge
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, \
+    ExtraTreesRegressor
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.neural_network import MLPRegressor
-from sklearn.svm import SVR
 from sklearn.preprocessing import LabelBinarizer
-from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.preprocessing import StandardScaler
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
@@ -95,7 +88,6 @@ class OptTask(FireTaskBase):
                 'RandomForestRegressor',
                 'ExtraTreesRegressor',
                 'GradientBoostingRegressor',
-                'SGDRegressor',
             To use a random guess, use 'random'
             Defaults to 'GaussianProcess'
             Example builtin predictor: predictor = 'GaussianProcessRegressor'
@@ -134,19 +126,6 @@ class OptTask(FireTaskBase):
             be present for bootstrapping.
         random_proba (int): Suggests a random guess with this probability. Must
             be a float between 0.0 (no random guesses) and 1.0 (totally random).
-
-        Hyperparameter search:
-        param_grid (dict): The sklearn-style dictionary to use for
-            hyperparameter optimization. Each key should correspond to a
-            regressor parameter name, and each value should be a list of
-            possible settings for the parameter key.
-            For example: param_grid={"n_estimators: [1, 10, 100],
-                        "max_features": ["sqrt", "auto", 3]}
-        hyper_opt (int): Defines how hyperparamter search is performed. An int
-            of 1 or greater defines the number of parameter combos to try with
-            RandomizedSearchCV. A value of None means exhaustive search with
-            GridSearchCV. param_grid must be defined to use this option.
-            All searches are performed in parallel, if possible.
 
         Features:
         get_z (string): the fully-qualified name of a function which, given a x
@@ -208,10 +187,6 @@ class OptTask(FireTaskBase):
             optimization with OptTask.
         launchpad (LaunchPad): The Fireworks LaunchPad object which determines
             where workflow data is stored.
-        hyperopt (int): Defines the number of hyperparameter searches to be
-            done, as per the FireTask argument.
-        param_grid (dict): Defines the parameter grid for hyperparameter search,
-            as per the FireTask argument.
         get_z (str): Fully qualified name of the "get_z" function defined by the
             user.
         _manager (dict/MongoDB query syntax): The document format which
@@ -234,8 +209,7 @@ class OptTask(FireTaskBase):
                        'random_interval', 'space', 'get_z', 'get_z_args',
                        'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs',
                        'encode_categorical', 'duplicate_check', 'max',
-                       'batch_size', 'tolerance', 'hyper_opt', 'param_grid',
-                       'timeout', 'n_boots']
+                       'batch_size', 'tolerance', 'timeout', 'n_boots']
 
     def run_task(self, fw_spec):
         """
@@ -416,12 +390,6 @@ class OptTask(FireTaskBase):
             self.acq = None
         self.n_boots = self.get('n_boots', 500)
 
-        # hyper-hyperparameter optimization
-        self.hyper_opt = self.get('hyper_opt', None)
-        self.param_grid = self.get('param_grid', None)
-        if self.hyper_opt and not self.param_grid:
-            raise ValueError("Please specify a param_grid.")
-
         # extra features
         if 'get_z' in self and self['get_z'] is not None:
             self.get_z = deserialize(self['get_z'])
@@ -590,7 +558,7 @@ class OptTask(FireTaskBase):
 
         # run machine learner on Z or X features
         plist = [RandomForestRegressor, GaussianProcessRegressor,
-                 ExtraTreesRegressor, GradientBoostingRegressor, SGDRegressor]
+                 ExtraTreesRegressor, GradientBoostingRegressor]
         self.predictors = {p.__name__: p for p in plist}
 
         if random_proba:
@@ -1058,9 +1026,6 @@ class OptTask(FireTaskBase):
             if maximize:
                 Y = -1.0 * Y
 
-            if self.param_grid and n_explored > 10:
-                model = self._hyperparameter_opt(model, X_scaled, Y)
-
             if self.acq is None or n_explored < 10:
                 model.fit(X_scaled, Y)
                 values = model.predict(space_scaled).tolist()
@@ -1076,8 +1041,6 @@ class OptTask(FireTaskBase):
                 values = np.zeros((n_unexplored, self.n_objs))
                 for i in range(self.n_objs):
                     yobj = [y[i] for y in Y]
-                    if self.param_grid and n_explored > 10:
-                        model = self._hyperparameter_opt(model, X_scaled, yobj)
                     model.fit(X_scaled, yobj)
                     values[:, i] = model.predict(space_scaled)
                 # In exploitative strategy, randomly weight pareto optimial
@@ -1098,8 +1061,6 @@ class OptTask(FireTaskBase):
                 values = np.zeros((n_unexplored, self.n_objs))
                 for i in range(self.n_objs):
                     yobj = [y[i] for y in Y]
-                    if self.param_grid and n_explored > 10:
-                        model = self._hyperparameter_opt(model, X_scaled, yobj)
                     values[:, i], mu[:, i] = acquire("pi", X_scaled, yobj,
                                                      space_scaled, model,
                                                      self.n_boots,
@@ -1143,55 +1104,6 @@ class OptTask(FireTaskBase):
         predictions = evaluator(n_predictions, values)
         indices = [values.index(p) for p in predictions]
         return [space[i] for i in indices]
-
-    def _hyperparameter_opt(self, model, X, Y):
-        """
-        Runs hyperparamter optimization on a model given X and Y. Reads the grid
-        and optimization strategy from self attrs.
-
-        Args:
-            model (sklearn BaseEstimator): An sklearn model
-            X ([list] or numpy array): A 2D array of samples (rows) by features
-                (columns).
-            Y (list): A vector of outputs (samples)
-
-        Returns:
-            sklearn BaseEstimator model with optimizer hyperparameters.
-        """
-        predictor_name = model.__class__.__name__
-
-        if "kernel" in self.param_grid:
-            import importlib
-            kernel_sets = self.param_grid['kernel']
-            mod = importlib.import_module('sklearn.gaussian_process.kernels')
-            for i, ks in enumerate(kernel_sets):
-                kernel = getattr(mod, ks[0])
-                args = ks[1]
-                self.param_grid["kernel"][i] = kernel(**args)
-
-        print(self.param_grid)
-
-        if predictor_name not in self.predictors:
-            raise ValueError("Cannot perform automatic hyperparameter "
-                             "search with custom optimizer.")
-        if not self.hyper_opt:
-            n_combos = reduce(mul, [len(p) for p in
-                                    list(self.param_grid.values())], 1)
-            hp_selector = GridSearchCV(model, self.param_grid,
-                                       n_jobs=n_combos)
-        elif self.hyper_opt >= 1:
-            hp_selector = RandomizedSearchCV(model, self.param_grid,
-                                             n_iter=self.hyper_opt,
-                                             n_jobs=self.hyper_opt)
-        else:
-            raise ValueError("Automatic hyperparameter optimization must be"
-                             " either grid or random. Please set the "
-                             "hyper_opt parameter to None for GridSearchCV "
-                             "and to any integer larger than 1 for "
-                             "n iterations of RandomizedSearchCV.")
-        hp_selector.fit(X, Y)
-        model = model.__class__(**hp_selector.best_params_)
-        return model
 
     def _encode(self, X, dims):
         """
