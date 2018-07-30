@@ -30,14 +30,16 @@ __email__ = "ardunn@lbl.gov"
 test_names = ['test_basic', 'test_custom_predictor', 'test_complex',
               'test_duplicates', 'test_get_z', 'test_multi', 'test_parallel']
 
+
 @explicit_serialize
 class BasicTestTask(FireTaskBase):
     _fw_name = "BasicTestTask"
 
     def run_task(self, fw_spec):
         x = fw_spec['_x_opt']
-        y = np.sum(x[:-1])        # sum all except the final string element
+        y = np.sum(x[:-1])  # sum all except the final string element
         return FWAction(update_spec={'_y_opt': y})
+
 
 @explicit_serialize
 class AccuracyTask(FireTaskBase):
@@ -48,6 +50,7 @@ class AccuracyTask(FireTaskBase):
         y = x[0] * x[1] / x[2]
         return FWAction(update_spec={'_y_opt': y})
 
+
 @explicit_serialize
 class MultiTestTask(FireTaskBase):
     _fw_name = "MultiTestTask"
@@ -56,6 +59,7 @@ class MultiTestTask(FireTaskBase):
         x = fw_spec['_x_opt']
         y = [np.sum(x[:-1]), np.prod(x[:-1])]
         return FWAction(update_spec={'_y_opt': y})
+
 
 def wf_creator_basic(x, launchpad):
     """
@@ -75,6 +79,7 @@ def wf_creator_basic(x, launchpad):
     firework1 = Firework([bt, ot], spec=spec)
     return Workflow([firework1])
 
+
 def wf_custom_predictor(x, launchpad):
     """
     Testing a custom predictor which returns the same x vector for every guess,
@@ -91,6 +96,7 @@ def wf_custom_predictor(x, launchpad):
                  opt_label='test_custom_predictor')
     firework1 = Firework([bt, ot], spec=spec)
     return Workflow([firework1])
+
 
 def wf_creator_complex(x, launchpad):
     """
@@ -131,6 +137,7 @@ def wf_creator_complex(x, launchpad):
                     {fw0: [fw1, fw2], fw1: [fw3], fw2: [fw3], fw3: [fw4], fw4:
                         [fw5], fw5: []})
 
+
 def wf_creator_duplicates(x, launchpad):
     """
     Test workflow for duplicate checking with tolerances.
@@ -148,6 +155,7 @@ def wf_creator_duplicates(x, launchpad):
                  opt_label='test_duplicates')
     firework1 = Firework([bt, ot], spec=spec)
     return Workflow([firework1])
+
 
 def wf_creator_get_z(x, launchpad):
     """
@@ -169,6 +177,7 @@ def wf_creator_get_z(x, launchpad):
     firework1 = Firework([bt, ot], spec=spec)
     return Workflow([firework1])
 
+
 def wf_creator_accuracy(x, launchpad):
     """
     An expensive test ensuring the default predictor actually performs better
@@ -186,6 +195,7 @@ def wf_creator_accuracy(x, launchpad):
     firework1 = Firework([at, ot], spec=spec)
     return Workflow([firework1])
 
+
 def wf_creator_parallel(x, launchpad):
     """
     An expensive test ensuring the database is locked and released
@@ -202,6 +212,7 @@ def wf_creator_parallel(x, launchpad):
                  maximize=True)
     firework1 = Firework([at, ot], spec=spec)
     return Workflow([firework1])
+
 
 def wf_creator_multiobjective(x, launchpad):
     """
@@ -221,8 +232,10 @@ def wf_creator_multiobjective(x, launchpad):
     firework1 = Firework([mt, ot], spec=spec)
     return Workflow([firework1])
 
+
 def custom_predictor(*args, **kwargs):
     return [3, 12.0, 'green']
+
 
 def get_z(x):
     return [x[0] ** 2, x[1] ** 2]
@@ -293,7 +306,6 @@ class TestWorkflows(unittest.TestCase):
 
         col = self.db.test_duplicates
 
-
         self.assertEqual(col.count_documents({}), 4)
         self.assertEqual(col.count_documents({'y': 'reserved'}), 1)
         # should return one doc, for the first WF
@@ -327,7 +339,7 @@ class TestWorkflows(unittest.TestCase):
                 launch_rocket(self.lp)
             # We want to maximize the function. The minimum is 0.5, and the
             # maximum is 10.
-            avg_random_best = 7.23002918931 # calculated with 1,000,000 calcs
+            avg_random_best = 7.23002918931  # calculated with 1,000,000 calcs
             for doc in self.db.test_accuracy.find({'y': {'$exists': 1,
                                                          '$ne': 'reserved'}},
                                                   sort=[('y',
@@ -387,13 +399,14 @@ class TestWorkflows(unittest.TestCase):
             except Exception:
                 pass
 
-        if self.lp.host=='localhost'\
-                and self.lp.port==27017 \
-                and self.lp.name=='rsled_tests':
+        if self.lp.host == 'localhost' \
+                and self.lp.port == 27017 \
+                and self.lp.name == 'rsled_tests':
             try:
                 self.lp.connection.drop_database('rsled_tests')
             except Exception:
                 pass
+
 
 def suite():
     wf_test_suite = unittest.TestSuite()
@@ -404,4 +417,3 @@ def suite():
 
 if __name__ == "__main__":
     unittest.main()
-
