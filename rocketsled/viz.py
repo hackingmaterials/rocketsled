@@ -1,4 +1,5 @@
 from __future__ import unicode_literals, division, print_function
+
 """
 Functions for visualizing optimization progress.
 """
@@ -13,6 +14,7 @@ from rocketsled.utils import Dtypes, latex_float, pareto
 __author__ = "Alexander Dunn"
 __version__ = "1.0"
 __email__ = "ardunn@lbl.gov"
+
 
 def visualize(collection, maximize=False, showbest=True, showmean=True,
               latexify=False, fontfamily="serif", scale='linear', analysis=True,
@@ -62,14 +64,13 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
         plt.rc('text', usetex=False)
     plt.rc('font', family=fontfamily, size=9)
 
-
     N_COLS = 3
     # print(int(math.ceil(float(n_objs)/float(N_COLS))))
 
     if n_objs < N_COLS:
         f, axarr = plt.subplots(n_objs, squeeze=False)
     else:
-        f, axarr = plt.subplots(N_COLS, int(math.ceil(n_objs/N_COLS)),
+        f, axarr = plt.subplots(N_COLS, int(math.ceil(n_objs / N_COLS)),
                                 squeeze=False)
 
     docset = collection.find({'index': {'$exists': 1}})
@@ -111,10 +112,10 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
 
         ax.scatter(i, fx, color='blue', label=fxstr, s=10)
         ax.plot(i, best, color='orange', label="best {} value found so far"
-                                                "".format(fxstr))
+                                               "".format(fxstr))
         if showmean:
-            ax.plot(i, mean, color='grey', label = "mean {} value (with std "
-                                                    "dev.)".format(fxstr))
+            ax.plot(i, mean, color='grey', label="mean {} value (with std "
+                                                 "dev.)".format(fxstr))
             ax.fill_between(i, mean + std, mean - std, color='grey', alpha=0.3)
 
         ax.set_xlabel("{} evaluation".format(fxstr))
@@ -131,8 +132,8 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
             for b in best:
                 bl = None if n_objs > 1 else best_label
                 ax.scatter([b['index']], [best_val], color='darkgreen', s=50,
-                            linewidth=3, label=bl, facecolors='none',
-                            edgecolors='darkgreen')
+                           linewidth=3, label=bl, facecolors='none',
+                           edgecolors='darkgreen')
 
                 artext = "$x = $ [" if latexify else "x = ["
                 for i, xi in enumerate(b['x']):
@@ -157,11 +158,11 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
                                                                 best_val,
                                                                 b['x']))
                 ax.annotate(artext,
-                             xy=(b['index'] + 0.5, best_val),
-                             xytext=(b['index'] + float(n)/12.0, best_val),
-                             arrowprops=dict(color='green'),
-                             color='darkgreen',
-                             bbox=dict(facecolor='white', alpha=1.0))
+                            xy=(b['index'] + 0.5, best_val),
+                            xytext=(b['index'] + float(n) / 12.0, best_val),
+                            arrowprops=dict(color='green'),
+                            color='darkgreen',
+                            bbox=dict(facecolor='white', alpha=1.0))
         else:
             best_label = ""
 
@@ -179,12 +180,22 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
         print(analyze(collection))
 
     if print_pareto and n_objs > 1:
-        print("Pareto Frontier: {} points".format(len(pareto_set)))
+        print("Pareto Frontier: {} points, ranked by hypervolume".format(len(pareto_set)))
         pareto_y = [doc['y'] for doc in docs if doc['y'] in pareto_set]
         pareto_x = [doc['x'] for doc in docs if doc['y'] in pareto_set]
 
+        # Order y by hypervolume
+        hypervolumes = [np.prod(y) for y in pareto_y]
+        pareto_y_ordered = [y for _, y in sorted(zip(hypervolumes, pareto_y),
+                                                 reverse=True)]
+        pareto_x_ordered = [x for _, x in sorted(zip(hypervolumes, pareto_x),
+                                                 reverse=True)]
+        hypervolumes_ordered = sorted(hypervolumes, reverse=True)
+
         for i, _ in enumerate(pareto_set):
-            print("f(x) = {} @ x = {}".format(pareto_y[i], pareto_x[i]))
+            print("f(x) = {} @ x = {} with hypervolume {}".format(
+                pareto_y_ordered[i], pareto_x_ordered[i],
+                hypervolumes_ordered[i]))
 
     if n_objs % N_COLS != 0 and n_objs > N_COLS:
         for i in range(n_objs % N_COLS, N_COLS):
@@ -196,6 +207,7 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
     plt.suptitle("Rocketsled optimization results for {} - "
                  "{}".format(collection.name, timestr), y=0.99)
     plt.show()
+
 
 def analyze(collection):
     """
@@ -228,21 +240,21 @@ def analyze(collection):
             dim = d
         elif dim != d:
             warnings.warn("It appears the optimization contained in {} is"
-                             "broken, as the x + z dims do not match between"
-                             "doc index ({}) and index 0 ({}). To fix, remove"
-                             "documents of dissimilar x or z length/type. and "
-                             "ensure only one optimization is used for this "
-                             "collection!"
-                             "".format(collection, d, dim))
+                          "broken, as the x + z dims do not match between"
+                          "doc index ({}) and index 0 ({}). To fix, remove"
+                          "documents of dissimilar x or z length/type. and "
+                          "ensure only one optimization is used for this "
+                          "collection!"
+                          "".format(collection, d, dim))
     dimdoc = collection.find_one({'index': {'$exists': 1},
-                                'y': {'$exists': 1, "$ne": "reserved"}})
+                                  'y': {'$exists': 1, "$ne": "reserved"}})
     xdim = [type(d) for d in dimdoc['x']]
     zdim = [type(d) for d in dimdoc['z']]
     n_opts = sum(predictors.values())
     n_reserved = collection.find({'y': 'reserved'}).count()
     breakdown = ""
     for p, v in predictors.items():
-        predfrac = float(v)/float(n_opts)
+        predfrac = float(v) / float(n_opts)
         breakdown += "    * {0:.2f}%: ".format(predfrac * 100.0) + p + "\n"
 
     if not lock:
@@ -264,5 +276,7 @@ def analyze(collection):
 
 if __name__ == "__main__":
     from fireworks import LaunchPad
+
     lpad = LaunchPad(host='localhost', port=27017, name='rsled')
     visualize(lpad.db.opt_complex, print_pareto=True, scale='log', showmean=False)
+    # visualize(lpad.db.gphyper0, scale='log')
