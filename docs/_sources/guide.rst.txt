@@ -421,45 +421,6 @@ Randomly guess with this probability. A value of 1.0 is random guessing only. A 
     random_proba=0.1
 
 
-Hyperparameter Search
-_____________________
-
-When using builtin predictors, rocketsled can perform automatic hyperparameter searches to optimize the chosen
-sklearn estimator before using it to select the next best point. Using hyperparameter optimization at each step
-in sequential optimization can have a significant effect on the predictive accuracy (i.e., optimization performance!) of SVR and many other models!
-
-:code:`param_grid`
-------------------
-
-The sklearn-style dictionary to use for hyperparameter optimization search. Each key should correspond to
-a regressor parameter name, and each value should be a list of possible settings for the parameter key.
-
-**Example**
-
-.. code-block:: python
-
-    # For example, when using RandomForestRegressor
-    param_grid={"n_estimators": [1, 10, 100], "max_features": ["sqrt", "auto", 3]}
-
-
-:code:`hyper_opt`
------------------
-Defines how hyperparamter search is performed. An int of 1 or greater defines the number of parameter combos to try with
-RandomizedSearchCV. A value of None or 0 means exhaustive search with GridSearchCV. :code:`param_grid` must be defined to use this option.
-All searches are performed in parallel, if possible.
-
-**Example**
-
-.. code-block:: python
-
-    # hyper_opt should be an integer or None
-    hyper_opt=200
-
-    # An exhaustive grid search can be performed
-    hyper_opt=0
-
-
-
 Features
 ________
 

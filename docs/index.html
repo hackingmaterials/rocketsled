@@ -74,29 +74,6 @@ It is designed to be as extensible as possible across many computer architecture
 <a class="reference internal image-reference" href="_images/opt.png"><img alt="opt" class="align-center" src="_images/opt.png" style="width: 300px;" /></a>
 <p>rocketsled requires no internal knowledge of f(x) for optimization. rocketsled is designed for problems where each evaluation of f(x) is highly complex, is computationally expensive, requires workflow software, or is all of the above.
 <strong>rocketsled is intended to be “plug-and-play”: simply plug-in an objective function or workflow f(x) and search domain D, and rocketsled automatically creates an optimization loop in FireWorks which can be easily (and dynamically) managed across arbitray computing resources.</strong></p>
-<div class="section" id="a-visual-explanation">
-<h2>A visual explanation…<a class="headerlink" href="#a-visual-explanation" title="Permalink to this headline">¶</a></h2>
-<p>A typical workflow f(x) without optimization might look like this:</p>
-<a class="reference internal image-reference" href="_images/diagram_fireworks.png"><img alt="basicwf" class="align-center" src="_images/diagram_fireworks.png" style="width: 250px;" /></a>
-<p>Input parameters (x) are given to the first job (Firework). This begins the workflow, and a useful output f(x) = y result is given. The workflow is repeated as desired with different input parameters, often across many compute nodes in parallel, in an attempt to compute favorable outputs.</p>
-<a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
-<a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
-<a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
-<a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
-<p>Randomly selecting the next x to run is <em>inefficient</em>, since we will execute many workflows, including those with unfavorable results. To increase computational efficiency, we need to <em>intelligently</em> choose new x with an <strong>optimization loop.</strong></p>
-<a class="reference internal image-reference" href="_images/diagram_highthroughput2.png"><img alt="basicwf" class="align-center" src="_images/diagram_highthroughput2.png" style="width: 800px;" /></a>
-<p>This is where rocketsled comes in handy. rocketsled is a sub-job (FireTask) which can go in any Firework in the workflow, and uses an sklearn-based Bayesian strategy to predict the best <em>input</em> parameters for the next iteration, store them in a MongoDB database, and automatically submit a new workflow to compute the next output.</p>
-<a class="reference internal image-reference" href="_images/rsfwdiagram.png"><img alt="basicwf" class="align-center" src="_images/rsfwdiagram.png" style="width: 400px;" /></a>
-</div>
-<div class="section" id="example-use-cases">
-<h2>Example use cases<a class="headerlink" href="#example-use-cases" title="Permalink to this headline">¶</a></h2>
-<p>rocketsled has many example use cases for adaptive computational problems.</p>
-<p><strong>Searching 19,000 possible for new energy materials using expensive first-principles physics calculations:</strong> rocketsled enabled increased efficiency (wrt. random and empirical rules) in searching a large space of input parameters (materials) for renewable energy water splitting perovskites using Density Functional Theory calculations.</p>
-<a class="reference internal image-reference" href="_images/3dmap_mend.png"><img alt="3d" src="_images/3dmap_mend.png" style="width: 500px;" /></a>
-<a class="reference internal image-reference" href="_images/perovskites_zoomin.png"><img alt="perov" src="_images/perovskites_zoomin.png" style="width: 500px;" /></a>
-<p><strong>(Forthcoming) Selecting the best machine learning model for large-scale data mining:</strong> rocketsled can be used for selecting the best machine learning models (and their hyperparameters) in cases where each training + cross-validation can be a computationally expensive task.</p>
-<a class="reference internal image-reference" href="_images/ml.png"><img alt="ml" class="align-center" src="_images/ml.png" style="width: 800px;" /></a>
-</div>
 <div class="section" id="features-of-rocketsled">
 <h2>Features of <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code><a class="headerlink" href="#features-of-rocketsled" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -140,6 +117,29 @@ It is designed to be as extensible as possible across many computer architecture
 <li>Automatic encoding for categorical optimization</li>
 <li>and more… (see comprehensive guide)</li>
 </ul>
+</div>
+<div class="section" id="a-visual-explanation">
+<h2>A visual explanation…<a class="headerlink" href="#a-visual-explanation" title="Permalink to this headline">¶</a></h2>
+<p>A typical workflow f(x) without optimization might look like this:</p>
+<a class="reference internal image-reference" href="_images/diagram_fireworks.png"><img alt="basicwf" class="align-center" src="_images/diagram_fireworks.png" style="width: 250px;" /></a>
+<p>Input parameters (x) are given to the first job (Firework). This begins the workflow, and a useful output f(x) = y result is given. The workflow is repeated as desired with different input parameters, often across many compute nodes in parallel, in an attempt to compute favorable outputs.</p>
+<a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
+<a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
+<a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
+<a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
+<p>Randomly selecting the next x to run is <em>inefficient</em>, since we will execute many workflows, including those with unfavorable results. To increase computational efficiency, we need to <em>intelligently</em> choose new x with an <strong>optimization loop.</strong></p>
+<a class="reference internal image-reference" href="_images/diagram_highthroughput2.png"><img alt="basicwf" class="align-center" src="_images/diagram_highthroughput2.png" style="width: 800px;" /></a>
+<p>This is where rocketsled comes in handy. rocketsled is a sub-job (FireTask) which can go in any Firework in the workflow, and uses an sklearn-based Bayesian strategy to predict the best <em>input</em> parameters for the next iteration, store them in a MongoDB database, and automatically submit a new workflow to compute the next output.</p>
+<a class="reference internal image-reference" href="_images/rsfwdiagram.png"><img alt="basicwf" class="align-center" src="_images/rsfwdiagram.png" style="width: 400px;" /></a>
+</div>
+<div class="section" id="example-use-cases">
+<h2>Example use cases<a class="headerlink" href="#example-use-cases" title="Permalink to this headline">¶</a></h2>
+<p>rocketsled has many example use cases for adaptive computational problems.</p>
+<p><strong>Searching 19,000 possible for new energy materials using expensive first-principles physics calculations:</strong> rocketsled enabled increased efficiency (wrt. random and empirical rules) in searching a large space of input parameters (materials) for renewable energy water splitting perovskites using Density Functional Theory calculations.</p>
+<a class="reference internal image-reference" href="_images/3dmap_mend.png"><img alt="3d" src="_images/3dmap_mend.png" style="width: 500px;" /></a>
+<a class="reference internal image-reference" href="_images/perovskites_zoomin.png"><img alt="perov" src="_images/perovskites_zoomin.png" style="width: 500px;" /></a>
+<p><strong>(Forthcoming) Selecting the best machine learning model for large-scale data mining:</strong> rocketsled can be used for selecting the best machine learning models (and their hyperparameters) in cases where each training + cross-validation can be a computationally expensive task.</p>
+<a class="reference internal image-reference" href="_images/ml.png"><img alt="ml" class="align-center" src="_images/ml.png" style="width: 800px;" /></a>
 </div>
 </div>
 <div class="section" id="installation">
@@ -225,9 +225,9 @@ question, you’ll most likely find your answer here.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#what-does-rocketsled-do">What does rocketsled do?</a><ul>
+<li><a class="reference internal" href="#features-of-rocketsled">Features of <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code></a></li>
 <li><a class="reference internal" href="#a-visual-explanation">A visual explanation…</a></li>
 <li><a class="reference internal" href="#example-use-cases">Example use cases</a></li>
-<li><a class="reference internal" href="#features-of-rocketsled">Features of <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#installation">Installation</a><ul>

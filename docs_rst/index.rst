@@ -45,7 +45,6 @@ If you answered yes to these three questions, *keep reading!*
 **rocketsled** is an optimization framework which can *automatically* improve the results of your complex, high-throughput tasks using previous results.
 It is designed to be as extensible as possible across many computer architectures, optimization schemes, and problem specifications.
 
-
 ============================
 What does rocketsled do?
 ============================
@@ -60,6 +59,43 @@ rocketsled functions as a **black box optimizer** for a sequential optimization 
 rocketsled requires no internal knowledge of f(x) for optimization. rocketsled is designed for problems where each evaluation of f(x) is highly complex, is computationally expensive, requires workflow software, or is all of the above.
 **rocketsled is intended to be "plug-and-play": simply plug-in an objective function or workflow f(x) and search domain D, and rocketsled automatically creates an optimization loop in FireWorks which can be easily (and dynamically) managed across arbitray computing resources.**
 
+Features of ``rocketsled``
+--------------------------
+
+* **One-line python setup tools**
+
+* Persistent storage and optimization tracking
+
+* **Automatic workflow submission and management with FireWorks**
+    + Parallel execution of objective functions on HPC resources
+    + Works with many queue systems
+    + Several optimization execution schemes
+
+* **Ability to handle complex search spaces, including:**
+    + discrete (categorical, integer) dimensions
+    + continuous dimensions
+    + discontinuous spaces (subsets of entire spaces)
+
+* 10 Built-in "out-of-the-box" sklearn-based tunable Bayesian optimizers
+    + single objective
+    + **multi objective**
+
+* Support for nearly any custom optimizer written in Python (Bayesian and non-Bayesian)
+
+* Facilitated feature engineering with ``get_z`` argument
+
+* Tuneable control of training and prediction performance, across many kinds of computer resources
+
+* Avoids submitting duplicate workflows, even when workflows run with massive parallelism
+
+* Customization of optimization scheme (sequential, batch, etc.)
+
+* Automatic hyperparameter optimization
+
+* Automatic encoding for categorical optimization
+
+* and more... (see comprehensive guide)
+
 
 A visual explanation...
 -----------------------
@@ -72,7 +108,6 @@ A typical workflow f(x) without optimization might look like this:
    :width: 250px
 
 Input parameters (x) are given to the first job (Firework). This begins the workflow, and a useful output f(x) = y result is given. The workflow is repeated as desired with different input parameters, often across many compute nodes in parallel, in an attempt to compute favorable outputs.
-
 
 .. image:: _static/miniwf.png
    :alt: basicwf
@@ -123,45 +158,6 @@ rocketsled has many example use cases for adaptive computational problems.
    :alt: ml
    :align: center
    :width: 800px
-
-
-
-Features of ``rocketsled``
---------------------------
-
-* **One-line python setup tools**
-
-* Persistent storage and optimization tracking
-
-* **Automatic workflow submission and management with FireWorks**
-    + Parallel execution of objective functions on HPC resources
-    + Works with many queue systems
-    + Several optimization execution schemes
-
-* **Ability to handle complex search spaces, including:**
-    + discrete (categorical, integer) dimensions
-    + continuous dimensions
-    + discontinuous spaces (subsets of entire spaces)
-
-* 10 Built-in "out-of-the-box" sklearn-based tunable Bayesian optimizers
-    + single objective
-    + **multi objective**
-
-* Support for nearly any custom optimizer written in Python (Bayesian and non-Bayesian)
-
-* Facilitated feature engineering with ``get_z`` argument
-
-* Tuneable control of training and prediction performance, across many kinds of computer resources
-
-* Avoids submitting duplicate workflows, even when workflows run with massive parallelism
-
-* Customization of optimization scheme (sequential, batch, etc.)
-
-* Automatic hyperparameter optimization
-
-* Automatic encoding for categorical optimization
-
-* and more... (see comprehensive guide)
 
 
 ============
