@@ -136,7 +136,7 @@ class OptTask(FireTaskBase):
             essentially become tags or identifiers only).
             Examples: 
                 get_z = 'my_module.my_fun'
-                get_z = '/path/to/folder/containing/my_package.my_module.my_fun'
+                get_z = '/path/to/folder/containing/my_package/my_module.my_fun'
         get_z_args (list): the positional arguments to be passed to the get_z
             function alongside x
         get_z_kwargs (dict): the kwargs to be passed to the get_z function
@@ -530,15 +530,14 @@ class OptTask(FireTaskBase):
         if persistent_z:
             if path.exists(persistent_z):
                 with open(persistent_z, 'rb') as f:
-                    xz_map = pickle.load(f)
+                    xz_map = pickle.load(f, encoding='utf-8')
             else:
                 xz_map = {tuple(xi): self.get_z(xi, *get_z_args, **get_z_kwargs)
                           for xi in X_space}
                 with open(persistent_z, 'wb') as f:
                     pickle.dump(xz_map, f)
 
-            XZ_unexplored = [xi + xz_map[tuple(xi)] for xi in
-                             X_unexplored]
+            XZ_unexplored = [xi + xz_map[tuple(xi)] for xi in X_unexplored]
         else:
             XZ_unexplored = [xi + self.get_z(xi, *get_z_args, **get_z_kwargs)
                              for xi in X_unexplored]
@@ -551,7 +550,7 @@ class OptTask(FireTaskBase):
                 raise ExhaustedSpaceError("The discrete space has been searched"
                                           " exhaustively.")
             else:
-                raise TypeError("A comprehensive list of pointswas exhausted "
+                raise TypeError("A comprehensive list of points was exhausted "
                                 "but the dimensions are not discrete.")
         z_dims = self._z_dims(XZ_unexplored, len(x_dims))
         xz_dims = x_dims + z_dims
@@ -679,11 +678,12 @@ class OptTask(FireTaskBase):
                 if isinstance(y, np.ndarray):
                     y = y.tolist()
                 else:
-                    try:
-                        # if it is a list of np types
-                        y = [yi.item() for yi in y]
-                    except AttributeError:
-                        y = list(y)
+                    y = self._convert_native(y)
+
+            x = self._convert_native(x)
+            x_new = self._convert_native(x_new)
+            z = self._convert_native(z)
+            z_new = self._convert_native(z_new)
 
             # if it is a duplicate (such as a forced
             # identical first guess)
@@ -722,9 +722,7 @@ class OptTask(FireTaskBase):
             # ensure previously fin. workflow results are not overwritten by
             # concurrent predictions
             if self.c.count_documents(
-                    {'x': x_new, 'y': {'$exists': 1,
-                                       '$ne': 'reserved'}
-                     }) == 0:
+                    {'x': x_new, 'y': {'$exists': 1, '$ne': 'reserved'}}) == 0:
                 # reserve the new x to prevent parallel processes from
                 # registering it as unexplored, since the next iteration of this
                 # process will be exploring it
@@ -1271,6 +1269,42 @@ class OptTask(FireTaskBase):
         # If none of the points inside X_explored are close to x_new
         # (inside tolerance) in ALL dimensions, it is not a duplicate
         return False
+
+    def _convert_native(self, a):
+        """
+        Convert iterables of non-native types to native types for bson storage
+        in the database. For situations where .tolist() does not work.
+
+        Args:
+            a (numpy array or list or tuple): Input list of strings, ints, or
+                floats, as either numpy or native types (or others), which
+                will be force-coerced to native types.
+
+        Returns:
+            native (list): A list of the data in a, converted to native types.
+
+        """
+        native = [None] * len(a)
+        for i, val in enumerate(a):
+            try:
+                native[i] = val.item()
+            except AttributeError:
+                if type(val) in self.dtypes.all:
+                    if type(val) in self.dtypes.floats:
+                        native[i] = float(val)
+                    elif type(val) in self.dtypes.ints:
+                        native[i] = int(val)
+                    elif type(val) in self.dtypes.bool:
+                        native[i] = val
+                    elif type(val) in self.dtypes.others:
+                        native[i] = str(val)
+                    else:
+                        TypeError("Dtype {} not found in rocketsled dtypes."
+                                  "".format(type(val)))
+                else:
+                    TypeError("Dtype {} not found in rocketsled dtypes."
+                              "".format(type(val)))
+        return native
 
 
 class ExhaustedSpaceError(Exception):
