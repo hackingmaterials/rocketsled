@@ -26,6 +26,7 @@ class Dtypes(object):
         self.complex = d['complex']
         self.numbers = self.reals + self.complex
         self.others = d['others']
+        self.bool = [bool, np.bool_]
         self.discrete = self.ints + self.others
         self.all = self.numbers + self.others
 
