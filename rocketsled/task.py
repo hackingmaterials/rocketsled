@@ -530,7 +530,7 @@ class OptTask(FireTaskBase):
         if persistent_z:
             if path.exists(persistent_z):
                 with open(persistent_z, 'rb') as f:
-                    xz_map = pickle.load(f, encoding='utf-8')
+                    xz_map = pickle.load(f)
             else:
                 xz_map = {tuple(xi): self.get_z(xi, *get_z_args, **get_z_kwargs)
                           for xi in X_space}
@@ -681,8 +681,8 @@ class OptTask(FireTaskBase):
                     y = self._convert_native(y)
 
             x = self._convert_native(x)
-            x_new = self._convert_native(x_new)
             z = self._convert_native(z)
+            x_new = self._convert_native(x_new)
             z_new = self._convert_native(z_new)
 
             # if it is a duplicate (such as a forced
