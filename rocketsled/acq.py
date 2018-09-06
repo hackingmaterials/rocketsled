@@ -85,7 +85,7 @@ def ppredict(X, Y, space, model):
     pmodel.fit(X_train, y_train)
     return pmodel.predict(space)
 
-def ei(fmin, mu, std, xi=0.0):
+def ei(fmin, mu, std, xi=0.01):
     """
     Returns expected improvement values.
 
@@ -95,6 +95,8 @@ def ei(fmin, mu, std, xi=0.0):
         std (numpy array): Standard deviation of bootstrapped predictions for
             each y.
         xi (float): Amount of expected improvement, optional hyper-parameter.
+            Default value taken from "Practical bayesian optimization" by Daniel
+            Lizotte (2008).
 
     Returns:
         vals (numpy array): Acquisition values.
@@ -110,7 +112,7 @@ def ei(fmin, mu, std, xi=0.0):
     # vals = improve * norm.cdf(improve/std) + std * norm.pdf(improve/std)
     return vals
 
-def pi(fmin, mu, std, xi=0.0):
+def pi(fmin, mu, std, xi=0.01):
     """
     Returns probability of improvement values.
 
@@ -120,6 +122,8 @@ def pi(fmin, mu, std, xi=0.0):
         std (numpy array): Standard deviation of bootstrapped predictions for
             each y.
         xi (float): Amount of expected improvement, optional hyper-parameter.
+            Default value taken from "Practical bayesian optimization" by Daniel
+            Lizotte (2008).
 
     Returns:
         vals (numpy array): Acquisition values.
