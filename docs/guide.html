@@ -498,6 +498,18 @@ The <code class="code docutils literal notranslate"><span class="pre">batch_size
 <p><em>Note: Enabling large batch sizes may cause synchronicity issues. For example, rocketsled waits for all batch calcs to finish before running
 another batch. If one calc fails, the batch optimization will fail.</em></p>
 </div>
+<div class="section" id="enforce-sequential">
+<h2><code class="code docutils literal notranslate"><span class="pre">enforce_sequential</span></code><a class="headerlink" href="#enforce-sequential" title="Permalink to this headline">¶</a></h2>
+<p><strong>Warning! Experimental feature!</strong></p>
+<p>Gives the ability to run optimizations 100% in parallel. This option disables all duplicate checking ability - even with built-in optimizers,
+duplicates may be selected and run.</p>
+<p>When <em>True</em>, the entire workflow besides optimization can be run in parallel. When <em>False</em>, the entire workflow including optimization can be run in parallel.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># We don&#39;t care about duplicate checking, but want to run everything in parallel</span>
+<span class="n">enforce_sequential</span><span class="o">=</span><span class="bp">False</span> <span class="c1"># May cause bugs!</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="timeout">
 <h2><code class="code docutils literal notranslate"><span class="pre">timeout</span></code><a class="headerlink" href="#timeout" title="Permalink to this headline">¶</a></h2>
 <p>The number of seconds to wait before resetting the lock on the db.</p>
@@ -578,6 +590,7 @@ See the <a class="reference internal" href="quickstart.html"><span class="doc">q
 <li><a class="reference internal" href="#tolerances"><code class="code docutils literal notranslate"><span class="pre">tolerances</span></code></a></li>
 <li><a class="reference internal" href="#maximize"><code class="code docutils literal notranslate"><span class="pre">maximize</span></code></a></li>
 <li><a class="reference internal" href="#batch-size"><code class="code docutils literal notranslate"><span class="pre">batch_size</span></code></a></li>
+<li><a class="reference internal" href="#enforce-sequential"><code class="code docutils literal notranslate"><span class="pre">enforce_sequential</span></code></a></li>
 <li><a class="reference internal" href="#timeout"><code class="code docutils literal notranslate"><span class="pre">timeout</span></code></a></li>
 </ul>
 </li>

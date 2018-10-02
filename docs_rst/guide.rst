@@ -643,6 +643,24 @@ See batch.py example for a demonstration.
 *Note: Enabling large batch sizes may cause synchronicity issues. For example, rocketsled waits for all batch calcs to finish before running
 another batch. If one calc fails, the batch optimization will fail.*
 
+:code:`enforce_sequential`
+--------------------------
+
+**Warning! Experimental feature!**
+
+Gives the ability to run optimizations 100% in parallel. This option disables all duplicate checking ability - even with built-in optimizers,
+duplicates may be selected and run.
+
+When *True*, the entire workflow besides optimization can be run in parallel. When *False*, the entire workflow including optimization can be run in parallel.
+
+**Example**
+
+.. code-block:: python
+
+    # We don't care about duplicate checking, but want to run everything in parallel
+    enforce_sequential=False # May cause bugs!
+
+
 
 :code:`timeout`
 ---------------
