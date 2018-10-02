@@ -1,7 +1,12 @@
 from __future__ import unicode_literals, print_function, division
 
 """
-An example of running rocketsled optimizations in parallel.
+An example of running optimization workflows in parallel.
+
+To ensure duplicate checking, optimizations themselves must be run sequentially
+while the black box function evaluation can be run in parallel. To run
+optimizations in parallel (and disable duplicate checking), change
+enforce_sequential to True and duplicate_checking to False. 
 """
 
 import os
@@ -26,7 +31,8 @@ def wf_creator(x):
                                   port=27017,
                                   name='rsled',
                                   duplicate_check=True,
-                                  opt_label="opt_parallel")],
+                                  opt_label="opt_parallel",
+                                  enforce_sequential=True)],
                          spec=spec)
     return Workflow([firework1])
 
@@ -44,7 +50,7 @@ if __name__ == "__main__":
     launchpad.reset(password=None, require_password=False)
 
     n_processes = 10
-    n_runs = 10
+    n_runs = 13
 
     # Should throw an 'Exhausted' error when n_processes*n_runs > 125 (the total space size)
 
