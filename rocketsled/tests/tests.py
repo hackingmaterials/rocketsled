@@ -324,7 +324,7 @@ class TestWorkflows(unittest.TestCase):
         loop1 = col.find_one({'index': 1})
         loop2 = col.find_one({'index': 2})
 
-        self.assertEqual(col.find({}).count(), 4)
+        self.assertEqual(col.count_documents({}), 4)
         self.assertEqual(loop1['x'], [5, 11, 'blue'])
         self.assertEqual(loop1['z'], [25.0, 121.0])
         self.assertEqual(loop2['x'], [3, 12.0, 'green'])
