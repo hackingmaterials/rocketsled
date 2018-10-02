@@ -175,6 +175,11 @@ class OptTask(FireTaskBase):
         batch_size (int): The number of jobs to submit per batch for a batch
             optimization. For example, batch_size=5 will optimize every 5th job,
             then submit another 5 jobs based on the best 5 predictions.
+        enforce_sequential (bool): WARNING: Experimental feature! If True,
+            enforces that RS optimizations are run sequentially (default), which
+            prevents duplicate guesses from ever being run. If False, allows
+            OptTasks to run optimizations in parallel, which may cause duplicate
+            guesses with high parallelism.
         timeout (int): The number of seconds to wait before resetting the lock
             on the db.
 
@@ -209,7 +214,8 @@ class OptTask(FireTaskBase):
                        'random_interval', 'space', 'get_z', 'get_z_args',
                        'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs',
                        'encode_categorical', 'duplicate_check', 'max',
-                       'batch_size', 'tolerance', 'timeout', 'n_boots']
+                       'batch_size', 'tolerance', 'timeout', 'n_boots',
+                       'enforce_sequential']
 
     def run_task(self, fw_spec):
         """
@@ -224,7 +230,7 @@ class OptTask(FireTaskBase):
             (FWAction) A workflow based on the workflow creator and a new,
             optimized guess.
         """
-
+        enforce_sequential = self.get("enforce_sequential", True)
         pid = getpid()
         sleeptime = .01
         timeout = self['timeout'] if 'timeout' in self else 500
@@ -270,7 +276,7 @@ class OptTask(FireTaskBase):
                     self.c.find_one_and_update({'_id': manager_id},
                                                {'$set': {'lock': pid}})
 
-                elif lock != pid:
+                elif enforce_sequential and lock != pid:
                     if pid not in manager['queue']:
 
                         # avoid bootup problems if manager queue is being
@@ -282,9 +288,10 @@ class OptTask(FireTaskBase):
                         except TypeError:
                             continue
                     else:
+                        print("WAITING!!!!!!")
                         sleep(sleeptime)
 
-                elif lock == pid:
+                elif not enforce_sequential or (enforce_sequential and lock == pid):
                     try:
                         x, y, z, x_dims, XZ_new, predictor, n_completed = \
                             self.optimize(fw_spec, manager_id)
@@ -615,6 +622,10 @@ class OptTask(FireTaskBase):
 
         # duplicate checking for custom optimizer functions
         if duplicate_check:
+
+            if not enforce_sequential:
+                raise ValueError("Duplicate checking cannot work when "
+                                 "optimizations are not enforced sequentially.")
 
             # todo: fix batch_mode duplicate checking
             if batch_mode:
