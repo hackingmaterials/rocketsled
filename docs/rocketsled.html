@@ -105,15 +105,20 @@ fittings and predictions which will be performed.</dd>
 
 <dl class="function">
 <dt id="rocketsled.acq.ei">
-<code class="descclassname">rocketsled.acq.</code><code class="descname">ei</code><span class="sig-paren">(</span><em>fmin</em>, <em>mu</em>, <em>std</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.ei" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rocketsled.acq.</code><code class="descname">ei</code><span class="sig-paren">(</span><em>fmin</em>, <em>mu</em>, <em>std</em>, <em>xi=0.01</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.ei" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns expected improvement values.</p>
 <dl class="docutils">
 <dt>Args:</dt>
 <dd><p class="first">fmin (float): Minimum value of the objective function known thus far.
 mu (numpy array):  Mean value of bootstrapped predictions for each y.
 std (numpy array): Standard deviation of bootstrapped predictions for</p>
-<blockquote class="last">
+<blockquote>
 <div>each y.</div></blockquote>
+<dl class="last docutils">
+<dt>xi (float): Amount of expected improvement, optional hyper-parameter.</dt>
+<dd>Default value taken from “Practical bayesian optimization” by Daniel
+Lizotte (2008).</dd>
+</dl>
 </dd>
 <dt>Returns:</dt>
 <dd>vals (numpy array): Acquisition values.</dd>
@@ -122,20 +127,40 @@ std (numpy array): Standard deviation of bootstrapped predictions for</p>
 
 <dl class="function">
 <dt id="rocketsled.acq.lcb">
-<code class="descclassname">rocketsled.acq.</code><code class="descname">lcb</code><span class="sig-paren">(</span><em>fmin</em>, <em>mu</em>, <em>std</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.lcb" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descclassname">rocketsled.acq.</code><code class="descname">lcb</code><span class="sig-paren">(</span><em>fmin</em>, <em>mu</em>, <em>std</em>, <em>kappa=1.96</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.lcb" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Returns lower confidence bound estimates.</dt>
+<dd><p class="first">fmin (float): Minimum value of the objective function known thus far.
+mu (numpy array):  Mean value of bootstrapped predictions for each y.
+std (numpy array): Standard deviation of bootstrapped predictions for</p>
+<blockquote>
+<div>each y.</div></blockquote>
+<dl class="last docutils">
+<dt>kappa (float): Controls the variance in the prediction,</dt>
+<dd>affecting exploration/exploitation.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>vals (numpy array): Acquisition values.</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
 <dt id="rocketsled.acq.pi">
-<code class="descclassname">rocketsled.acq.</code><code class="descname">pi</code><span class="sig-paren">(</span><em>fmin</em>, <em>mu</em>, <em>std</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.pi" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rocketsled.acq.</code><code class="descname">pi</code><span class="sig-paren">(</span><em>fmin</em>, <em>mu</em>, <em>std</em>, <em>xi=0.01</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.pi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns probability of improvement values.</p>
 <dl class="docutils">
 <dt>Args:</dt>
 <dd><p class="first">fmin (float): Minimum value of the objective function known thus far.
 mu (numpy array):  Mean value of bootstrapped predictions for each y.
 std (numpy array): Standard deviation of bootstrapped predictions for</p>
-<blockquote class="last">
+<blockquote>
 <div>each y.</div></blockquote>
+<dl class="last docutils">
+<dt>xi (float): Amount of expected improvement, optional hyper-parameter.</dt>
+<dd>Default value taken from “Practical bayesian optimization” by Daniel
+Lizotte (2008).</dd>
+</dl>
 </dd>
 <dt>Returns:</dt>
 <dd>vals (numpy array): Acquisition values.</dd>
@@ -340,7 +365,7 @@ essentially become tags or identifiers only).
 Examples:</p>
 <blockquote>
 <div>get_z = ‘my_module.my_fun’
-get_z = ‘/path/to/folder/containing/my_package.my_module.my_fun’</div></blockquote>
+get_z = ‘/path/to/folder/containing/my_package/my_module.my_fun’</div></blockquote>
 </div></blockquote>
 <dl class="docutils">
 <dt>get_z_args (list): the positional arguments to be passed to the get_z</dt>
@@ -387,6 +412,11 @@ within 1e-6. Then:</p>
 <dt>batch_size (int): The number of jobs to submit per batch for a batch</dt>
 <dd>optimization. For example, batch_size=5 will optimize every 5th job,
 then submit another 5 jobs based on the best 5 predictions.</dd>
+<dt>enforce_sequential (bool): WARNING: Experimental feature! If True,</dt>
+<dd>enforces that RS optimizations are run sequentially (default), which
+prevents duplicate guesses from ever being run. If False, allows
+OptTasks to run optimizations in parallel, which may cause duplicate
+guesses with high parallelism.</dd>
 <dt>timeout (int): The number of seconds to wait before resetting the lock</dt>
 <dd>on the db.</dd>
 </dl>
@@ -404,6 +434,10 @@ then submit another 5 jobs based on the best 5 predictions.</dd>
 <dd>where workflow data is stored.</dd>
 <dt>get_z (str): Fully qualified name of the “get_z” function defined by the</dt>
 <dd>user.</dd>
+<dt>enforce_sequential (bool): WARNING: Experimental feature. True means</dt>
+<dd>that optimization calculations are run sequentially. False means
+that optimization calculations are run in parallel, which disables
+duplicate checking.</dd>
 <dt>_manager (dict/MongoDB query syntax): The document format which</dt>
 <dd>details how the manager (for parallel optimizations) are managed.</dd>
 <dt>_completed (dict/MongoDB query syntax): The document format which</dt>
@@ -448,7 +482,7 @@ n_completed (int): The number of completed guesses/workflows</p>
 
 <dl class="attribute">
 <dt id="rocketsled.task.OptTask.optional_params">
-<code class="descname">optional_params</code><em class="property"> = ['host', 'port', 'name', 'lpad', 'opt_label', 'db_extras', 'predictor', 'predictor_args', 'predictor_kwargs', 'n_search_points', 'n_train_points', 'acq', 'random_interval', 'space', 'get_z', 'get_z_args', 'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs', 'encode_categorical', 'duplicate_check', 'max', 'batch_size', 'tolerance', 'timeout', 'n_boots']</em><a class="headerlink" href="#rocketsled.task.OptTask.optional_params" title="Permalink to this definition">¶</a></dt>
+<code class="descname">optional_params</code><em class="property"> = ['host', 'port', 'name', 'lpad', 'opt_label', 'db_extras', 'predictor', 'predictor_args', 'predictor_kwargs', 'n_search_points', 'n_train_points', 'acq', 'random_interval', 'space', 'get_z', 'get_z_args', 'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs', 'encode_categorical', 'duplicate_check', 'max', 'batch_size', 'tolerance', 'timeout', 'n_boots', 'enforce_sequential']</em><a class="headerlink" href="#rocketsled.task.OptTask.optional_params" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">

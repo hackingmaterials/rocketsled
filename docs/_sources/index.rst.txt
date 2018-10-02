@@ -90,7 +90,7 @@ Features of ``rocketsled``
 
 * Customization of optimization scheme (sequential, batch, etc.)
 
-* Automatic hyperparameter optimization
+* Ability to run optimizations 100% in parallel
 
 * Automatic encoding for categorical optimization
 
