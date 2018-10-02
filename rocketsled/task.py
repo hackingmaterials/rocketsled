@@ -194,6 +194,10 @@ class OptTask(FireTaskBase):
             where workflow data is stored.
         get_z (str): Fully qualified name of the "get_z" function defined by the
             user.
+        enforce_sequential (bool): WARNING: Experimental feature. True means
+            that optimization calculations are run sequentially. False means
+            that optimization calculations are run in parallel, which disables
+            duplicate checking.
         _manager (dict/MongoDB query syntax): The document format which
             details how the manager (for parallel optimizations) are managed.
         _completed (dict/MongoDB query syntax): The document format which
@@ -230,7 +234,7 @@ class OptTask(FireTaskBase):
             (FWAction) A workflow based on the workflow creator and a new,
             optimized guess.
         """
-        enforce_sequential = self.get("enforce_sequential", True)
+        self.enforce_sequential = self.get("enforce_sequential", True)
         pid = getpid()
         sleeptime = .01
         timeout = self['timeout'] if 'timeout' in self else 500
@@ -276,7 +280,7 @@ class OptTask(FireTaskBase):
                     self.c.find_one_and_update({'_id': manager_id},
                                                {'$set': {'lock': pid}})
 
-                elif enforce_sequential and lock != pid:
+                elif self.enforce_sequential and lock != pid:
                     if pid not in manager['queue']:
 
                         # avoid bootup problems if manager queue is being
@@ -291,7 +295,8 @@ class OptTask(FireTaskBase):
                         print("WAITING!!!!!!")
                         sleep(sleeptime)
 
-                elif not enforce_sequential or (enforce_sequential and lock == pid):
+                elif not self.enforce_sequential or \
+                        (self.enforce_sequential and lock == pid):
                     try:
                         x, y, z, x_dims, XZ_new, predictor, n_completed = \
                             self.optimize(fw_spec, manager_id)
@@ -623,7 +628,7 @@ class OptTask(FireTaskBase):
         # duplicate checking for custom optimizer functions
         if duplicate_check:
 
-            if not enforce_sequential:
+            if not self.enforce_sequential:
                 raise ValueError("Duplicate checking cannot work when "
                                  "optimizations are not enforced sequentially.")
 
