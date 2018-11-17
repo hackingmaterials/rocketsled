@@ -85,6 +85,9 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
                         if doc['y'] in pareto_set]
         pareto_i = [i[0] for i in pareto_graph]
 
+    print("Optimization Analysis:")
+    print("Number of objectives: {}".format(n_objs))
+
     for obj in range(n_objs):
         ax = axarr[obj % N_COLS, int(math.floor(obj / N_COLS))]
 
@@ -123,12 +126,20 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
         best_val = opt(best)
 
         if showbest:
+
             if latexify:
                 best_label = "Best value: $f(x) = {}$" \
                              "".format(latex_float(best_val))
             else:
                 best_label = "Best value: f(x) = {:.2E}".format(best_val)
             best = collection.find({'y': best_val})
+
+            if n_objs == 1:
+                print("\tNumber of optima: {}".format(best.count()))
+            else:
+                print("\tNumber of optima for objective {}: {}"
+                      "".format(obj + 1, best.count()))
+
             for b in best:
                 bl = None if n_objs > 1 else best_label
                 ax.scatter([b['index']], [best_val], color='darkgreen', s=50,
@@ -148,15 +159,15 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
                         artext += str(xi) + ",\n"
 
                 artext = artext[:-2] + "]"
-                objstr = "objective {}".format(obj) if n_objs > 1 else ""
+                objstr = "objective {}".format(obj + 1) if n_objs > 1 else ""
                 if maximize:
-                    print("max(f(x)) {} is {} at x = {}".format(objstr,
-                                                                best_val,
-                                                                b['x']))
+                    print("\t\tmax(f(x)) {} is {} at x = {}".format(objstr,
+                                                                  best_val,
+                                                                  b['x']))
                 else:
-                    print("min(f(x)) {} is {} at x = {}".format(objstr,
-                                                                best_val,
-                                                                b['x']))
+                    print("\t\tmin(f(x)) {} is {} at x = {}".format(objstr,
+                                                                  best_val,
+                                                                  b['x']))
                 ax.annotate(artext,
                             xy=(b['index'] + 0.5, best_val),
                             xytext=(b['index'] + float(n) / 12.0, best_val),
@@ -180,7 +191,8 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
         print(analyze(collection))
 
     if print_pareto and n_objs > 1:
-        print("Pareto Frontier: {} points, ranked by hypervolume".format(len(pareto_set)))
+        print("Pareto Frontier: {} points, ranked by hypervolume".format(
+            len(pareto_set)))
         pareto_y = [doc['y'] for doc in docs if doc['y'] in pareto_set]
         pareto_x = [doc['x'] for doc in docs if doc['y'] in pareto_set]
 
@@ -277,6 +289,12 @@ def analyze(collection):
 if __name__ == "__main__":
     from fireworks import LaunchPad
 
-    lpad = LaunchPad(host='localhost', port=27017, name='rsled')
-    visualize(lpad.db.opt_complex, print_pareto=True, scale='log', showmean=False)
-    # visualize(lpad.db.gphyper0, scale='log')
+    lpad = LaunchPad(host='localhost', port=27017, name='hardness')
+    visualize(lpad.db.opt10, print_pareto=True, scale='linear', showmean=False,
+              maximize=True)
+
+    # lpad = LaunchPad(host='localhost', port=27017, name='2k18pskites_ep')
+    # visualize(lpad.db.rfz4, maximize=True)
+    #
+    # lpad = LaunchPad(host='localhost', port=27017, name='2k18pskites_ep')
+    # visualize(lpad.db.rfz20, maximize=True)
