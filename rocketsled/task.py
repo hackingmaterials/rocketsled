@@ -292,7 +292,6 @@ class OptTask(FireTaskBase):
                         except TypeError:
                             continue
                     else:
-                        print("WAITING!!!!!!")
                         sleep(sleeptime)
 
                 elif not self.enforce_sequential or \
