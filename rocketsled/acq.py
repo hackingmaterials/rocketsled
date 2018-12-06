@@ -153,7 +153,3 @@ def lcb(fmin, mu, std, kappa=1.96):
         vals (numpy array): Acquisition values.
     """
     return mu - kappa * std
-
-
-if __name__ == "__main__":
-    pass
