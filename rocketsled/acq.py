@@ -24,9 +24,9 @@ def acquire(acq, X, Y, space, model, nstraps, return_means=False):
 
     Args:
         acq (str): The acquisition function ('ei', 'pi', or 'lcb')
-        X ([list[): A list of x vectors, for training.
-        Y (list): A list of scalars, for training.
-        space ([list[): A list of possible X vectors, yet to be explored. This
+        X ([list]): A list of x vectors (inputs), for training.
+        Y (list): A list of scalars (outputs), for training.
+        space ([list]): A list of possible X vectors, yet to be explored. This
             is the 'test' set.
         model (BaseEstimator object): sklearn estimator object. Must have .fit
             and .predict methods.
@@ -58,7 +58,7 @@ def acquire(acq, X, Y, space, model, nstraps, return_means=False):
         raise ValueError("Unknown acquisition function: {}!".format(acq))
 
     if return_means:
-        return (acqf(min(Y), mu, std).tolist(), mu)
+        return acqf(min(Y), mu, std).tolist(), mu
     else:
         return acqf(min(Y), mu, std).tolist()
 
@@ -70,9 +70,9 @@ def ppredict(X, Y, space, model):
     combination with joblib's delayed and Parallel utilities.
 
     Args:
-        X ([list[): A list of x vectors, for training.
+        X ([list]): A list of x vectors, for training.
         Y (list): A list of scalars, for training.
-        space ([list[): A list of possible X vectors, yet to be explored. This
+        space ([list]): A list of possible X vectors, yet to be explored. This
             is the 'test' set.
         model (BaseEstimator object): sklearn estimator object. Must have .fit
             and .predict methods.

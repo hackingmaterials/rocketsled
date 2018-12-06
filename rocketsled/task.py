@@ -47,9 +47,9 @@ class OptTask(FireTaskBase):
     A FireTask for automatically running optimization loops and storing
     optimization data for complex workflows.
 
-    OptTask takes in x and yi (input/output of current guess), gathers X
-    (previous guesses input) and y (previous guesses output), and predicts the
-    next best guess.
+    OptTask takes in _x_opt and _y_opt from the fw_spec (input/output of
+    current guess), gathers X (previous guesses input) and y (previous guesses
+    output), and predicts the next best guess.
 
     Required args:
         wf_creator (str): Module path to a function that returns a workflow
@@ -228,7 +228,7 @@ class OptTask(FireTaskBase):
         Args:
             fw_spec (dict): the firetask spec. Must contain a '_y_opt' key with
             a float type field and must contain a '_x_opt' key containing a
-            vector uniquely defining the search space.
+            vector uniquely defining the point in search space.
 
         Returns:
             (FWAction) A workflow based on the workflow creator and a new,
@@ -369,7 +369,7 @@ class OptTask(FireTaskBase):
                 document.
 
         Returns:
-            x (iteralbe): The current x guess.
+            x (iterable): The current x guess.
             y: (iterable): The current y (objective function) value
             z (iterable): The z vector associated with x
             x_dims ([list] or [tuple]): The dimensions of the domain
@@ -666,7 +666,7 @@ class OptTask(FireTaskBase):
         Write documents to database after optimization.
 
         Args:
-            x (iteralbe): The current x guess.
+            x (iterable): The current x guess.
             y: (iterable): The current y (objective function) value
             z (iterable): The z vector associated with x
             x_dims ([list] or [tuple]): The dimensions of the domain
