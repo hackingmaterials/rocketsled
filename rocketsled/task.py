@@ -52,7 +52,7 @@ class OptTask(FireTaskBase):
     next best guess.
 
     Required args:
-        wf_creator (str): Module path ot a function that returns a workflow
+        wf_creator (str): Module path to a function that returns a workflow
             based on a unique vector, x.
         dimensions ([tuple]): each 2-tuple in the list defines one dimension in
             the search space in (low, high) format.
@@ -105,8 +105,8 @@ class OptTask(FireTaskBase):
         Predictor performance:
         n_searchpts (int): The number of points to be searched in the search
             space when choosing the next best point. Choosing more points to
-            search may increase the effectiveness of the optimization. The
-            default is 1000 points.
+            search may increase the effectiveness of the optimization but take
+            longer to evaluate. The default is 1000 points.
         n_trainpts (int): The number of already explored points to be chosen
             for training. Default is None, meaning all available points will be
             used for training. Reduce the number of points to decrease training
@@ -118,8 +118,8 @@ class OptTask(FireTaskBase):
         acq (str): The acquisition function to use. Can be 'ei' for expected
             improvement, 'pi' for probability of improvement, or 'lcb' for lower
             confidence bound. Defaults to None, which means no acquisition
-            function is used, and the highest predicted point is picked. Only
-            applies to builtin predictors.
+            function is used, and the highest predicted point is picked
+            (greedy algorithm). Only applies to builtin predictors.
         n_boots (int): The number of times each optimization should, sample,
             train, and predict values when generating uncertainty estimates for
             prediction. Only used if acq specified. At least 10 data points must
