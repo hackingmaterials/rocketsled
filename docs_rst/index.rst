@@ -76,7 +76,7 @@ Features of ``rocketsled``
     + continuous dimensions
     + discontinuous spaces (subsets of entire spaces)
 
-* 10 Built-in "out-of-the-box" sklearn-based tunable Bayesian optimizers
+* 10 different built-in sklearn-based tunable Bayesian optimizers
     + single objective
     + **multi objective**
 
@@ -202,8 +202,6 @@ Tip: To run tests using a remote launchpad, edit ``/rocketsled/tests/tests_launc
 Tutorials
 =========
 
-*Tutorials 1 and 2 require some knowledge of Fireworks. If you aren't comfortable with Fireworks, please work through the tutorials* `here <https://hackingmaterials.lbl.gov/fireworks/>`_.
-
 
 :doc:`Tutorial 0 - Quickstart </quickstart>`
 -----------------------
@@ -216,6 +214,8 @@ up and running quickly, starting only with an objective function written in Pyth
 :doc:`Tutorial 1 - Basic usage </basic>`
 ------------------------
 
+*Tutorials 1 and 2 require some knowledge of Fireworks. If you aren't comfortable with Fireworks, please work through the tutorials* `here <https://hackingmaterials.lbl.gov/fireworks/>`_.
+
 In this tutorial we demonstrate how to get a basic optimization loop up and
 running with a FireWorks workflow.
 
@@ -224,6 +224,9 @@ running with a FireWorks workflow.
 
 :doc:`Tutorial 2 - Advanced usage </advanced>`
 ---------------------------
+
+*Tutorials 1 and 2 require some knowledge of Fireworks. If you aren't comfortable with Fireworks, please work through the tutorials* `here <https://hackingmaterials.lbl.gov/fireworks/>`_.
+
 In this tutorial we explore the more advanced capabilities of ``OptTask``.
 
 **Time to complete**: 20 min
