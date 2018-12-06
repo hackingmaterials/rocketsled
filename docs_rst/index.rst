@@ -240,6 +240,18 @@ exhaustively documents the possible arguments to ``OptTask`` and provides at lea
 one example of each. If working through the tutorials did not answer your
 question, you'll most likely find your answer here.
 
+Contributions and Support
+-------------------------
+Want to see something added or changed? Here's a few ways you can!
+
+* Help us improve the documentation. Tell us where you got 'stuck' and improve the install process for everyone.
+* Let us know about areas of the code that are difficult to understand or use.
+* Contribute code! Fork our `Github repo <https://github.com/hackingmaterials/rocketsled>`_ and make a pull request.
+
+Submit all questions and contact to the `Google group <https://groups.google.com/forum/#!forum/fireworkflows>`_
+
+A comprehensive guide to contributions can be found `here. <https://github.com/hackingmaterials/rocketsled/blob/master/CONTRIBUTING.md>`_
+
 Documentation
 -------------
 
