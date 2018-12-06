@@ -14,6 +14,7 @@ __author__ = "Alexander Dunn"
 __version__ = "1.0"
 __email__ = "ardunn@lbl.gov"
 
+
 def acquire(acq, X, Y, space, model, nstraps, return_means=False):
     """
     A high level function for calculating acquisition values. Includes a
@@ -61,6 +62,7 @@ def acquire(acq, X, Y, space, model, nstraps, return_means=False):
     else:
         return acqf(min(Y), mu, std).tolist()
 
+
 def ppredict(X, Y, space, model):
     """
     Run a split and fit on a random subsample of the entire explored X. Use this
@@ -85,6 +87,7 @@ def ppredict(X, Y, space, model):
     pmodel.fit(X_train, y_train)
     return pmodel.predict(space)
 
+
 def ei(fmin, mu, std, xi=0.01):
     """
     Returns expected improvement values.
@@ -106,11 +109,12 @@ def ei(fmin, mu, std, xi=0.01):
     mask = std > 0
     stdm = std[mask]
     improve = fmin - mu[mask] - xi
-    vals[mask] = improve * norm.cdf(improve/stdm) + stdm * \
-                 norm.pdf(improve/stdm)
+    vals[mask] = improve * norm.cdf(improve / stdm) + stdm * \
+                 norm.pdf(improve / stdm)
     # improve = fmin - mu
     # vals = improve * norm.cdf(improve/std) + std * norm.pdf(improve/std)
     return vals
+
 
 def pi(fmin, mu, std, xi=0.01):
     """
@@ -131,8 +135,9 @@ def pi(fmin, mu, std, xi=0.01):
         """
     vals = np.zeros_like(mu)
     mask = std > 0
-    vals[mask] = norm.cdf((fmin - mu[mask] - xi)/std[mask])
+    vals[mask] = norm.cdf((fmin - mu[mask] - xi) / std[mask])
     return vals
+
 
 def lcb(fmin, mu, std, kappa=1.96):
     """
@@ -148,6 +153,7 @@ def lcb(fmin, mu, std, kappa=1.96):
         vals (numpy array): Acquisition values.
     """
     return mu - kappa * std
+
 
 if __name__ == "__main__":
     pass
