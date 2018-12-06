@@ -1,4 +1,4 @@
-from  __future__ import print_function, unicode_literals
+from __future__ import print_function, unicode_literals
 
 """
 Utility functions for OptTask.
@@ -29,6 +29,7 @@ class Dtypes(object):
         self.bool = [bool, np.bool_]
         self.discrete = self.ints + self.others
         self.all = self.numbers + self.others
+
 
 def deserialize(fun):
     """
@@ -73,7 +74,7 @@ def random_guess(dimensions, dtypes=Dtypes()):
         upper = dimset[1]
         lower = dimset[0]
         if type(lower) in dtypes.others or len(dimset) > 2:
-            domain_size = len(dimset)-1
+            domain_size = len(dimset) - 1
             new_param = random.randint(0, domain_size)
             random_vector.append(dimset[new_param])
         elif type(lower) in dtypes.ints:
@@ -106,6 +107,7 @@ def latex_float(f):
     else:
         return float_str
 
+
 def pareto(Y, maximize=False):
     """
     Returns the indices of Pareto-optimal solutions.
@@ -118,15 +120,16 @@ def pareto(Y, maximize=False):
         list - The indices of the entries which are Pareto-optimal
     """
     Y = np.asarray(Y)
-    po = np.ones(Y.shape[0], dtype = bool)
+    po = np.ones(Y.shape[0], dtype=bool)
     for i, c in enumerate(Y):
         if maximize:
-            po[i] = np.all(np.any(Y<=c, axis=1))
+            po[i] = np.all(np.any(Y <= c, axis=1))
         else:
-            po[i] = np.all(np.any(Y>=c, axis=1))
+            po[i] = np.all(np.any(Y >= c, axis=1))
     return po
 
+
 if __name__ == "__main__":
-    test = np.asarray([[5,5],[2,2],[1,4],[3,2]])
+    test = np.asarray([[5, 5], [2, 2], [1, 4], [3, 2]])
     print(test[pareto(test, maximize=False)])
     print(test[pareto(test, maximize=True)])
