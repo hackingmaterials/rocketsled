@@ -142,7 +142,7 @@ def pi(fmin, mu, std, xi=0.01):
 def lcb(fmin, mu, std, kappa=1.96):
     """
     Returns lower confidence bound estimates.
-        fmin (float): Minimum value of the objective function known thus far.
+        fmin (float): (not used): Minimum value of the objective function known thus far.
         mu (numpy array):  Mean value of bootstrapped predictions for each y.
         std (numpy array): Standard deviation of bootstrapped predictions for
             each y.
