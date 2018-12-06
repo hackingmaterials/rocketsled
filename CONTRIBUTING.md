@@ -1,4 +1,4 @@
-# Contributing to rocketsled
+# Contributing to rocketsled and FireWorks
 We love your input! We want to make contributing to rocketsled as easy and transparent as possible, whether it's:
 * Reporting a bug
 * Discussing the current state of the code
@@ -19,7 +19,7 @@ If you are making a bug report, incorporate as many elements of the following as
 We love thorough bug reports as this means the development team can make quick and meaningful fixes. When we confirm your bug report, we'll move it to the GitHub issues where its progress can be further tracked.
 
 ## Contributing code modifications or additions through Github
-We use github to host code, to track issues and feature requests, as well as accept pull requests.
+We use github to host code, to track issues and feature requests, as well as accept pull requests. We maintain a list of all contributors to FireWorks (incl. rocketsled) [here.](https://materialsproject.github.io/fireworks/contributors.html)
 
 Pull requests are the best way to propose changes to the codebase. Follow the [Github flow](https://www.atlassian.com/git/tutorials/comparing-workflows/forking-workflow) for more information on this procedure.
 
