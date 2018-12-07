@@ -18,7 +18,7 @@ Overview
 Rocketsled is designed to be a "plug and play" framework, meaning "plug in" your workflow and search space. The requirements are:
 
 * **Workflow creator function**: takes in a vector of workflow input parameters :code:`x`  and returns a Fireworks workflow based on those parameters, including optimization. Specified with the :code:`wf_creator` arg to OptTask. OptTask should be located somewhere in the workflow that :code:`wf_creator` returns.
-* **'_x_opt' and '_y_opt' fields in spec**: the parameters the workflow is run with and the output metric, in the spec of the Firework containing :code:`OptTask`. x must be a vector (list), and y can be a vector (list) or scalar (float).
+* **'_x' and '_y' fields in spec**: the parameters the workflow is run with and the output metric, in the spec of the Firework containing :code:`OptTask`. x must be a vector (list), and y can be a vector (list) or scalar (float).
 * **Dimensions of the search space**: A list of the spaces dimensions, where each dimension is defined by :code:`(higher, lower)` form (for  float/ int)  or ["a", "comprehensive", "list"] form for categories. Specified with the :code:`dimensions` argument to OptTask
 * **MongoDB collection to store data**: Each optimization problem should have its own collection. Specify with :code:`host`, :code:`port`, and :code:`name` arguments to OptTask, or with a Launchpad object (via :code:`lpad` arg to OptTask).
 
@@ -42,10 +42,10 @@ Let's create a **workflow creator function**, the most important part. This func
     # a workflow creator function which takes x and returns a workflow based on x
     def wf_creator(x):
 
-        spec = {'_x_opt':x}
+        spec = {'_x':x}
         X_dim = [(1, 5), (1, 5), (1, 5)]
 
-        # SumTask writes _y_opt field to the spec internally.
+        # SumTask writes _y field to the spec internally.
 
         firework1 = Firework([SumTask(),
                               OptTask(wf_creator='rocketsled.examples.basic.wf_creator',

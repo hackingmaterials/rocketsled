@@ -111,18 +111,20 @@ def auto_setup(func, dimensions, wfname=None, launch_ready=False, **kwargs):
             try:
                 f.write("from __future__ import unicode_literals\n")
                 f.write('"""\n')
-                f.write("This is an automatically created script from auto_setup.\n"
-                        "If you are not comfortable working with FireWorks and "
-                        "PyTask, do NOT move this\nfile out this directory or "
-                        "rename it if you want to run this workflow!\n\nIf you are"
-                        " comfortable working with FireWorks and PyTask, feel f"
-                        "ree to edit\nand/or move this file to suit your needs. "
-                        "See the OptTask documentation and the\nexamples for more "
-                        "information on setting up workflow creators.\n")
+                f.write(
+                    "This is an automatically created script from auto_setup.\n"
+                    "If you are not comfortable working with FireWorks and "
+                    "PyTask, do NOT move this\nfile out this directory or "
+                    "rename it if you want to run this workflow!\n\nIf you are"
+                    " comfortable working with FireWorks and PyTask, feel f"
+                    "ree to edit\nand/or move this file to suit your needs. "
+                    "See the OptTask documentation and the\nexamples for more "
+                    "information on setting up workflow creators.\n")
                 f.write('"""\n')
                 f.write("from fireworks import PyTask, Firework, Workflow, "
                         "LaunchPad\n")
-                f.write("from fireworks.core.rocket_launcher import rapidfire\n")
+                f.write(
+                    "from fireworks.core.rocket_launcher import rapidfire\n")
                 f.write("from rocketsled.utils import deserialize, "
                         "random_guess\n")
                 f.write("from rocketsled import OptTask\n\n\n")
@@ -130,10 +132,11 @@ def auto_setup(func, dimensions, wfname=None, launch_ready=False, **kwargs):
                         " with PyTask.\n")
                 f.write("f = deserialize('" + rawfunc + "')\n\n")
                 f.write("def wf_creator(x):\n")
-                f.write("    spec = {'_x_opt':x}\n")
+                f.write("    spec = {'_x':x}\n")
                 f.write("    pt = " + PyTask_as_string(funcpath) + "\n")
                 f.write("    ot = " + OptTask_as_string(**kwargs) + "\n")
-                f.write("    fw0 = Firework([pt], spec=spec, name='PyTaskFW')\n")
+                f.write(
+                    "    fw0 = Firework([pt], spec=spec, name='PyTaskFW')\n")
                 f.write("    fw1 = Firework([ot], spec=spec, "
                         "name='RocketsledFW')\n")
                 f.write("    wf = Workflow([fw0, fw1], {fw0: [fw1], fw1: []},"
@@ -179,9 +182,11 @@ def auto_setup(func, dimensions, wfname=None, launch_ready=False, **kwargs):
                          "formatted string location of the function")
     return filename
 
+
 def PyTask_as_string(funcpath):
     return "PyTask(func=" + "'{}'".format(funcpath) + \
-           ", args=[x], outputs=['_y_opt'])"
+           ", args=[x], outputs=['_y'])"
+
 
 def OptTask_as_string(**kwargs):
     otstr = "OptTask("
@@ -195,5 +200,6 @@ def OptTask_as_string(**kwargs):
     otstr = otstr[:-2] + ")"
     return otstr
 
+
 if __name__ == "__main__":
-    auto_setup(OptTask_as_string, [1,2,3])
+    auto_setup(OptTask_as_string, [1, 2, 3])

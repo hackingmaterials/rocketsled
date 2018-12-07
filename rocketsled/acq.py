@@ -14,6 +14,7 @@ __author__ = "Alexander Dunn"
 __version__ = "1.0"
 __email__ = "ardunn@lbl.gov"
 
+
 def acquire(acq, X, Y, space, model, nstraps, return_means=False):
     """
     A high level function for calculating acquisition values. Includes a
@@ -23,9 +24,9 @@ def acquire(acq, X, Y, space, model, nstraps, return_means=False):
 
     Args:
         acq (str): The acquisition function ('ei', 'pi', or 'lcb')
-        X ([list[): A list of x vectors, for training.
-        Y (list): A list of scalars, for training.
-        space ([list[): A list of possible X vectors, yet to be explored. This
+        X ([list]): A list of x vectors (inputs), for training.
+        Y (list): A list of scalars (outputs), for training.
+        space ([list]): A list of possible X vectors, yet to be explored. This
             is the 'test' set.
         model (BaseEstimator object): sklearn estimator object. Must have .fit
             and .predict methods.
@@ -57,9 +58,10 @@ def acquire(acq, X, Y, space, model, nstraps, return_means=False):
         raise ValueError("Unknown acquisition function: {}!".format(acq))
 
     if return_means:
-        return (acqf(min(Y), mu, std).tolist(), mu)
+        return acqf(min(Y), mu, std).tolist(), mu
     else:
         return acqf(min(Y), mu, std).tolist()
+
 
 def ppredict(X, Y, space, model):
     """
@@ -68,9 +70,9 @@ def ppredict(X, Y, space, model):
     combination with joblib's delayed and Parallel utilities.
 
     Args:
-        X ([list[): A list of x vectors, for training.
+        X ([list]): A list of x vectors, for training.
         Y (list): A list of scalars, for training.
-        space ([list[): A list of possible X vectors, yet to be explored. This
+        space ([list]): A list of possible X vectors, yet to be explored. This
             is the 'test' set.
         model (BaseEstimator object): sklearn estimator object. Must have .fit
             and .predict methods.
@@ -84,6 +86,7 @@ def ppredict(X, Y, space, model):
     pmodel = deepcopy(model)
     pmodel.fit(X_train, y_train)
     return pmodel.predict(space)
+
 
 def ei(fmin, mu, std, xi=0.01):
     """
@@ -106,11 +109,12 @@ def ei(fmin, mu, std, xi=0.01):
     mask = std > 0
     stdm = std[mask]
     improve = fmin - mu[mask] - xi
-    vals[mask] = improve * norm.cdf(improve/stdm) + stdm * \
-                 norm.pdf(improve/stdm)
+    vals[mask] = improve * norm.cdf(improve / stdm) + stdm * \
+                 norm.pdf(improve / stdm)
     # improve = fmin - mu
     # vals = improve * norm.cdf(improve/std) + std * norm.pdf(improve/std)
     return vals
+
 
 def pi(fmin, mu, std, xi=0.01):
     """
@@ -131,13 +135,14 @@ def pi(fmin, mu, std, xi=0.01):
         """
     vals = np.zeros_like(mu)
     mask = std > 0
-    vals[mask] = norm.cdf((fmin - mu[mask] - xi)/std[mask])
+    vals[mask] = norm.cdf((fmin - mu[mask] - xi) / std[mask])
     return vals
+
 
 def lcb(fmin, mu, std, kappa=1.96):
     """
     Returns lower confidence bound estimates.
-        fmin (float): Minimum value of the objective function known thus far.
+        fmin (float): (not used): Minimum value of the objective function known thus far.
         mu (numpy array):  Mean value of bootstrapped predictions for each y.
         std (numpy array): Standard deviation of bootstrapped predictions for
             each y.
@@ -148,6 +153,3 @@ def lcb(fmin, mu, std, kappa=1.96):
         vals (numpy array): Acquisition values.
     """
     return mu - kappa * std
-
-if __name__ == "__main__":
-    pass

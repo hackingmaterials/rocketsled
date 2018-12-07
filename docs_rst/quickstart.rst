@@ -99,8 +99,8 @@ Let's go to this directory and look at the file, which should look similar to th
     f = deserialize('/Users/ardunn/quickstart.f')
 
     def wf_creator(x):
-        spec = {'_x_opt':x}
-        pt = PyTask(func='rocketsled.auto_sleds.quickstart.f', args=[x], outputs=['_y_opt'])
+        spec = {'_x':x}
+        pt = PyTask(func='rocketsled.auto_sleds.quickstart.f', args=[x], outputs=['_y'])
         ot = OptTask(opt_label='quickstart', dimensions=[(1, 100), (200, 300), (5.0, 10.0)], wf_creator='rocketsled.auto_sleds.quickstart.wf_creator', maximize=True, host='localhost', port=27017, name='my_db')
         fw0 = Firework([pt], spec=spec, name='PyTaskFW')
         fw1 = Firework([ot], spec=spec, name='RocketsledFW')
