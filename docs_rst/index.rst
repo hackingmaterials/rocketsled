@@ -11,7 +11,13 @@ framework *"on rails"* for high throughput computation. rocketsled is an extensi
 `FireWorks <https://github.com/materialsproject/fireworks>`_ workflow software,
 written in Python.
 
-There are many packages for adaptive optimization, including `skopt <https://scikit-optimize.github.io>`_ and `pySOT <https://pysot.readthedocs.io/en/latest/>`_. The major aim of rocketsled is to focus on cases where: (i) function evaluations are expensive enough that they cannot be run locally, and may instead need to be executed on supercomputing centers (e.g., through a queueing system) or external server; (ii) having a database of provenance for jobs is helpful (e.g., to help re-run error cases); or (iii) one needs to run the optimization over long time scales (days, weeks, months, or even years) with persistence. For example, the function to optimize might be a complex physics simulation that takes days to run on a parallel supercomputer. Rocketsled helps users run such difficult optimization cases by leveraging the workflow capabilities of the underlying `FireWorks <https://github.com/materialsproject/fireworks>`_ software, which has been used to execute hundreds of millions of CPU-hours of simulations across millions of workflows on many different systems. The optimization algorithm itself can be set by the user or quickly selected from one of the built-in  `skopt <https://scikit-optimize.github.io>`_ optimizers.
+There are many packages for adaptive optimization, including `skopt <https://scikit-optimize.github.io>`_ and `pySOT <https://pysot.readthedocs.io/en/latest/>`_. The major aim of rocketsled is to focus on cases where:
+
+* function evaluations are expensive enough that they cannot be run locally, and may instead need to be executed on supercomputing centers (e.g., through a queueing system) or external server
+* having a database of provenance for jobs is helpful (e.g., to help re-run error cases)
+* one needs to run the optimization over long time scales (days, weeks, months, or even years) with persistence.
+
+For example, the function to optimize might be a complex physics simulation that takes days to run on a parallel supercomputer. Rocketsled helps users run such difficult optimization cases by leveraging the workflow capabilities of the underlying `FireWorks <https://github.com/materialsproject/fireworks>`_ software, which has been used to execute hundreds of millions of CPU-hours of simulations across millions of workflows on many different systems. The optimization algorithm itself can be set by the user or quickly selected from one of the built-in  `skopt <https://scikit-optimize.github.io>`_ optimizers.
 
 
 =========================
