@@ -17,9 +17,9 @@ X_dim = [(1, 5), (1, 5), (1, 5)]
 
 
 def wf_creator(x):
-    spec = {'_x_opt': x}
+    spec = {'_x': x}
 
-    # CalculateTask writes _y_opt field to the spec internally.
+    # CalculateTask writes _y field to the spec internally.
     firework1 = Firework([SumTask(),
                           OptTask(wf_creator='rocketsled.examples.batch.'
                                              'wf_creator',

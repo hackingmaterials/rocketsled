@@ -162,12 +162,12 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
                 objstr = "objective {}".format(obj + 1) if n_objs > 1 else ""
                 if maximize:
                     print("\t\tmax(f(x)) {} is {} at x = {}".format(objstr,
-                                                                  best_val,
-                                                                  b['x']))
+                                                                    best_val,
+                                                                    b['x']))
                 else:
                     print("\t\tmin(f(x)) {} is {} at x = {}".format(objstr,
-                                                                  best_val,
-                                                                  b['x']))
+                                                                    best_val,
+                                                                    b['x']))
                 ax.annotate(artext,
                             xy=(b['index'] + 0.5, best_val),
                             xytext=(b['index'] + float(n) / 12.0, best_val),

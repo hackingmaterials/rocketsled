@@ -36,9 +36,9 @@ class BasicTestTask(FireTaskBase):
     _fw_name = "BasicTestTask"
 
     def run_task(self, fw_spec):
-        x = fw_spec['_x_opt']
+        x = fw_spec['_x']
         y = np.sum(x[:-1])  # sum all except the final string element
-        return FWAction(update_spec={'_y_opt': y})
+        return FWAction(update_spec={'_y': y})
 
 
 @explicit_serialize
@@ -46,9 +46,9 @@ class AccuracyTask(FireTaskBase):
     _fw_name = "AccuracyTask"
 
     def run_task(self, fw_spec):
-        x = fw_spec['_x_opt']
+        x = fw_spec['_x']
         y = x[0] * x[1] / x[2]
-        return FWAction(update_spec={'_y_opt': y})
+        return FWAction(update_spec={'_y': y})
 
 
 @explicit_serialize
@@ -56,9 +56,9 @@ class MultiTestTask(FireTaskBase):
     _fw_name = "MultiTestTask"
 
     def run_task(self, fw_spec):
-        x = fw_spec['_x_opt']
+        x = fw_spec['_x']
         y = [np.sum(x[:-1]), np.prod(x[:-1])]
-        return FWAction(update_spec={'_y_opt': y})
+        return FWAction(update_spec={'_y': y})
 
 
 def wf_creator_basic(x, launchpad):
@@ -66,7 +66,7 @@ def wf_creator_basic(x, launchpad):
     Testing a basic workflow with one Firework, and two FireTasks.
     """
 
-    spec = {'_x_opt': x}
+    spec = {'_x': x}
     dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
     bt = BasicTestTask()
     ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_basic',
@@ -85,7 +85,7 @@ def wf_custom_predictor(x, launchpad):
     Testing a custom predictor which returns the same x vector for every guess,
     using same workflow as test_basic.
     """
-    spec = {'_x_opt': x}
+    spec = {'_x': x}
     dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
     bt = BasicTestTask()
     ot = OptTask(wf_creator='rocketsled.tests.tests.wf_custom_predictor',
@@ -114,7 +114,7 @@ def wf_creator_complex(x, launchpad):
                    fw5
     """
 
-    spec = {'_x_opt': x}
+    spec = {'_x': x}
     dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
     fw0 = Firework(AdditionTask(), spec={"input_array": [1, 2]}, name='Parent')
     fw1 = Firework(AdditionTask(), spec={"input_array": [2, 3]}, name='Child A')
@@ -142,7 +142,7 @@ def wf_creator_duplicates(x, launchpad):
     """
     Test workflow for duplicate checking with tolerances.
     """
-    spec = {'_x_opt': x}
+    spec = {'_x': x}
     dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
     bt = BasicTestTask()
     ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_duplicates',
@@ -162,7 +162,7 @@ def wf_creator_get_z(x, launchpad):
     Testing a basic workflow with one Firework, and two FireTasks with a get_z
     function. Also tests that duplicate checking is working with get_z.
     """
-    spec = {'_x_opt': x}
+    spec = {'_x': x}
     dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
     bt = BasicTestTask()
     ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_get_z',
@@ -183,7 +183,7 @@ def wf_creator_accuracy(x, launchpad):
     An expensive test ensuring the default predictor actually performs better
     than the average random case on the function defined in AccuracyTask.
     """
-    spec = {'_x_opt': x}
+    spec = {'_x': x}
     dims = [(1, 10), (10.0, 20.0), (20.0, 30.0)]
     at = AccuracyTask()
     ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_accuracy',
@@ -201,7 +201,7 @@ def wf_creator_parallel(x, launchpad):
     An expensive test ensuring the database is locked and released
     correctly during optimization.
     """
-    spec = {'_x_opt': x}
+    spec = {'_x': x}
     dims = [(1, 5), (1, 5), (1, 5)]
     at = AccuracyTask()
     ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_parallel',
@@ -219,7 +219,7 @@ def wf_creator_multiobjective(x, launchpad):
     Testing a multiobjective optimization.
     """
 
-    spec = {'_x_opt': x}
+    spec = {'_x': x}
     dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
     mt = MultiTestTask()
     ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_multiobjective',

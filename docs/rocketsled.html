@@ -81,9 +81,9 @@ space of unknown points. Assumes minimization!</p>
 <dl class="docutils">
 <dt>Args:</dt>
 <dd><p class="first">acq (str): The acquisition function (‘ei’, ‘pi’, or ‘lcb’)
-X ([list[): A list of x vectors, for training.
-Y (list): A list of scalars, for training.
-space ([list[): A list of possible X vectors, yet to be explored. This</p>
+X ([list]): A list of x vectors (inputs), for training.
+Y (list): A list of scalars (outputs), for training.
+space ([list]): A list of possible X vectors, yet to be explored. This</p>
 <blockquote>
 <div>is the ‘test’ set.</div></blockquote>
 <dl class="last docutils">
@@ -130,7 +130,7 @@ Lizotte (2008).</dd>
 <code class="descclassname">rocketsled.acq.</code><code class="descname">lcb</code><span class="sig-paren">(</span><em>fmin</em>, <em>mu</em>, <em>std</em>, <em>kappa=1.96</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.lcb" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Returns lower confidence bound estimates.</dt>
-<dd><p class="first">fmin (float): Minimum value of the objective function known thus far.
+<dd><p class="first">fmin (float): (not used): Minimum value of the objective function known thus far.
 mu (numpy array):  Mean value of bootstrapped predictions for each y.
 std (numpy array): Standard deviation of bootstrapped predictions for</p>
 <blockquote>
@@ -175,9 +175,9 @@ fitted model to predict the remaining space. Meant to be run in parallel in
 combination with joblib’s delayed and Parallel utilities.</p>
 <dl class="docutils">
 <dt>Args:</dt>
-<dd><p class="first">X ([list[): A list of x vectors, for training.
+<dd><p class="first">X ([list]): A list of x vectors, for training.
 Y (list): A list of scalars, for training.
-space ([list[): A list of possible X vectors, yet to be explored. This</p>
+space ([list]): A list of possible X vectors, yet to be explored. This</p>
 <blockquote>
 <div>is the ‘test’ set.</div></blockquote>
 <dl class="last docutils">
@@ -263,13 +263,13 @@ lpad, host, port, name, opt_label, acq, predictor, etc…</dd>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fireworks.core.firework.FireTaskBase</span></code></p>
 <p>A FireTask for automatically running optimization loops and storing
 optimization data for complex workflows.</p>
-<p>OptTask takes in x and yi (input/output of current guess), gathers X
-(previous guesses input) and y (previous guesses output), and predicts the
-next best guess.</p>
+<p>OptTask takes in _x and _y from the fw_spec (input/output of
+current guess), gathers X (previous guesses input) and y (previous guesses
+output), and predicts the next best guess.</p>
 <dl class="docutils">
 <dt>Required args:</dt>
 <dd><dl class="first last docutils">
-<dt>wf_creator (str): Module path ot a function that returns a workflow</dt>
+<dt>wf_creator (str): Module path to a function that returns a workflow</dt>
 <dd>based on a unique vector, x.</dd>
 <dt>dimensions ([tuple]): each 2-tuple in the list defines one dimension in</dt>
 <dd>the search space in (low, high) format.
@@ -331,8 +331,8 @@ to be used with optimization.</dd>
 n_searchpts (int): The number of points to be searched in the search</p>
 <blockquote>
 <div>space when choosing the next best point. Choosing more points to
-search may increase the effectiveness of the optimization. The
-default is 1000 points.</div></blockquote>
+search may increase the effectiveness of the optimization but take
+longer to evaluate. The default is 1000 points.</div></blockquote>
 <dl class="docutils">
 <dt>n_trainpts (int): The number of already explored points to be chosen</dt>
 <dd>for training. Default is None, meaning all available points will be
@@ -345,8 +345,8 @@ space should be a list of tuples.</dd>
 <dt>acq (str): The acquisition function to use. Can be ‘ei’ for expected</dt>
 <dd>improvement, ‘pi’ for probability of improvement, or ‘lcb’ for lower
 confidence bound. Defaults to None, which means no acquisition
-function is used, and the highest predicted point is picked. Only
-applies to builtin predictors.</dd>
+function is used, and the highest predicted point is picked
+(greedy algorithm). Only applies to builtin predictors.</dd>
 <dt>n_boots (int): The number of times each optimization should, sample,</dt>
 <dd>train, and predict values when generating uncertainty estimates for
 prediction. Only used if acq specified. At least 10 data points must
@@ -467,7 +467,7 @@ manager_id (ObjectId): The MongoDB object id of the manager</p>
 <div>document.</div></blockquote>
 </dd>
 <dt>Returns:</dt>
-<dd><p class="first">x (iteralbe): The current x guess.
+<dd><p class="first">x (iterable): The current x guess.
 y: (iterable): The current y (objective function) value
 z (iterable): The z vector associated with x
 x_dims ([list] or [tuple]): The dimensions of the domain
@@ -509,9 +509,9 @@ processes from the queue to the lock.</p>
 <dd><p>FireTask for running an optimization loop.</p>
 <dl class="docutils">
 <dt>Args:</dt>
-<dd>fw_spec (dict): the firetask spec. Must contain a ‘_y_opt’ key with
-a float type field and must contain a ‘_x_opt’ key containing a
-vector uniquely defining the search space.</dd>
+<dd>fw_spec (dict): the firetask spec. Must contain a ‘_y’ key with
+a float type field and must contain a ‘_x’ key containing a
+vector uniquely defining the point in search space.</dd>
 <dt>Returns:</dt>
 <dd>(FWAction) A workflow based on the workflow creator and a new,
 optimized guess.</dd>
@@ -524,7 +524,7 @@ optimized guess.</dd>
 <dd><p>Write documents to database after optimization.</p>
 <dl class="docutils">
 <dt>Args:</dt>
-<dd><p class="first">x (iteralbe): The current x guess.
+<dd><p class="first">x (iterable): The current x guess.
 y: (iterable): The current y (objective function) value
 z (iterable): The z vector associated with x
 x_dims ([list] or [tuple]): The dimensions of the domain

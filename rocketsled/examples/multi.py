@@ -27,10 +27,10 @@ from rocketsled.examples.tasks import MultiTask2, MultiTask6
 # a workflow creator function which takes x and returns a workflow based on x
 def wf_creator(x):
 
-    spec = {'_x_opt':x}
+    spec = {'_x':x}
     X_dim = [(1.0, 5.0), (1.0, 5.0), (1.0, 5.0)]
 
-    # MultiTasks write _y_opt field to the spec internally.
+    # MultiTasks write _y field to the spec internally.
     # MultiTask2 has 2 objectives.
     # MultiTask6, the 6-objective version of MultiTask2, has 6 objectives.
     # Select it by uncommenting it and commenting out MultiTask2.
