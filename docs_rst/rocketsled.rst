@@ -6,6 +6,7 @@ Subpackages
 
 .. toctree::
 
+    rocketsled.auto_sleds
     rocketsled.examples
     rocketsled.tests
 
