@@ -132,7 +132,7 @@ def auto_setup(func, dimensions, wfname=None, launch_ready=False, **kwargs):
                         " with PyTask.\n")
                 f.write("f = deserialize('" + rawfunc + "')\n\n")
                 f.write("def wf_creator(x):\n")
-                f.write("    spec = {'_x_opt':x}\n")
+                f.write("    spec = {'_x':x}\n")
                 f.write("    pt = " + PyTask_as_string(funcpath) + "\n")
                 f.write("    ot = " + OptTask_as_string(**kwargs) + "\n")
                 f.write(
@@ -185,7 +185,7 @@ def auto_setup(func, dimensions, wfname=None, launch_ready=False, **kwargs):
 
 def PyTask_as_string(funcpath):
     return "PyTask(func=" + "'{}'".format(funcpath) + \
-           ", args=[x], outputs=['_y_opt'])"
+           ", args=[x], outputs=['_y'])"
 
 
 def OptTask_as_string(**kwargs):

@@ -20,7 +20,7 @@ This is a string which defines the function returning your optimization loop wor
 1. Accept x
 2. Return a Fireworks workflow based on x (i.e., x sets some parameters in the workflow)
     a. The workflow must contain OptTask
-    b. The Firework containing OptTask must have spec fields '_x_opt' and '_y_opt' containing your x optimization vector and y optimization vector/scalar. A vector used for y is considered a multiobjective optimization.
+    b. The Firework containing OptTask must have spec fields '_x' and '_y' containing your x optimization vector and y optimization vector/scalar. A vector used for y is considered a multiobjective optimization.
 
 The workflow that is returned should have OptTask contained somewhere in it. Since OptTask is in the workflow, this is somewhat recursive.
 

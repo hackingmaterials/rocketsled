@@ -47,7 +47,7 @@ class OptTask(FireTaskBase):
     A FireTask for automatically running optimization loops and storing
     optimization data for complex workflows.
 
-    OptTask takes in _x_opt and _y_opt from the fw_spec (input/output of
+    OptTask takes in _x and _y from the fw_spec (input/output of
     current guess), gathers X (previous guesses input) and y (previous guesses
     output), and predicts the next best guess.
 
@@ -226,8 +226,8 @@ class OptTask(FireTaskBase):
         FireTask for running an optimization loop.
 
         Args:
-            fw_spec (dict): the firetask spec. Must contain a '_y_opt' key with
-            a float type field and must contain a '_x_opt' key containing a
+            fw_spec (dict): the firetask spec. Must contain a '_y' key with
+            a float type field and must contain a '_x' key containing a
             vector uniquely defining the point in search space.
 
         Returns:
@@ -431,8 +431,8 @@ class OptTask(FireTaskBase):
                 raise TypeError("{} should be a list/tuple of positional "
                                 "arguments".format(argname))
 
-        x = list(fw_spec['_x_opt'])
-        y = fw_spec['_y_opt']
+        x = list(fw_spec['_x'])
+        y = fw_spec['_y']
 
         if isinstance(y, (list, tuple)):
             if len(y) == 1:

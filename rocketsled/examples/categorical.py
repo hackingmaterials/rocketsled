@@ -14,10 +14,10 @@ opt_label = "opt_categorical"
 
 def wf_creator(x):
 
-    fw1_spec = {'A': x[0], 'B': x[1], 'C': x[2], 'D': x[3], '_x_opt': x}
+    fw1_spec = {'A': x[0], 'B': x[1], 'C': x[2], 'D': x[3], '_x': x}
     fw1_dim = [(1, 2), (1, 2), (1, 2), ("red", "green", "blue")]
 
-    # CalculateTask writes _y_opt field to the spec internally.
+    # CalculateTask writes _y field to the spec internally.
 
     firework1 = Firework([MixedCalculateTask(),
                           OptTask(wf_creator='rocketsled.examples.categorical.'

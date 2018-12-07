@@ -18,10 +18,10 @@ from rocketsled.examples.tasks import SumTask
 # a workflow creator function which takes x and returns a workflow based on x
 def wf_creator(x):
 
-    spec = {'_x_opt':x}
+    spec = {'_x':x}
     X_dim = [(1, 5), (1, 5), (1, 5)]
 
-    # SumTask writes _y_opt field to the spec internally.
+    # SumTask writes _y field to the spec internally.
 
     firework1 = Firework([SumTask(),
                           OptTask(wf_creator='rocketsled.examples.basic.'

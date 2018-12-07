@@ -16,7 +16,7 @@ from rocketsled.examples.tasks import ComplexMultiObjTask
 def wf_creator(x):
     X_dim = [(16, 145), (0.0, 90.0),
              ["industry standard", "shark fin", "dolphin fin"]]
-    simulation = Firework([ComplexMultiObjTask()], spec={'_x_opt': x},
+    simulation = Firework([ComplexMultiObjTask()], spec={'_x': x},
                           name="simulation")
     optimization = Firework(
         [OptTask(wf_creator='rocketsled.examples.complex.wf_creator',
