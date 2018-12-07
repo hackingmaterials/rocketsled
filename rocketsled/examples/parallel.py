@@ -21,7 +21,7 @@ dims = [(1, 5), (1, 5), (1, 5)]
 
 # a workflow creator function which takes z and returns a workflow based on x
 def wf_creator(x):
-    spec = {'_x_opt': x, '_add_launchpad_and_fw_id': True}
+    spec = {'_x': x, '_add_launchpad_and_fw_id': True}
     Z_dim = dims
 
     firework1 = Firework([SumTask(),

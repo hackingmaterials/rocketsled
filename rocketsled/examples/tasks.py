@@ -19,9 +19,9 @@ class SumTask(FireTaskBase):
     _fw_name = "SumTask"
 
     def run_task(self, fw_spec):
-        x = fw_spec['_x_opt']
+        x = fw_spec['_x']
         y = np.sum(x)
-        return FWAction(update_spec={'_y_opt': y})
+        return FWAction(update_spec={'_y': y})
 
 
 @explicit_serialize
@@ -38,7 +38,7 @@ class MixedCalculateTask(FireTaskBase):
         score += 30 if D == 'red' else 0
         score -= 20 if D == 'green' else 0
 
-        return FWAction(update_spec={'_y_opt': score})
+        return FWAction(update_spec={'_y': score})
 
 
 @explicit_serialize
@@ -46,9 +46,9 @@ class MultiTask2(FireTaskBase):
     _fw_name = "MultiTask2"
 
     def run_task(self, fw_spec):
-        x = fw_spec['_x_opt']
+        x = fw_spec['_x']
         y = [np.sum(x), np.prod(x)]
-        return FWAction(update_spec={'_y_opt': y})
+        return FWAction(update_spec={'_y': y})
 
 
 @explicit_serialize
@@ -56,10 +56,10 @@ class MultiTask6(FireTaskBase):
     _fw_name = "MultiTask6"
 
     def run_task(self, fw_spec):
-        x = fw_spec['_x_opt']
+        x = fw_spec['_x']
         y = [np.sum(x), np.prod(x), x[0] ** x[2],
              3.0 * x[1] ** 2 - 4 * x[0] - x[2], max(x), x[0] - x[1] + x[2]]
-        return FWAction(update_spec={'_y_opt': y})
+        return FWAction(update_spec={'_y': y})
 
 
 @explicit_serialize
@@ -72,7 +72,7 @@ class ComplexMultiObjTask(FireTaskBase):
     _fw_name = "CMOT"
 
     def run_task(self, fw_spec):
-        x = fw_spec['_x_opt']
+        x = fw_spec['_x']
         fin_len = x[0]
         fin_angle = x[1]
         fin_type = x[2]
@@ -90,5 +90,5 @@ class ComplexMultiObjTask(FireTaskBase):
             drag = drag * 0.84
             failure_prob - failure_prob * 1.75
 
-        return FWAction(update_spec={'_y_opt': [cost, drag, failure_prob],
-                                     '_x_opt': x})
+        return FWAction(update_spec={'_y': [cost, drag, failure_prob],
+                                     '_x': x})
