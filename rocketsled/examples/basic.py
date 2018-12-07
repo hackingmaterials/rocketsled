@@ -39,7 +39,7 @@ def run_workflows():
     launchpad = LaunchPad(name=TESTDB_NAME)
     launchpad.reset(password=None, require_password=False)
     launchpad.add_wf(wf_creator([5, 5, 2]))
-    rapidfire(launchpad, nlaunches=10, sleep_time=0)
+    # rapidfire(launchpad, nlaunches=10, sleep_time=0)
 
     # tear down database
     # launchpad.connection.drop_database(TESTDB_NAME)
