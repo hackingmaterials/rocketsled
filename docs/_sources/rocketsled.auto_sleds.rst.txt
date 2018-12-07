@@ -76,6 +76,22 @@ rocketsled.auto\_sleds.pskites\_rfzc\_ep module
     :undoc-members:
     :show-inheritance:
 
+rocketsled.auto\_sleds.quickstart module
+----------------------------------------
+
+.. automodule:: rocketsled.auto_sleds.quickstart
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rocketsled.auto\_sleds.quickstart\_2018\-12\-07\-02\-06\-02\-617273 module
+--------------------------------------------------------------------------
+
+.. automodule:: rocketsled.auto_sleds.quickstart_2018-12-07-02-06-02-617273
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------
