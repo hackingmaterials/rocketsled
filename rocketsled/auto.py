@@ -1,5 +1,3 @@
-from __future__ import unicode_literals, print_function, division
-
 """
 Automatically set up a file to execute a rocketsled optimization given:
     - a function taking in a vector x, and returning a scalar y (func)
@@ -11,15 +9,16 @@ All output will be organized inside the "auto_sleds" directory.
 """
 
 __author__ = "Alexander Dunn"
-__version__ = "1.0"
 __email__ = "ardunn@lbl.gov"
 
 import os
 import sys
 import datetime
 import warnings
+
 from fireworks import LaunchPad
 from fireworks.utilities.fw_utilities import FW_BLOCK_FORMAT
+
 from rocketsled.utils import deserialize
 
 
@@ -51,7 +50,7 @@ def auto_setup(func, dimensions, wfname=None, launch_ready=False, **kwargs):
             immediately.
         kwargs: Arguments to be passed as options to OptTask. Valid arguments
             to be passed are any valid args for OptTask. For example,
-            lpad, host, port, name, opt_label, acq, predictor, etc...
+            lpad, opt_label, acq, predictor, etc...
 
     """
     # Determine the name and directory
@@ -146,13 +145,7 @@ def auto_setup(func, dimensions, wfname=None, launch_ready=False, **kwargs):
                 f.write("    # Make sure the launchpad below is correct, and "
                         "make changes if necessary if\n    # it does not match "
                         "the OptTask db ^^^:\n")
-                if all(s in kwargs for s in ['host', 'port', 'name']):
-                    h = kwargs['host']
-                    p = kwargs['port']
-                    n = kwargs['name']
-                    f.write("    lpad = LaunchPad(host='{}', port={}, "
-                            "name='{}')\n".format(h, p, n))
-                elif 'lpad' in kwargs:
+                if 'lpad' in kwargs:
                     if isinstance(kwargs['lpad'], LaunchPad):
                         lpad = kwargs['lpad'].to_dict()
                     else:
@@ -190,16 +183,11 @@ def PyTask_as_string(funcpath):
 
 def OptTask_as_string(**kwargs):
     otstr = "OptTask("
-    strlist = (str, unicode) if sys.version_info[0] < 3 else str
     for k, v in kwargs.items():
-        if isinstance(v, strlist):
+        if isinstance(v, str):
             strv = "'{}'".format(str(v))
         else:
             strv = str(v)
         otstr += str(k) + "=" + strv + ", "
     otstr = otstr[:-2] + ")"
     return otstr
-
-
-if __name__ == "__main__":
-    auto_setup(OptTask_as_string, [1, 2, 3])
