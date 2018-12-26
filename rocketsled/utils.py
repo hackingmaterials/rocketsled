@@ -1,15 +1,13 @@
-from __future__ import print_function, unicode_literals
-
 """
 Utility functions for OptTask.
 """
 
 import imp
 import random
+
 import numpy as np
 
 __author__ = "Alexander Dunn"
-__version__ = "1.0"
 __email__ = "ardunn@lbl.gov"
 
 
@@ -42,8 +40,6 @@ def deserialize(fun):
     Returns:
         (function) The function object defined by fun
     """
-    # todo: merge with PyTask's deserialize code, move to fw utils
-
     toks = fun.rsplit(".", 1)
     modname, funcname = toks
     if "/" in toks[0]:
@@ -129,7 +125,31 @@ def pareto(Y, maximize=False):
     return po
 
 
-if __name__ == "__main__":
-    test = np.asarray([[5, 5], [2, 2], [1, 4], [3, 2]])
-    print(test[pareto(test, maximize=False)])
-    print(test[pareto(test, maximize=True)])
+def convert_value_to_native(val, dtypes=Dtypes()):
+    """
+    Convert a single value to the native datatype for storage in the opt db.
+
+    Args:
+        val (int/float/str): Numpy or native implementation of numeric or
+            categrical dtype
+        dtypes (Dtypes): An instance of the Dtypes class
+
+    Returns:
+        native (int/float/str): The native python value of val.
+    """
+    if type(val) in dtypes.all:
+        if type(val) in dtypes.floats:
+            native = float(val)
+        elif type(val) in dtypes.ints:
+            native = int(val)
+        elif type(val) in dtypes.bool:
+            native = val
+        elif type(val) in dtypes.others:
+            native = str(val)
+        else:
+            TypeError("Dtype {} not found in rocketsled dtypes."
+                      "".format(type(val)))
+    else:
+        TypeError("Dtype {} not found in rocketsled dtypes."
+                  "".format(type(val)))
+    return native
