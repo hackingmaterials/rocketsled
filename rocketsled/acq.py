@@ -1,17 +1,16 @@
-from __future__ import unicode_literals
-
 """
 Acquisition functions and utilities.
 """
+
 from copy import deepcopy
 from multiprocessing import cpu_count
+
 import numpy as np
 from scipy.stats import norm
 from sklearn.model_selection import train_test_split
 from sklearn.externals.joblib import Parallel, delayed
 
 __author__ = "Alexander Dunn"
-__version__ = "1.0"
 __email__ = "ardunn@lbl.gov"
 
 
