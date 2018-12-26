@@ -1,5 +1,3 @@
-from __future__ import unicode_literals, print_function, division
-
 """
 A file for testing the workflow capabilities of OptTask.
 Note that a local mongod instance in admin mode must be running for the tests to
@@ -12,6 +10,7 @@ if you do not have access to admin mongod privledges on your local machine.
 import os
 import warnings
 import unittest
+
 from ruamel.yaml import YAML
 import numpy as np
 import pymongo
@@ -21,6 +20,7 @@ from fireworks.core.firework import FireTaskBase
 from fireworks.scripts.rlaunch_run import launch_multiprocess
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fw_tutorials.firetask.addition_task import AdditionTask
+
 from rocketsled.task import OptTask, ExhaustedSpaceError
 
 __author__ = "Alexander Dunn"
