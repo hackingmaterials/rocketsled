@@ -572,22 +572,11 @@ class OptTask(FireTaskBase):
             model = self.predictors[predictor]
             XZ_explored = self._encode(XZ_explored, xz_dims)
             XZ_unexplored = self._encode(XZ_unexplored, xz_dims)
-            # todo: Figure out if scaling categorical data makes
-            # todo: optimizer better
-
-            # Scale to
-            if 'get_z' in self:
-                scaling = False if self._is_discrete(
-                    dims=z_dims, criteria='any') else True
-            else:
-                scaling = False if self._is_discrete(
-                    dims=x_dims, criteria='any') else True
-
             XZ_onehot = []
             for _ in range(batch_size):
                 xz1h = self._predict(XZ_explored, Y, XZ_unexplored,
                                      model(*predargs, **predkwargs),
-                                     maximize, scaling)
+                                     maximize, scaling=True)
                 ix = XZ_unexplored.index(xz1h)
                 XZ_unexplored.pop(ix)
                 XZ_onehot.append(xz1h)
