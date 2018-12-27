@@ -104,8 +104,6 @@ class OptTask(FireTaskBase):
             train, and predict values when generating uncertainty estimates for
             prediction. Only used if acq specified. At least 10 data points must
             be present for bootstrapping.
-        random_proba (int): Suggests a random guess with this probability. Must
-            be a float between 0.0 (no random guesses) and 1.0 (totally random).
 
         Features:
         get_z (string): the fully-qualified name of a function which, given a x
@@ -373,7 +371,6 @@ class OptTask(FireTaskBase):
         predkwargs = self.get('predictor_kwargs', {})
 
         # predictor performance
-        random_proba = self.get('random_proba', 0.0)
         n_trainpts = self.get('n_trainpts', None)
         self.n_searchpts = self.get('n_searchpts', 1000)
         if 'acq' in self:
@@ -559,16 +556,6 @@ class OptTask(FireTaskBase):
         plist = [RandomForestRegressor, GaussianProcessRegressor,
                  ExtraTreesRegressor, GradientBoostingRegressor]
         self.predictors = {p.__name__: p for p in plist}
-
-        if random_proba:
-            if random_proba > 1.0 or random_proba < 0.0 or \
-                    type(random_proba) not in self.dtypes.floats:
-                raise ValueError("The probability of a random guess is between "
-                                 "0.0 and 1.0. Please enter a float in this"
-                                 " range")
-            if np.random.rand() < random_proba:
-                predictor = 'random'
-
         if predictor in self.predictors:
             model = self.predictors[predictor]
             XZ_explored = self._encode(XZ_explored, xz_dims)
