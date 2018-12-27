@@ -32,6 +32,8 @@ def acquire(acq, X, Y, space, model, nstraps, return_means=False):
         nstraps (int): The number of bootstrap samplings, with replacement,
             which will be performed. This is also the number of regressor
             fittings and predictions which will be performed.
+        return_means (bool): If True, also return the mean of the acquisition
+            function alongside the acquisition fucntion values.
 
     Returns:
         (list) acquisition values for space. Higher acquisition values
