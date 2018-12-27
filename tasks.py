@@ -54,7 +54,7 @@ def publish(ctx):
 
 @task
 def release(ctx):
-    # ctx.run('github_changelog_generator hackingmaterials/rocketsled')
+    ctx.run('github_changelog_generator hackingmaterials/rocketsled')
     payload = {
         "tag_name": "v" + __version__,
         "target_commitish": "master",
