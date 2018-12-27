@@ -5,15 +5,19 @@
 version: 2
 jobs:
   build:
-    working_directory: ~/repo
     docker:
       # specify the version you desire here
       # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
+      - image: circleci/python:3.6.1
       - image: circleci/mongo:3.4.15
-      - image: circleci/python:3.6.2
-        environment:
-          CODACY_PROJECT_TOKEN: "d5aad8f7509a480da15ec1fb69c455ff"
-          CI: "CIRCLE"
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+
+    working_directory: ~/repo
+
     steps:
       - checkout
 
@@ -27,7 +31,7 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            python -m venv venv
+            python3 -m venv venv
             . venv/bin/activate
             pip install -r requirements.txt
 
@@ -41,11 +45,7 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            pip install coverage
-            pip install codacy-coverage
-            coverage run setup.py test
-            coverage xml
-            python-codacy-coverage -r coverage.xml
+            python setup.py test
 
       - store_artifacts:
           path: test-reports
