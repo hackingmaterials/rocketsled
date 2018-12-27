@@ -16,6 +16,10 @@ jobs:
       # documented at https://circleci.com/docs/2.0/circleci-images/
       # - image: circleci/postgres:9.4
 
+      environment:
+        CODACY_PROJECT_TOKEN: "d5aad8f7509a480da15ec1fb69c455ff"
+        CI: "CIRCLE"
+
     working_directory: ~/repo
 
     steps:
@@ -45,7 +49,11 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            python setup.py test
+            pip install coverage
+            pip install codacy-coverage
+            coverage run setup.py test
+            coverage xml
+            python-codacy-coverage -r coverage.xml
 
       - store_artifacts:
           path: test-reports
