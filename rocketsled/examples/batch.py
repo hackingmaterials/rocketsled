@@ -1,7 +1,17 @@
 """
 An example of running optimizations in batches. For example, submitting 5
 workflows, running them, optimizing, and then submitting the next best 5 
-workflows to the LPAD. 
+workflows to the launchpad.
+
+
+--------------------------------------------------------------------------
+The following workflow is only one Firework (one job), for example purposes.
+However, FireWorks and rocketsled are capable of handling more complex
+workflows including multiple jobs and advanced dependencies. Please see the
+Fireworks and rocketsled documentation pages for more information:
+
+https://hackingmaterials.github.io/rocketsled/
+https://materialsproject.github.io/fireworks/
 """
 
 from fireworks import Workflow, Firework, LaunchPad

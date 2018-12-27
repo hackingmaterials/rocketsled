@@ -1,7 +1,13 @@
-from __future__ import unicode_literals, print_function, division
-
 """
 Example tasks for use in rs_example optimization workflows.
+
+These tasks are mostly used in one-Firework workflows, which are very basic and
+used only for example purposes. However, rocketsled and FireWorks are capable
+of handling workflows which are much more complex. See the FireWorks and
+rocketsled documentation for more information:
+
+https://hackingmaterials.github.io/rocketsled/
+https://materialsproject.github.io/fireworks/
 """
 
 from fireworks.utilities.fw_utilities import explicit_serialize
@@ -10,12 +16,15 @@ from fireworks import FWAction
 import numpy as np
 
 __author__ = "Alexander Dunn"
-__version__ = "1.1"
 __email__ = "ardunn@lbl.gov"
 
 
 @explicit_serialize
 class SumTask(FireTaskBase):
+    """
+    An example task which just sums the input vector, x. Used in the rocketsled
+    example tasks.
+    """
     _fw_name = "SumTask"
 
     def run_task(self, fw_spec):
@@ -26,6 +35,11 @@ class SumTask(FireTaskBase):
 
 @explicit_serialize
 class MixedCalculateTask(FireTaskBase):
+    """
+    An example task (part of an objective function, for example), which accepts
+    both categorical and numerical arguments. Used in the rocketsled example
+    tasks.
+    """
     _fw_name = "MixedCalculateTask"
 
     def run_task(self, fw_spec):
@@ -43,6 +57,11 @@ class MixedCalculateTask(FireTaskBase):
 
 @explicit_serialize
 class MultiTask2(FireTaskBase):
+    """
+    An example task simulating a multiobjective (2) objective function.
+    This task has two objectives, which return the sum and product of a
+    numerical input vector.
+    """
     _fw_name = "MultiTask2"
 
     def run_task(self, fw_spec):
@@ -53,6 +72,10 @@ class MultiTask2(FireTaskBase):
 
 @explicit_serialize
 class MultiTask6(FireTaskBase):
+    """
+    An example task simulating a multiobjective (6) objective function.
+    This task has various objectives which may or may not be competing.
+    """
     _fw_name = "MultiTask6"
 
     def run_task(self, fw_spec):
@@ -65,9 +88,9 @@ class MultiTask6(FireTaskBase):
 @explicit_serialize
 class ComplexMultiObjTask(FireTaskBase):
     """
-    An example of a complex, multiobjective task with competing objectives.
-
-    This problem is defined on
+    An example of a complex, multiobjective task (similar to MutliTask2/6) with
+    directly competing objectives. The input vector is defined on a search
+    space with numerical and categorical inputs.
     """
     _fw_name = "CMOT"
 
