@@ -163,10 +163,9 @@ class OptTask(FireTaskBase):
     """
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
-    optional_params = ['lpad', 'opt_label',
-                       'predictor', 'predictor_args', 'predictor_kwargs',
-                       'n_search_points', 'n_train_points', 'acq',
-                       'random_interval', 'space_file', 'get_z', 'get_z_args',
+    optional_params = ['lpad', 'opt_label', 'predictor', 'predictor_args',
+                       'predictor_kwargs', 'n_search_points', 'n_train_points',
+                       'acq', 'space_file', 'get_z', 'get_z_args',
                        'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs',
                        'encode_categorical', 'duplicate_check', 'max',
                        'batch_size', 'tolerance', 'timeout', 'n_boostraps',
