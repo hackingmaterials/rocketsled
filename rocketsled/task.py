@@ -160,33 +160,6 @@ class OptTask(FireTaskBase):
             guesses with high parallelism.
         timeout (int): The number of seconds to wait before resetting the lock
             on the db.
-
-    Attributes:
-        c (MongoDB collection): The collection to store the
-            optimization data.
-        dtypes (Dtypes): Object containing the datatypes available for
-            optimization.
-        predictors ([str]): Built in sklearn regressors available for
-            optimization with OptTask.
-        launchpad (LaunchPad): The Fireworks LaunchPad object which determines
-            where workflow data is stored.
-        get_z (str): Fully qualified name of the "get_z" function defined by the
-            user.
-        enforce_sequential (bool): WARNING: Experimental feature. True means
-            that optimization calculations are run sequentially. False means
-            that optimization calculations are run in parallel, which disables
-            duplicate checking.
-        _manager (dict/MongoDB query syntax): The document format which
-            details how the manager (for parallel optimizations) are managed.
-        _completed (dict/MongoDB query syntax): The document format which
-            details how the optimization data (on
-            a per optimization loop basis) is stored for points which have
-            already been computed/explored by a workflow.
-        _n_cats (int): The number of categorical dimensions.
-        _encoding_info (dict): Data for converting between one-hot encoded data
-            and categorical data.
-        _xdim_spec ([str]): Specifications about the datatype of the x
-            dimensions.
     """
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
