@@ -1,5 +1,3 @@
-from __future__ import print_function, unicode_literals
-
 """
 An example of the using rocketsled to auto_setup a loop using a custom function.
 
@@ -9,6 +7,7 @@ self-repeating FireWorks workflow.
 Your auto-created script will be in the rocketsled/auto_sleds directory!
 """
 from rocketsled import auto_setup
+
 
 # The objective function must accept a vector and return a scalar.
 def f(x):
