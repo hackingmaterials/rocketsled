@@ -44,13 +44,17 @@ def update_doc(ctx):
         ctx.run("git commit -a -m \"Update to v{}\"".format(__version__))
         ctx.run("git push")
 
+
 @task
 def publish(ctx):
-    ctx.run("python setup.py release")
+    ctx.run("rm dist/*.*", warn=True)
+    ctx.run("python3 setup.py sdist bdist_wheel")
+    ctx.run("twine upload dist/*")
 
 
 @task
-def release_github(ctx):
+def release(ctx):
+    # ctx.run('github_changelog_generator hackingmaterials/rocketsled')
     payload = {
         "tag_name": "v" + __version__,
         "target_commitish": "master",
@@ -59,24 +63,11 @@ def release_github(ctx):
         "draft": False,
         "prerelease": False
     }
-    # For this to work properly, you need to go to your Github profile, generate
-    # a "Personal access token". Then do export GITHUB_RELEASES_TOKEN="xyz1234"
-    # (or add it to your bash_profile).
     response = requests.post(
         "https://api.github.com/repos/hackingmaterials/rocketsled/releases",
         data=json.dumps(payload),
         headers={"Authorization": "token " + os.environ["GITHUB_RELEASES_TOKEN"]})
     print(response.text)
-
-
-@task
-def release(ctx, nosetest=False):
-    if nosetest:
-        ctx.run("nosetests")
-    publish(ctx)
-    update_doc(ctx)
-    release_github(ctx)
-
 
 @task
 def open_doc(ctx):
