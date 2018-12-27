@@ -25,7 +25,7 @@ from fireworks import FWAction, LaunchPad
 
 from rocketsled.acq import acquire
 from rocketsled.utils import deserialize, Dtypes, pareto, \
-    convert_value_to_native
+    convert_value_to_native, split_xz
 
 __author__ = "Alexander Dunn"
 __email__ = "ardunn@lbl.gov"
@@ -307,7 +307,8 @@ class OptTask(FireTaskBase):
                         # continue
 
                     self.pop_lock(manager_id)
-                    X_new = [xz_new[:len(x)] for xz_new in XZ_new]
+                    X_new = [split_xz(xz_new, x_dims, x_only=True) for
+                             xz_new in XZ_new]
                     wf_creator = deserialize(self['wf_creator'])
                     wf_creator_args = self.get('wf_creator_args', [])
                     wf_creator_kwargs = self.get('wf_creator_kwargs', {})
@@ -608,8 +609,10 @@ class OptTask(FireTaskBase):
                                 "predictors is not yet supported")
 
             if predictor not in self.predictors and predictor != 'random':
-                X_new = [xz_new[:len(x)] for xz_new in XZ_new]
-                X_explored = [xz[:len(x)] for xz in XZ_explored]
+                X_new = [split_xz(xz_new, x_dims, x_only=True) for
+                         xz_new in XZ_new]
+                X_explored = [split_xz(xz, x_dims, x_only=True) for
+                              xz in XZ_explored]
 
                 if tolerances:
                     for n, x_new in enumerate(X_new):
@@ -654,7 +657,7 @@ class OptTask(FireTaskBase):
 
         for xz_new in XZ_new:
             # separate 'predicted' z features from the new x vector
-            x_new, z_new = xz_new[:len(x_dims)], xz_new[len(x_dims):]
+            x_new, z_new = split_xz(xz_new, x_dims)
             x_new = self._convert_native(x_new)
             z_new = self._convert_native(z_new)
 
