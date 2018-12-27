@@ -91,10 +91,10 @@ class OptTask(FireTaskBase):
             for training. Default is None, meaning all available points will be
             used for training. Reduce the number of points to decrease training
             times.
-        space (str): The fully specified path of a pickle file containing a list
-            of all possible searchable vectors.
+        space_file (str): The fully specified path of a pickle file containing a
+            list of all possible searchable vectors.
             For example '/Users/myuser/myfolder/myspace.p'. When loaded, this
-            space should be a list of tuples.
+            space_file should be a list of tuples.
         acq (str): The acquisition function to use. Can be 'ei' for expected
             improvement, 'pi' for probability of improvement, or 'lcb' for lower
             confidence bound. Defaults to None, which means no acquisition
@@ -193,7 +193,7 @@ class OptTask(FireTaskBase):
     optional_params = ['lpad', 'opt_label',
                        'predictor', 'predictor_args', 'predictor_kwargs',
                        'n_search_points', 'n_train_points', 'acq',
-                       'random_interval', 'space', 'get_z', 'get_z_args',
+                       'random_interval', 'space_file', 'get_z', 'get_z_args',
                        'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs',
                        'encode_categorical', 'duplicate_check', 'max',
                        'batch_size', 'tolerance', 'timeout', 'n_boostraps',
@@ -853,9 +853,9 @@ class OptTask(FireTaskBase):
         Returns:
             ([list]) Points of the search space. 
         """
-        if 'space' in self:
-            if self['space']:
-                with open(self['space'], 'rb') as f:
+        if 'space_file' in self:
+            if self['space_file']:
+                with open(self['space_file'], 'rb') as f:
                     return pickle.load(f)
 
         # Ensure consistency of dimensions
