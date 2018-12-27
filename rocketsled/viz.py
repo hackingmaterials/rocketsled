@@ -281,17 +281,3 @@ def analyze(collection):
              "{}\n".format(len(xdim), xdim, len(zdim), zdim, zlearn, n_opts,
                            breakdown, n_reserved, qlen, lockstr)
     return fmtstr
-
-
-if __name__ == "__main__":
-    from fireworks import LaunchPad
-
-    lpad = LaunchPad(host='localhost', port=27017, name='hardness')
-    visualize(lpad.db.opt10, print_pareto=True, scale='linear', showmean=False,
-              maximize=True)
-
-    # lpad = LaunchPad(host='localhost', port=27017, name='2k18pskites_ep')
-    # visualize(lpad.db.rfz4, maximize=True)
-    #
-    # lpad = LaunchPad(host='localhost', port=27017, name='2k18pskites_ep')
-    # visualize(lpad.db.rfz20, maximize=True)

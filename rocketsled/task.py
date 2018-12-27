@@ -28,7 +28,6 @@ from rocketsled.utils import deserialize, Dtypes, pareto, \
     convert_value_to_native
 
 __author__ = "Alexander Dunn"
-__version__ = "1.0"
 __email__ = "ardunn@lbl.gov"
 
 
@@ -587,8 +586,8 @@ class OptTask(FireTaskBase):
             XZ_onehot = []
             for _ in range(batch_size):
                 xz1h = self._predict(XZ_explored, Y, XZ_unexplored,
-                                          model(*predargs, **predkwargs),
-                                          maximize, scaling)
+                                     model(*predargs, **predkwargs),
+                                     maximize, scaling)
                 ix = XZ_unexplored.index(xz1h)
                 XZ_unexplored.pop(ix)
                 XZ_onehot.append(xz1h)
@@ -753,7 +752,7 @@ class OptTask(FireTaskBase):
 
         elif '_add_launchpad_and_fw_id' in fw_spec and \
                 fw_spec['_add_launchpad_and_fw_id']:
-                lpad = self.launchpad
+            lpad = self.launchpad
         else:
             try:
                 lpad = LaunchPad.auto_load()
