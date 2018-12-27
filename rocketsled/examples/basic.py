@@ -15,37 +15,27 @@ from rocketsled import OptTask
 from rocketsled.examples.tasks import SumTask
 
 
+LPAD = LaunchPad(name='rsled')
+X_dim = [(1, 5), (1, 5), (1, 5)]
+
 # a workflow creator function which takes x and returns a workflow based on x
 def wf_creator(x):
 
     spec = {'_x':x}
-    X_dim = [(1, 5), (1, 5), (1, 5)]
 
     # SumTask writes _y field to the spec internally.
-
     firework1 = Firework([SumTask(),
                           OptTask(wf_creator='rocketsled.examples.basic.'
                                              'wf_creator',
                                   dimensions=X_dim,
-                                  host='localhost',
-                                  port=27017,
-                                  name='rsled')],
+                                  lpad=LPAD)],
                           spec=spec)
 
     return Workflow([firework1])
 
-def run_workflows():
-    TESTDB_NAME = 'rsled'
-    launchpad = LaunchPad(name=TESTDB_NAME)
-    launchpad.reset(password=None, require_password=False)
-    launchpad.add_wf(wf_creator([5, 5, 2]))
-    # rapidfire(launchpad, nlaunches=10, sleep_time=0)
-
-    # tear down database
-    # launchpad.connection.drop_database(TESTDB_NAME)
-
 if __name__ == "__main__":
-    run_workflows()
-
+    LPAD.reset(password=None, require_password=False)
+    LPAD.add_wf(wf_creator([5, 5, 2]))
+    rapidfire(LPAD, nlaunches=10, sleep_time=0)
 
 
