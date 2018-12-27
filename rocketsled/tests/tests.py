@@ -351,7 +351,7 @@ class TestWorkflows(unittest.TestCase):
     def test_parallel(self):
         n_procs = 10
         self.lp.reset(password=None, require_password=False)
-        for _ in range(n_procs):
+        for i in range(n_procs):
             # Assume the worst case, with n_procs forced duplicates
             self.lp.add_wf(wf_creator_parallel([1, 5, 3], self.lp))
         try:
