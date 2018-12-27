@@ -100,7 +100,7 @@ class OptTask(FireTaskBase):
             confidence bound. Defaults to None, which means no acquisition
             function is used, and the highest predicted point is picked
             (greedy algorithm). Only applies to builtin predictors.
-        n_boots (int): The number of times each optimization should, sample,
+        n_boostraps (int): The number of times each optimization should, sample,
             train, and predict values when generating uncertainty estimates for
             prediction. Only used if acq specified. At least 10 data points must
             be present for bootstrapping.
@@ -198,11 +198,12 @@ class OptTask(FireTaskBase):
                        'random_interval', 'space', 'get_z', 'get_z_args',
                        'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs',
                        'encode_categorical', 'duplicate_check', 'max',
-                       'batch_size', 'tolerance', 'timeout', 'n_boots',
+                       'batch_size', 'tolerance', 'timeout', 'n_boostraps',
                        'enforce_sequential']
 
-    # def __init__(self):
-    #     super(FireTaskBase, self)
+    def __init__(self, *args, **kwargs):
+        super(OptTask, self).__init__(*args, **kwargs)
+
 
     def run_task(self, fw_spec):
         """
@@ -384,7 +385,7 @@ class OptTask(FireTaskBase):
                     "'maximin' (multiobjective), or None.")
         else:
             self.acq = None
-        self.n_boots = self.get('n_boots', 500)
+        self.n_boostraps = self.get('n_boostraps', 500)
 
         # extra features
         if 'get_z' in self and self['get_z'] is not None:
@@ -776,7 +777,7 @@ class OptTask(FireTaskBase):
             dims (list): The dimensions of the search space. 
 
         Returns:
-            None
+            [str]: Types of the dimensions in the search space defined by dims.
         """
         dims_types = [list, tuple]
         dim_spec = []
@@ -1003,7 +1004,7 @@ class OptTask(FireTaskBase):
             else:
                 # Use the acquistion function values
                 values = acquire(self.acq, X_scaled, Y, space_scaled, model,
-                                 self.n_boots)
+                                 self.n_boostraps)
         else:
             # Multi-objective
             if self.acq is None or n_explored < 10:
@@ -1031,7 +1032,7 @@ class OptTask(FireTaskBase):
                     yobj = [y[i] for y in Y]
                     values[:, i], mu[:, i] = acquire("pi", X_scaled, yobj,
                                                      space_scaled, model,
-                                                     self.n_boots,
+                                                     self.n_boostraps,
                                                      return_means=True)
                 pf = Y[pareto(Y, maximize=maximize)]
                 dmaximin = np.zeros(n_unexplored)
