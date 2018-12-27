@@ -65,9 +65,9 @@ def visualize(collection, maximize=False, showbest=True, showmean=True,
     # print(int(math.ceil(float(n_objs)/float(N_COLS))))
 
     if n_objs < N_COLS:
-        f, axarr = plt.subplots(n_objs, squeeze=False)
+        _, axarr = plt.subplots(n_objs, squeeze=False)
     else:
-        f, axarr = plt.subplots(N_COLS, int(math.ceil(n_objs / N_COLS)),
+        _, axarr = plt.subplots(N_COLS, int(math.ceil(n_objs / N_COLS)),
                                 squeeze=False)
 
     docset = collection.find({'index': {'$exists': 1}})

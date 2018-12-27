@@ -772,16 +772,16 @@ class OptTask(FireTaskBase):
         dims_types = [list, tuple]
         dim_spec = []
 
-        if type(dims) not in dims_types:
+        if not isinstance(dims, dims_types):
             raise TypeError("The dimensions must be a list or tuple.")
 
         for dim in dims:
-            if type(dim) not in dims_types:
+            if not isinstance(dim, dims_types):
                 raise TypeError("The dimension {} must be a list or tuple."
                                 "".format(dim))
 
             for entry in dim:
-                if type(entry) not in self.dtypes.all:
+                if not isinstance(entry, self.dtypes.all):
                     raise TypeError("The entry {} in dimension {} cannot be "
                                     "used with OptTask. A list of acceptable "
                                     "datatypes is {}".format(entry, dim,
@@ -789,25 +789,25 @@ class OptTask(FireTaskBase):
                 for dset in [self.dtypes.ints,
                              self.dtypes.floats,
                              self.dtypes.others]:
-                    if type(entry) not in dset and type(dim[0]) in dset:
+                    if not isinstance(entry, dset) and isinstance(dim[0], dset):
                         raise TypeError(
                             "The dimension {} contains heterogeneous"
                             " types: {} and {}".format(dim,
                                                        type(dim[0]),
                                                        type(entry)))
             if isinstance(dim, list):
-                if type(dim[0]) in self.dtypes.ints:
+                if isinstance(dim[0], self.dtypes.ints):
                     dim_spec.append("int_set")
-                elif type(dim[0]) in self.dtypes.floats:
+                elif isinstance(dim[0], self.dtypes.floats):
                     dim_spec.append("float_set")
-                elif type(dim[0]) in self.dtypes.others:
+                elif isinstance(dim[0], self.dtypes.others):
                     dim_spec.append("categorical {}".format(len(dim)))
             elif isinstance(dim, tuple):
-                if type(dim[0]) in self.dtypes.ints:
+                if isinstance(dim[0], self.dtypes.ints):
                     dim_spec.append("int_range")
-                elif type(dim[0]) in self.dtypes.floats:
+                elif isinstance(dim[0], self.dtypes.floats):
                     dim_spec.append("float_range")
-                elif type(dim[0]) in self.dtypes.others:
+                elif isinstance(dim[0], self.dtypes.others):
                     dim_spec.append("categorical {}".format(len(dim)))
         return dim_spec
 
@@ -827,15 +827,15 @@ class OptTask(FireTaskBase):
 
         if criteria == 'all':
             for dim in dims:
-                if type(dim[0]) not in self.dtypes.discrete or \
-                        type(dim[1]) not in self.dtypes.discrete:
+                if not isinstance(dim[0], self.dtypes.discrete) or \
+                        not isinstance(dim[1], self.dtypes.discrete):
                     return False
             return True
 
         elif criteria == 'any':
             for dim in dims:
-                if type(dim[0]) in self.dtypes.discrete or \
-                        type(dim[1]) in self.dtypes.discrete:
+                if isinstance(dim[0], self.dtypes.discrete) or \
+                        isinstance(dim[1], self.dtypes.discrete):
                     return True
             return False
 
@@ -1110,8 +1110,7 @@ class OptTask(FireTaskBase):
             dims ([list]): The dimensions of the search space.
 
         Returns:
-            categorical_new_x (list): The new_x vector in categorical dimensions. 
-
+            categorical_new_x (list): The new_x vector in categorical dimensions
         """
 
         original_len = len(dims)
@@ -1121,7 +1120,7 @@ class OptTask(FireTaskBase):
         tot_bin_len = 0
 
         for i, dim in enumerate(dims):
-            if type(dim[0]) in self.dtypes.others:
+            if isinstance(dim[0], self.dtypes.others):
                 dim_info = self._encoding_info[cat_index]
                 binary_len = dim_info['binary_len']
                 lb = dim_info['lb']
@@ -1164,7 +1163,7 @@ class OptTask(FireTaskBase):
         for i, dim in enumerate(dims):
             cat_values = []
             for z in Z:
-                if type(z[i]) in self.dtypes.others:
+                if isinstance(z[i], self.dtypes.others):
                     # the dimension is categorical
                     if z[i] not in cat_values:
                         cat_values.append(z[i])
@@ -1200,7 +1199,7 @@ class OptTask(FireTaskBase):
 
         categorical_dimensions = []
         for i in range(len(x_new)):
-            if type(x_new[i]) not in self.dtypes.numbers:
+            if not isinstance(x_new[i], self.dtypes.numbers):
                 categorical_dimensions.append(i)
 
         for x_ex in X_explored:
