@@ -12,7 +12,8 @@ from rocketsled import auto_setup
 
 DIMS = [(1, 5), (2, 6)]
 
-def testfun(x):
+
+def examplefun(x):
     """
     A test function returning the sum of a list.
 
@@ -36,12 +37,12 @@ class TestAutoSleds(unittest.TestCase):
             self.lp = LaunchPad.from_dict(lp_dict)
 
     def test_basic(self):
-        auto_setup(testfun, DIMS, wfname="TEST_AUTO_SLED")
+        auto_setup(examplefun, DIMS, wfname="TEST_AUTO_SLED")
         sled_file = os.path.join(self.autosled_dir, "TEST_AUTO_SLED.py")
         self.assertTrue(os.path.exists(sled_file))
 
     def test_with_lpad(self):
-        auto_setup(testfun, DIMS, wfname="TEST_WITH_LPAD")
+        auto_setup(examplefun, DIMS, wfname="TEST_WITH_LPAD")
         sled_file = os.path.join(self.autosled_dir, "TEST_WITH_LPAD.py")
         self.assertTrue(os.path.exists(sled_file))
 

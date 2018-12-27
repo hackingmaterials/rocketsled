@@ -1,5 +1,3 @@
-from __future__ import unicode_literals, division, print_function
-
 """
 Functions for visualizing optimization progress.
 """
@@ -12,7 +10,6 @@ from matplotlib import pyplot as plt
 from rocketsled.utils import Dtypes, latex_float, pareto
 
 __author__ = "Alexander Dunn"
-__version__ = "1.0"
 __email__ = "ardunn@lbl.gov"
 
 

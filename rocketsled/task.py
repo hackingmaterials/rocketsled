@@ -1,16 +1,18 @@
-from __future__ import unicode_literals, print_function, division
-
 """
 The FireTask for running automatic optimization loops.
 
 Please see the documentation for a comprehensive guide on usage. 
 """
+import pickle
+import warnings
 import random
 import heapq
-from itertools import product
-from os import getpid, path
 from time import sleep
-import warnings
+from os import getpid, path
+from functools import reduce
+from itertools import product
+from collections.abc import Iterable
+
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, \
     ExtraTreesRegressor
@@ -20,21 +22,10 @@ from sklearn.preprocessing import StandardScaler
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction, LaunchPad
+
 from rocketsled.acq import acquire
-from rocketsled.utils import deserialize, Dtypes, pareto
-
-try:
-    # for Python 3.6-
-    import cPickle as pickle
-except:
-    # for Python 3.6+
-    import pickle
-
-try:
-    # Python 3.6+ has no reduce() builtin
-    from functools import reduce
-except:
-    pass
+from rocketsled.utils import deserialize, Dtypes, pareto, \
+    convert_value_to_native
 
 __author__ = "Alexander Dunn"
 __version__ = "1.0"
@@ -64,21 +55,11 @@ class OptTask(FireTaskBase):
     Optional args:
     
         Database setup:
-        host (string): The name of the MongoDB host where the optimization data
-            will be stored.
-        port (int): The number of the MongoDB port where the optimization data
-            will be stored.
-        name (string): The name of the MongoDB database where the optimization
-            data will be stored.
         lpad (LaunchPad): A Fireworks LaunchPad object, which can be used to
             define the host/port/name of the db.
         opt_label (string): Names the collection of that the particular
             optimization's data will be stored in. Multiple collections
             correspond to multiple independent optimizations.
-        db_extras (dict): Keyword arguments to be passed to MongoClient to help
-            set up the db (e.g., password, username, SSL info)
-            Example: db_extras={'username': 'myuser', 'password': 'mypassword',
-            'maxPoolSize': 10}
     
         Predictors:
         predictor (string): names a function which given a list of explored
@@ -212,7 +193,7 @@ class OptTask(FireTaskBase):
     """
     _fw_name = "OptTask"
     required_params = ['wf_creator', 'dimensions']
-    optional_params = ['host', 'port', 'name', 'lpad', 'opt_label', 'db_extras',
+    optional_params = ['lpad', 'opt_label',
                        'predictor', 'predictor_args', 'predictor_kwargs',
                        'n_search_points', 'n_train_points', 'acq',
                        'random_interval', 'space', 'get_z', 'get_z_args',
@@ -220,6 +201,9 @@ class OptTask(FireTaskBase):
                        'encode_categorical', 'duplicate_check', 'max',
                        'batch_size', 'tolerance', 'timeout', 'n_boots',
                        'enforce_sequential']
+
+    # def __init__(self):
+    #     super(FireTaskBase, self)
 
     def run_task(self, fw_spec):
         """
@@ -299,6 +283,8 @@ class OptTask(FireTaskBase):
                     try:
                         x, y, z, x_dims, XZ_new, predictor, n_completed = \
                             self.optimize(fw_spec, manager_id)
+                    except BatchNotReadyError:
+                        return None
                     except Exception:
                         self.pop_lock(manager_id)
                         raise
@@ -473,6 +459,10 @@ class OptTask(FireTaskBase):
         batch_ready = n_completed not in (0, 1) and \
                       (n_completed + 1) % batch_size == 0
 
+        x = self._convert_native(x)
+        y = self._convert_native(y)
+        z = self._convert_native(z)
+
         if batch_mode and not batch_ready:
             # 'None' predictor means this job was not used for
             # an optimization run.
@@ -486,7 +476,6 @@ class OptTask(FireTaskBase):
                                   'predictor': None,
                                   'index': n_completed + 1}
                          })
-
                 else:
                     # For completed guesses (ie, this workflow
                     # is a forced duplicate), do not update
@@ -503,7 +492,7 @@ class OptTask(FireTaskBase):
                                    'z_new': [], 'predictor': None,
                                    'index': n_completed + 1})
             self.pop_lock(manager_id)
-            return None
+            raise BatchNotReadyError
 
         # Mongo aggregation framework may give duplicate documents, so we cannot
         # use $sample to randomize the training points used
@@ -595,9 +584,15 @@ class OptTask(FireTaskBase):
                 scaling = False if self._is_discrete(
                     dims=x_dims, criteria='any') else True
 
-            XZ_onehot = self._predict(XZ_explored, Y, XZ_unexplored,
-                                      model(*predargs, **predkwargs), maximize,
-                                      batch_size, scaling)
+            XZ_onehot = []
+            for _ in range(batch_size):
+                xz1h = self._predict(XZ_explored, Y, XZ_unexplored,
+                                          model(*predargs, **predkwargs),
+                                          maximize, scaling)
+                ix = XZ_unexplored.index(xz1h)
+                XZ_unexplored.pop(ix)
+                XZ_onehot.append(xz1h)
+
             XZ_new = [self._decode(xz_onehot, xz_dims) for
                       xz_onehot in XZ_onehot]
 
@@ -647,7 +642,6 @@ class OptTask(FireTaskBase):
                                 tolerances=tolerances):
                             XZ_new[n] = random.choice(
                                 XZ_unexplored)
-
                 else:
                     if self._is_discrete(x_dims):
                         # test only for x, not xz because custom predicted z
@@ -685,18 +679,6 @@ class OptTask(FireTaskBase):
         for xz_new in XZ_new:
             # separate 'predicted' z features from the new x vector
             x_new, z_new = xz_new[:len(x_dims)], xz_new[len(x_dims):]
-
-            # Python3/new bson type conversion for numpy
-            if self.n_objs == 1:
-                y = float(y)
-            else:
-                if isinstance(y, np.ndarray):
-                    y = y.tolist()
-                else:
-                    y = self._convert_native(y)
-
-            x = self._convert_native(x)
-            z = self._convert_native(z)
             x_new = self._convert_native(x_new)
             z_new = self._convert_native(z_new)
 
@@ -741,7 +723,8 @@ class OptTask(FireTaskBase):
                 # reserve the new x to prevent parallel processes from
                 # registering it as unexplored, since the next iteration of this
                 # process will be exploring it
-                self.c.insert_one({'x': x_new, 'y': 'reserved'})
+                res = self.c.insert_one({'x': x_new, 'y': 'reserved'})
+                opt_id = res.inserted_id
             else:
                 raise ValueError(
                     "The predictor suggested a guess which has already been "
@@ -763,28 +746,14 @@ class OptTask(FireTaskBase):
             opt_label = self['opt_label']
         else:
             opt_label = 'opt_default'
-        if 'db_extras' in self:
-            db_extras = self['db_extras']
-        else:
-            db_extras = {}
-        db_reqs = ('host', 'port', 'name')
-        db_def = [req in self for req in db_reqs]
 
-        if all(db_def):
-            host, port, name = [self[k] for k in db_reqs]
-            lpad = LaunchPad(host, port, name, **db_extras)
-
-        elif any(db_def):
-            raise AttributeError("Host, port, and name must all be specified!")
-
-        elif 'lpad' in self:
+        if 'lpad' in self:
             lpad_dict = self['lpad']
             lpad = LaunchPad.from_dict(lpad_dict)
 
-        elif '_add_launchpad_and_fw_id' in fw_spec:
-            if fw_spec['_add_launchpad_and_fw_id']:
+        elif '_add_launchpad_and_fw_id' in fw_spec and \
+                fw_spec['_add_launchpad_and_fw_id']:
                 lpad = self.launchpad
-
         else:
             try:
                 lpad = LaunchPad.auto_load()
@@ -793,9 +762,9 @@ class OptTask(FireTaskBase):
                 # auto_load did not return any launchpad object, so nothing was
                 # defined.
                 raise AttributeError("The optimization database must be "
-                                     "specified explicitly (with host, port, "
-                                     "and name), with Launchpad object (lpad), "
-                                     "by setting _add_launchpad_and_fw_id to "
+                                     "specified explicitly with a Launchpad "
+                                     "object (lpad), by setting "
+                                     "_add_launchpad_and_fw_id to "
                                      "True in the fw_spec, or by defining "
                                      "LAUNCHPAD_LOC in your config file for "
                                      "LaunchPad.auto_load()")
@@ -978,7 +947,7 @@ class OptTask(FireTaskBase):
                                        {'$set': {'lock': new_lock,
                                                  'queue': queue}})
 
-    def _predict(self, X, Y, space, model, maximize, n_predictions, scaling):
+    def _predict(self, X, Y, space, model, maximize, scaling):
         """
         Scikit-learn compatible model for stepwise optimization. It uses a
         regressive predictor evaluated on remaining points in a discrete space.
@@ -999,8 +968,8 @@ class OptTask(FireTaskBase):
             maximize (bool): Makes predictor return the guess which maximizes
                 the predicted objective function output. Else minmizes the
                 predicted objective function output.
-            n_predictions (bool): Number of predictions to return (i.e. if 5,
-                returns best 5 predictions)
+            scaling (bool): If True, scale data with StandardScaler (required
+                for some optimizers, such as Gaussian processes).
 
         Returns:
             (list) A vector which is predicted to minimize (or maximize) the
@@ -1033,7 +1002,7 @@ class OptTask(FireTaskBase):
             space_scaled = np.asarray(space_scaled)[:, encoded_xlen:]
 
         Y = np.asarray(Y)
-
+        evaluator = max
         if self.n_objs == 1:
             # Single objective
             if maximize:
@@ -1042,12 +1011,11 @@ class OptTask(FireTaskBase):
             if self.acq is None or n_explored < 10:
                 model.fit(X_scaled, Y)
                 values = model.predict(space_scaled).tolist()
-                evaluator = heapq.nsmallest
+                evaluator = min
             else:
                 # Use the acquistion function values
                 values = acquire(self.acq, X_scaled, Y, space_scaled, model,
                                  self.n_boots)
-                evaluator = heapq.nlargest
         else:
             # Multi-objective
             if self.acq is None or n_explored < 10:
@@ -1060,7 +1028,6 @@ class OptTask(FireTaskBase):
                 # predictions!
                 values = pareto(values, maximize=maximize) * \
                          np.random.uniform(0, 1, n_unexplored)
-                evaluator = heapq.nlargest
             else:
                 # Adapted from Multiobjective Optimization of Expensive Blackbox
                 # Functions via Expected Maximin Improvement
@@ -1109,14 +1076,10 @@ class OptTask(FireTaskBase):
 
                 pi_product = np.prod(values, axis=1)
                 values = pi_product * dmaximin
-                evaluator = heapq.nlargest
             values = values.tolist()
-
-        # todo: possible batch duplicates if two x predict the same y?
-        # todo: .index() will find the first one twice
-        predictions = evaluator(n_predictions, values)
-        indices = [values.index(p) for p in predictions]
-        return [space[i] for i in indices]
+        prediction = evaluator(values)
+        index = values.index(prediction)
+        return space[index]
 
     def _encode(self, X, dims):
         """
@@ -1291,34 +1254,28 @@ class OptTask(FireTaskBase):
         in the database. For situations where .tolist() does not work.
 
         Args:
-            a (numpy array or list or tuple): Input list of strings, ints, or
+            a (iterable or scalar): Input list of strings, ints, or
                 floats, as either numpy or native types (or others), which
-                will be force-coerced to native types.
+                will be force-coerced to native types. Also works with scalar
+                entries such as floats, ints, etc.
 
         Returns:
             native (list): A list of the data in a, converted to native types.
 
         """
-        native = [None] * len(a)
-        for i, val in enumerate(a):
+        if isinstance(a, Iterable):
             try:
-                native[i] = val.item()
+                # numpy conversion
+                native = a.tolist()
             except AttributeError:
-                if type(val) in self.dtypes.all:
-                    if type(val) in self.dtypes.floats:
-                        native[i] = float(val)
-                    elif type(val) in self.dtypes.ints:
-                        native[i] = int(val)
-                    elif type(val) in self.dtypes.bool:
-                        native[i] = val
-                    elif type(val) in self.dtypes.others:
-                        native[i] = str(val)
-                    else:
-                        TypeError("Dtype {} not found in rocketsled dtypes."
-                                  "".format(type(val)))
-                else:
-                    TypeError("Dtype {} not found in rocketsled dtypes."
-                              "".format(type(val)))
+                native = [None] * len(a)
+                for i, val in enumerate(a):
+                    try:
+                        native[i] = val.item()
+                    except AttributeError:
+                        native[i] = convert_value_to_native(val, self.dtypes)
+        else:
+            native = convert_value_to_native(a, self.dtypes)
         return native
 
 
@@ -1327,4 +1284,8 @@ class ExhaustedSpaceError(Exception):
 
 
 class DimensionMismatchError(Exception):
+    pass
+
+
+class BatchNotReadyError(Exception):
     pass
