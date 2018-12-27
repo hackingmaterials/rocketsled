@@ -172,8 +172,8 @@ class OptTask(FireTaskBase):
                        'enforce_sequential']
 
     def __init__(self, *args, **kwargs):
+        # instance attrs to be inserted here...
         super(OptTask, self).__init__(*args, **kwargs)
-
 
     def run_task(self, fw_spec):
         """
