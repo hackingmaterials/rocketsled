@@ -153,3 +153,23 @@ def convert_value_to_native(val, dtypes=Dtypes()):
         TypeError("Dtype {} not found in rocketsled dtypes."
                   "".format(type(val)))
     return native
+
+
+def split_xz(xz, x_dims, x_only=False):
+    """
+    Split concatenated xz vector into x and z vectors.
+
+    Args:
+        xz (list): The XZ matrix.
+        x_dims ([list/tuple]) the dimensions of the X dimensions
+        x_only (bool): If True, returns only the x vector.
+
+    Returns:
+        x, z (list, list): the separate X and Z matrices.
+
+    """
+    x, z = xz[:len(x_dims)], xz[len(x_dims):]
+    if x_only:
+        return x
+    else:
+        return x, z
