@@ -69,14 +69,14 @@ def random_guess(dimensions, dtypes=Dtypes()):
     for dimset in dimensions:
         upper = dimset[1]
         lower = dimset[0]
-        if type(lower) in dtypes.others or len(dimset) > 2:
+        if isinstance(lower, dtypes.others) or len(dimset) > 2:
             domain_size = len(dimset) - 1
             new_param = random.randint(0, domain_size)
             random_vector.append(dimset[new_param])
-        elif type(lower) in dtypes.ints:
+        elif isinstance(lower, dtypes.ints):
             new_param = random.randint(lower, upper)
             random_vector.append(new_param)
-        elif type(lower) in dtypes.floats:
+        elif isinstance(lower, dtypes.floats):
             new_param = random.uniform(lower, upper)
             random_vector.append(new_param)
         else:
