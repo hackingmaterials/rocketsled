@@ -3,7 +3,7 @@ opt_label: "opt_default"                # name of the collection to use for stor
 
 # wf_creator configuration
 wf_creator_args: null
-wf_Creator_kwargs: null
+wf_creator_kwargs: null
 
 # predictor configuration
 predictor: "RandomForestRegressor"      # builtin predictor name or full path to custom predictor
@@ -15,11 +15,11 @@ n_train_pts: null                       # number of train points (null is all)
 n_bootstraps: 500                       # number of bootstraps for tree-based builtin predictors
 acq: "ei"                               # acquisition function
 space_file: null                        # define search space with a filepath
-encode_Categorical: True                # for custom predictors only
+encode_categorical: True                # for custom predictors only
 duplicate_check: True                   # for custom predictors only
 
 # z-vector parameters
-get_z: nulll                            # full path of the get_z function (e.g. my_pkg.my_module.my_get_z
+get_z: null                             # full path of the get_z function (e.g. my_pkg.my_module.my_get_z
 get_z_args: null
 get_z_kwargs: null
 z_file: null                            # filepath to use to store the z_guesses, if evaluating z repeatedly is not inexpensive

@@ -66,31 +66,36 @@ def setup_config(wf_creator, dimensions, launchpad, **kwargs):
 
     # Ensure acquisition function is valid (for builtin predictors)
     acq_funcs = [None, 'ei', 'pi', 'lcb', 'maximin']
-    if kwargs['acq'] not in acq_funcs:
+    if config['acq'] not in acq_funcs:
         raise ValueError(
             "Invalid acquisition function. Use 'ei', 'pi', 'lcb', "
             "'maximin' (multiobjective), or None.")
-    for argname, arglist in \
-            {'get_z_kwargs': kwargs["get_z_args"],
-             'predictor_kwargs': kwargs["predictor_args"]}.items():
-        if not isinstance(arglist, (list, tuple)):
-            raise TypeError("{} should be a list/tuple of positional "
-                            "arguments".format(argname))
-    for kwname, kwdict in \
-            {'get_z_kwargs': kwargs["get_z_kwargs"],
-             'predictor_kwargs': kwargs["predictor_kwargs"]}.items():
-        if not isinstance(kwdict, dict):
-            raise TypeError("{} should be a dictonary of keyword arguments."
-                            "".format(kwname))
 
     # Insert config document
     config["doctype"] = "config"
     c = getattr(launchpad.db,  config["opt_label"])
-    c.insert_one(config)
-    logger = get_fw_logger("rocketsled")
-    logger.info("Rocketsled configuration succeeded.")
+    if c.find_one({"doctype": "config"}):
+        opt_label = config["opt_label"]
+        raise ValueError("A config is already present in this Launchpad for "
+                         "opt_label=={}. Please use the reset function to reset"
+                         " the database config.".format(opt_label))
+    else:
+        c.insert_one(config)
+        logger = get_fw_logger("rocketsled", )
+        logger.info("Rocketsled configuration succeeded.")
+
+
+def reset(launchpad, opt_label="opt_default", delete=False):
+    c = getattr(launchpad.db, opt_label)
+    if delete:
+        c.delete_many({})
+        logger = get_fw_logger("rocketsled")
+        logger.info("Optimization collection reset.")
+    else:
+        warnings.warn("Set delete=True to reset the optimization collection.")
 
 
 if __name__ == "__main__":
     from fireworks import LaunchPad
-    setup_config('somemod.something', [(1, 2), ["red", "green"]], LaunchPad(name="rsled"))
+    # setup_config('somemod.something', [(1, 2), ["red", "green"]], LaunchPad(name="rsled"))
+    reset(LaunchPad(name="rsled"), delete=True)
