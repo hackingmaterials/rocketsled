@@ -64,8 +64,8 @@ class OptTask(FireTaskBase):
         self.c = getattr(self.lpad.db, self.opt_label)
         self.config = self.c.find_one({"doctype": "config"})
         if self.config is None:
-            raise NotConfiguredError("Please use setup_config to configure the "
-                                     "optimization database ({} - {}) before "
+            raise NotConfiguredError("Please use RailsConfig().configure to configure the"
+                                     " optimization database ({} - {}) before "
                                      "running OptTask.".format(self.lpad.db,
                                                                self.opt_label))
         self.wf_creator = deserialize(self.config["wf_creator"])

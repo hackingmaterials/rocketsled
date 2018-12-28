@@ -40,7 +40,7 @@ class TestUtilities(unittest.TestCase):
         self.assertFalse(([3, 2] in maxes))
         self.assertTrue([5, 5] in maxes)
 
-    def test_convesion(self):
+    def test_conversion(self):
         a = np.int(5)
         b = np.float(1.4)
         c = np.str("somestr")

@@ -6,7 +6,7 @@ Welcome to the :code:`rocketsled` quickstart! - 5 min
 =====================================================
 
 
-If you have a Python function to optimize, the easiest way to get started is to use rocketsled's auto_setup. Auto-setup wraps any Python function in a FireWork - an execution wrapper -, creates a Firework containing an OptTask optimization, and creates a workflow optimization loop linking the two Fireworks which is ready for launch.
+If you have a Python function to optimize, the easiest way to get started is to use rocketsled's auto_setup. Auto-configure wraps any Python function in a FireWork - an execution wrapper -, creates a Firework containing an OptTask optimization, and creates a workflow optimization loop linking the two Fireworks which is ready for launch.
 
 Let's get an optimization running on your local machine. First, make sure a :code:`mongod` instance is running.
 

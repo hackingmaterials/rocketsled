@@ -70,7 +70,7 @@ rocketsled requires no internal knowledge of f(x) for optimization. rocketsled i
 Features of ``rocketsled``
 --------------------------
 
-* **One-line python setup tools**
+* **One-line python configure tools**
 
 * Persistent storage and optimization tracking
 
@@ -202,7 +202,7 @@ Run tests locally
 
     $ # Make sure the mongod daemon is running as admin
     $ mongod
-    $ python setup.py test
+    $ python configure.py test
 
 Tip: To run tests using a remote launchpad, edit ``/rocketsled/tests/tests_launchpad.yaml``
 
