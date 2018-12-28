@@ -131,7 +131,7 @@ def latex_float(f):
         return float_str
 
 
-def pareto(Y, maximize=False):
+def pareto(all_y, maximize=False):
     """
     Returns the indices of Pareto-optimal solutions.
 
@@ -142,17 +142,17 @@ def pareto(Y, maximize=False):
     Returns:
         list - The indices of the entries which are Pareto-optimal
     """
-    Y = np.asarray(Y)
-    po = np.ones(Y.shape[0], dtype=bool)
-    for i, c in enumerate(Y):
+    all_y = np.asarray(all_y)
+    po = np.ones(all_y.shape[0], dtype=bool)
+    for i, c in enumerate(all_y):
         if maximize:
-            po[i] = np.all(np.any(Y <= c, axis=1))
+            po[i] = np.all(np.any(all_y <= c, axis=1))
         else:
-            po[i] = np.all(np.any(Y >= c, axis=1))
+            po[i] = np.all(np.any(all_y >= c, axis=1))
     return po
 
 
-def split_xz(xz, x_dims, x_only=False):
+def split_xz(xz, x_dims, x_only=False, z_only=False):
     """
     Split concatenated xz vector into x and z vectors.
 
@@ -160,14 +160,20 @@ def split_xz(xz, x_dims, x_only=False):
         xz (list): The XZ matrix.
         x_dims ([list/tuple]) the dimensions of the X dimensions
         x_only (bool): If True, returns only the x vector.
+        z_only (bool): If True, returns only the z vector.
 
     Returns:
         x, z (list, list): the separate X and Z matrices.
 
     """
+    if x_only and z_only:
+        raise ValueError("Please select either x_only or z_only or set both"
+                         "to false to return both x and z after splitting.")
     x, z = xz[:len(x_dims)], xz[len(x_dims):]
     if x_only:
         return x
+    elif z_only:
+        return z
     else:
         return x, z
 
@@ -337,13 +343,13 @@ def convert_value_to_native(val, dtypes=Dtypes()):
     return native
 
 
-def tolerance_check(x_new, X_explored, tolerances):
+def tolerance_check(x_new, all_x_explored, tolerances):
     """
     Duplicate checks with tolerances.
 
     Args:
         x_new: the new guess to be duplicate checked
-        X_explored: the list of all explored guesses
+        all_x_explored: the list of all explored guesses
         tolerances: the tolerances of each dimension
 
     Returns:
@@ -369,7 +375,7 @@ def tolerance_check(x_new, X_explored, tolerances):
         if type(x_new[i]) not in dtypes.numbers:
             categorical_dimensions.append(i)
 
-    for x_ex in X_explored:
+    for x_ex in all_x_explored:
         numerical_dimensions_inside_tolerance = []
         categorical_dimensions_equal = []
         for i, _ in enumerate(x_new):
