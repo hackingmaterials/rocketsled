@@ -212,7 +212,7 @@ class OptTask(FireTaskBase):
         self.n_objs = None
         plist = [RandomForestRegressor, GaussianProcessRegressor,
                  ExtraTreesRegressor, GradientBoostingRegressor]
-        self.predictors = {p.__name__: p for p in plist}
+        self.builtin_predictors = {p.__name__: p for p in plist}
         self._n_cats = 0
         self._encoding_info = []
 
@@ -497,8 +497,8 @@ class OptTask(FireTaskBase):
         xz_dims = self.x_dims + z_dims
 
         # run machine learner on Z or X features
-        if self.predictor in self.predictors:
-            model = self.predictors[self.predictor]
+        if self.predictor in self.builtin_predictors:
+            model = self.builtin_predictors[self.predictor]
             XZ_explored = self._encode(XZ_explored, xz_dims)
             XZ_unexplored = self._encode(XZ_unexplored, xz_dims)
             XZ_onehot = []
@@ -550,7 +550,7 @@ class OptTask(FireTaskBase):
                 raise Exception("Dupicate checking in batch mode for custom "
                                 "predictors is not yet supported")
 
-            if self.predictor not in self.predictors and \
+            if self.predictor not in self.builtin_predictors and \
                     self.predictor != 'random':
                 X_new = [split_xz(xz_new, self.x_dims, x_only=True) for
                          xz_new in XZ_new]
@@ -614,7 +614,7 @@ class OptTask(FireTaskBase):
                       None: "Highest Value",
                       "maximin": "Maximin Expected "
                                  "Improvement"}
-            if self.predictor in self.predictors:
+            if self.predictor in self.builtin_predictors:
                 predictorstr = self.predictor + " with acquisition: " + acqmap[
                     self.acq]
                 if self.n_objs > 1:
