@@ -24,8 +24,8 @@ from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction, LaunchPad
 
 from rocketsled.acq import acquire
-from rocketsled.utils import deserialize, Dtypes, pareto, \
-    convert_value_to_native, split_xz
+from rocketsled.utils import deserialize, dtypes, pareto, \
+    convert_native, split_xz
 
 __author__ = "Alexander Dunn"
 __email__ = "ardunn@lbl.gov"
@@ -162,18 +162,59 @@ class OptTask(FireTaskBase):
             on the db.
     """
     _fw_name = "OptTask"
-    required_params = ['wf_creator', 'dimensions']
-    optional_params = ['lpad', 'opt_label', 'predictor', 'predictor_args',
-                       'predictor_kwargs', 'n_search_points', 'n_train_points',
-                       'acq', 'space_file', 'get_z', 'get_z_args',
-                       'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs',
-                       'encode_categorical', 'duplicate_check', 'max',
-                       'batch_size', 'tolerance', 'timeout', 'n_boostraps',
-                       'enforce_sequential']
+    required_params = ['lpad', 'opt_label']
 
     def __init__(self, *args, **kwargs):
-        # instance attrs to be inserted here...
         super(OptTask, self).__init__(*args, **kwargs)
+
+        # Configuration attrs (will not change within run)
+        self.lpad = self.get("lpad", LaunchPad.auto_load())
+        self.opt_label = self.get("opt_label", "opt_default")
+        self.c = getattr(self.lpad.db, self.opt_label)
+        self.config = self.c.find_one({"doctype": "config"})
+        if self.config is None:
+            raise NotConfiguredError("Please use setup_config to configure the "
+                                     "optimization database before running "
+                                     "OptTask.")
+        self.wf_creator = deserialize(self.config["wf_creator"])
+        self.x_dims = self.config["dimensions"]
+        self.wf_creator_args = self.config["wf_creator_args"] or []
+        self.wf_creator_kwargs = self.config["wf_creator_kwargs"] or {}
+        self.predictor = self.config("predictor")
+        self.predictor_args = self.config["predictor_args"] or []
+        self.predictor_kwargs = self.config("predictor_kwargs") or {}
+        self.maximize = self.config["maximize"]
+        self.n_search_pts = self.config["n_search_pts"]
+        self.n_train_pts = self.config["n_train_pts"]
+        self.n_bootstraps = self.config["n_bootstraps"]
+        self.acq = self.config["acq"]
+        self.space_file = self.config["space_file"]
+        self.encode_categorical = self.config["encode_categorical"]
+        self.duplicate_check = self.config["duplicate_check"]
+        self.get_z = self.config["get_z"]
+        if self.get_z:
+            self.get_z = deserialize(self['get_z'])
+        else:
+            self.get_z = lambda *args, **kwargs: []
+        self.get_z_args = self.config["get_z_args"] or []
+        self.get_z_kwargs = self.config["get_z_kwargs"] or {}
+        self.z_file = self.config["z_file"]
+        self.enforce_sequential = self.config["enforce_sequential"]
+        self.tolerances = self.config["tolerances"]
+        self.batch_size = self.config["batch_size"]
+        self.timeout = self.config["timeout"]
+        self._xdim_types = self.config["dim_types"]
+        self.is_discrete_all = self.config["is_discrete_all"]
+        self.is_discrete_any = self.config["is_discrete_any"]
+
+        # Declared attrs (will be changed)
+        self.n_objs = None
+
+        # Query formats
+        self._completed = {'x': {'$exists': 1}, 'y': {'$exists': 1,
+                                                      '$ne': 'reserved'},
+                           'z': {'$exists': 1}}
+        self._manager = {'lock': {'$exists': 1}, 'queue': {'$exists': 1}}
 
     def run_task(self, fw_spec):
         """
@@ -188,19 +229,11 @@ class OptTask(FireTaskBase):
             (FWAction) A workflow based on the workflow creator and a new,
             optimized guess.
         """
-        self.enforce_sequential = self.get("enforce_sequential", True)
         pid = getpid()
         sleeptime = .01
-        timeout = self['timeout'] if 'timeout' in self else 500
-        max_runs = int(timeout / sleeptime)
+        max_runs = int(self.timeout / sleeptime)
         max_resets = 3
         self._setup_db(fw_spec)
-
-        # points for which a workflow has already been run
-        self._completed = {'x': {'$exists': 1}, 'y': {'$exists': 1, '$ne':
-            'reserved'}, 'z': {'$exists': 1}}
-        # the query format for the manager document
-        self._manager = {'lock': {'$exists': 1}, 'queue': {'$exists': 1}}
 
         # Running stepwise optimization for concurrent processes requires a
         # manual 'lock' on the optimization database to prevent duplicate
@@ -215,18 +248,16 @@ class OptTask(FireTaskBase):
 
         for run in range(max_resets * max_runs):
             manager_count = self.c.count_documents(self._manager)
-
             if manager_count == 0:
-                self.c.insert_one({'lock': pid, 'queue': []})
+                self.c.insert_one({'lock': pid, 'queue': [],
+                                   'doctype': 'manager'})
             elif manager_count == 1:
-
                 # avoid bootup problems if manager lock is being deleted
                 # concurrently with this check
                 try:
                     manager = self.c.find_one(self._manager)
                     manager_id = manager['_id']
                     lock = manager['lock']
-
                 except TypeError:
                     continue
 
@@ -247,7 +278,6 @@ class OptTask(FireTaskBase):
                             continue
                     else:
                         sleep(sleeptime)
-
                 elif not self.enforce_sequential or \
                         (self.enforce_sequential and lock == pid):
                     try:
@@ -277,26 +307,21 @@ class OptTask(FireTaskBase):
                                       "".format(pid, E), RuntimeWarning)
                         raise E
                         # continue
-
                     self.pop_lock(manager_id)
                     X_new = [split_xz(xz_new, x_dims, x_only=True) for
                              xz_new in XZ_new]
-                    wf_creator = deserialize(self['wf_creator'])
-                    wf_creator_args = self.get('wf_creator_args', [])
-                    wf_creator_kwargs = self.get('wf_creator_kwargs', {})
-
-                    if not isinstance(wf_creator_args, (list, tuple)):
+                    if not isinstance(self.wf_creator_args, (list, tuple)):
                         raise TypeError(
                             "wr_creator_args should be a list/tuple of "
                             "positional arguments.")
 
-                    if not isinstance(wf_creator_kwargs, dict):
+                    if not isinstance(self.wf_creator_kwargs, dict):
                         raise TypeError(
                             "wr_creator_kwargs should be a dictionary of "
                             "keyword arguments.")
 
-                    new_wfs = [wf_creator(x_new, *wf_creator_args,
-                                          **wf_creator_kwargs)
+                    new_wfs = [self.wf_creator(x_new, *self.wf_creator_args,
+                                          **self.wf_creator_kwargs)
                                for x_new in X_new]
                     for wf in new_wfs:
                         self.lpad.add_wf(wf)
@@ -335,65 +360,11 @@ class OptTask(FireTaskBase):
             predictor (str): The name of the predictor used to make XZ_new
             n_completed (int): The number of completed guesses/workflows
         """
-        # required args
-        x_dims = self['dimensions']
-
-        # predictor definition
-        predictor = self.get('predictor', 'RandomForestRegressor')
-        predargs = self.get('predictor_args', [])
-        predkwargs = self.get('predictor_kwargs', {})
-
-        # predictor performance
-        n_trainpts = self.get('n_trainpts', None)
-        self.n_searchpts = self.get('n_searchpts', 1000)
-        if 'acq' in self:
-            self.acq = self['acq']
-            acq_funcs = [None, 'ei', 'pi', 'lcb', 'maximin']
-            if self.acq not in acq_funcs:
-                raise ValueError(
-                    "Invalid acquisition function. Use 'ei', 'pi', 'lcb', "
-                    "'maximin' (multiobjective), or None.")
-        else:
-            self.acq = None
-        self.n_boostraps = self.get('n_boostraps', 500)
-
-        # extra features
-        if 'get_z' in self and self['get_z'] is not None:
-            self.get_z = deserialize(self['get_z'])
-        else:
-            self.get_z = lambda *args, **kwargs: []
-        get_z_args = self.get('get_z_args', [])
-        get_z_kwargs = self.get('get_z_kwargs', {})
-        persistent_z = self.get('persistent_z', None)
-
-        # miscellaneous
-        encode_categorical = self.get('encode_categorical', False)
-        duplicate_check = self.get('duplicate_check', False)
-        tolerances = self.get('tolerances', None)
-        maximize = self.get('maximize', False)
-        batch_size = self.get('batch_size', 1)
-
-        for kwname, kwdict in \
-                {'get_z_kwargs': get_z_kwargs,
-                 'predictor_kwargs': predkwargs}.items():
-            if not isinstance(kwdict, dict):
-                raise TypeError("{} should be a dictonary of keyword arguments."
-                                "".format(kwname))
-
-        for argname, arglist in \
-                {'get_z_args': get_z_args,
-                 'predictor_args': predargs}.items():
-            if not isinstance(arglist, (list, tuple)):
-                raise TypeError("{} should be a list/tuple of positional "
-                                "arguments".format(argname))
-
         x = list(fw_spec['_x'])
         y = fw_spec['_y']
-
         if isinstance(y, (list, tuple)):
             if len(y) == 1:
                 y = y[0]
-
             self.n_objs = len(y)
             if self.acq not in ("maximin", None):
                 raise ValueError(
@@ -406,32 +377,29 @@ class OptTask(FireTaskBase):
                     "objective optimization.")
             self.n_objs = 1
 
-        # If process A suggests a certain guess and runs it,
-        # process B may suggest the same guess while process A
-        # is running its new workflow. Therefore, process A must
-        # reserve the guess. Line below releases reservation on
-        # this document in case of workflow failure or end of
+        # If process A suggests a certain guess and runs it, process B may
+        # suggest the same guess while process A is running its new workflow.
+        # Therefore, process A must reserve the guess. Line below releases
+        # reservation on this document in case of workflow failure or end of
         # workflow.
         self.c.delete_one({'x': x, 'y': 'reserved'})
-        self.dtypes = Dtypes()
-        self._xdim_spec = self._check_dims(x_dims)
 
         # fetch additional attributes for constructing ML model
-        z = self.get_z(x, *get_z_args, **get_z_kwargs)
+        z = self.get_z(x, *self.get_z_args, **self.get_z_kwargs)
 
         # use all possible training points as default
         n_completed = self.c.count_documents(self._completed)
-        if not n_trainpts or n_trainpts > n_completed:
+        if not self.n_trainpts or self.n_trainpts > n_completed:
             n_trainpts = n_completed
 
         # check if opimization should be done, if in batch mode
-        batch_mode = False if batch_size == 1 else True
+        batch_mode = False if self.batch_size == 1 else True
         batch_ready = n_completed not in (0, 1) and \
-                      (n_completed + 1) % batch_size == 0
+                      (n_completed + 1) % self.batch_size == 0
 
-        x = self._convert_native(x)
-        y = self._convert_native(y)
-        z = self._convert_native(z)
+        x = convert_native(x)
+        y = convert_native(y)
+        z = convert_native(z)
 
         if batch_mode and not batch_ready:
             # 'None' predictor means this job was not used for
@@ -526,9 +494,6 @@ class OptTask(FireTaskBase):
         xz_dims = x_dims + z_dims
 
         # run machine learner on Z or X features
-        plist = [RandomForestRegressor, GaussianProcessRegressor,
-                 ExtraTreesRegressor, GradientBoostingRegressor]
-        self.predictors = {p.__name__: p for p in plist}
         if predictor in self.predictors:
             model = self.predictors[predictor]
             XZ_explored = self._encode(XZ_explored, xz_dims)
@@ -630,8 +595,8 @@ class OptTask(FireTaskBase):
         for xz_new in XZ_new:
             # separate 'predicted' z features from the new x vector
             x_new, z_new = split_xz(xz_new, x_dims)
-            x_new = self._convert_native(x_new)
-            z_new = self._convert_native(z_new)
+            x_new = convert_native(x_new)
+            z_new = convert_native(z_new)
 
             # if it is a duplicate (such as a forced
             # identical first guess)
@@ -722,94 +687,9 @@ class OptTask(FireTaskBase):
         self.lpad = lpad
         self.c = getattr(self.lpad.db, opt_label)
 
-    def _check_dims(self, dims):
-        """
-        Ensure the dimensions are in the correct format for the optimization.
-        
-        Dimensions should be a list or tuple of lists or tuples each defining
-        the search space in one dimension. The datatypes used inside each
-        dimension's  definition should be NumPy compatible datatypes.
 
-        Continuous numerical dimensions (floats and ranges of ints) should be
-        2-tuples in the form (upper, lower). Categorical dimensions or
-        discontinuous numerical dimensions should be exhaustive lists/tuples
-        such as ['red', 'green', 'blue'] or [1.2, 11.5, 15.0].
-        
-        Args:
-            dims (list): The dimensions of the search space. 
 
-        Returns:
-            [str]: Types of the dimensions in the search space defined by dims.
-        """
-        dims_types = [list, tuple]
-        dim_spec = []
 
-        if type(dims) not in dims_types:
-            raise TypeError("The dimensions must be a list or tuple.")
-
-        for dim in dims:
-            if type(dim) not in dims_types:
-                raise TypeError("The dimension {} must be a list or tuple."
-                                "".format(dim))
-
-            for entry in dim:
-                if type(entry) not in self.dtypes.all:
-                    raise TypeError("The entry {} in dimension {} cannot be "
-                                    "used with OptTask. A list of acceptable "
-                                    "datatypes is {}".format(entry, dim,
-                                                             self.dtypes.all))
-                for dset in [self.dtypes.ints,
-                             self.dtypes.floats,
-                             self.dtypes.others]:
-                    if type(entry) not in dset and type(dim[0]) in dset:
-                        raise TypeError(
-                            "The dimension {} contains heterogeneous"
-                            " types: {} and {}".format(dim,
-                                                       type(dim[0]),
-                                                       type(entry)))
-            if isinstance(dim, list):
-                if type(dim[0]) in self.dtypes.ints:
-                    dim_spec.append("int_set")
-                elif type(dim[0]) in self.dtypes.floats:
-                    dim_spec.append("float_set")
-                elif type(dim[0]) in self.dtypes.others:
-                    dim_spec.append("categorical {}".format(len(dim)))
-            elif isinstance(dim, tuple):
-                if type(dim[0]) in self.dtypes.ints:
-                    dim_spec.append("int_range")
-                elif type(dim[0]) in self.dtypes.floats:
-                    dim_spec.append("float_range")
-                elif type(dim[0]) in self.dtypes.others:
-                    dim_spec.append("categorical {}".format(len(dim)))
-        return dim_spec
-
-    def _is_discrete(self, dims, criteria='all'):
-        """
-        Checks if the search space is discrete.
-
-        Args:
-            dims ([tuple]): dimensions of the search space
-            criteria (str/unicode): If 'all', returns bool based on whether
-                ALL dimensions are discrete. If 'any', returns bool based on
-                whether ANY dimensions are discrete.
-
-        Returns:
-            (bool) whether the search space is totally discrete.
-        """
-
-        if criteria == 'all':
-            for dim in dims:
-                if type(dim[0]) not in self.dtypes.discrete or \
-                        type(dim[1]) not in self.dtypes.discrete:
-                    return False
-            return True
-
-        elif criteria == 'any':
-            for dim in dims:
-                if type(dim[0]) in self.dtypes.discrete or \
-                        type(dim[1]) in self.dtypes.discrete:
-                    return True
-            return False
 
     def _discretize_space(self, dims, n_floats=100):
         """
@@ -966,7 +846,7 @@ class OptTask(FireTaskBase):
             else:
                 # Use the acquistion function values
                 values = acquire(self.acq, X_scaled, Y, space_scaled, model,
-                                 self.n_boostraps)
+                                 self.n_bootstraps)
         else:
             # Multi-objective
             if self.acq is None or n_explored < 10:
@@ -994,7 +874,7 @@ class OptTask(FireTaskBase):
                     yobj = [y[i] for y in Y]
                     values[:, i], mu[:, i] = acquire("pi", X_scaled, yobj,
                                                      space_scaled, model,
-                                                     self.n_boostraps,
+                                                     self.n_bootstraps,
                                                      return_means=True)
                 pf = Y[pareto(Y, maximize=maximize)]
                 dmaximin = np.zeros(n_unexplored)
@@ -1199,44 +1079,14 @@ class OptTask(FireTaskBase):
         # (inside tolerance) in ALL dimensions, it is not a duplicate
         return False
 
-    def _convert_native(self, a):
-        """
-        Convert iterables of non-native types to native types for bson storage
-        in the database. For situations where .tolist() does not work.
-
-        Args:
-            a (iterable or scalar): Input list of strings, ints, or
-                floats, as either numpy or native types (or others), which
-                will be force-coerced to native types. Also works with scalar
-                entries such as floats, ints, etc.
-
-        Returns:
-            native (list): A list of the data in a, converted to native types.
-
-        """
-        if isinstance(a, Iterable):
-            try:
-                # numpy conversion
-                native = a.tolist()
-            except AttributeError:
-                native = [None] * len(a)
-                for i, val in enumerate(a):
-                    try:
-                        native[i] = val.item()
-                    except AttributeError:
-                        native[i] = convert_value_to_native(val, self.dtypes)
-        else:
-            native = convert_value_to_native(a, self.dtypes)
-        return native
-
-
 class ExhaustedSpaceError(Exception):
     pass
-
 
 class DimensionMismatchError(Exception):
     pass
 
-
 class BatchNotReadyError(Exception):
+    pass
+
+class NotConfiguredError(Exception):
     pass
