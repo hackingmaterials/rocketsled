@@ -65,26 +65,23 @@ def setup_config(wf_creator, dimensions, launchpad, **kwargs):
         warnings.warn("get_z " + IMPORT_WARNING + "\n" + str(IE))
 
     # Ensure acquisition function is valid (for builtin predictors)
-    if 'acq' in kwargs.keys():
-        acq_funcs = [None, 'ei', 'pi', 'lcb', 'maximin']
-        if kwargs['acq'] not in acq_funcs:
-            raise ValueError(
-                "Invalid acquisition function. Use 'ei', 'pi', 'lcb', "
-                "'maximin' (multiobjective), or None.")
-
-    for kwname, kwdict in \
-            {'get_z_kwargs': get_z_kwargs,
-             'predictor_kwargs': predkwargs}.items():
-        if not isinstance(kwdict, dict):
-            raise TypeError("{} should be a dictonary of keyword arguments."
-                            "".format(kwname))
-
+    acq_funcs = [None, 'ei', 'pi', 'lcb', 'maximin']
+    if kwargs['acq'] not in acq_funcs:
+        raise ValueError(
+            "Invalid acquisition function. Use 'ei', 'pi', 'lcb', "
+            "'maximin' (multiobjective), or None.")
     for argname, arglist in \
-            {'get_z_args': get_z_args,
-             'predictor_args': predargs}.items():
+            {'get_z_kwargs': kwargs["get_z_args"],
+             'predictor_kwargs': kwargs["predictor_args"]}.items():
         if not isinstance(arglist, (list, tuple)):
             raise TypeError("{} should be a list/tuple of positional "
                             "arguments".format(argname))
+    for kwname, kwdict in \
+            {'get_z_kwargs': kwargs["get_z_kwargs"],
+             'predictor_kwargs': kwargs["predictor_kwargs"]}.items():
+        if not isinstance(kwdict, dict):
+            raise TypeError("{} should be a dictonary of keyword arguments."
+                            "".format(kwname))
 
     # Insert config document
     config["doctype"] = "config"
