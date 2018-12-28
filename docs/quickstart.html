@@ -40,7 +40,7 @@
   <p><em>Note: This quickstart assumes a limited knowledge of FireWorks. If you already have a workflow built, see the examples or the more advanced tutorials.</em></p>
 <div class="section" id="welcome-to-the-rocketsled-quickstart-5-min">
 <h1>Welcome to the <code class="code docutils literal notranslate"><span class="pre">rocketsled</span></code> quickstart! - 5 min<a class="headerlink" href="#welcome-to-the-rocketsled-quickstart-5-min" title="Permalink to this headline">¶</a></h1>
-<p>If you have a Python function to optimize, the easiest way to get started is to use rocketsled’s auto_setup. Auto-setup wraps any Python function in a FireWork - an execution wrapper -, creates a Firework containing an OptTask optimization, and creates a workflow optimization loop linking the two Fireworks which is ready for launch.</p>
+<p>If you have a Python function to optimize, the easiest way to get started is to use rocketsled’s auto_setup. Auto-configure wraps any Python function in a FireWork - an execution wrapper -, creates a Firework containing an OptTask optimization, and creates a workflow optimization loop linking the two Fireworks which is ready for launch.</p>
 <p>Let’s get an optimization running on your local machine. First, make sure a <code class="code docutils literal notranslate"><span class="pre">mongod</span></code> instance is running.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ mongod
 </pre></div>
@@ -62,8 +62,8 @@
 </div>
 <p>These constraints ensure the function has a maximum value of 6,000.</p>
 </div>
-<div class="section" id="using-auto-setup-on-a-function">
-<h2>Using auto_setup on a function<a class="headerlink" href="#using-auto-setup-on-a-function" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="using-auto-configure-on-a-function">
+<h2>Using auto_setup on a function<a class="headerlink" href="#using-auto-configure-on-a-function" title="Permalink to this headline">¶</a></h2>
 <p>Now we can use <code class="code docutils literal notranslate"><span class="pre">auto_setup</span></code> to write a file containing</p>
 <blockquote>
 <div><ol class="arabic simple">
@@ -175,7 +175,7 @@ Although for this basic example we are using relatively few search points (defau
 <li><a class="reference internal" href="#">Welcome to the <code class="code docutils literal notranslate"><span class="pre">rocketsled</span></code> quickstart! - 5 min</a><ul>
 <li><a class="reference internal" href="#define-objective-function">Define objective function</a></li>
 <li><a class="reference internal" href="#define-constraints">Define constraints</a></li>
-<li><a class="reference internal" href="#using-auto-setup-on-a-function">Using auto_setup on a function</a></li>
+<li><a class="reference internal" href="#using-auto-configure-on-a-function">Using auto_setup on a function</a></li>
 <li><a class="reference internal" href="#check-out-and-run-the-auto-sled">Check out and run the auto sled</a></li>
 <li><a class="reference internal" href="#visualize-the-optimization-results">Visualize the optimization results</a></li>
 </ul>

@@ -40,7 +40,7 @@
 - Make better docs/tutorials [\#20](https://github.com/hackingmaterials/rocketsled/issues/20)
 - Stop rs\_examples/benchmarks being its own package [\#19](https://github.com/hackingmaterials/rocketsled/issues/19)
 - Decide on a way to store models persistently [\#18](https://github.com/hackingmaterials/rocketsled/issues/18)
-- Make an auto-setup [\#17](https://github.com/hackingmaterials/rocketsled/issues/17)
+- Make an auto-configure [\#17](https://github.com/hackingmaterials/rocketsled/issues/17)
 - Add tags to each mongo doc? [\#16](https://github.com/hackingmaterials/rocketsled/issues/16)
 - Various probabilistic functions for sampling spaces [\#15](https://github.com/hackingmaterials/rocketsled/issues/15)
 - Add uncertainty estimation + more advanced methods of prediction [\#14](https://github.com/hackingmaterials/rocketsled/issues/14)

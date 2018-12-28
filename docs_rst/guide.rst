@@ -689,7 +689,7 @@ your problem is most likely with the timeout setting.
 
 
 =======================================
-Auto setup
+Auto configure
 =======================================
 
 If you just have an expensive python function you'd like to put in a workflow, and not a complex workflow itself, don't forget auto_setup!

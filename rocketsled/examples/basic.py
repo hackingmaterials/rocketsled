@@ -24,7 +24,7 @@ from fireworks import Workflow, Firework, LaunchPad
 
 from rocketsled import OptTask
 from rocketsled.examples.tasks import SumTask
-from rocketsled.db import setup_config
+from rocketsled.db import RailsConfig
 
 LPAD = LaunchPad(name='rsled')
 X_dim = [(1, 5), (1, 5), (1, 5)]
@@ -39,9 +39,10 @@ def wf_creator(x):
 
 
 if __name__ == "__main__":
-    setup_config(wf_creator='rocketsled.examples.basic.wf_creator',
-                 dimensions=X_dim,
-                 launchpad=LPAD)
+    r = RailsConfig(wf_creator='rocketsled.examples.basic.wf_creator',
+                    dimensions=X_dim,
+                    launchpad=LPAD)
+    r.configure()
     LPAD.reset(password=None, require_password=False)
     LPAD.add_wf(wf_creator([5, 5, 2]))
     rapidfire(LPAD, nlaunches=10, sleep_time=0)
