@@ -6,12 +6,9 @@ Please see the documentation for a comprehensive guide on usage.
 import pickle
 import warnings
 import random
-import heapq
 from time import sleep
 from os import getpid, path
-from functools import reduce
 from itertools import product
-from collections.abc import Iterable
 
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, \
@@ -25,7 +22,8 @@ from fireworks import FWAction, LaunchPad
 
 from rocketsled.acq import acquire
 from rocketsled.utils import deserialize, dtypes, pareto, \
-    convert_native, split_xz
+    convert_native, split_xz, tolerance_check, ExhaustedSpaceError, \
+    NotConfiguredError, BatchNotReadyError
 
 __author__ = "Alexander Dunn"
 __email__ = "ardunn@lbl.gov"
@@ -202,7 +200,7 @@ class OptTask(FireTaskBase):
         if self.get_z:
             self.get_z = deserialize(self['get_z'])
         else:
-            self.get_z = lambda *args, **kwargs: []
+            self.get_z = lambda *ars, **kws: []
         self.get_z_args = self.config["get_z_args"] or []
         self.get_z_kwargs = self.config["get_z_kwargs"] or {}
         self.z_file = self.config["z_file"]
@@ -289,7 +287,7 @@ class OptTask(FireTaskBase):
                 elif not self.enforce_sequential or \
                         (self.enforce_sequential and lock == pid):
                     try:
-                        x, y, z, XZ_new, n_completed = \
+                        x, y, z, all_xz_new, n_completed = \
                             self.optimize(fw_spec, manager_id)
                     except BatchNotReadyError:
                         return None
@@ -304,7 +302,8 @@ class OptTask(FireTaskBase):
                                 self.c.count_documents(self._manager) == 0:
                             continue
                         else:
-                            opt_id = self.stash(x, y, z, XZ_new, n_completed)
+                            opt_id = self.stash(x, y, z, all_xz_new,
+                                                n_completed)
                     except TypeError as E:
                         warnings.warn("Process {} probably timed out while "
                                       "computing next guess, with exception {}."
@@ -314,8 +313,8 @@ class OptTask(FireTaskBase):
                         raise E
                         # continue
                     self.pop_lock(manager_id)
-                    X_new = [split_xz(xz_new, self.x_dims, x_only=True) for
-                             xz_new in XZ_new]
+                    all_x_new = [split_xz(xz_new, self.x_dims, x_only=True)
+                                 for xz_new in all_xz_new]
                     if not isinstance(self.wf_creator_args, (list, tuple)):
                         raise TypeError(
                             "wr_creator_args should be a list/tuple of "
@@ -328,7 +327,7 @@ class OptTask(FireTaskBase):
 
                     new_wfs = [self.wf_creator(x_new, *self.wf_creator_args,
                                                **self.wf_creator_kwargs)
-                               for x_new in X_new]
+                               for x_new in all_x_new]
                     for wf in new_wfs:
                         self.lpad.add_wf(wf)
                     return FWAction(update_spec={'_optimization_id': opt_id},
@@ -360,7 +359,7 @@ class OptTask(FireTaskBase):
             x (iterable): The current x guess.
             y: (iterable): The current y (objective function) value
             z (iterable): The z vector associated with x
-            XZ_new ([list] or [tuple]): The predicted next best guess(es),
+            all_xz_new ([list] or [tuple]): The predicted next best guess(es),
                 including their associated z vectors
             n_completed (int): The number of completed guesses/workflows
         """
@@ -398,8 +397,8 @@ class OptTask(FireTaskBase):
 
         # check if opimization should be done, if in batch mode
         batch_mode = False if self.batch_size == 1 else True
-        batch_ready = n_completed not in (0, 1) and \
-                      (n_completed + 1) % self.batch_size == 0
+        batch_ready = n_completed not in (0, 1) and (
+                n_completed + 1) % self.batch_size == 0
 
         x = convert_native(x)
         y = convert_native(y)
@@ -447,26 +446,26 @@ class OptTask(FireTaskBase):
         reserved = []
         for doc in reserved_docs:
             reserved.append(doc['x'])
-        Y = [None] * n_completed
-        Y.append(y)
-        X_explored = [None] * n_completed
-        X_explored.append(x)
+        all_y = [None] * n_completed
+        all_y.append(y)
+        all_x_explored = [None] * n_completed
+        all_x_explored.append(x)
         z = list(z)
-        XZ_explored = [None] * n_completed
-        XZ_explored.append(x + z)
+        all_xz_explored = [None] * n_completed
+        all_xz_explored.append(x + z)
         for i, doc in enumerate(explored_docs):
-            X_explored[i] = doc['x']
-            XZ_explored[i] = doc['x'] + doc['z']
-            Y[i] = doc['y']
+            all_x_explored[i] = doc['x']
+            all_xz_explored[i] = doc['x'] + doc['z']
+            all_y[i] = doc['y']
 
-        X_space = self._discretize_space(self.x_dims)
-        X_space = list(X_space) if self.z_file else X_space
-        X_unexplored = []
-        for xi in X_space:
+        all_x_space = self._discretize_space(self.x_dims)
+        all_x_space = list(all_x_space) if self.z_file else all_x_space
+        all_x_unsearched = []
+        for xi in all_x_space:
             xj = list(xi)
-            if xj not in X_explored and xj not in reserved:
-                X_unexplored.append(xj)
-                if len(X_unexplored) == self.n_search_pts:
+            if xj not in all_x_explored and xj not in reserved:
+                all_x_unsearched.append(xj)
+                if len(all_x_unsearched) == self.n_search_pts:
                     break
 
         if self.z_file:
@@ -476,49 +475,50 @@ class OptTask(FireTaskBase):
             else:
                 xz_map = {tuple(xi): self.get_z(xi, *self.get_z_args,
                                                 **self.get_z_kwargs)
-                          for xi in X_space}
+                          for xi in all_x_space}
                 with open(self.z_file, 'wb') as f:
                     pickle.dump(xz_map, f)
 
-            XZ_unexplored = [xi + xz_map[tuple(xi)] for xi in X_unexplored]
+            all_xz_unsearched = [xi + xz_map[tuple(xi)] for xi in
+                                 all_x_unsearched]
         else:
-            XZ_unexplored = [xi + self.get_z(xi, *self.get_z_args,
-                                             **self.get_z_kwargs)
-                             for xi in X_unexplored]
+            all_xz_unsearched = [
+                xi + self.get_z(xi, *self.get_z_args, **self.get_z_kwargs) for
+                xi in all_x_unsearched]
 
         # if there are no more unexplored points in the entire
         # space, either they have been explored (ie have x, y,
         # and z) or have been reserved.
-        if len(XZ_unexplored) < 1:
+        if len(all_xz_unsearched) < 1:
             if self.is_discrete_all:
                 raise ExhaustedSpaceError("The discrete space has been searched"
                                           " exhaustively.")
             else:
                 raise TypeError("A comprehensive list of points was exhausted "
                                 "but the dimensions are not discrete.")
-        z_dims = self._z_dims(XZ_unexplored, len(self.x_dims))
+        z_dims = self._z_dims(all_xz_unsearched, len(self.x_dims))
         xz_dims = self.x_dims + z_dims
 
         # run machine learner on Z or X features
         if self.predictor in self.builtin_predictors:
             model = self.builtin_predictors[self.predictor]
-            XZ_explored = self._encode(XZ_explored, xz_dims)
-            XZ_unexplored = self._encode(XZ_unexplored, xz_dims)
-            XZ_onehot = []
+            all_xz_explored = self._encode(all_xz_explored, xz_dims)
+            all_xz_unsearched = self._encode(all_xz_unsearched, xz_dims)
+            all_xz_onehot = []
             for _ in range(self.batch_size):
-                xz1h = self._predict(XZ_explored, Y, XZ_unexplored,
+                xz1h = self._predict(all_xz_explored, all_y, all_xz_unsearched,
                                      model(*self.predictor_args,
                                            **self.predictor_kwargs),
                                      self.maximize, scaling=True)
-                ix = XZ_unexplored.index(xz1h)
-                XZ_unexplored.pop(ix)
-                XZ_onehot.append(xz1h)
+                ix = all_xz_unsearched.index(xz1h)
+                all_xz_unsearched.pop(ix)
+                all_xz_onehot.append(xz1h)
 
-            XZ_new = [self._decode(xz_onehot, xz_dims) for
-                      xz_onehot in XZ_onehot]
+            all_xz_new = [self._decode(xz_onehot, xz_dims) for xz_onehot in
+                          all_xz_onehot]
 
         elif self.predictor == 'random':
-            XZ_new = random.sample(XZ_unexplored, self.batch_size)
+            all_xz_new = random.sample(all_xz_unsearched, self.batch_size)
 
         else:
             # If using a custom predictor, automatically convert
@@ -526,8 +526,8 @@ class OptTask(FireTaskBase):
             # Used when a custom predictor cannot natively use
             # categorical info
             if self.encode_categorical:
-                XZ_explored = self._encode(XZ_explored, xz_dims)
-                XZ_unexplored = self._encode(XZ_unexplored, xz_dims)
+                all_xz_explored = self._encode(all_xz_explored, xz_dims)
+                all_xz_unsearched = self._encode(all_xz_unsearched, xz_dims)
 
             try:
                 predictor_fun = deserialize(self.predictor)
@@ -535,11 +535,11 @@ class OptTask(FireTaskBase):
                 raise NameError("The custom predictor {} didnt import "
                                 "correctly!\n{}".format(self.predictor, E))
 
-            XZ_new = predictor_fun(XZ_explored, Y, self.x_dims, XZ_unexplored,
-                                   *self.predictor_args,
-                                   **self.predictor_kwargs)
-            if not isinstance(XZ_new[0], (list, tuple)):
-                XZ_new = [XZ_new]
+            all_xz_new = predictor_fun(all_xz_explored, all_y, self.x_dims,
+                                       all_xz_unsearched, *self.predictor_args,
+                                       **self.predictor_kwargs)
+            if not isinstance(all_xz_new[0], (list, tuple)):
+                all_xz_new = [all_xz_new]
 
         # duplicate checking for custom optimizer functions
         if self.duplicate_check:
@@ -547,40 +547,32 @@ class OptTask(FireTaskBase):
             if not self.enforce_sequential:
                 raise ValueError("Duplicate checking cannot work when "
                                  "optimizations are not enforced sequentially.")
-
-            # todo: fix batch_mode duplicate checking
-            if batch_mode:
-                raise Exception("Dupicate checking in batch mode for custom "
-                                "predictors is not yet supported")
-
             if self.predictor not in self.builtin_predictors and \
                     self.predictor != 'random':
-                X_new = [split_xz(xz_new, self.x_dims, x_only=True) for
-                         xz_new in XZ_new]
-                X_explored = [split_xz(xz, self.x_dims, x_only=True) for
-                              xz in XZ_explored]
-
+                all_x_new = [split_xz(xz_new, self.x_dims, x_only=True) for
+                             xz_new in all_xz_new]
+                all_x_explored = [split_xz(xz, self.x_dims, x_only=True) for xz
+                                  in all_xz_explored]
                 if self.tolerances:
-                    for n, x_new in enumerate(X_new):
-                        if self._tolerance_check(
-                                x_new, X_explored,
-                                tolerances=self.tolerances):
-                            XZ_new[n] = random.choice(
-                                XZ_unexplored)
+                    for n, x_new in enumerate(all_x_new):
+                        if tolerance_check(x_new, all_x_explored,
+                                           tolerances=self.tolerances):
+                            all_xz_new[n] = random.choice(
+                                all_xz_unsearched)
                 else:
                     if self._is_discrete(self.x_dims):
                         # test only for x, not xz because custom predicted z
                         # may not be accounted for
-                        for n, x_new in enumerate(X_new):
-                            if x_new in X_explored or x_new == x:
-                                XZ_new[n] = random.choice(
-                                    XZ_unexplored)
+                        for n, x_new in enumerate(all_x_new):
+                            if x_new in all_x_explored or x_new == x:
+                                all_xz_new[n] = random.choice(
+                                    all_xz_unsearched)
                     else:
                         raise ValueError("Define tolerances parameter to "
                                          "duplicate check floats.")
-        return x, y, z, XZ_new, n_completed
+        return x, y, z, all_xz_new, n_completed
 
-    def stash(self, x, y, z, XZ_new, n_completed):
+    def stash(self, x, y, z, all_xz_new, n_completed):
         """
         Write documents to database after optimization.
 
@@ -589,7 +581,7 @@ class OptTask(FireTaskBase):
             y: (iterable): The current y (objective function) value
             z (iterable): The z vector associated with x
             x_dims ([list] or [tuple]): The dimensions of the domain
-            XZ_new ([list] or [tuple]): The predicted next best guess(es),
+            all_xz_new ([list] or [tuple]): The predicted next best guess(es),
                 including their associated z vectors
             predictor (str): The name of the predictor used to make XZ_new
             n_completed (int): The number of completed guesses/workflows
@@ -601,7 +593,7 @@ class OptTask(FireTaskBase):
                 is returned.
         """
 
-        for xz_new in XZ_new:
+        for xz_new in all_xz_new:
             # separate 'predicted' z features from the new x vector
             x_new, z_new = split_xz(xz_new, self.x_dims)
             x_new = convert_native(x_new)
@@ -635,7 +627,7 @@ class OptTask(FireTaskBase):
                      })
             else:
                 # update all the fields, as it is a new document
-                res = self.c.insert_one(
+                self.c.insert_one(
                     {'z': z, 'y': y, 'x': x, 'z_new': z_new, 'x_new': x_new,
                      'predictor': predictorstr, 'index': n_completed + 1})
             # ensure previously fin. workflow results are not overwritten by
@@ -740,7 +732,7 @@ class OptTask(FireTaskBase):
                                        {'$set': {'lock': new_lock,
                                                  'queue': queue}})
 
-    def _predict(self, X, Y, space, model, maximize, scaling):
+    def _predict(self, all_x, all_y, space, model, maximize, scaling):
         """
         Scikit-learn compatible model for stepwise optimization. It uses a
         regressive predictor evaluated on remaining points in a discrete space.
@@ -751,8 +743,8 @@ class OptTask(FireTaskBase):
         the original categorical dimensions.
 
         Args:
-            X ([list]): List of vectors containing input training data.
-            Y (list): List of scalars containing output training data. Can
+            all_x ([list]): List of vectors containing input training data.
+            all_y (list): List of scalars containing output training data. Can
                 be a list of vectors if undergoing multiobjective optimization.
             space ([list]): List of vectors containing all unexplored inputs.
                 Should be preprocessed.
@@ -772,14 +764,14 @@ class OptTask(FireTaskBase):
         # Scale data if all floats for dimensions in question
         if scaling:
             scaler = StandardScaler()
-            train_set = np.vstack((X, space))
+            train_set = np.vstack((all_x, space))
             scaler.fit(train_set)
-            X_scaled = scaler.transform(X)
+            X_scaled = scaler.transform(all_x)
             space_scaled = scaler.transform(space)
         else:
-            X_scaled = X
+            X_scaled = all_x
             space_scaled = space
-        n_explored = len(X)
+        n_explored = len(all_x)
         n_unexplored = len(space)
 
         # If get_z defined, only use z features!
@@ -792,50 +784,50 @@ class OptTask(FireTaskBase):
                     encoded_xlen += int(t[-1])
             X_scaled = np.asarray(X_scaled)[:, encoded_xlen:]
             space_scaled = np.asarray(space_scaled)[:, encoded_xlen:]
-        Y = np.asarray(Y)
+        all_y = np.asarray(all_y)
         evaluator = max
         if self.n_objs == 1:
             # Single objective
             if maximize:
-                Y = -1.0 * Y
+                all_y = -1.0 * all_y
             if self.acq is None or n_explored < 10:
-                model.fit(X_scaled, Y)
+                model.fit(X_scaled, all_y)
                 values = model.predict(space_scaled).tolist()
                 evaluator = min
             else:
                 # Use the acquistion function values
-                values = acquire(self.acq, X_scaled, Y, space_scaled, model,
+                values = acquire(self.acq, X_scaled, all_y, space_scaled, model,
                                  self.n_bootstraps)
         else:
             # Multi-objective
             if self.acq is None or n_explored < 10:
                 values = np.zeros((n_unexplored, self.n_objs))
                 for i in range(self.n_objs):
-                    yobj = [y[i] for y in Y]
+                    yobj = [y[i] for y in all_y]
                     model.fit(X_scaled, yobj)
                     values[:, i] = model.predict(space_scaled)
                 # In exploitative strategy, randomly weight pareto optimial
                 # predictions!
-                values = pareto(values, maximize=maximize) * \
-                         np.random.uniform(0, 1, n_unexplored)
+                values = pareto(values, maximize=maximize) * np.random.uniform(
+                    0, 1, n_unexplored)
             else:
                 # Adapted from Multiobjective Optimization of Expensive Blackbox
                 # Functions via Expected Maximin Improvement
                 # by Joshua D. Svenson, Thomas J. Santner
 
                 if maximize:
-                    Y = -1.0 * Y
+                    all_y = -1.0 * all_y
 
                 assert (self.acq == "maximin")
                 mu = np.zeros((n_unexplored, self.n_objs))
                 values = np.zeros((n_unexplored, self.n_objs))
                 for i in range(self.n_objs):
-                    yobj = [y[i] for y in Y]
+                    yobj = [y[i] for y in all_y]
                     values[:, i], mu[:, i] = acquire("pi", X_scaled, yobj,
                                                      space_scaled, model,
                                                      self.n_bootstraps,
                                                      return_means=True)
-                pf = Y[pareto(Y, maximize=maximize)]
+                pf = all_y[pareto(all_y, maximize=maximize)]
                 dmaximin = np.zeros(n_unexplored)
                 for i, mui in enumerate(mu):
                     mins = np.zeros(len(pf))
@@ -871,13 +863,13 @@ class OptTask(FireTaskBase):
         index = values.index(prediction)
         return space[index]
 
-    def _encode(self, X, dims):
+    def _encode(self, all_x, dims):
         """
         Transforms data containing categorical information to "one-hot" encoded
         data, since sklearn cannot process categorical data on its own.
         
         Args:
-            X ([list]): The search space, possibly containing categorical
+            all_x ([list]): The search space, possibly containing categorical
                 dimensions.
             dims: The dimensions of the search space. Used to define all
                 possible choices for categorical dimensions so that categories
@@ -890,22 +882,22 @@ class OptTask(FireTaskBase):
         """
         for i, dim in enumerate(dims):
             if type(dim[0]) in dtypes.others:
-                cats = [0] * len(X)
-                for j, x in enumerate(X):
+                cats = [0] * len(all_x)
+                for j, x in enumerate(all_x):
                     cats[j] = x[i - self._n_cats]
                 forward_map = {k: v for v, k in enumerate(dim)}
                 inverse_map = {v: k for k, v in forward_map.items()}
                 lb = LabelBinarizer()
                 lb.fit([forward_map[v] for v in dim])
                 binary = lb.transform([forward_map[v] for v in cats])
-                for j, x in enumerate(X):
+                for j, x in enumerate(all_x):
                     del (x[i - self._n_cats])
                     x += list(binary[j])
                 dim_info = {'lb': lb, 'inverse_map': inverse_map,
                             'binary_len': len(binary[0])}
                 self._encoding_info.append(dim_info)
                 self._n_cats += 1
-        return X
+        return all_x
 
     def _decode(self, new_x, dims):
         """
@@ -918,8 +910,7 @@ class OptTask(FireTaskBase):
             dims ([list]): The dimensions of the search space.
 
         Returns:
-            categorical_new_x (list): The new_x vector in categorical dimensions. 
-
+            categorical_new_x (list): The new_x vector in categorical dimensions
         """
 
         original_len = len(dims)
@@ -947,7 +938,7 @@ class OptTask(FireTaskBase):
 
         return categorical_new_x
 
-    def _z_dims(self, XZ_unexplored, x_length):
+    def _z_dims(self, all_xz_unsearched, x_length):
         """
         Prepare dims to use in preprocessing for categorical dimensions.
         Gathers a list of possible dimensions from stored and current z vectors.
@@ -959,7 +950,7 @@ class OptTask(FireTaskBase):
             ([tuple]) dimensions for the z space
         """
 
-        Z_unexplored = [z[x_length:] for z in XZ_unexplored]
+        Z_unexplored = [z[x_length:] for z in all_xz_unsearched]
         Z_explored = [doc['z'] for doc in self.c.find(self._completed,
                                                       batch_size=10000)]
         Z = Z_explored + Z_unexplored
@@ -978,75 +969,3 @@ class OptTask(FireTaskBase):
                         cat_values.append(z[i])
                         dims[i] = cat_values
         return dims
-
-    def _tolerance_check(self, x_new, X_explored, tolerances):
-        """
-        Duplicate checks with tolerances.
-
-        Args:
-            x_new: the new guess to be duplicate checked
-            X_explored: the list of all explored guesses
-            tolerances: the tolerances of each dimension
-
-        Returns:
-            True if x_new is a duplicate of a guess in X_explored.
-            False if x_new is unique in the space and has yet to be tried.
-
-        """
-
-        if len(tolerances) != len(x_new):
-            raise DimensionMismatchError("Make sure each dimension has a "
-                                         "corresponding tolerance value of the "
-                                         "same type! Your dimensions and the "
-                                         "tolerances must be the same length "
-                                         "and types. Use 'None' for categorical"
-                                         " dimensions.")
-
-        # todo: there is a more efficient way to do this: abort check for a
-        # todo: pair of points as soon as one dim...
-        # todo: ...is outside of tolerance
-
-        categorical_dimensions = []
-        for i in range(len(x_new)):
-            if type(x_new[i]) not in dtypes.numbers:
-                categorical_dimensions.append(i)
-
-        for x_ex in X_explored:
-            numerical_dimensions_inside_tolerance = []
-            categorical_dimensions_equal = []
-            for i, _ in enumerate(x_new):
-                if i in categorical_dimensions:
-                    if str(x_new[i]) == str(x_ex[i]):
-                        categorical_dimensions_equal.append(True)
-                    else:
-                        categorical_dimensions_equal.append(False)
-                else:
-                    if abs(float(x_new[i]) - float(x_ex[i])) \
-                            <= float(tolerances[i]):
-                        numerical_dimensions_inside_tolerance.append(True)
-                    else:
-                        numerical_dimensions_inside_tolerance.append(False)
-
-            if all(numerical_dimensions_inside_tolerance) and \
-                    all(categorical_dimensions_equal):
-                return True
-
-        # If none of the points inside X_explored are close to x_new
-        # (inside tolerance) in ALL dimensions, it is not a duplicate
-        return False
-
-
-class ExhaustedSpaceError(Exception):
-    pass
-
-
-class DimensionMismatchError(Exception):
-    pass
-
-
-class BatchNotReadyError(Exception):
-    pass
-
-
-class NotConfiguredError(Exception):
-    pass

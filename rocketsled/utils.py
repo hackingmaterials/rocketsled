@@ -13,11 +13,33 @@ __author__ = "Alexander Dunn"
 __email__ = "ardunn@lbl.gov"
 
 
-class Dtypes(object):
-    """
-    Defines the datatypes available for optimization.
-    """
+class RSBaseException(BaseException):
+    """Base exception for rocketsled exceptions."""
+    pass
 
+
+class ExhaustedSpaceError(RSBaseException):
+    """When the search space has been exhausted."""
+    pass
+
+
+class DimensionMismatchError(RSBaseException):
+    """Dimensions of the search space are ill-defined or conflicting"""
+    pass
+
+
+class BatchNotReadyError(RSBaseException):
+    """Batch-mode scheme broken"""
+    pass
+
+
+class NotConfiguredError(RSBaseException):
+    """When rocketsled config doc is broken or not found."""
+    pass
+
+
+class Dtypes(object):
+    """Defines the datatypes available for optimization."""
     def __init__(self):
         d = np.sctypes
         self.ints = d['int'] + d['uint'] + [int]
@@ -56,7 +78,7 @@ def deserialize(fun):
     return getattr(mod, funcname)
 
 
-def random_guess(dimensions, dtypes=Dtypes()):
+def random_guess(dimensions):
     """
     Returns random new inputs based on the dimensions of the search space.
     It works with float, integer, and categorical types
@@ -315,3 +337,58 @@ def convert_value_to_native(val, dtypes=Dtypes()):
     return native
 
 
+def tolerance_check(x_new, X_explored, tolerances):
+    """
+    Duplicate checks with tolerances.
+
+    Args:
+        x_new: the new guess to be duplicate checked
+        X_explored: the list of all explored guesses
+        tolerances: the tolerances of each dimension
+
+    Returns:
+        True if x_new is a duplicate of a guess in X_explored.
+        False if x_new is unique in the space and has yet to be tried.
+
+    """
+
+    if len(tolerances) != len(x_new):
+        raise DimensionMismatchError("Make sure each dimension has a "
+                                     "corresponding tolerance value of the "
+                                     "same type! Your dimensions and the "
+                                     "tolerances must be the same length "
+                                     "and types. Use 'None' for categorical"
+                                     " dimensions.")
+
+    # todo: there is a more efficient way to do this: abort check for a
+    # todo: pair of points as soon as one dim...
+    # todo: ...is outside of tolerance
+
+    categorical_dimensions = []
+    for i in range(len(x_new)):
+        if type(x_new[i]) not in dtypes.numbers:
+            categorical_dimensions.append(i)
+
+    for x_ex in X_explored:
+        numerical_dimensions_inside_tolerance = []
+        categorical_dimensions_equal = []
+        for i, _ in enumerate(x_new):
+            if i in categorical_dimensions:
+                if str(x_new[i]) == str(x_ex[i]):
+                    categorical_dimensions_equal.append(True)
+                else:
+                    categorical_dimensions_equal.append(False)
+            else:
+                if abs(float(x_new[i]) - float(x_ex[i])) \
+                        <= float(tolerances[i]):
+                    numerical_dimensions_inside_tolerance.append(True)
+                else:
+                    numerical_dimensions_inside_tolerance.append(False)
+
+        if all(numerical_dimensions_inside_tolerance) and \
+                all(categorical_dimensions_equal):
+            return True
+
+    # If none of the points inside X_explored are close to x_new
+    # (inside tolerance) in ALL dimensions, it is not a duplicate
+    return False
