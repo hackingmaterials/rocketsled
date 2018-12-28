@@ -34,7 +34,7 @@ X_dim = [(1, 5), (1, 5), (1, 5)]
 def wf_creator(x):
     spec = {'_x': x}
     # SumTask writes _y field to the spec internally.
-    firework1 = Firework([SumTask(), OptTask(lpad=LPAD)], spec=spec)
+    firework1 = Firework([SumTask(), OptTask(launchpad=LPAD)], spec=spec)
     return Workflow([firework1])
 
 
