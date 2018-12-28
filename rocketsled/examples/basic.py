@@ -22,27 +22,25 @@ https://materialsproject.github.io/fireworks/
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
 
-from rocketsled import OptTask
+from rocketsled import OptTask, MissionControl
 from rocketsled.examples.tasks import SumTask
-from rocketsled.db import RailsConfig
 
-LPAD = LaunchPad(name='rsled')
-X_dim = [(1, 5), (1, 5), (1, 5)]
+launchpad = LaunchPad(name='rsled')
+x_dim = [(1, 5), (1, 5), (1, 5)]
 
 
 # a workflow creator function which takes x and returns a workflow based on x
 def wf_creator(x):
     spec = {'_x': x}
     # SumTask writes _y field to the spec internally.
-    firework1 = Firework([SumTask(), OptTask(launchpad=LPAD)], spec=spec)
+    firework1 = Firework([SumTask(), OptTask(launchpad=launchpad)], spec=spec)
     return Workflow([firework1])
 
 
 if __name__ == "__main__":
-    r = RailsConfig(wf_creator='rocketsled.examples.basic.wf_creator',
-                    dimensions=X_dim,
-                    launchpad=LPAD)
-    r.configure()
-    LPAD.reset(password=None, require_password=False)
-    LPAD.add_wf(wf_creator([5, 5, 2]))
-    rapidfire(LPAD, nlaunches=10, sleep_time=0)
+    mc = MissionControl(launchpad=launchpad)
+    mc.reset(hard=True)
+    mc.configure(wf_creator='rocketsled.examples.basic.wf_creator', dimensions=x_dim)
+    launchpad.reset(password=None, require_password=False)
+    launchpad.add_wf(wf_creator([5, 5, 2]))
+    rapidfire(launchpad, nlaunches=10, sleep_time=0)

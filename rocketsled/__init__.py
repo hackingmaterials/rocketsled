@@ -3,8 +3,7 @@ Rocketsled is an optimization suite "on rails" based on Scikit-learn and
 FireWorks workflows.
 """
 
-from rocketsled.config import RailsConfig
-from rocketsled.viz import visualize
+from rocketsled.control import MissionControl
 from rocketsled.task import OptTask
 
 __author__ = "Alexander Dunn"
