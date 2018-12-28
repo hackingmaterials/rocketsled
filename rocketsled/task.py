@@ -169,7 +169,10 @@ class OptTask(FireTaskBase):
         super(OptTask, self).__init__(*args, **kwargs)
 
         # Configuration attrs
-        self.lpad = self.get("lpad", LaunchPad.auto_load())
+        lp = self.get("lpad", LaunchPad.auto_load())
+        if isinstance(lp, LaunchPad):
+            lp = lp.to_dict()
+        self.lpad = LaunchPad.from_dict(lp)
         self.opt_label = self.get("opt_label", "opt_default")
         self.c = getattr(self.lpad.db, self.opt_label)
         self.config = self.c.find_one({"doctype": "config"})
@@ -184,9 +187,9 @@ class OptTask(FireTaskBase):
         self.is_discrete_any = self.config["is_discrete_any"]
         self.wf_creator_args = self.config["wf_creator_args"] or []
         self.wf_creator_kwargs = self.config["wf_creator_kwargs"] or {}
-        self.predictor = self.config("predictor")
+        self.predictor = self.config["predictor"]
         self.predictor_args = self.config["predictor_args"] or []
-        self.predictor_kwargs = self.config("predictor_kwargs") or {}
+        self.predictor_kwargs = self.config["predictor_kwargs"] or {}
         self.maximize = self.config["maximize"]
         self.n_search_pts = self.config["n_search_pts"]
         self.n_train_pts = self.config["n_train_pts"]
