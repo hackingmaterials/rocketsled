@@ -447,7 +447,7 @@ class OptTask(FireTaskBase):
                             all_xz_new[n] = random.choice(
                                 all_xz_unsearched)
                 else:
-                    if self._is_discrete(self.x_dims):
+                    if self.is_discrete_all:
                         # test only for x, not xz because custom predicted z
                         # may not be accounted for
                         for n, x_new in enumerate(all_x_new):

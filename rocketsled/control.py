@@ -64,8 +64,10 @@ class MissionControl:
 
         Args:
 
-        wf_creator (str): Module path to a function that returns a workflow
-            based on a unique vector, x.
+        wf_creator (function or str): The function object that creates the
+            workflow based on a unique vector, x. Alternatively, the full string
+            module path to that function, e.g. "mypkg.mymodule.my_wf_creator",
+            which must importable and found in PYTHONPATH.
         dimensions ([tuple]): each 2-tuple in the list defines one dimension in
             the search space in (low, high) format.
             For categorical or discontinuous dimensions, includes all possible
@@ -86,17 +88,25 @@ class MissionControl:
                 wf_creator function alongside the new x vector
 
             Predictors (optimization):
-            predictor (string): names a function which given a list of explored
-                points and unexplored points, returns an optimized guess.
-                Builtin sklearn-based predictors are:
+            predictor (function or str): a function which given a list of
+                searched points and unsearched points, returns an optimized
+                guess.
+
+                To use a builtin predictor, pass in one of:
                     'GaussianProcessRegressor',
                     'RandomForestRegressor',
                     'ExtraTreesRegressor',
                     'GradientBoostingRegressor',
-                To use a random guess, use 'random'
-                Defaults to 'GaussianProcess'
-                Ex. builtin predictor: 'GaussianProcessRegressor'
-                Ex. custom predictor: 'my_pkg.my_module.my_predictor'
+                    'random' (random guess)
+                The default is 'GaussianProcessRegressor'
+
+                To use a custom predictor, pass in the function object.
+                Alternatively, the full string module path to that function,
+                e.g. "mypkg.mymodule.my_predictor", which must importable and
+                found in PYTHONPATH.
+                Example builtin predictor: 'GaussianProcessRegressor'
+                Example custom predictor: my_predictor
+                Example custom predictor 2: 'my_pkg.my_module.my_predictor'
             predictor_args (list): the positional args to be passed to the model
                 along with a list of points to be searched. For sklearn-based
                 predictors included in OptTask, these positional args are passed
@@ -194,14 +204,12 @@ class MissionControl:
                     "{} not a valid argument for setup_config. Choose "
                     "from: {}".format(kw, list(config.keys())))
             elif kw in ["get_z", "predictor"]:
-                print("in {}".format(kw))
-                print(kwargs[kw])
-                print(hasattr(kwargs[kw], '__call__'))
                 if hasattr(kwargs[kw], '__call__'):
                     config[kw] = serialize(kwargs[kw])
             else:
                 config[kw] = kwargs[kw]
-        wf_creator = serialize(wf_creator)
+        if hasattr(wf_creator, '__call__'):
+            wf_creator = serialize(wf_creator)
         config["wf_creator"] = wf_creator
         config["dimensions"] = dimensions
 
@@ -238,7 +246,6 @@ class MissionControl:
                 "'maximin' (multiobjective), or None.")
         config["doctype"] = "config"
         self.config = config
-
         if self.c.find_one({"doctype": "config"}):
             raise ValueError("A config is already present in this Launchpad "
                              "for opt_label=={}. Please use the MissionControl"
