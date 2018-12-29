@@ -7,7 +7,7 @@ wf_creator_args: null
 wf_creator_kwargs: null
 
 # predictor configuration
-predictor: "RandomForestRegressor"      # builtin predictor name or full path to custom predictor
+predictor: "GaussianProcessRegressor"   # builtin predictor name or full path to custom predictor
 predictor_args: null
 predictor_kwargs: null
 maximize: False                         # search for maxima instead of minima
@@ -17,7 +17,7 @@ n_bootstraps: 500                       # number of bootstraps for tree-based bu
 acq: null                               # acquisition function
 space_file: null                        # define search space with a filepath
 encode_categorical: True                # for custom predictors only
-duplicate_check: True                   # for custom predictors only
+duplicate_check: False                  # for custom predictors only
 
 # z-vector parameters
 get_z: null                             # full path of the get_z function (e.g. my_pkg.my_module.my_get_z
