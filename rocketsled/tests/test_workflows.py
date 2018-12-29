@@ -79,18 +79,6 @@ def wf_creator_basic(x):
     return Workflow([firework1])
 
 
-def wf_custom_predictor(x):
-    """
-    Testing a custom predictor which returns the same x vector for every guess,
-    using same workflow as test_basic.
-    """
-    spec = {'_x': x}
-    bt = BasicTestTask()
-    ot = OptTask(**db_info)
-    firework1 = Firework([bt, ot], spec=spec)
-    return Workflow([firework1])
-
-
 def wf_creator_complex(x):
     """
     Testing a custom workflow of five fireworks with complex dependencies, and
@@ -122,46 +110,6 @@ def wf_creator_complex(x):
     return Workflow([fw0, fw1, fw2, fw3, fw4, fw5],
                     {fw0: [fw1, fw2], fw1: [fw3], fw2: [fw3], fw3: [fw4], fw4:
                         [fw5], fw5: []})
-
-
-def wf_creator_duplicates(x, launchpad):
-    """
-    Test workflow for duplicate checking with tolerances.
-    """
-    spec = {'_x': x}
-    dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
-    bt = BasicTestTask()
-    ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_duplicates',
-                 dimensions=dims,
-                 predictor='rocketsled.tests.tests.custom_predictor',
-                 lpad=launchpad,
-                 duplicate_check=True,
-                 tolerances=[0, 1e-6, None],
-                 wf_creator_args=[launchpad],
-                 opt_label='test_duplicates')
-    firework1 = Firework([bt, ot], spec=spec)
-    return Workflow([firework1])
-
-
-def wf_creator_get_z(x, launchpad):
-    """
-    Testing a basic workflow with one Firework, and two FireTasks with a get_z
-    function. Also tests that duplicate checking is working with get_z.
-    """
-    spec = {'_x': x}
-    dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
-    bt = BasicTestTask()
-    ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_get_z',
-                 dimensions=dims,
-                 predictor='rocketsled.tests.tests.custom_predictor',
-                 lpad=launchpad,
-                 duplicate_check=True,
-                 tolerances=[0, 1e-6, None],
-                 get_z='rocketsled.tests.tests.get_z',
-                 wf_creator_args=[launchpad],
-                 opt_label='test_get_z')
-    firework1 = Firework([bt, ot], spec=spec)
-    return Workflow([firework1])
 
 
 def wf_creator_accuracy(x, launchpad):
@@ -254,10 +202,10 @@ class TestWorkflows(unittest.TestCase):
         self.assertEqual(self.c.count_documents(reserved), 1)
 
     def test_custom_predictor(self):
-        self.mc.configure(wf_creator=wf_custom_predictor,
+        self.mc.configure(wf_creator=wf_creator_basic,
                           dimensions=self.dims_basic,
                           predictor=custom_predictor)
-        launchpad.add_wf(wf_custom_predictor([5, 11, 'blue']))
+        launchpad.add_wf(wf_creator_basic([5, 11, 'blue']))
         launch_rocket(launchpad)
 
         manager = self.c.find_one({'doctype': "manager"})
@@ -285,38 +233,48 @@ class TestWorkflows(unittest.TestCase):
         self.assertEqual(self.c.count_documents({'index': 1}), 1)  # loop 1
         # should return one doc, for second WF
         self.assertEqual(self.c.count_documents({'index': 2}), 1)  # loop 2
-    #
-    # def test_duplicates(self):
-    #     self.lp.reset(password=None, require_password=False)
-    #     self.lp.add_wf(wf_creator_duplicates([5, 11, 'blue'], self.lp))
-    #     for _ in range(2):
-    #         launch_rocket(self.lp)
-    #
-    #     col = self.db.test_duplicates
-    #
-    #     self.assertEqual(col.count_documents({}), 4)
-    #     self.assertEqual(col.count_documents({'y': 'reserved'}), 1)
-    #     # should return one doc, for the first WF
-    #     self.assertEqual(col.count_documents({'x': [5, 11, 'blue']}), 1)
-    #     # should return one doc, for the second WF
-    #     # no duplicates are in the db
-    #     self.assertEqual(col.count_documents({'x': [3, 12, 'green']}), 1)
-    #
-    # def test_get_z(self):
-    #     self.lp.reset(password=None, require_password=False)
-    #     self.lp.add_wf(wf_creator_get_z([5, 11, 'blue'], self.lp))
-    #     for _ in range(2):
-    #         launch_rocket(self.lp)
-    #
-    #     col = self.db.test_get_z
-    #     loop1 = col.find_one({'index': 1})
-    #     loop2 = col.find_one({'index': 2})
-    #
-    #     self.assertEqual(col.count_documents({}), 4)
-    #     self.assertEqual(loop1['x'], [5, 11, 'blue'])
-    #     self.assertEqual(loop1['z'], [25.0, 121.0])
-    #     self.assertEqual(loop2['x'], [3, 12.0, 'green'])
-    #     self.assertEqual(loop2['z'], [9, 144.0])
+
+    def test_duplicates(self):
+        self.mc.configure(wf_creator=wf_creator_basic,
+                          dimensions=self.dims_basic,
+                          duplicate_check=True,
+                          tolerances=[0, 1e-6, None],
+                          predictor=custom_predictor,
+                          )
+        launchpad.add_wf(wf_creator_basic([5, 11, 'blue']))
+        for _ in range(2):
+            launch_rocket(launchpad)
+
+        self.assertEqual(self.c.count_documents({}), 5)
+        self.assertEqual(self.c.count_documents({'y': 'reserved'}), 1)
+        # should return one doc, for the first WF
+        self.assertEqual(self.c.count_documents({'x': [5, 11, 'blue']}), 1)
+        # should return one doc, for the second WF
+        # no duplicates are in the db
+        self.assertEqual(self.c.count_documents({'x': [3, 12, 'green']}), 1)
+
+    def test_get_z(self):
+        self.mc.configure(wf_creator=wf_creator_basic,
+                          dimensions=self.dims_basic,
+                          predictor=custom_predictor(),
+                          duplicate_check=True,
+                          tolerances=[0, 1e-6, None],
+                          get_z=get_z)
+
+        launchpad.reset(password=None, require_password=False)
+        launchpad.add_wf(wf_creator_basic([5, 11, 'blue']))
+        for _ in range(2):
+            launch_rocket(launchpad)
+
+        col = self.db.test_get_z
+        loop1 = col.find_one({'index': 1})
+        loop2 = col.find_one({'index': 2})
+
+        self.assertEqual(col.count_documents({}), 4)
+        self.assertEqual(loop1['x'], [5, 11, 'blue'])
+        self.assertEqual(loop1['z'], [25.0, 121.0])
+        self.assertEqual(loop2['x'], [3, 12.0, 'green'])
+        self.assertEqual(loop2['z'], [9, 144.0])
     #
     # def test_accuracy(self):
     #     best = [None] * 10

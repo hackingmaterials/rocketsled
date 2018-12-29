@@ -138,7 +138,7 @@ class MissionControl:
                 containing a list of all possible searchable vectors.
                 For example '/Users/myuser/myfolder/myspace.p'. When loaded,
                 this space_file should be a list of tuples.
-            encode_categorical (bool): If True, preprocesses categorical data
+            onehot_categorical (bool): If True, preprocesses categorical data
                 (strings) to one-hot encoded binary arrays for use with custom
                 predictor functions. Default False.
             duplicate_check (bool): If True, checks that custom optimizers are
