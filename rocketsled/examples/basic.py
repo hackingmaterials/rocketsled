@@ -40,7 +40,10 @@ def wf_creator(x):
 if __name__ == "__main__":
     mc = MissionControl(launchpad=launchpad)
     mc.reset(hard=True)
-    mc.configure(wf_creator='rocketsled.examples.basic.wf_creator', dimensions=x_dim)
+    mc.configure(
+        # wf_creator='rocketsled.examples.basic.wf_creator',
+        wf_creator=wf_creator,
+        dimensions=x_dim)
     launchpad.reset(password=None, require_password=False)
     launchpad.add_wf(wf_creator([5, 5, 2]))
     rapidfire(launchpad, nlaunches=10, sleep_time=0)
