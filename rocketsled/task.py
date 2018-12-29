@@ -81,7 +81,7 @@ class OptTask(FireTaskBase):
         self.n_bootstraps = self.config["n_bootstraps"]
         self.acq = self.config["acq"]
         self.space_file = self.config["space_file"]
-        self.encode_categorical = self.config["encode_categorical"]
+        self.onehot_categorical = self.config["onehot_categorical"]
         self.duplicate_check = self.config["duplicate_check"]
         self.get_z = self.config["get_z"]
         if self.get_z:
@@ -400,7 +400,6 @@ class OptTask(FireTaskBase):
                 ix = all_xz_unsearched.index(xz1h)
                 all_xz_unsearched.pop(ix)
                 all_xz_onehot.append(xz1h)
-
             all_xz_new = [self._decode(xz_onehot, xz_dims) for xz_onehot in
                           all_xz_onehot]
 
@@ -412,7 +411,7 @@ class OptTask(FireTaskBase):
             # categorical info to one-hot encoded ints.
             # Used when a custom predictor cannot natively use
             # categorical info
-            if self.encode_categorical:
+            if self.onehot_categorical:
                 all_xz_searched = self._encode(all_xz_searched, xz_dims)
                 all_xz_unsearched = self._encode(all_xz_unsearched, xz_dims)
 
@@ -425,6 +424,9 @@ class OptTask(FireTaskBase):
             all_xz_new = predictor_fun(all_xz_searched, all_y, self.x_dims,
                                        all_xz_unsearched, *self.predictor_args,
                                        **self.predictor_kwargs)
+            if self.onehot_categorical:
+                all_xz_new = self._decode(all_xz_new, xz_dims)
+
             if not isinstance(all_xz_new[0], (list, tuple)):
                 all_xz_new = [all_xz_new]
 
