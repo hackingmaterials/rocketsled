@@ -3,12 +3,10 @@ An example of the most basic rocketsled implementation.
 This file creates and executes a workflow containing one Firework.
 
 The Firework contains 2 Tasks.
-    1. CalculateTask - a task that reads x from the spec and calculates the sum
+    1. SumTask - a task that reads x from the spec and calculates the sum
      of the vector.
     2. OptTask - a task that stores optimiztion data in the db and optimizes
     the next guess.
-
-
 --------------------------------------------------------------------------
 The following workflow is only one Firework (one job), for example purposes.
 However, FireWorks and rocketsled are capable of handling more complex
