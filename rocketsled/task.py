@@ -42,15 +42,12 @@ class OptTask(FireTaskBase):
     Required args:
         launchpad (LaunchPad): A Fireworks LaunchPad object, which can be used
             to define the host/port/name of the db.
-
-    Optional args:
         opt_label (string): Names the collection of that the particular
             optimization's data will be stored in. Multiple collections
             correspond to multiple independent optimizations.
     """
     _fw_name = "OptTask"
-    required_params = ["launchpad"]
-    optional_params = ["opt_label"]
+    required_params = ["launchpad", "opt_label"]
 
     def __init__(self, *args, **kwargs):
         super(OptTask, self).__init__(*args, **kwargs)
@@ -88,7 +85,7 @@ class OptTask(FireTaskBase):
         self.duplicate_check = self.config["duplicate_check"]
         self.get_z = self.config["get_z"]
         if self.get_z:
-            self.get_z = deserialize(self['get_z'])
+            self.get_z = deserialize(self.config['get_z'])
         else:
             self.get_z = lambda *ars, **kws: []
         self.get_z_args = self.config["get_z_args"] or []
@@ -768,6 +765,8 @@ class OptTask(FireTaskBase):
                 dimensions. Search spaces which are  completely numerical are
                 unchanged.
         """
+        self._n_cats = 0
+        self._encoding_info = []
         for i, dim in enumerate(dims):
             if type(dim[0]) in dtypes.others:
                 cats = [0] * len(all_x)

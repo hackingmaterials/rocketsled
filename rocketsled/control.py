@@ -12,7 +12,8 @@ from fireworks.utilities.fw_utilities import get_fw_logger
 
 from rocketsled.task import OptTask
 from rocketsled.utils import get_default_opttask_kwargs, check_dims, \
-    is_discrete, deserialize, latex_float, pareto, dtypes, NotConfiguredError
+    is_discrete, serialize, deserialize, latex_float, pareto, dtypes, \
+    NotConfiguredError
 
 IMPORT_WARNING = "could not be imported! try putting it in a python package " \
                  "registered with PYTHONPATH or using the alternative " \
@@ -31,7 +32,7 @@ class MissionControl:
             a new collection (ie no other documents are present in the collection).
      """
 
-    def __init__(self, launchpad, opt_label="opt_default"):
+    def __init__(self, launchpad, opt_label):
         self.logger = get_fw_logger("rocketsled")
         self.config = None
         self.launchpad = launchpad
@@ -192,8 +193,15 @@ class MissionControl:
                 raise KeyError(
                     "{} not a valid argument for setup_config. Choose "
                     "from: {}".format(kw, list(config.keys())))
+            elif kw in ["get_z", "predictor"]:
+                print("in {}".format(kw))
+                print(kwargs[kw])
+                print(hasattr(kwargs[kw], '__call__'))
+                if hasattr(kwargs[kw], '__call__'):
+                    config[kw] = serialize(kwargs[kw])
             else:
                 config[kw] = kwargs[kw]
+        wf_creator = serialize(wf_creator)
         config["wf_creator"] = wf_creator
         config["dimensions"] = dimensions
 
