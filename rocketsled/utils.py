@@ -3,6 +3,7 @@ Utility functions for OptTask.
 """
 import os
 import imp
+import sys
 import random
 from collections.abc import Iterable
 
@@ -76,6 +77,26 @@ def deserialize(fun):
         mod = __import__(str(modname), globals(), locals(),
                          fromlist=[str(funcname)])
     return getattr(mod, funcname)
+
+
+def serialize(fun):
+    """
+    Turn a python function into a string which can later be used to deserialize
+    the function. Only works with importable modules.
+
+    Args:
+        fun (function object): The python function.
+
+    Returns:
+        (str) The full function path as a string.
+
+    """
+    mod = fun.__module__
+    if mod == "__main__":
+        import __main__
+        mod = __main__.__file__.replace(".py", "").replace(".pyc", "")
+    name = fun.__name__
+    return "{}.{}".format(mod, name)
 
 
 def random_guess(dimensions):
