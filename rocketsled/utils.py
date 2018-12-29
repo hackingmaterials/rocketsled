@@ -91,12 +91,29 @@ def serialize(fun):
         (str) The full function path as a string.
 
     """
-    mod = fun.__module__
-    if mod == "__main__":
-        import __main__
-        mod = __main__.__file__.replace(".py", "").replace(".pyc", "")
+    path = fun.__module__
     name = fun.__name__
-    return "{}.{}".format(mod, name)
+    if path == "__main__":
+        import __main__
+        path = __main__.__file__.replace(".py", "").replace(".pyc", "")
+        importlist = path.split("/")
+        all_pkgs = importlist[:-1]
+        full_import_path = importlist[-1]
+        for i in range(5):
+            try:
+                full_import_path = all_pkgs[-1] + "." + full_import_path
+                all_pkgs = all_pkgs[:-1]
+                funpath = full_import_path + "." + name
+                deserialize(funpath)
+                return funpath
+            except ImportError:
+                continue
+        else:
+            raise ImportError("{} couldn't be serialized to be imported. Are "
+                              "you sure it's module is in your PYTHONPATH?")
+    else:
+        funpath = "{}.{}".format(path, name)
+        return funpath
 
 
 def random_guess(dimensions):

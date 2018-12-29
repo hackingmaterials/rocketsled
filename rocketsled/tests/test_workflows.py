@@ -21,7 +21,8 @@ from fireworks.scripts.rlaunch_run import launch_multiprocess
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fw_tutorials.firetask.addition_task import AdditionTask
 
-from rocketsled.task import OptTask, ExhaustedSpaceError
+from rocketsled import OptTask, MissionControl
+from rocketsled.utils import ExhaustedSpaceError
 
 __author__ = "Alexander Dunn"
 __version__ = "1.0"
@@ -30,6 +31,11 @@ __email__ = "ardunn@lbl.gov"
 test_names = ['test_basic', 'test_custom_predictor', 'test_complex',
               'test_duplicates', 'test_get_z', 'test_multi', 'test_parallel']
 
+lp_filedir = os.path.dirname(os.path.realpath(__file__))
+with open(lp_filedir + '/tests_launchpad.yaml', 'r') as lp_file:
+    yaml = YAML()
+    lp_dict = dict(yaml.load(lp_file))
+    launchpad = LaunchPad.from_dict(lp_dict)
 
 @explicit_serialize
 class BasicTestTask(FireTaskBase):
@@ -61,39 +67,23 @@ class MultiTestTask(FireTaskBase):
         return FWAction(update_spec={'_y': y})
 
 
-def wf_creator_basic(x, launchpad):
-    """
-    Testing a basic workflow with one Firework, and two FireTasks.
-    """
-
+def wf_creator_basic(x):
+    """Testing a basic workflow with one Firework, and two FireTasks."""
     spec = {'_x': x}
-    dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
     bt = BasicTestTask()
-    ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_basic',
-                 dimensions=dims,
-                 predictor='RandomForestRegressor',
-                 predictor_kwargs={'random_state': 1},
-                 lpad=launchpad,
-                 wf_creator_args=[launchpad],
-                 opt_label='test_basic')
+    ot = OptTask(launchpad=launchpad, opt_label='test_basic')
     firework1 = Firework([bt, ot], spec=spec)
     return Workflow([firework1])
 
 
-def wf_custom_predictor(x, launchpad):
+def wf_custom_predictor(x):
     """
     Testing a custom predictor which returns the same x vector for every guess,
     using same workflow as test_basic.
     """
     spec = {'_x': x}
-    dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
     bt = BasicTestTask()
-    ot = OptTask(wf_creator='rocketsled.tests.tests.wf_custom_predictor',
-                 dimensions=dims,
-                 predictor='rocketsled.tests.tests.custom_predictor',
-                 lpad=launchpad,
-                 wf_creator_args=[launchpad],
-                 opt_label='test_custom_predictor')
+    ot = OptTask(launchpad=launchpad, opt_label='test_custom_predictor')
     firework1 = Firework([bt, ot], spec=spec)
     return Workflow([firework1])
 
@@ -115,7 +105,6 @@ def wf_creator_complex(x, launchpad):
     """
 
     spec = {'_x': x}
-    dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
     fw0 = Firework(AdditionTask(), spec={"input_array": [1, 2]}, name='Parent')
     fw1 = Firework(AdditionTask(), spec={"input_array": [2, 3]}, name='Child A')
     fw2 = Firework(AdditionTask(), spec={"input_array": [3, 4]}, name='Child B')
@@ -243,24 +232,30 @@ def get_z(x):
 
 class TestWorkflows(unittest.TestCase):
     def setUp(self):
-        lp_filedir = os.path.dirname(os.path.realpath(__file__))
-        with open(lp_filedir + '/tests_launchpad.yaml', 'r') as lp_file:
-            yaml = YAML()
-            lp_dict = dict(yaml.load(lp_file))
-            self.lp = LaunchPad.from_dict(lp_dict)
-            self.db = self.lp.db
+        self.db = launchpad.db
+
+        self.dims_basic = [(1, 10), (10.0, 20.0),
+                           ['blue', 'green', 'red', 'orange']]
+
+
+
+    def test_missioncontrol(self):
+        pass
 
     def test_basic(self):
-        self.lp.reset(password=None, require_password=False)
-        self.lp.add_wf(wf_creator_basic([5, 11, 'blue'], self.lp))
-        launch_rocket(self.lp)
+        mc = MissionControl(launchpad=launchpad, opt_label="test_basic")
+        mc.reset(hard=True)
+        mc.configure(wf_creator=wf_creator_basic, dimensions=self.dims_basic)
+        launchpad.reset(password=None, require_password=False)
+        launchpad.add_wf(wf_creator_basic([5, 11, 'blue']))
+        launch_rocket(launchpad)
 
         col = self.db.test_basic
         manager = col.find_one({'y': {'$exists': 0}})
         done = col.find_one({'y': {'$exists': 1, '$ne': 'reserved'}})
         reserved = col.find_one({'y': 'reserved'})
 
-        self.assertEqual(col.count_documents({}), 3)
+        self.assertEqual(col.count_documents({}), 4)
         self.assertEqual(manager['lock'], None)
         self.assertEqual(manager['queue'], [])
         self.assertEqual(done['x'], [5, 11, 'blue'])

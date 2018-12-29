@@ -15,11 +15,12 @@ https://materialsproject.github.io/fireworks/
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad
 
-from rocketsled import OptTask
+from rocketsled import OptTask, MissionControl
 from rocketsled.examples.tasks import MixedCalculateTask
 
+launchpad = LaunchPad(name='rsled')
 opt_label = "opt_categorical"
-lpad = LaunchPad(name='rsled')
+db_info = {"launchpad": launchpad, "opt_label": opt_label}
 dims = [(1, 2), (1, 2), (1, 2), ("red", "green", "blue")]
 
 
@@ -28,15 +29,7 @@ def wf_creator(x):
 
     # CalculateTask writes _y field to the spec internally.
 
-    firework1 = Firework([MixedCalculateTask(),
-                          OptTask(wf_creator='rocketsled.examples.categorical.'
-                                             'wf_creator',
-                                  dimensions=dims,
-                                  lpad=lpad,
-                                  get_z='rocketsled.examples.categorical.'
-                                        'get_z',
-                                  duplicate_check=True,
-                                  opt_label=opt_label)],
+    firework1 = Firework([MixedCalculateTask(), OptTask(**db_info)],
                          spec=fw1_spec)
     return Workflow([firework1])
 
@@ -50,6 +43,9 @@ def get_z(x):
 
 
 if __name__ == "__main__":
-    lpad.reset(password=None, require_password=False)
-    lpad.add_wf(wf_creator([1, 1, 2, "red"]))
-    rapidfire(lpad, nlaunches=23, sleep_time=0)
+    mc = MissionControl(**db_info)
+    mc.reset(hard=True)
+    mc.configure(wf_creator=wf_creator, dimensions=dims, get_z=get_z)
+    launchpad.reset(password=None, require_password=False)
+    launchpad.add_wf(wf_creator([1, 1, 2, "red"]))
+    rapidfire(launchpad, nlaunches=23, sleep_time=0)

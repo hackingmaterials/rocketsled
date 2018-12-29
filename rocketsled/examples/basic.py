@@ -26,6 +26,8 @@ from rocketsled import OptTask, MissionControl
 from rocketsled.examples.tasks import SumTask
 
 launchpad = LaunchPad(name='rsled')
+opt_label = "opt_default"
+db_info = {"launchpad": launchpad, "opt_label": opt_label}
 x_dim = [(1, 5), (1, 5), (1, 5)]
 
 
@@ -33,17 +35,14 @@ x_dim = [(1, 5), (1, 5), (1, 5)]
 def wf_creator(x):
     spec = {'_x': x}
     # SumTask writes _y field to the spec internally.
-    firework1 = Firework([SumTask(), OptTask(launchpad=launchpad)], spec=spec)
+    firework1 = Firework([SumTask(), OptTask(**db_info)], spec=spec)
     return Workflow([firework1])
 
 
 if __name__ == "__main__":
-    mc = MissionControl(launchpad=launchpad)
+    mc = MissionControl(**db_info)
     mc.reset(hard=True)
-    mc.configure(
-        # wf_creator='rocketsled.examples.basic.wf_creator',
-        wf_creator=wf_creator,
-        dimensions=x_dim)
+    mc.configure(wf_creator=wf_creator, dimensions=x_dim)
     launchpad.reset(password=None, require_password=False)
     launchpad.add_wf(wf_creator([5, 5, 2]))
     rapidfire(launchpad, nlaunches=10, sleep_time=0)
