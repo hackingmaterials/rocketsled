@@ -22,7 +22,7 @@ from fireworks.utilities.fw_utilities import explicit_serialize
 from fw_tutorials.firetask.addition_task import AdditionTask
 
 from rocketsled import OptTask, MissionControl
-from rocketsled.utils import ExhaustedSpaceError,random_guess
+from rocketsled.utils import ExhaustedSpaceError
 
 __author__ = "Alexander Dunn"
 __version__ = "1.0"

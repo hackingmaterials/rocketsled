@@ -6,13 +6,15 @@ import unittest
 
 import numpy as np
 
-from rocketsled.utils import Dtypes, random_guess, pareto, \
-    convert_value_to_native, latex_float, deserialize, split_xz
+from rocketsled.utils import dtypes, random_guess, pareto, \
+    convert_value_to_native, latex_float, deserialize, split_xz, \
+    get_default_opttask_kwargs, convert_native, check_dims, is_discrete, \
+    tolerance_check, serialize
 
 
 class TestUtilities(unittest.TestCase):
     def test_Dtypes(self):
-        dt = Dtypes()
+        dt = dtypes
         self.assertTrue(int in dt.ints)
         self.assertTrue(np.int in dt.ints)
         self.assertTrue(float in dt.floats)
@@ -40,7 +42,7 @@ class TestUtilities(unittest.TestCase):
         self.assertFalse(([3, 2] in maxes))
         self.assertTrue([5, 5] in maxes)
 
-    def test_conversion(self):
+    def test_convert_value_to_native(self):
         a = np.int(5)
         b = np.float(1.4)
         c = np.str("somestr")
@@ -51,11 +53,17 @@ class TestUtilities(unittest.TestCase):
         self.assertTrue(isinstance(b_native, float))
         self.assertTrue(isinstance(c_native, str))
 
+    def test_convert_native(self):
+        pass
+
     def test_latex_float(self):
         f1 = 3.494388373744
         f2 = 3.223421e-16
         self.assertTrue(latex_float(f1), "3.49")
         self.assertTrue(latex_float(f2), "3.22 \times 10^{-16}")
+
+    def test_serialize(self):
+        pass
 
     def test_deserialize(self):
         cwd = os.path.dirname(os.path.realpath(__file__))
@@ -73,9 +81,14 @@ class TestUtilities(unittest.TestCase):
         self.assertListEqual(x, x_split)
         self.assertListEqual(z, z_split)
 
+    def test_get_default_opttask_kwargs(self):
+        pass
 
+    def test_check_dims(self):
+        pass
 
+    def test_is_discrete(self):
+        pass
 
-
-
-
+    def test_tolerance_check(self):
+        pass
