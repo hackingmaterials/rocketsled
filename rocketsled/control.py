@@ -29,7 +29,8 @@ class MissionControl:
             information.
         opt_label (str): The name of the collection where Rocketsled should
             keep optimization data (in the same db as the LaunchPad). Please use
-            a new collection (ie no other documents are present in the collection).
+            a new collection (ie no other documents are present in the
+            collection).
      """
 
     def __init__(self, launchpad, opt_label):
