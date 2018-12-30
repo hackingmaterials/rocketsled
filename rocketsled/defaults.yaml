@@ -7,14 +7,14 @@ wf_creator_args: null
 wf_creator_kwargs: null
 
 # predictor configuration
-predictor: "GaussianProcessRegressor"   # builtin predictor name or full path to custom predictor
+predictor: "RandomForestRegressor"      # builtin predictor name or full path to custom predictor
 predictor_args: null
 predictor_kwargs: null
 maximize: False                         # search for maxima instead of minima
 n_search_pts: 1000                      # number of search points
 n_train_pts: null                       # number of train points (null is all)
 n_bootstraps: 500                       # number of bootstraps for tree-based builtin predictors
-acq: null                               # acquisition function
+acq: "ei"                               # acquisition function
 space_file: null                        # define search space with a filepath
 onehot_categorical: False               # for custom predictors only
 duplicate_check: False                  # for custom predictors only

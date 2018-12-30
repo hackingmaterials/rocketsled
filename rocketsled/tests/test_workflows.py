@@ -22,7 +22,7 @@ from fireworks.utilities.fw_utilities import explicit_serialize
 from fw_tutorials.firetask.addition_task import AdditionTask
 
 from rocketsled import OptTask, MissionControl
-from rocketsled.utils import ExhaustedSpaceError
+from rocketsled.utils import ExhaustedSpaceError,random_guess
 
 __author__ = "Alexander Dunn"
 __version__ = "1.0"
@@ -39,6 +39,8 @@ with open(lp_filedir + '/tests_launchpad.yaml', 'r') as lp_file:
 opt_label = "test"
 db_info = {"launchpad": launchpad, "opt_label": opt_label}
 test_db_name = launchpad.db
+common_kwargs = {"predictor": "RandomForestRegressor", "acq": None}
+
 
 @explicit_serialize
 class BasicTestTask(FireTaskBase):
@@ -112,57 +114,26 @@ def wf_creator_complex(x):
                         [fw5], fw5: []})
 
 
-def wf_creator_accuracy(x, launchpad):
+def wf_creator_accuracy(x):
     """
     An expensive test ensuring the default predictor actually performs better
     than the average random case on the function defined in AccuracyTask.
     """
     spec = {'_x': x}
-    dims = [(1, 10), (10.0, 20.0), (20.0, 30.0)]
     at = AccuracyTask()
-    ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_accuracy',
-                 dimensions=dims,
-                 lpad=launchpad,
-                 wf_creator_args=[launchpad],
-                 opt_label='test_accuracy',
-                 maximize=True)
+    ot = OptTask(**db_info)
     firework1 = Firework([at, ot], spec=spec)
     return Workflow([firework1])
 
 
-def wf_creator_parallel(x, launchpad):
-    """
-    An expensive test ensuring the database is locked and released
-    correctly during optimization.
-    """
-    spec = {'_x': x}
-    dims = [(1, 5), (1, 5), (1, 5)]
-    at = AccuracyTask()
-    ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_parallel',
-                 dimensions=dims,
-                 lpad=launchpad,
-                 wf_creator_args=[launchpad],
-                 opt_label='test_parallel',
-                 maximize=True)
-    firework1 = Firework([at, ot], spec=spec)
-    return Workflow([firework1])
-
-
-def wf_creator_multiobjective(x, launchpad):
+def wf_creator_multiobjective(x):
     """
     Testing a multiobjective optimization.
     """
 
     spec = {'_x': x}
-    dims = [(1, 10), (10.0, 20.0), ['blue', 'green', 'red', 'orange']]
     mt = MultiTestTask()
-    ot = OptTask(wf_creator='rocketsled.tests.tests.wf_creator_multiobjective',
-                 dimensions=dims,
-                 predictor='RandomForestRegressor',
-                 predictor_kwargs={'random_state': 1},
-                 lpad=launchpad,
-                 wf_creator_args=[launchpad],
-                 opt_label='test_multi')
+    ot = OptTask(**db_info)
     firework1 = Firework([mt, ot], spec=spec)
     return Workflow([firework1])
 
@@ -183,11 +154,15 @@ class TestWorkflows(unittest.TestCase):
         self.db = launchpad.db
         self.dims_basic = [(1, 10), (10.0, 20.0),
                            ['blue', 'green', 'red', 'orange']]
+        self.dims_accuracy = [(1, 10), (10.0, 20.0), (20.0, 30.0)]
+        self.dims_parallel = [(1, 5), (1, 5), (1, 5)]
+
         self.c = getattr(self.db, opt_label)
 
     def test_basic(self):
         self.mc.configure(wf_creator=wf_creator_basic,
-                          dimensions=self.dims_basic)
+                          dimensions=self.dims_basic,
+                          **common_kwargs)
         launchpad.add_wf(wf_creator_basic([5, 11, 'blue']))
         launch_rocket(launchpad)
         manager = self.c.find_one({'doctype': "manager"})
@@ -222,7 +197,8 @@ class TestWorkflows(unittest.TestCase):
 
     def test_complex(self):
         self.mc.configure(wf_creator=wf_creator_complex,
-                          dimensions=self.dims_basic)
+                          dimensions=self.dims_basic,
+                          **common_kwargs)
         launchpad.add_wf(wf_creator_complex([5, 11, 'blue']))
         for _ in range(10):
             launch_rocket(launchpad)
@@ -240,6 +216,7 @@ class TestWorkflows(unittest.TestCase):
                           duplicate_check=True,
                           tolerances=[0, 1e-6, None],
                           predictor=custom_predictor,
+                          acq=None
                           )
         launchpad.add_wf(wf_creator_basic([5, 11, 'blue']))
         for _ in range(2):
@@ -256,87 +233,100 @@ class TestWorkflows(unittest.TestCase):
     def test_get_z(self):
         self.mc.configure(wf_creator=wf_creator_basic,
                           dimensions=self.dims_basic,
-                          predictor=custom_predictor(),
+                          predictor=custom_predictor,
                           duplicate_check=True,
                           tolerances=[0, 1e-6, None],
-                          get_z=get_z)
+                          get_z=get_z,
+                          acq=None)
 
         launchpad.reset(password=None, require_password=False)
         launchpad.add_wf(wf_creator_basic([5, 11, 'blue']))
         for _ in range(2):
             launch_rocket(launchpad)
 
-        col = self.db.test_get_z
-        loop1 = col.find_one({'index': 1})
-        loop2 = col.find_one({'index': 2})
+        loop1 = self.c.find_one({'index': 1})
+        loop2 = self.c.find_one({'index': 2})
 
-        self.assertEqual(col.count_documents({}), 4)
+        self.assertEqual(self.c.count_documents({}), 5)
         self.assertEqual(loop1['x'], [5, 11, 'blue'])
         self.assertEqual(loop1['z'], [25.0, 121.0])
         self.assertEqual(loop2['x'], [3, 12.0, 'green'])
         self.assertEqual(loop2['z'], [9, 144.0])
-    #
-    # def test_accuracy(self):
-    #     best = [None] * 10
-    #     for n in range(10):
-    #         self.lp.reset(password=None, require_password=False)
-    #         self.lp.add_wf(wf_creator_accuracy([1, 10.1, 30.1], self.lp))
-    #         for _ in range(20):
-    #             launch_rocket(self.lp)
-    #         # We want to maximize the function. The minimum is 0.5, and the
-    #         # maximum is 10.
-    #         avg_random_best = 7.23002918931  # calculated with 1,000,000 calcs
-    #         for doc in self.db.test_accuracy.find({'y': {'$exists': 1,
-    #                                                      '$ne': 'reserved'}},
-    #                                               sort=[('y',
-    #                                                      pymongo.DESCENDING)],
-    #                                               limit=1):
-    #             best[n] = doc['y']
-    #     self.assertGreater(np.mean(best), avg_random_best)
-    #
-    # def test_parallel(self):
-    #     n_procs = 10
-    #     self.lp.reset(password=None, require_password=False)
-    #     for i in range(n_procs):
-    #         # Assume the worst case, with n_procs forced duplicates
-    #         self.lp.add_wf(wf_creator_parallel([1, 5, 3], self.lp))
-    #     try:
-    #         launch_multiprocess(self.lp, None, 'INFO', 13, n_procs, 0)
-    #     except ExhaustedSpaceError:
-    #         pass
-    #
-    #     self.assertEqual(
-    #         self.db.test_parallel.count_documents({'y': {'$exists': 1}}), 125)
-    #
-    #     X_unique = []
-    #     for doc in self.db.test_parallel.find({'x_new': {"$exists": 1}}):
-    #         X_unique.append(doc['x_new'])
-    #     for doc in self.db.test_parallel.find({'y': 'reserved'}):
-    #         X_unique.append(doc['x'])
-    #     self.assertEqual(len(X_unique), 125)
-    #
-    # def test_multi(self):
-    #     self.lp.reset(password=None, require_password=False)
-    #     self.lp.add_wf(wf_creator_multiobjective([5, 11, 'blue'], self.lp))
-    #     launch_rocket(self.lp)
-    #
-    #     col = self.db.test_multi
-    #     manager = col.find_one({'y': {'$exists': 0}})
-    #     done = col.find_one({'y': {'$exists': 1, '$ne': 'reserved'}})
-    #     reserved = col.find_one({'y': 'reserved'})
-    #
-    #     self.assertEqual(col.count_documents({}), 3)
-    #     self.assertEqual(manager['lock'], None)
-    #     self.assertEqual(manager['queue'], [])
-    #     self.assertEqual(done['x'], [5, 11, 'blue'])
-    #     self.assertEqual(done['index'], 1)
-    #     self.assertEqual(len(done['y']), 2)
-    #
-    #     # Loop 2, to make sure optimizations will keep running
-    #     launch_rocket(self.lp)
-    #     self.assertEqual(col.count_documents({}), 4)
-    #     self.assertEqual(manager['lock'], None)
-    #     self.assertEqual(manager['queue'], [])
+
+    def test_accuracy(self):
+        best = [None] * 10
+        avg_random_best = 7.23002918931  # calculated with 1,000,000 calcs
+        for n in range(10):
+            self.mc.reset(hard=True)
+            self.mc.configure(wf_creator=wf_creator_accuracy,
+                              dimensions=self.dims_accuracy,
+                              maximize=True,
+                              **common_kwargs)
+            launchpad.reset(password=None, require_password=False)
+            launchpad.add_wf(wf_creator_accuracy([1, 10.1, 30.1]))
+            for _ in range(20):
+                launch_rocket(launchpad)
+            # We want to maximize the function. The minimum is 0.5, and the
+            # maximum is 10.
+            for doc in self.c.find({'y': {'$exists': 1, '$ne': 'reserved'}},
+                                   sort=[('y', pymongo.DESCENDING)],
+                                   limit=1):
+                best[n] = doc['y']
+        print(best)
+        self.assertGreater(np.mean(best), avg_random_best)
+
+    def test_multi(self):
+        self.mc.configure(wf_creator=wf_creator_multiobjective,
+                          dimensions=self.dims_basic,
+                          predictor_kwargs={'random_state': 1},
+                          **common_kwargs)
+        launchpad.add_wf(wf_creator_multiobjective([5, 11, 'blue']))
+        launch_rocket(launchpad)
+
+        manager = self.c.find_one({"doctype": "manager"})
+        done = self.c.find_one({'y': {'$exists': 1, '$ne': 'reserved'}})
+        reserved = self.c.find_one({'y': 'reserved'})
+
+        self.assertEqual(self.c.count_documents({}), 4)
+        self.assertEqual(manager['lock'], None)
+        self.assertEqual(manager['queue'], [])
+        self.assertEqual(done['x'], [5, 11, 'blue'])
+        self.assertEqual(done['index'], 1)
+        self.assertEqual(len(done['y']), 2)
+
+        # Loop 2, to make sure optimizations will keep running
+        launch_rocket(launchpad)
+        self.assertEqual(self.c.count_documents({}), 5)
+        self.assertEqual(manager['lock'], None)
+        self.assertEqual(manager['queue'], [])
+
+    def test_parallel(self):
+        n_procs = 10
+        self.mc.configure(wf_creator=wf_creator_accuracy,
+                          dimensions=self.dims_parallel,
+                          opt_label='test_parallel',
+                          maximize=True,
+                          **common_kwargs)
+
+        for i in range(n_procs):
+            # Assume the worst case, with n_procs forced duplicates
+            launchpad.add_wf(wf_creator_accuracy([1, 5, 3]))
+
+        launch_multiprocess(launchpad, None, 'INFO', 12, n_procs, 0)
+        try:
+            for _ in range(10):
+                launch_rocket(launchpad)
+        except ExhaustedSpaceError:
+            pass
+
+        self.assertEqual(125, self.c.count_documents({'y': {'$exists': 1}}))
+
+        all_x_unique = []
+        for doc in self.c.find({'x_new': {"$exists": 1}}):
+            all_x_unique.append(doc['x_new'])
+        for doc in self.c.find({'y': 'reserved'}):
+            all_x_unique.append(doc['x'])
+        self.assertEqual(len(all_x_unique), 125)
 
     def tearDown(self):
         try:
@@ -345,18 +335,17 @@ class TestWorkflows(unittest.TestCase):
             warnings.warn("LaunchPad {} could not be reset! There may be "
                           "fireworks from these tests remaining on the "
                           "LaunchPad.".format(launchpad.to_dict()))
-        for tn in test_names:
-            try:
-                self.db.drop_collection(tn)
-            except Exception:
-                pass
+        try:
+            self.db.drop_collection(opt_label)
+        except BaseException:
+            pass
 
         if launchpad.host == 'localhost' \
                 and launchpad.port == 27017 \
                 and launchpad.name == test_db_name:
             try:
                 launchpad.connection.drop_database(test_db_name)
-            except Exception:
+            except BaseException:
                 pass
 
 

@@ -672,7 +672,6 @@ class OptTask(FireTaskBase):
             all_x_scaled = np.asarray(all_x_scaled)[:, encoded_xlen:]
             space_scaled = np.asarray(space_scaled)[:, encoded_xlen:]
         all_y = np.asarray(all_y)
-        evaluator = max
         if self.n_objs == 1:
             # Single objective
             if maximize:
@@ -683,9 +682,11 @@ class OptTask(FireTaskBase):
                 evaluator = min
             else:
                 # Use the acquistion function values
-                values = acquire(self.acq, all_x_scaled, all_y, space_scaled, model,
-                                 self.n_bootstraps)
+                values = acquire(self.acq, all_x_scaled, all_y, space_scaled,
+                                 model, self.n_bootstraps)
+                evaluator = max
         else:
+            evaluator = max
             # Multi-objective
             if self.acq is None or n_searched < 10:
                 values = np.zeros((n_unsearched, self.n_objs))
@@ -697,11 +698,11 @@ class OptTask(FireTaskBase):
                 # predictions!
                 values = pareto(values, maximize=maximize) * np.random.uniform(
                     0, 1, n_unsearched)
+
             else:
                 # Adapted from Multiobjective Optimization of Expensive Blackbox
                 # Functions via Expected Maximin Improvement
                 # by Joshua D. Svenson, Thomas J. Santner
-
                 if maximize:
                     all_y = -1.0 * all_y
 
