@@ -381,14 +381,14 @@ def convert_value_to_native(val, dtypes=Dtypes()):
     return native
 
 
-def tolerance_check(x_new, all_x_explored, tolerances):
+def is_duplicate_by_tolerance(x_new, all_x_explored, tolerances):
     """
     Duplicate checks with tolerances.
 
     Args:
-        x_new: the new guess to be duplicate checked
-        all_x_explored: the list of all explored guesses
-        tolerances: the tolerances of each dimension
+        x_new (list): the new guess to be duplicate checked
+        all_x_explored ([list]): the list of all explored guesses
+        tolerances (list): the tolerances of each dimension
 
     Returns:
         True if x_new is a duplicate of a guess in X_explored.
