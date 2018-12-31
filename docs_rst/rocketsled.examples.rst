@@ -4,14 +4,6 @@ rocketsled.examples package
 Submodules
 ----------
 
-rocketsled.examples.auto module
--------------------------------
-
-.. automodule:: rocketsled.examples.auto
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 rocketsled.examples.basic module
 --------------------------------
 
