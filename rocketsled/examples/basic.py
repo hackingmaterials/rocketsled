@@ -7,30 +7,73 @@ The Firework contains 2 Tasks.
      of the vector.
     2. OptTask - a task that stores optimiztion data in the db and optimizes
     the next guess.
+
 --------------------------------------------------------------------------
 The following workflow is only one Firework (one job), for example purposes.
 However, FireWorks and rocketsled are capable of handling more complex
 workflows including multiple jobs and advanced dependencies. Please see the
-Fireworks and rocketsled documentation pages for more information:
+complex example, or the Fireworks and rocketsled documentation pages for more
+information:
 
 https://hackingmaterials.github.io/rocketsled/
 https://materialsproject.github.io/fireworks/
 """
+import numpy as np
 
+from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.rocket_launcher import rapidfire
-from fireworks import Workflow, Firework, LaunchPad
+from fireworks import Workflow, Firework, LaunchPad, FireTaskBase, FWAction
 
 from rocketsled import OptTask, MissionControl
-from rocketsled.examples.tasks import SumTask
 
+
+# Setting up the FireWorks LaunchPad
 launchpad = LaunchPad(name='rsled')
 opt_label = "opt_default"
 db_info = {"launchpad": launchpad, "opt_label": opt_label}
+
+# We constrain our dimensions to 3 integers, each between 1 and 5
 x_dim = [(1, 5), (1, 5), (1, 5)]
 
 
-# a workflow creator function which takes x and returns a workflow based on x
+@explicit_serialize
+class SumTask(FireTaskBase):
+    """
+    An example task which just sums the input vector, x. Replace this code
+    with your objective function if your objective function is relatively simple
+    (i.e., only needs one Firework).
+    """
+    _fw_name = "SumTask"
+
+    def run_task(self, fw_spec):
+        x = fw_spec['_x']
+        y = np.sum(x)
+        return FWAction(update_spec={'_y': y})
+
+
 def wf_creator(x):
+    """
+    The workflow creator function required by rocketsled.
+
+    This wf_creator takes in an input vector x and returns a workflow which
+    calculates y, the output. The requirements for using this wf_creator
+    with rocketsled are:
+
+    1. OptTask is passed into a FireWork in the workflow
+    2. The fields "_x" and "_y" are written to the spec of the FireWork
+        containing OptTask.
+    3. You use MissionControl's "configure" method to set up the optimization,
+        and pass in wf_creator as it's first argument.
+
+    Args:
+        x (list): The wf_creator input vector. In this example, it is just 3
+            integers between 1 and 5 (inclusive).
+
+    Returns:
+        (Workflow): A workflow containing one FireWork (two FireTasks) which
+            is automatically set up to run the optimization loop.
+
+    """
     spec = {'_x': x}
     # SumTask writes _y field to the spec internally.
     firework1 = Firework([SumTask(), OptTask(**db_info)], spec=spec)
@@ -38,9 +81,16 @@ def wf_creator(x):
 
 
 if __name__ == "__main__":
+    # Make a MissionControl object
     mc = MissionControl(**db_info)
-    mc.reset(hard=True)
-    mc.configure(wf_creator=wf_creator, dimensions=x_dim)
+
+    # Reset the launchpad and optimization db for this example
     launchpad.reset(password=None, require_password=False)
+    mc.reset(hard=True)
+
+    # Configure the optimization db with MissionControl
+    mc.configure(wf_creator=wf_creator, dimensions=x_dim)
+
+    # Run the optimization loop 10 times.
     launchpad.add_wf(wf_creator([5, 5, 2]))
     rapidfire(launchpad, nlaunches=10, sleep_time=0)
