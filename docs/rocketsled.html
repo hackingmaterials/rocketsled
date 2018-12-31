@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>rocketsled package &#8212; rocketsled 1.1 documentation</title>
+    <title>rocketsled package &#8212; rocketsled 2018.12.30 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" src="_static/documentation_options.js"></script>
@@ -28,7 +28,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 1.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2018.12.30 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -45,7 +45,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="rocketsled.examples.html">rocketsled.examples package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="rocketsled.examples.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rocketsled.examples.html#module-rocketsled.examples.auto">rocketsled.examples.auto module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rocketsled.examples.html#module-rocketsled.examples.basic">rocketsled.examples.basic module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rocketsled.examples.html#module-rocketsled.examples.batch">rocketsled.examples.batch module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rocketsled.examples.html#module-rocketsled.examples.categorical">rocketsled.examples.categorical module</a></li>
@@ -59,7 +58,9 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rocketsled.tests.html">rocketsled.tests package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="rocketsled.tests.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rocketsled.tests.html#module-rocketsled.tests.tests">rocketsled.tests.tests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rocketsled.tests.html#module-rocketsled.tests.deserialize_func">rocketsled.tests.deserialize_func module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rocketsled.tests.html#module-rocketsled.tests.test_task">rocketsled.tests.test_task module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rocketsled.tests.html#module-rocketsled.tests.test_utils">rocketsled.tests.test_utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rocketsled.tests.html#module-rocketsled.tests">Module contents</a></li>
 </ul>
 </li>
@@ -71,6 +72,7 @@
 </div>
 <div class="section" id="module-rocketsled.acq">
 <span id="rocketsled-acq-module"></span><h2>rocketsled.acq module<a class="headerlink" href="#module-rocketsled.acq" title="Permalink to this headline">¶</a></h2>
+<p>Acquisition functions and utilities.</p>
 <dl class="function">
 <dt id="rocketsled.acq.acquire">
 <code class="descclassname">rocketsled.acq.</code><code class="descname">acquire</code><span class="sig-paren">(</span><em>acq</em>, <em>X</em>, <em>Y</em>, <em>space</em>, <em>model</em>, <em>nstraps</em>, <em>return_means=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.acquire" title="Permalink to this definition">¶</a></dt>
@@ -92,6 +94,8 @@ space ([list]): A list of possible X vectors, yet to be explored. This</p>
 <dt>nstraps (int): The number of bootstrap samplings, with replacement,</dt>
 <dd>which will be performed. This is also the number of regressor
 fittings and predictions which will be performed.</dd>
+<dt>return_means (bool): If True, also return the mean of the acquisition</dt>
+<dd>function alongside the acquisition fucntion values.</dd>
 </dl>
 </dd>
 <dt>Returns:</dt>
@@ -195,68 +199,276 @@ space ([list]): A list of possible X vectors, yet to be explored. This</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-rocketsled.auto">
-<span id="rocketsled-auto-module"></span><h2>rocketsled.auto module<a class="headerlink" href="#module-rocketsled.auto" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="rocketsled.auto.OptTask_as_string">
-<code class="descclassname">rocketsled.auto.</code><code class="descname">OptTask_as_string</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.auto.OptTask_as_string" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="rocketsled.auto.PyTask_as_string">
-<code class="descclassname">rocketsled.auto.</code><code class="descname">PyTask_as_string</code><span class="sig-paren">(</span><em>funcpath</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.auto.PyTask_as_string" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="rocketsled.auto.auto_setup">
-<code class="descclassname">rocketsled.auto.</code><code class="descname">auto_setup</code><span class="sig-paren">(</span><em>func</em>, <em>dimensions</em>, <em>wfname=None</em>, <em>launch_ready=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.auto.auto_setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>Automatically set up a FireWorks-based optimization loop with OptTask with
-you own function.</p>
-<p>The loop is set up as a script, which is written to the
-rocketsled/auto_sleds directory. All you need to do it set up your
-Fireworks launchpad and run the script created, to get started.</p>
-<p>Make sure to pass in necessary launchpad data to OptTask through kwargs of
-this function!</p>
-<p>Args:</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>func (function object): A function object accepting a single positional</dt>
-<dd>argument, x, a vector of ints/floats/strs and returning a single
-scalar, y.</dd>
-</dl>
-<p>wfname (str): The base name you want for the workflow.
-dimensions (list): A list of dimensions constraining each of the</p>
-<blockquote>
-<div>variables in x. Each 2-tuple in the list defines one dimension in
-the search space in (low, high) format. For categorical dimensions,
-includes all possible categories as a list.
-Example:
-dimensions = [(1,100), (9.293, 18.2838), (“red”, “blue”, “green”)]</div></blockquote>
+<div class="section" id="module-rocketsled.control">
+<span id="rocketsled-control-module"></span><h2>rocketsled.control module<a class="headerlink" href="#module-rocketsled.control" title="Permalink to this headline">¶</a></h2>
+<p>A class to configure, manage, and analyze optimizations. Similar to the
+LaunchPad for FireWorks.</p>
+<dl class="class">
+<dt id="rocketsled.control.MissionControl">
+<em class="property">class </em><code class="descclassname">rocketsled.control.</code><code class="descname">MissionControl</code><span class="sig-paren">(</span><em>launchpad</em>, <em>opt_label</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A class for configuring and controlling rocketsled optimization.</p>
 <dl class="docutils">
-<dt>launch_ready (bool): If True, the created document can be executed</dt>
-<dd>immediately.</dd>
-<dt>kwargs: Arguments to be passed as options to OptTask. Valid arguments</dt>
-<dd>to be passed are any valid args for OptTask. For example,
-lpad, host, port, name, opt_label, acq, predictor, etc…</dd>
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>launchpad (LaunchPad): The launchpad to use for storing optimization</dt>
+<dd>information.</dd>
+<dt>opt_label (str): The name of the collection where Rocketsled should</dt>
+<dd>keep optimization data (in the same db as the LaunchPad). Please use
+a new collection (ie no other documents are present in the
+collection).</dd>
 </dl>
+</dd>
+</dl>
+<dl class="method">
+<dt id="rocketsled.control.MissionControl.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>launchpad</em>, <em>opt_label</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rocketsled.control.MissionControl.configure">
+<code class="descname">configure</code><span class="sig-paren">(</span><em>wf_creator</em>, <em>dimensions</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set up the optimization config. Required before using OptTask, but only
+needs to be done once. To reconfigure, use MissionControl.reset and then
+use configure again.</p>
+<p>Args:</p>
+<dl class="docutils">
+<dt>wf_creator (function or str): The function object that creates the</dt>
+<dd>workflow based on a unique vector, x. Alternatively, the full string
+module path to that function, e.g. “mypkg.mymodule.my_wf_creator”,
+which must importable and found in PYTHONPATH.</dd>
+<dt>dimensions ([tuple]): each 2-tuple in the list defines one dimension in</dt>
+<dd>the search space in (low, high) format.
+For categorical or discontinuous dimensions, includes all possible
+categories or values as a list of any length or a tuple of length&gt;2.
+Example: dimensions = dim = [(1,100), (9.293, 18.2838), (“red”,
+“blue”, “green”)].</dd>
+<dt><a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs: Keyword arguments for defining the optimization. A full list</dt>
+<dd><p class="first">of possible kwargs is given below:</p>
+<p>Optimization data:
+opt_label (str): The label to use for this collection of</p>
+<blockquote>
+<div>optimization data.</div></blockquote>
+<p>Workflow creator function:
+wf_creator_args (list): the positional args to be passed to the</p>
+<blockquote>
+<div>wf_creator function alongsize the new x vector</div></blockquote>
+<dl class="docutils">
+<dt>wf_creator_kwargs (dict): details the kwargs to be passed to the</dt>
+<dd>wf_creator function alongside the new x vector</dd>
+</dl>
+<p>Predictors (optimization):
+predictor (function or str): a function which given a list of</p>
+<blockquote>
+<div><p>searched points and unsearched points, returns an optimized
+guess.</p>
+<dl class="docutils">
+<dt>To use a builtin predictor, pass in one of:</dt>
+<dd>‘GaussianProcessRegressor’,
+‘RandomForestRegressor’,
+‘ExtraTreesRegressor’,
+‘GradientBoostingRegressor’,
+‘random’ (random guess)</dd>
+</dl>
+<p>The default is ‘GaussianProcessRegressor’</p>
+<p>To use a custom predictor, pass in the function object.
+Alternatively, the full string module path to that function,
+e.g. “mypkg.mymodule.my_predictor”, which must importable and
+found in PYTHONPATH.
+Example builtin predictor: ‘GaussianProcessRegressor’
+Example custom predictor: my_predictor
+Example custom predictor 2: ‘my_pkg.my_module.my_predictor’</p>
 </div></blockquote>
+<dl class="docutils">
+<dt>predictor_args (list): the positional args to be passed to the model</dt>
+<dd>along with a list of points to be searched. For sklearn-based
+predictors included in OptTask, these positional args are passed
+to the init method of the chosen model. For custom predictors,
+these are passed to the chosen predictor function alongside the
+searched guesses, the output from searched guesses, and an
+unsearched space to be used with optimization.</dd>
+<dt>predictor_kwargs (dict): the kwargs to be passed to the model.</dt>
+<dd>Similar to predictor_args.</dd>
+<dt>n_search_pts (int): The number of points to be searched in the</dt>
+<dd>search space when choosing the next best point. Choosing more
+points to search may increase the effectiveness of the
+optimization but take longer to evaluate. The default is 1000.</dd>
+<dt>n_train_pts (int): The number of already explored points to be</dt>
+<dd>chosen for training. Default is None, meaning all available
+points will be used for training. Reduce the number of points to
+decrease training times.</dd>
+<dt>n_bootstraps (int): The number of times each optimization should,</dt>
+<dd>sample, train, and predict values when generating uncertainty
+estimates for prediction. At least 10 data points must be
+present for bootstrapping. Not used if: acq not specified,
+custom predictor used, or GaussianProcessRegressor used.</dd>
+<dt>acq (str): The acquisition function to use. Can be ‘ei’ for expected</dt>
+<dd>improvement, ‘pi’ for probability of improvement, or ‘lcb’ for
+lower confidence bound. Defaults to None, which means no
+acquisition function is used, and the highest predicted point is
+picked (greedy algorithm). Only applies to builtin predictors.</dd>
+<dt>space_file (str): The fully specified path of a pickle file</dt>
+<dd>containing a list of all possible searchable vectors.
+For example ‘/Users/myuser/myfolder/myspace.p’. When loaded,
+this space_file should be a list of tuples.</dd>
+<dt>onehot_categorical (bool): If True, preprocesses categorical data</dt>
+<dd>(strings) to one-hot encoded binary arrays for use with custom
+predictor functions. Default False.</dd>
+<dt>duplicate_check (bool): If True, checks that custom optimizers are</dt>
+<dd>not making duplicate guesses; all built-in optimizers cannot
+duplicate guess. If the custom predictor suggests a duplicate,
+OptTask picks a random guess out of the remaining untried space.
+Default is no duplicate check, and an error is raised if a
+duplicate is suggested.</dd>
+<dt>tolerances (list): The tolerance of each feature when duplicate</dt>
+<dd><p class="first">checking. For categorical features, put ‘None’
+Example: Our dimensions are [(1, 100), [‘red’, ‘blue’],
+(2.0, 20.0)]. We want our first parameter to be  a duplicate
+only if it is exact, and our third parameter to be a duplicate
+if it is within 1e-6. Then:</p>
+<blockquote class="last">
+<div>tolerances=[0, None, 1e-6]</div></blockquote>
+</dd>
+</dl>
+<p>z-vector features:
+get_z (string): the fully-qualified name of a function which, given</p>
+<blockquote>
+<div><p>an x vector, returns another vector z which provides extra
+information to the machine learner. The features defined in z
+are not used to run the workflow, but are used for learning. If
+z_features are enabled, ONLY z features will be used for
+learning (x vectors essentially become tags or identifiers only)
+Examples:</p>
+<blockquote>
+<div>get_z = ‘my_pkg.my_module.my_fun’
+get_z = ‘/path/to/folder/containing/my_dir/my_module.my_fun’</div></blockquote>
+</div></blockquote>
+<dl class="docutils">
+<dt>get_z_args (list): the positional arguments to be passed to the</dt>
+<dd>get_z function alongside x</dd>
+<dt>get_z_kwargs (dict): the kwargs to be passed to the get_z function</dt>
+<dd>alongside x</dd>
+<dt>z_file (str): The filename (pickle file) where OptTask should save</dt>
+<dd><p class="first">/cache z calculations. Specify this argument if calculating z
+for many (n_search_pts) is not trivial and will cost time in
+computing. With this argument specified, each z  will only be
+calculated once. Defaults to None, meaning that all unexplored z
+are re-calculated each iteration.
+Example:</p>
+<blockquote class="last">
+<div>z_file = ‘/path/to/z_guesses.p’</div></blockquote>
+</dd>
+</dl>
+<p>Parallelism:
+enforce_sequential (bool): WARNING: Experimental feature! If True,</p>
+<blockquote>
+<div>enforces that RS optimizations are run sequentially (default),
+which prevents duplicate guesses from ever being run. If False,
+allows OptTasks to run optimizations in parallel, which may
+cause duplicate guesses with high parallelism.</div></blockquote>
+<dl class="last docutils">
+<dt>batch_size (int): The number of jobs to submit per batch for a batch</dt>
+<dd>optimization. For example, batch_size=5 will optimize every 5th
+job, then submit another 5 jobs based on the best 5 predictions
+(recomputing the acquisition function after each prediction).</dd>
+<dt>timeout (int): The number of seconds to wait before resetting the</dt>
+<dd>lock on the db.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>None: If you want to run the OptTask workflow, you’ll need to pass
+in the launchpad and opt_label arguments in your wf_creator.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="rocketsled.control.MissionControl.plot">
+<code class="descname">plot</code><span class="sig-paren">(</span><em>show_best=True</em>, <em>show_mean=True</em>, <em>latexify=False</em>, <em>font_family='serif'</em>, <em>scale='linear'</em>, <em>summarize=True</em>, <em>print_pareto=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualize the progress of an optimization.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">maximize (bool): Whether to plot optimizing for minimum or maximum.
+show_best (bool): Point out the best point on legend and on plot. If</p>
+<blockquote>
+<div>more than one best point (i.e., multiple equal maxima), show
+them all. If multiobjective, shows best for each objective, and
+prints the best value and x for each objective.</div></blockquote>
+<dl class="docutils">
+<dt>show_mean (bool): Show the mean and standard deviation for the</dt>
+<dd>guesses as the computations are carried out.</dd>
+</dl>
+<p>latexify (bool): Use LaTeX for formatting.
+font_family (str): The font family to use for rendering. Choose from</p>
+<blockquote>
+<div>‘serif’, ‘sans-serif’, ‘fantasy’, ‘monospace’, or ‘cursive’.</div></blockquote>
+<dl class="docutils">
+<dt>scale (str): Whether to scale the plot’s y axis according to log</dt>
+<dd>(‘log’) or ‘linear’ scale.</dd>
+</dl>
+<p>summarize (bool): If True, stdouts summary from .summarize.
+print_pareto (bool): If True, display all Pareto-optimal objective</p>
+<blockquote class="last">
+<div>values.</div></blockquote>
+</dd>
+<dt>Returns:</dt>
+<dd>A matplotlib plot object handle</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="rocketsled.control.MissionControl.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><em>hard=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset (delete) this optimization configuration and/or collection.</p>
+<dl class="docutils">
+<dt>Soft reset (hard=False): Delete the configuration, but keep the</dt>
+<dd>optimization data. This is useful if you are changing optimizers
+and want to keep the previous data (recommended)</dd>
+<dt>Hard reset (hard=True): Delete all data from the collection, including</dt>
+<dd>optimizatiomn data. WARNING - THIS OPTION IS NOT REVERSIBLE!</dd>
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>hard (bool): Whether to do a hard or soft reset. If False, deletes</dt>
+<dd>only the configuration, leaving the previously stored
+optimization data. If True, deletes everything from the
+optimization collection.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>None</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="rocketsled.control.MissionControl.summarize">
+<code class="descname">summarize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.summarize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns stats about the optimization collection and checks consistency
+of the collection.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>fmtstr (str): The formatted information from the analysis, to print.</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="rocketsled.control.MissionControl.task">
+<code class="descname">task</code><a class="headerlink" href="#rocketsled.control.MissionControl.task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a preconfigured OptTask which can be inserted into a workflow.
+Make sure to run .configure before using this task, otherwise your
+workflow optimization might not work!</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>OptTask: An OptTask object.</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
 <div class="section" id="module-rocketsled.task">
 <span id="rocketsled-task-module"></span><h2>rocketsled.task module<a class="headerlink" href="#module-rocketsled.task" title="Permalink to this headline">¶</a></h2>
-<dl class="exception">
-<dt id="rocketsled.task.DimensionMismatchError">
-<em class="property">exception </em><code class="descclassname">rocketsled.task.</code><code class="descname">DimensionMismatchError</code><a class="headerlink" href="#rocketsled.task.DimensionMismatchError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
-</dd></dl>
-
-<dl class="exception">
-<dt id="rocketsled.task.ExhaustedSpaceError">
-<em class="property">exception </em><code class="descclassname">rocketsled.task.</code><code class="descname">ExhaustedSpaceError</code><a class="headerlink" href="#rocketsled.task.ExhaustedSpaceError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
-</dd></dl>
-
+<p>The FireTask for running automatic optimization loops.</p>
+<p>Please see the documentation for a comprehensive guide on usage.</p>
 <dl class="class">
 <dt id="rocketsled.task.OptTask">
 <em class="property">class </em><code class="descclassname">rocketsled.task.</code><code class="descname">OptTask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.task.OptTask" title="Permalink to this definition">¶</a></dt>
@@ -269,192 +481,20 @@ output), and predicts the next best guess.</p>
 <dl class="docutils">
 <dt>Required args:</dt>
 <dd><dl class="first last docutils">
-<dt>wf_creator (str): Module path to a function that returns a workflow</dt>
-<dd>based on a unique vector, x.</dd>
-<dt>dimensions ([tuple]): each 2-tuple in the list defines one dimension in</dt>
-<dd>the search space in (low, high) format.
-For categorical or discontinuous dimensions, includes all possible
-categories or values as a list of any length or a tuple of length&gt;2.
-Example: dimensions = dim = [(1,100), (9.293, 18.2838), (“red”,
-“blue”, “green”)].</dd>
-</dl>
-</dd>
-</dl>
-<p>Optional args:</p>
-<blockquote>
-<div><p>Database configure:
-host (string): The name of the MongoDB host where the optimization data</p>
-<blockquote>
-<div>will be stored.</div></blockquote>
-<dl class="docutils">
-<dt>port (int): The number of the MongoDB port where the optimization data</dt>
-<dd>will be stored.</dd>
-<dt>name (string): The name of the MongoDB database where the optimization</dt>
-<dd>data will be stored.</dd>
-<dt>lpad (LaunchPad): A Fireworks LaunchPad object, which can be used to</dt>
-<dd>define the host/port/name of the db.</dd>
+<dt>launchpad (LaunchPad): A Fireworks LaunchPad object, which can be used</dt>
+<dd>to define the host/port/name of the db.</dd>
 <dt>opt_label (string): Names the collection of that the particular</dt>
 <dd>optimization’s data will be stored in. Multiple collections
 correspond to multiple independent optimizations.</dd>
-<dt>db_extras (dict): Keyword arguments to be passed to MongoClient to help</dt>
-<dd>set up the db (e.g., password, username, SSL info)
-Example: db_extras={‘username’: ‘myuser’, ‘password’: ‘mypassword’,
-‘maxPoolSize’: 10}</dd>
-</dl>
-<p>Predictors:
-predictor (string): names a function which given a list of explored</p>
-<blockquote>
-<div><p>points and unexplored points, returns an optimized guess.
-Included sklearn predictors are:</p>
-<blockquote>
-<div>‘GaussianProcessRegressor’,
-‘RandomForestRegressor’,
-‘ExtraTreesRegressor’,
-‘GradientBoostingRegressor’,</div></blockquote>
-<p>To use a random guess, use ‘random’
-Defaults to ‘GaussianProcess’
-Example builtin predictor: predictor = ‘GaussianProcessRegressor’
-Example custom predictor: predictor = ‘my_module.my_predictor’</p>
-</div></blockquote>
-<dl class="docutils">
-<dt>predictor_args (list): the positional args to be passed to the model</dt>
-<dd>along with a list of points to be searched. For sklearn-based
-predictors included in OptTask, these positional args are passed to
-the init method of the chosen model. For custom predictors, these
-are passed to the chosen predictor function alongside the searched
-guesses, the output from searched guesses, and an unsearched space
-to be used with optimization.</dd>
-<dt>predictor_kwargs (dict): the kwargs to be passed to the model. Similar</dt>
-<dd>to predictor_args.</dd>
-</dl>
-<p>Predictor performance:
-n_searchpts (int): The number of points to be searched in the search</p>
-<blockquote>
-<div>space when choosing the next best point. Choosing more points to
-search may increase the effectiveness of the optimization but take
-longer to evaluate. The default is 1000 points.</div></blockquote>
-<dl class="docutils">
-<dt>n_trainpts (int): The number of already explored points to be chosen</dt>
-<dd>for training. Default is None, meaning all available points will be
-used for training. Reduce the number of points to decrease training
-times.</dd>
-<dt>space (str): The fully specified path of a pickle file containing a list</dt>
-<dd>of all possible searchable vectors.
-For example ‘/Users/myuser/myfolder/myspace.p’. When loaded, this
-space should be a list of tuples.</dd>
-<dt>acq (str): The acquisition function to use. Can be ‘ei’ for expected</dt>
-<dd>improvement, ‘pi’ for probability of improvement, or ‘lcb’ for lower
-confidence bound. Defaults to None, which means no acquisition
-function is used, and the highest predicted point is picked
-(greedy algorithm). Only applies to builtin predictors.</dd>
-<dt>n_boots (int): The number of times each optimization should, sample,</dt>
-<dd>train, and predict values when generating uncertainty estimates for
-prediction. Only used if acq specified. At least 10 data points must
-be present for bootstrapping.</dd>
-<dt>random_proba (int): Suggests a random guess with this probability. Must</dt>
-<dd>be a float between 0.0 (no random guesses) and 1.0 (totally random).</dd>
-</dl>
-<p>Features:
-get_z (string): the fully-qualified name of a function which, given a x</p>
-<blockquote>
-<div><p>vector, returns another vector z which provides extra information
-to the machine learner. The features defined in z are not used to
-run the workflow, but are used for learning. If z_features are
-enabled, ONLY z features will be used for learning (x vectors
-essentially become tags or identifiers only).
-Examples:</p>
-<blockquote>
-<div>get_z = ‘my_module.my_fun’
-get_z = ‘/path/to/folder/containing/my_package/my_module.my_fun’</div></blockquote>
-</div></blockquote>
-<dl class="docutils">
-<dt>get_z_args (list): the positional arguments to be passed to the get_z</dt>
-<dd>function alongside x</dd>
-<dt>get_z_kwargs (dict): the kwargs to be passed to the get_z function</dt>
-<dd>alongside x</dd>
-<dt>persistent_z (str): The filename (pickle file) which should be used to</dt>
-<dd><p class="first">store persistent z calculations. Specify this argument if
-calculating z for many (n_search_points) is not trivial and will
-cost time in computing. With this argument specified, each z will
-only be calculated once. Defaults to None, meaning that all
-unexplored z are re-calculated each iteration.
-Example:</p>
-<blockquote class="last">
-<div>persistent_z = ‘/path/to/persistent_z_guesses.p’</div></blockquote>
-</dd>
-</dl>
-<p>Miscellaneous:
-wf_creator_args (list): the positional args to be passed to the</p>
-<blockquote>
-<div>wf_creator function alongsize the new x vector</div></blockquote>
-<dl class="docutils">
-<dt>wf_creator_kwargs (dict): details the kwargs to be passed to the</dt>
-<dd>wf_creator function alongside the new x vector</dd>
-<dt>encode_categorical (bool): If True, preprocesses categorical data</dt>
-<dd>(strings) to one-hot encoded binary arrays for use with custom
-predictor functions. Default False.</dd>
-<dt>duplicate_check (bool): If True, checks that custom optimizers are not</dt>
-<dd>making duplicate guesses; all built-in optimizers cannot duplicate
-guess. If the custom predictor suggests a duplicate, OptTask picks
-a random guess out of the remaining untried space. Default is no
-duplicate check, and an error is raised if a duplicate is suggested.</dd>
-<dt>tolerances (list): The tolerance of each feature when duplicate</dt>
-<dd><p class="first">checking. For categorical features, put ‘None’
-Example: Our dimensions are [(1, 100), [‘red’, ‘blue’],
-(2.0, 20.0)]. We want our first parameter to be  a duplicate only
-if it is exact, and our third parameter to be a duplicate if it is
-within 1e-6. Then:</p>
-<blockquote class="last">
-<div>tolerances=[0, None, 1e-6]</div></blockquote>
-</dd>
-<dt>maximize (bool): If true, makes optimization tend toward maximum values</dt>
-<dd>instead of minimum ones.</dd>
-<dt>batch_size (int): The number of jobs to submit per batch for a batch</dt>
-<dd>optimization. For example, batch_size=5 will optimize every 5th job,
-then submit another 5 jobs based on the best 5 predictions.</dd>
-<dt>enforce_sequential (bool): WARNING: Experimental feature! If True,</dt>
-<dd>enforces that RS optimizations are run sequentially (default), which
-prevents duplicate guesses from ever being run. If False, allows
-OptTasks to run optimizations in parallel, which may cause duplicate
-guesses with high parallelism.</dd>
-<dt>timeout (int): The number of seconds to wait before resetting the lock</dt>
-<dd>on the db.</dd>
-</dl>
-</div></blockquote>
-<dl class="docutils">
-<dt>Attributes:</dt>
-<dd><dl class="first docutils">
-<dt>c (MongoDB collection): The collection to store the</dt>
-<dd>optimization data.</dd>
-<dt>dtypes (Dtypes): Object containing the datatypes available for</dt>
-<dd>optimization.</dd>
-<dt>predictors ([str]): Built in sklearn regressors available for</dt>
-<dd>optimization with OptTask.</dd>
-<dt>launchpad (LaunchPad): The Fireworks LaunchPad object which determines</dt>
-<dd>where workflow data is stored.</dd>
-<dt>get_z (str): Fully qualified name of the “get_z” function defined by the</dt>
-<dd>user.</dd>
-<dt>enforce_sequential (bool): WARNING: Experimental feature. True means</dt>
-<dd>that optimization calculations are run sequentially. False means
-that optimization calculations are run in parallel, which disables
-duplicate checking.</dd>
-<dt>_manager (dict/MongoDB query syntax): The document format which</dt>
-<dd>details how the manager (for parallel optimizations) are managed.</dd>
-<dt>_completed (dict/MongoDB query syntax): The document format which</dt>
-<dd>details how the optimization data (on
-a per optimization loop basis) is stored for points which have
-already been computed/explored by a workflow.</dd>
-</dl>
-<p>_n_cats (int): The number of categorical dimensions.
-_encoding_info (dict): Data for converting between one-hot encoded data</p>
-<blockquote>
-<div>and categorical data.</div></blockquote>
-<dl class="last docutils">
-<dt>_xdim_spec ([str]): Specifications about the datatype of the x</dt>
-<dd>dimensions.</dd>
 </dl>
 </dd>
 </dl>
+<dl class="method">
+<dt id="rocketsled.task.OptTask.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.task.OptTask.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="rocketsled.task.OptTask.optimize">
 <code class="descname">optimize</code><span class="sig-paren">(</span><em>fw_spec</em>, <em>manager_id</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.task.OptTask.optimize" title="Permalink to this definition">¶</a></dt>
@@ -470,20 +510,13 @@ manager_id (ObjectId): The MongoDB object id of the manager</p>
 <dd><p class="first">x (iterable): The current x guess.
 y: (iterable): The current y (objective function) value
 z (iterable): The z vector associated with x
-x_dims ([list] or [tuple]): The dimensions of the domain
-XZ_new ([list] or [tuple]): The predicted next best guess(es),</p>
+all_xz_new ([list] or [tuple]): The predicted next best guess(es),</p>
 <blockquote>
 <div>including their associated z vectors</div></blockquote>
-<p class="last">predictor (str): The name of the predictor used to make XZ_new
-n_completed (int): The number of completed guesses/workflows</p>
+<p class="last">n_completed (int): The number of completed guesses/workflows</p>
 </dd>
 </dl>
 </dd></dl>
-
-<dl class="attribute">
-<dt id="rocketsled.task.OptTask.optional_params">
-<code class="descname">optional_params</code><em class="property"> = ['host', 'port', 'name', 'lpad', 'opt_label', 'db_extras', 'predictor', 'predictor_args', 'predictor_kwargs', 'n_search_points', 'n_train_points', 'acq', 'random_interval', 'space', 'get_z', 'get_z_args', 'get_z_kwargs', 'wf_creator_args', 'wf_creator_kwargs', 'encode_categorical', 'duplicate_check', 'max', 'batch_size', 'tolerance', 'timeout', 'n_boots', 'enforce_sequential']</em><a class="headerlink" href="#rocketsled.task.OptTask.optional_params" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.task.OptTask.pop_lock">
@@ -500,7 +533,7 @@ processes from the queue to the lock.</p>
 
 <dl class="attribute">
 <dt id="rocketsled.task.OptTask.required_params">
-<code class="descname">required_params</code><em class="property"> = ['wf_creator', 'dimensions']</em><a class="headerlink" href="#rocketsled.task.OptTask.required_params" title="Permalink to this definition">¶</a></dt>
+<code class="descname">required_params</code><em class="property"> = ['launchpad', 'opt_label']</em><a class="headerlink" href="#rocketsled.task.OptTask.required_params" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -520,19 +553,17 @@ optimized guess.</dd>
 
 <dl class="method">
 <dt id="rocketsled.task.OptTask.stash">
-<code class="descname">stash</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>z</em>, <em>x_dims</em>, <em>XZ_new</em>, <em>predictor</em>, <em>n_completed</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.task.OptTask.stash" title="Permalink to this definition">¶</a></dt>
+<code class="descname">stash</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>z</em>, <em>all_xz_new</em>, <em>n_completed</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.task.OptTask.stash" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write documents to database after optimization.</p>
 <dl class="docutils">
 <dt>Args:</dt>
 <dd><p class="first">x (iterable): The current x guess.
 y: (iterable): The current y (objective function) value
 z (iterable): The z vector associated with x
-x_dims ([list] or [tuple]): The dimensions of the domain
-XZ_new ([list] or [tuple]): The predicted next best guess(es),</p>
+all_xz_new ([list] or [tuple]): The predicted next best guess(es),</p>
 <blockquote>
 <div>including their associated z vectors</div></blockquote>
-<p class="last">predictor (str): The name of the predictor used to make XZ_new
-n_completed (int): The number of completed guesses/workflows</p>
+<p class="last">n_completed (int): The number of completed guesses/workflows</p>
 </dd>
 <dt>Returns:</dt>
 <dd><dl class="first last docutils">
@@ -550,6 +581,21 @@ is returned.</dd>
 </div>
 <div class="section" id="module-rocketsled.utils">
 <span id="rocketsled-utils-module"></span><h2>rocketsled.utils module<a class="headerlink" href="#module-rocketsled.utils" title="Permalink to this headline">¶</a></h2>
+<p>Utility functions for OptTask.</p>
+<dl class="exception">
+<dt id="rocketsled.utils.BatchNotReadyError">
+<em class="property">exception </em><code class="descclassname">rocketsled.utils.</code><code class="descname">BatchNotReadyError</code><a class="headerlink" href="#rocketsled.utils.BatchNotReadyError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rocketsled.utils.RSBaseException" title="rocketsled.utils.RSBaseException"><code class="xref py py-class docutils literal notranslate"><span class="pre">rocketsled.utils.RSBaseException</span></code></a></p>
+<p>Batch-mode scheme broken</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rocketsled.utils.DimensionMismatchError">
+<em class="property">exception </em><code class="descclassname">rocketsled.utils.</code><code class="descname">DimensionMismatchError</code><a class="headerlink" href="#rocketsled.utils.DimensionMismatchError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rocketsled.utils.RSBaseException" title="rocketsled.utils.RSBaseException"><code class="xref py py-class docutils literal notranslate"><span class="pre">rocketsled.utils.RSBaseException</span></code></a></p>
+<p>Dimensions of the search space are ill-defined or conflicting</p>
+</dd></dl>
+
 <dl class="class">
 <dt id="rocketsled.utils.Dtypes">
 <em class="property">class </em><code class="descclassname">rocketsled.utils.</code><code class="descname">Dtypes</code><a class="headerlink" href="#rocketsled.utils.Dtypes" title="Permalink to this definition">¶</a></dt>
@@ -561,6 +607,82 @@ is returned.</dd>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="exception">
+<dt id="rocketsled.utils.ExhaustedSpaceError">
+<em class="property">exception </em><code class="descclassname">rocketsled.utils.</code><code class="descname">ExhaustedSpaceError</code><a class="headerlink" href="#rocketsled.utils.ExhaustedSpaceError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rocketsled.utils.RSBaseException" title="rocketsled.utils.RSBaseException"><code class="xref py py-class docutils literal notranslate"><span class="pre">rocketsled.utils.RSBaseException</span></code></a></p>
+<p>When the search space has been exhausted.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rocketsled.utils.NotConfiguredError">
+<em class="property">exception </em><code class="descclassname">rocketsled.utils.</code><code class="descname">NotConfiguredError</code><a class="headerlink" href="#rocketsled.utils.NotConfiguredError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rocketsled.utils.RSBaseException" title="rocketsled.utils.RSBaseException"><code class="xref py py-class docutils literal notranslate"><span class="pre">rocketsled.utils.RSBaseException</span></code></a></p>
+<p>When rocketsled config doc is broken or not found.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rocketsled.utils.RSBaseException">
+<em class="property">exception </em><code class="descclassname">rocketsled.utils.</code><code class="descname">RSBaseException</code><a class="headerlink" href="#rocketsled.utils.RSBaseException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseException</span></code></a></p>
+<p>Base exception for rocketsled exceptions.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rocketsled.utils.check_dims">
+<code class="descclassname">rocketsled.utils.</code><code class="descname">check_dims</code><span class="sig-paren">(</span><em>dims</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.check_dims" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure the dimensions are in the correct format for the optimization.</p>
+<p>Dimensions should be a list or tuple of lists or tuples each defining
+the search space in one dimension. The datatypes used inside each
+dimension’s  definition should be NumPy compatible datatypes.</p>
+<p>Continuous numerical dimensions (floats and ranges of ints) should be
+2-tuples in the form (upper, lower). Categorical dimensions or
+discontinuous numerical dimensions should be exhaustive lists/tuples
+such as [‘red’, ‘green’, ‘blue’] or [1.2, 11.5, 15.0].</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>dims (list): The dimensions of the search space.</dd>
+<dt>Returns:</dt>
+<dd>[str]: Types of the dimensions in the search space defined by dims.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="rocketsled.utils.convert_native">
+<code class="descclassname">rocketsled.utils.</code><code class="descname">convert_native</code><span class="sig-paren">(</span><em>a</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.convert_native" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert iterables of non-native types to native types for bson storage
+in the database. For situations where .tolist() does not work.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>a (iterable or scalar): Input list of strings, ints, or</dt>
+<dd>floats, as either numpy or native types (or others), which
+will be force-coerced to native types. Also works with scalar
+entries such as floats, ints, etc.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>native (list): A list of the data in a, converted to native types.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="rocketsled.utils.convert_value_to_native">
+<code class="descclassname">rocketsled.utils.</code><code class="descname">convert_value_to_native</code><span class="sig-paren">(</span><em>val</em>, <em>dtypes=&lt;rocketsled.utils.Dtypes object&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.convert_value_to_native" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a single value to the native datatype for storage in the opt db.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first docutils">
+<dt>val (int/float/str): Numpy or native implementation of numeric or</dt>
+<dd>categrical dtype</dd>
+</dl>
+<p class="last">dtypes (Dtypes): An instance of the Dtypes class</p>
+</dd>
+<dt>Returns:</dt>
+<dd>native (int/float/str): The native python value of val.</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
@@ -580,6 +702,47 @@ is returned.</dd>
 </dd></dl>
 
 <dl class="function">
+<dt id="rocketsled.utils.get_default_opttask_kwargs">
+<code class="descclassname">rocketsled.utils.</code><code class="descname">get_default_opttask_kwargs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.get_default_opttask_kwargs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the default configuration kwargs for OptTask.
+Returns:</p>
+<blockquote>
+<div>conf_dict (dict): The default kwargs for OptTask</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="rocketsled.utils.is_discrete">
+<code class="descclassname">rocketsled.utils.</code><code class="descname">is_discrete</code><span class="sig-paren">(</span><em>dims</em>, <em>criteria='all'</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.is_discrete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the search space is discrete.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">dims ([tuple]): dimensions of the search space
+criteria (str/unicode): If ‘all’, returns bool based on whether</p>
+<blockquote class="last">
+<div>ALL dimensions are discrete. If ‘any’, returns bool based on
+whether ANY dimensions are discrete.</div></blockquote>
+</dd>
+<dt>Returns:</dt>
+<dd>(bool) whether the search space is totally discrete.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="rocketsled.utils.is_duplicate_by_tolerance">
+<code class="descclassname">rocketsled.utils.</code><code class="descname">is_duplicate_by_tolerance</code><span class="sig-paren">(</span><em>x_new</em>, <em>all_x_explored</em>, <em>tolerances</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.is_duplicate_by_tolerance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Duplicate checks with tolerances.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>x_new (list): the new guess to be duplicate checked
+all_x_explored ([list]): the list of all explored guesses
+tolerances (list): the tolerances of each dimension</dd>
+<dt>Returns:</dt>
+<dd>True if x_new is a duplicate of a guess in X_explored.
+False if x_new is unique in the space and has yet to be tried.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
 <dt id="rocketsled.utils.latex_float">
 <code class="descclassname">rocketsled.utils.</code><code class="descname">latex_float</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.latex_float" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert floating point number into latex-formattable string for visualize.
@@ -594,7 +757,7 @@ Might relocate to viz.py</p>
 
 <dl class="function">
 <dt id="rocketsled.utils.pareto">
-<code class="descclassname">rocketsled.utils.</code><code class="descname">pareto</code><span class="sig-paren">(</span><em>Y</em>, <em>maximize=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.pareto" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rocketsled.utils.</code><code class="descname">pareto</code><span class="sig-paren">(</span><em>all_y</em>, <em>maximize=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.pareto" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the indices of Pareto-optimal solutions.</p>
 <dl class="docutils">
 <dt>Args:</dt>
@@ -610,7 +773,7 @@ Might relocate to viz.py</p>
 
 <dl class="function">
 <dt id="rocketsled.utils.random_guess">
-<code class="descclassname">rocketsled.utils.</code><code class="descname">random_guess</code><span class="sig-paren">(</span><em>dimensions</em>, <em>dtypes=&lt;rocketsled.utils.Dtypes object&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.random_guess" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rocketsled.utils.</code><code class="descname">random_guess</code><span class="sig-paren">(</span><em>dimensions</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.random_guess" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns random new inputs based on the dimensions of the search space.
 It works with float, integer, and categorical types</p>
 <dl class="docutils">
@@ -629,72 +792,39 @@ It works with float, integer, and categorical types</p>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-rocketsled.viz">
-<span id="rocketsled-viz-module"></span><h2>rocketsled.viz module<a class="headerlink" href="#module-rocketsled.viz" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
-<dt id="rocketsled.viz.analyze">
-<code class="descclassname">rocketsled.viz.</code><code class="descname">analyze</code><span class="sig-paren">(</span><em>collection</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.viz.analyze" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns stats about the optimization collection and checks consistency
-of the collection.</p>
+<dt id="rocketsled.utils.serialize">
+<code class="descclassname">rocketsled.utils.</code><code class="descname">serialize</code><span class="sig-paren">(</span><em>fun</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.serialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turn a python function into a string which can later be used to deserialize
+the function. Only works with importable modules.</p>
 <dl class="docutils">
 <dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>collection (pymongo Collection): The pymongo colllection containing your</dt>
-<dd>rocketsled optimization. For example, if you set you opt_label to
-‘opt123’, and used the same db as your LaunchPad, you could use
-lpad.db.opt123</dd>
-</dl>
-</dd>
+<dd>fun (function object): The python function.</dd>
 <dt>Returns:</dt>
-<dd>fmtstr (str): The formatted information from the analysis, to print.</dd>
+<dd>(str) The full function path as a string.</dd>
 </dl>
 </dd></dl>
 
 <dl class="function">
-<dt id="rocketsled.viz.visualize">
-<code class="descclassname">rocketsled.viz.</code><code class="descname">visualize</code><span class="sig-paren">(</span><em>collection</em>, <em>maximize=False</em>, <em>showbest=True</em>, <em>showmean=True</em>, <em>latexify=False</em>, <em>fontfamily='serif'</em>, <em>scale='linear'</em>, <em>analysis=True</em>, <em>print_pareto=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.viz.visualize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visualize the progress of an optimization.</p>
+<dt id="rocketsled.utils.split_xz">
+<code class="descclassname">rocketsled.utils.</code><code class="descname">split_xz</code><span class="sig-paren">(</span><em>xz</em>, <em>x_dims</em>, <em>x_only=False</em>, <em>z_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.split_xz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split concatenated xz vector into x and z vectors.</p>
 <dl class="docutils">
 <dt>Args:</dt>
-<dd><dl class="first docutils">
-<dt>collection (pymongo Collection): The pymongo colllection containing your</dt>
-<dd>rocketsled optimization. For example, if you set you opt_label to
-‘opt123’, and used the same db as your LaunchPad, you could use
-lpad.db.opt123</dd>
-</dl>
-<p>maximize (bool): Whether to plot optimizing for minimum or maximum.
-showbest (bool): Point out the best point on legend and on plot. If more</p>
-<blockquote>
-<div>than one best point (i.e., multiple equal maxima), show them all. If
-multiobjective, shows best for each objective, and prints the best
-value and x for each objective.</div></blockquote>
-<dl class="docutils">
-<dt>showmean (bool): Show the mean and standard deviation for the guesses</dt>
-<dd>as the computations are carried out.</dd>
-</dl>
-<p>latexify (bool): Use LaTeX for formatting.
-fontfamily (str): The font family to use for rendering. Choose from</p>
-<blockquote>
-<div>‘serif’, ‘sans-serif’, ‘fantasy’, ‘monospace’, or ‘cursive’.</div></blockquote>
-<dl class="docutils">
-<dt>scale (str): Whether to scale the plot’s y axis according to log (‘log’)</dt>
-<dd>or ‘linear’ scale.</dd>
-</dl>
-<p>analysis (bool): If True, stdouts info from analyze().
-print_pareto (bool): If True, display all Pareto-optimal objective</p>
-<blockquote class="last">
-<div>values.</div></blockquote>
-</dd>
+<dd>xz (list): The XZ matrix.
+x_dims ([list/tuple]) the dimensions of the X dimensions
+x_only (bool): If True, returns only the x vector.
+z_only (bool): If True, returns only the z vector.</dd>
 <dt>Returns:</dt>
-<dd>Either None, a matplotlib plot, or a pymongo iterator. See ‘mode’ for
-details.</dd>
+<dd>x, z (list, list): the separate X and Z matrices.</dd>
 </dl>
 </dd></dl>
 
 </div>
 <div class="section" id="module-rocketsled">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-rocketsled" title="Permalink to this headline">¶</a></h2>
+<p>Rocketsled is an optimization suite “on rails” based on Scikit-learn and 
+FireWorks workflows.</p>
 </div>
 </div>
 
@@ -710,10 +840,9 @@ details.</dd>
 <li><a class="reference internal" href="#subpackages">Subpackages</a></li>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
 <li><a class="reference internal" href="#module-rocketsled.acq">rocketsled.acq module</a></li>
-<li><a class="reference internal" href="#module-rocketsled.auto">rocketsled.auto module</a></li>
+<li><a class="reference internal" href="#module-rocketsled.control">rocketsled.control module</a></li>
 <li><a class="reference internal" href="#module-rocketsled.task">rocketsled.task module</a></li>
 <li><a class="reference internal" href="#module-rocketsled.utils">rocketsled.utils module</a></li>
-<li><a class="reference internal" href="#module-rocketsled.viz">rocketsled.viz module</a></li>
 <li><a class="reference internal" href="#module-rocketsled">Module contents</a></li>
 </ul>
 </li>
@@ -751,7 +880,7 @@ details.</dd>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 1.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2018.12.30 documentation</a> &#187;</li> 
       </ul>
     </div>
 

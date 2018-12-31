@@ -1,22 +1,111 @@
-*Note: This quickstart assumes a limited knowledge of FireWorks. If you already have a workflow built, see the examples or the more advanced tutorials.*
+=============================================================
+Welcome to the :code:`rocketsled` tutorial! - 30 min required
+=============================================================
 
 
-=====================================================
-Welcome to the :code:`rocketsled` quickstart! - 5 min
-=====================================================
+What you'll need
+----------------
+
+1. An expensive objective function (or Fireworks workflow, if you already have it)
+2. The search domain of your objective function.
+3. A working knowledge of FireWorks (see the `FireWorks <https://github.com/materialsproject/fireworks>`_ docs for a quick refresher, if needed!)
 
 
-If you have a Python function to optimize, the easiest way to get started is to use rocketsled's auto_setup. Auto-configure wraps any Python function in a FireWork - an execution wrapper -, creates a Firework containing an OptTask optimization, and creates a workflow optimization loop linking the two Fireworks which is ready for launch.
+A bird's eye view:
+-----------------------------------
+This tutorial will walk you through setting up an optimization on your local machine. For more advanced execution options, see the FireWorks documentation and the `comprehensive rocketsled guide </guide.rst>`.
 
-Let's get an optimization running on your local machine. First, make sure a :code:`mongod` instance is running.
+
+0.**Set up prerequisites** Getting mongodb running, and FireWorks and rocketsled installed.
+
+1.**Create a workflow creator with your objective function and OptTask (optimization task).** Your objective function should take in a list of parameters x, and return a scalar (or list of scalars, if multiobjecive), y. Your workflow should be set up so that the parameters x and y get written to at least one Firework's spec under the keys "_x" and "_y") - if you don't know how to do this, don't worry: we'll walk you through it.
+
+2.**Configure the optimization with rocketsled MissionControl.** OptTask is how rocketsled optimizes your objective function in the workflow. The workflow creator function takes in the input vector x, and returns a workflow (which evaluates your objective function) that calculates y.
+
+3.**Run your optimization** (using FireWorks' LaunchPad).
+
+
+0. Setting up prerequisites
+---------------------------
+
+First, pip install rocketsled:
+
+.. code-block:: bash
+
+    $ pip install rocketsled
+
+
+This pip install should automatically pip install FireWorks. If it does not, make sure to:
+
+.. code-block:: bash
+
+    $ pip install FireWorks
+
+Last, make sure you have a mongodb instance running locally.
 
 .. code-block:: bash
 
     $ mongod
 
 
-Define objective function
--------------------------
+1. Writing your objective function with FireWorks
+----------------------------------------------------------
+The first step is to write the objective function as a workflow in FireWorks. If you already have your objective function written in FireWorks, you can skip this step!
+
+If your objective function is relatively simple, you can put your objective function code in a FireTask, then place that FireTask in a workflow (like we will do in this tutorial).
+If your objective function is more complex (i.e., it is dynamic, has multiple jobs or error handling steps, etc.), you should consult the FireWorks documentation.
+
+**The only requirement rocketsled makes on your objective workflow is that the
+input and output vectors (x and y) gets written to the spec in two specific fields: "_x", and "_y".**
+
+Below, we write out an example task for a very simple objective function:
+
+.. code-block:: python
+
+    def my_obj_function(x):
+        y = x[0] * x[1] / x[2]
+        return y
+
+
+Writing this objective function as a FireTask looks like:
+
+.. code-block:: python
+
+    from fireworks.core.firework import FireTaskBase
+    from fireworks.utilities.fw_utilities import explicit_serialize
+
+    @explicit_serialize
+    class TutorialTask(FireTaskBase):
+    _fw_name = "TutorialTask"
+
+    def run_task(self, fw_spec):
+        x = fw_spec['_x']
+        y = x[0] * x[1] / x[2]
+        return FWAction(update_spec={'_y': y})
+
+
+*Note that we write the "_y" field to the spec; this is required by rocketsled!*
+Now that we have the objective function as a FireTask, we could easily create a workflow in FireWorks; however,
+we still need to put our rocketsled optimization in the workflow.
+
+
+2. Write a workflow creator function and place an OptTask inside.
+-----------------------------------------------------------------
+Now that we have our objective function defined as a FireTask, we can make a workflow creator function.
+
+The purpose of the workflow creator function is to take in an input vector x, and return a workflow calculating the output values, y.
+
+**Rocketsled requires you place an optimization task ```OptTask``` inside of the workflow creator in the same Firework where the "_x" and "_y" fields are written to the spec.** Below, we write a workflow creator using the FireTask we just wrote.
+
+.. code-block:: python
+
+    from rocketsled import OptTask
+    from fireworks import Firework, Workflow
+
+    def my_wf_creator(x):
+
+
+
 
 Great! Now lets define a trivial objective function f(x) for this demo. Your actual objective function will be **much** more complex than this.
 

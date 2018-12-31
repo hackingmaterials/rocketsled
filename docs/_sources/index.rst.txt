@@ -211,33 +211,13 @@ Tutorials
 =========
 
 
-:doc:`Tutorial 0 - Quickstart </quickstart>`
+:doc:`Tutorial </tutorial>`
 -----------------------
 
 In the quickstart, we show how to use rocketsled's ``auto_setup`` to get
 up and running quickly, starting only with an objective function written in Python.
 
 **Time to complete**: 5 min
-
-:doc:`Tutorial 1 - Basic usage </basic>`
-------------------------
-
-*Tutorials 1 and 2 require some knowledge of Fireworks. If you aren't comfortable with Fireworks, please work through the tutorials* `here <https://hackingmaterials.lbl.gov/fireworks/>`_.
-
-In this tutorial we demonstrate how to get a basic optimization loop up and
-running with a FireWorks workflow.
-
-**Time to complete**: 5 min
-
-
-:doc:`Tutorial 2 - Advanced usage </advanced>`
----------------------------
-
-*Tutorials 1 and 2 require some knowledge of Fireworks. If you aren't comfortable with Fireworks, please work through the tutorials* `here <https://hackingmaterials.lbl.gov/fireworks/>`_.
-
-In this tutorial we explore the more advanced capabilities of ``OptTask``.
-
-**Time to complete**: 20 min
 
 
 :doc:`A Comprehensive Guide to rocketsled </guide>`

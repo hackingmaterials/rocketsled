@@ -20,10 +20,10 @@ rocketsled.acq module
     :undoc-members:
     :show-inheritance:
 
-rocketsled.auto module
-----------------------
+rocketsled.control module
+-------------------------
 
-.. automodule:: rocketsled.auto
+.. automodule:: rocketsled.control
     :members:
     :undoc-members:
     :show-inheritance:
@@ -40,14 +40,6 @@ rocketsled.utils module
 -----------------------
 
 .. automodule:: rocketsled.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-rocketsled.viz module
----------------------
-
-.. automodule:: rocketsled.viz
     :members:
     :undoc-members:
     :show-inheritance:
