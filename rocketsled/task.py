@@ -22,7 +22,7 @@ from fireworks import FWAction, LaunchPad
 
 from rocketsled.acq import acquire
 from rocketsled.utils import deserialize, dtypes, pareto, \
-    convert_native, split_xz, tolerance_check, ExhaustedSpaceError, \
+    convert_native, split_xz, is_duplicate_by_tolerance, ExhaustedSpaceError, \
     NotConfiguredError, BatchNotReadyError
 
 __author__ = "Alexander Dunn"
@@ -444,8 +444,8 @@ class OptTask(FireTaskBase):
                                   in all_xz_searched]
                 if self.tolerances:
                     for n, x_new in enumerate(all_x_new):
-                        if tolerance_check(x_new, all_x_searched,
-                                           tolerances=self.tolerances):
+                        if is_duplicate_by_tolerance(x_new, all_x_searched,
+                                                     tolerances=self.tolerances):
                             all_xz_new[n] = random.choice(
                                 all_xz_unsearched)
                 else:
