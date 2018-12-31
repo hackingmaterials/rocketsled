@@ -1,7 +1,9 @@
 """
-A file for testing the workflow capabilities of OptTask.
+A file for testing the workflow capabilities of OptTask and MissionControl.
+
 Note that a local mongod instance in admin mode must be running for the tests to
 pass by default.
+
 WARNING: Tests reset the launchpad you specify. Specify a launchpad for testing 
 you wouldn't mind resetting (e.g., mlab.com)
 Modify tests_launchpad.yaml to define the db where you'd like to run the tests 
@@ -15,7 +17,7 @@ from ruamel.yaml import YAML
 import numpy as np
 import pymongo
 from fireworks import FWAction, Firework, Workflow, LaunchPad, ScriptTask
-from fireworks.core.rocket_launcher import launch_rocket
+from fireworks.core.rocket_launcher import launch_rocket, rapidfire
 from fireworks.core.firework import FireTaskBase
 from fireworks.scripts.rlaunch_run import launch_multiprocess
 from fireworks.utilities.fw_utilities import explicit_serialize
@@ -299,6 +301,18 @@ class TestWorkflows(unittest.TestCase):
         self.assertEqual(self.c.count_documents({}), 5)
         self.assertEqual(manager['lock'], None)
         self.assertEqual(manager['queue'], [])
+
+    def test_missioncontrol(self):
+        self.mc.configure(wf_creator=wf_creator_basic,
+                          dimensions=self.dims_basic,
+                          **common_kwargs)
+        launchpad.add_wf(wf_creator_basic([5, 11, 'blue']))
+        rapidfire(launchpad, nlaunches=20, sleep_time=0)
+        plt = self.mc.plot()
+        savepath = os.path.join(lp_filedir, "missioncontrol_plot.png")
+        plt.savefig(savepath)
+        self.assertTrue(os.path.exists(savepath))
+
 
     def test_parallel(self):
         n_procs = 10
