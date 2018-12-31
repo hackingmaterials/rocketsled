@@ -494,7 +494,6 @@ class MissionControl:
         qlen = len(manager['queue'])
         lock = manager['lock']
         predictors = {}
-        dim = None
         for doc in self.c.find({'index': {'$exists': 1},
                                 'y': {'$exists': 1, "$ne": "reserved"}}):
             p = doc['predictor']
@@ -502,17 +501,6 @@ class MissionControl:
                 predictors[p] += 1
             else:
                 predictors[p] = 1
-            d = [type(xi) for xi in doc['x'] + doc['z']]
-            if not dim:
-                dim = d
-            elif dim != d:
-                self.logger.warn("It appears the optimization contained in {} "
-                                 "is broken, as the x + z dims do not match "
-                                 "between doc index ({}) and index 0 ({}). To "
-                                 "fix, remove documents of dissimilar x or z "
-                                 "length/type. and ensure only one optimization"
-                                 " is used for this collection!"
-                                 "".format(self.c, d, dim))
         dimdoc = self.c.find_one({'index': {'$exists': 1},
                                   'y': {'$exists': 1, "$ne": "reserved"}})
         xdim = [type(d) for d in dimdoc['x']]
