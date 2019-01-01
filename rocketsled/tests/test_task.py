@@ -339,8 +339,6 @@ class TestWorkflows(unittest.TestCase):
                           acq="lcb")
         rapidfire(launchpad, nlaunches=2, sleep_time=0)
 
-
-
     def test_parallel(self):
         n_procs = 10
         self.mc.configure(wf_creator=wf_creator_accuracy,
