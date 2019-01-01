@@ -1,5 +1,15 @@
 # Change Log
 
+## [Unreleased](https://github.com/hackingmaterials/rocketsled/tree/HEAD)
+
+[Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2018.12.26...HEAD)
+
+**Closed issues:**
+
+- Most type checking and metadata can be stored as central db doc [\#57](https://github.com/hackingmaterials/rocketsled/issues/57)
+- don't understand check\_dims [\#50](https://github.com/hackingmaterials/rocketsled/issues/50)
+- make sure all instance attributes are only set in the \_\_init\_\_ method\(\) [\#48](https://github.com/hackingmaterials/rocketsled/issues/48)
+
 ## [v2018.12.26](https://github.com/hackingmaterials/rocketsled/tree/v2018.12.26) (2018-12-27)
 [Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/1.1...v2018.12.26)
 
@@ -40,7 +50,7 @@
 - Make better docs/tutorials [\#20](https://github.com/hackingmaterials/rocketsled/issues/20)
 - Stop rs\_examples/benchmarks being its own package [\#19](https://github.com/hackingmaterials/rocketsled/issues/19)
 - Decide on a way to store models persistently [\#18](https://github.com/hackingmaterials/rocketsled/issues/18)
-- Make an auto-configure [\#17](https://github.com/hackingmaterials/rocketsled/issues/17)
+- Make an auto-setup [\#17](https://github.com/hackingmaterials/rocketsled/issues/17)
 - Add tags to each mongo doc? [\#16](https://github.com/hackingmaterials/rocketsled/issues/16)
 - Various probabilistic functions for sampling spaces [\#15](https://github.com/hackingmaterials/rocketsled/issues/15)
 - Add uncertainty estimation + more advanced methods of prediction [\#14](https://github.com/hackingmaterials/rocketsled/issues/14)
