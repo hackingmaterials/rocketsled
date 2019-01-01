@@ -217,14 +217,14 @@ Tutorials
 In the quickstart, we show how to use rocketsled's ``auto_setup`` to get
 up and running quickly, starting only with an objective function written in Python.
 
-**Time to complete**: 5 min
+**Time to complete**: 30 min
 
 
 :doc:`A Comprehensive Guide to rocketsled </guide>`
 ---------------------------------------
 
 Find a comprehensive guide to using rocketsled at the link below. The guide
-exhaustively documents the possible arguments to ``OptTask`` and provides at least
+exhaustively documents the possible arguments to ``MissionControl`` and provides at least
 one example of each. If working through the tutorials did not answer your
 question, you'll most likely find your answer here.
 

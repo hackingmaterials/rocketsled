@@ -3,8 +3,8 @@ Comprehensive Guide
 =======================================
 
 
-This is a comprehensive guide detailing the arguments which OptTask accepts, and, since OptTask is defined by its arguments, general usage tips.
-This is best used as a reference guide after looking through the examples and tutorials.
+Outside of the tutorial, all of rocketsled's configuration (which OptTask reads) can be done through the MissionControl class.
+The following documentation details all the possible arguments to MissionControl.configure(...), which controls the execution and optimization parameters OptTask uses.
 
 
 =======================================
@@ -15,7 +15,7 @@ Required Arguments
 :code:`wf_creator`
 --------------
 
-This is a string which defines the function returning your optimization loop workflow. The function represented by this string must
+This is a function object which takes in an input vector x and returns your optimization loop workflow. The function must
 
 1. Accept x
 2. Return a Fireworks workflow based on x (i.e., x sets some parameters in the workflow)
@@ -23,6 +23,17 @@ This is a string which defines the function returning your optimization loop wor
     b. The Firework containing OptTask must have spec fields '_x' and '_y' containing your x optimization vector and y optimization vector/scalar. A vector used for y is considered a multiobjective optimization.
 
 The workflow that is returned should have OptTask contained somewhere in it. Since OptTask is in the workflow, this is somewhat recursive.
+
+You can also pass in full string path of the wf_creator function.
+
+**Example**
+
+.. code-block:: python
+
+    wf_creator=my_wf_creator_fun_object
+
+
+Alternatively, define it with a string.
 
 **Example**
 
@@ -82,61 +93,10 @@ Database Setup
 ______________
 
 
-When setting up the database, one MongoDB collection is needed to store optimization data. We recommend using the database
-you use for your production FireWorks workflows, using a collection name not already used by Fireworks. By default, the collection
-name will be opt_default.
-
-There are 3 main ways to specify where to store optimization data:
-
-1. Use :code:`host`, :code:`port`, and :code:`name`
-2. Use :code:`lpad`
-3. Let launchapd auto_load, if applicable.
+To set up the databsae
 
 
-:code:`host`
---------------
-
-The host of the MongoDB instance you are going to store optimization data in. port and name must also be specified if this is specified.
-
-**Examples**
-
-.. code-block:: python
-
-    # host should be a string
-    host='localhost'
-
-    # remote
-    host='my_webserver.com'
-
-
-:code:`port`
---------------
-
-The port of the MongodDB instance you are going to store optimization data in. host and name must also be specified if this is specified.
-
-**Examples**
-
-.. code-block:: python
-
-    # Port should be an integer
-    port=27017
-
-
-:code:`name`
---------------
-
-The name of the MongoDB database you are going to store optimization data in. port and host must also be specified.
-
-**Examples**
-
-.. code-block:: python
-
-    # name should be a string
-    name = "my_db"
-
-
-
-:code:`lpad`
+:code:`launchpad`
 --------------
 
 A FireWorks launchpad object. Used in lieu of host, port, and name.
@@ -688,9 +648,3 @@ your problem is most likely with the timeout setting.
 
 
 
-=======================================
-Auto configure
-=======================================
-
-If you just have an expensive python function you'd like to put in a workflow, and not a complex workflow itself, don't forget auto_setup!
-See the :doc:`quickstart </quickstart>` for more information on auto_setup.

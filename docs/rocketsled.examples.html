@@ -58,363 +58,194 @@ the next guess.</p>
 </dd>
 </dl>
 <p>workflows including multiple jobs and advanced dependencies. Please see the
-Fireworks and rocketsled documentation pages for more information:</p>
+complex example, or the Fireworks and rocketsled documentation pages for more
+information:</p>
 <p><a class="reference external" href="https://hackingmaterials.github.io/rocketsled/">https://hackingmaterials.github.io/rocketsled/</a>
 <a class="reference external" href="https://materialsproject.github.io/fireworks/">https://materialsproject.github.io/fireworks/</a></p>
+<dl class="class">
+<dt id="rocketsled.examples.basic.ObjectiveFuncTask">
+<em class="property">class </em><code class="descclassname">rocketsled.examples.basic.</code><code class="descname">ObjectiveFuncTask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.basic.ObjectiveFuncTask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fireworks.core.firework.FireTaskBase</span></code></p>
+<p>An example task which just sums the input vector, x. Replace this code
+with your objective function if your objective function is relatively simple
+(i.e., only needs one Firework). This task just evaluates the following
+simple function:</p>
+<p>f(x) = x[0] * x[1] / x[2]</p>
+<dl class="method">
+<dt id="rocketsled.examples.basic.ObjectiveFuncTask.run_task">
+<code class="descname">run_task</code><span class="sig-paren">(</span><em>fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.basic.ObjectiveFuncTask.run_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method gets called when the Firetask is run. It can take in a
+Firework spec, perform some task using that data, and then return an
+output in the form of a FWAction.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>fw_spec (dict): A Firework spec. This comes from the master spec.</dt>
+<dd>In addition, this spec contains a special “_fw_env” key that
+contains the env settings of the FWorker calling this method.
+This provides for abstracting out certain commands or
+settings. For example, “foo” may be named “foo1” in resource
+1 and “foo2” in resource 2. The FWorker env can specify {
+“foo”: “foo1”}, which maps an abstract variable “foo” to the
+relevant “foo1” or “foo2”. You can then write a task that
+uses fw_spec[“_fw_env”][“foo”] that will work across all
+these multiple resources.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>(FWAction)</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="function">
 <dt id="rocketsled.examples.basic.wf_creator">
 <code class="descclassname">rocketsled.examples.basic.</code><code class="descname">wf_creator</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.basic.wf_creator" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</div>
-<div class="section" id="module-rocketsled.examples.batch">
-<span id="rocketsled-examples-batch-module"></span><h2>rocketsled.examples.batch module<a class="headerlink" href="#module-rocketsled.examples.batch" title="Permalink to this headline">¶</a></h2>
-<p>An example of running optimizations in batches. For example, submitting 5
-workflows, running them, optimizing, and then submitting the next best 5 
-workflows to the launchpad.</p>
-<p>workflows including multiple jobs and advanced dependencies. Please see the
-Fireworks and rocketsled documentation pages for more information:</p>
-<p><a class="reference external" href="https://hackingmaterials.github.io/rocketsled/">https://hackingmaterials.github.io/rocketsled/</a>
-<a class="reference external" href="https://materialsproject.github.io/fireworks/">https://materialsproject.github.io/fireworks/</a></p>
-<dl class="function">
-<dt id="rocketsled.examples.batch.wf_creator">
-<code class="descclassname">rocketsled.examples.batch.</code><code class="descname">wf_creator</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.batch.wf_creator" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</div>
-<div class="section" id="module-rocketsled.examples.categorical">
-<span id="rocketsled-examples-categorical-module"></span><h2>rocketsled.examples.categorical module<a class="headerlink" href="#module-rocketsled.examples.categorical" title="Permalink to this headline">¶</a></h2>
-<p>Running a rocketsled optimization where the objective function has a categorical
-argument.</p>
-<p>workflows including multiple jobs and advanced dependencies. Please see the
-Fireworks and rocketsled documentation pages for more information:</p>
-<p><a class="reference external" href="https://hackingmaterials.github.io/rocketsled/">https://hackingmaterials.github.io/rocketsled/</a>
-<a class="reference external" href="https://materialsproject.github.io/fireworks/">https://materialsproject.github.io/fireworks/</a></p>
-<dl class="function">
-<dt id="rocketsled.examples.categorical.get_z">
-<code class="descclassname">rocketsled.examples.categorical.</code><code class="descname">get_z</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.categorical.get_z" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="rocketsled.examples.categorical.wf_creator">
-<code class="descclassname">rocketsled.examples.categorical.</code><code class="descname">wf_creator</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.categorical.wf_creator" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>The workflow creator function required by rocketsled.</p>
+<p>This wf_creator takes in an input vector x and returns a workflow which
+calculates y, the output. The requirements for using this wf_creator
+with rocketsled are:</p>
+<ol class="arabic simple">
+<li>OptTask is passed into a FireWork in the workflow</li>
+<li><dl class="first docutils">
+<dt>The fields “_x” and “_y” are written to the spec of the FireWork</dt>
+<dd>containing OptTask.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>You use MissionControl’s “configure” method to set up the optimization,</dt>
+<dd>and pass in wf_creator as it’s first argument.</dd>
+</dl>
+</li>
+</ol>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>x (list): The wf_creator input vector. In this example, it is just 3</dt>
+<dd>integers between 1 and 5 (inclusive).</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>(Workflow): A workflow containing one FireWork (two FireTasks) which</dt>
+<dd>is automatically set up to run the optimization loop.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
 
 </div>
 <div class="section" id="module-rocketsled.examples.complex">
 <span id="rocketsled-examples-complex-module"></span><h2>rocketsled.examples.complex module<a class="headerlink" href="#module-rocketsled.examples.complex" title="Permalink to this headline">¶</a></h2>
-<p>A more complex example based on the advanced rocketsled tutorial.</p>
-<p>The workflow creator function creates two Fireworks, one containing a mock 
-simulation, and the other containing OptTask.</p>
-<p>workflows including multiple jobs and advanced dependencies. Please see the
-Fireworks and rocketsled documentation pages for more information:</p>
-<p><a class="reference external" href="https://hackingmaterials.github.io/rocketsled/">https://hackingmaterials.github.io/rocketsled/</a>
-<a class="reference external" href="https://materialsproject.github.io/fireworks/">https://materialsproject.github.io/fireworks/</a></p>
+<p>Running a rocketsled optimization with a multi-part workflow, multi-objective
+objective function, z-features, as well as more advanced configuration.</p>
+<p>Our workflow to optimize now has two Fireworks, each with one FireTask. The
+first firework runs the ‘expensive’ objective function, and the second firework
+runs only the optimization. This two-firework setup allows us to run the
+objective function and optimization on different computing resources, if
+desired.</p>
+<p>We also use an objective function with more than one objective. Note that
+as long as we pass in the output vector to the spec (in the key “_y”, as in the
+basic example), we don’t need to make any other changes to tell rocketsled the
+objective function is multi-objective. Additionally, the objective function
+has dimensions of differing data types (int, float, categorical), which is
+automatically handled by rocketsled as long as the dimensions are passed into
+MissionControl.configure(…).</p>
+<p>Finally, we add some arguments to the MissionControl configuration before
+launching.</p>
+<dl class="class">
+<dt id="rocketsled.examples.complex.ComplexMultiObjTask">
+<em class="property">class </em><code class="descclassname">rocketsled.examples.complex.</code><code class="descname">ComplexMultiObjTask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.complex.ComplexMultiObjTask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fireworks.core.firework.FireTaskBase</span></code></p>
+<p>An example of a complex, multiobjective task with directly competing
+objectives. The input vector is defined on a search space with numerical
+and categorical inputs.</p>
+<p>This task accepts a 3-vector of the form [int, float, str].</p>
+<dl class="method">
+<dt id="rocketsled.examples.complex.ComplexMultiObjTask.run_task">
+<code class="descname">run_task</code><span class="sig-paren">(</span><em>fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.complex.ComplexMultiObjTask.run_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method gets called when the Firetask is run. It can take in a
+Firework spec, perform some task using that data, and then return an
+output in the form of a FWAction.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>fw_spec (dict): A Firework spec. This comes from the master spec.</dt>
+<dd>In addition, this spec contains a special “_fw_env” key that
+contains the env settings of the FWorker calling this method.
+This provides for abstracting out certain commands or
+settings. For example, “foo” may be named “foo1” in resource
+1 and “foo2” in resource 2. The FWorker env can specify {
+“foo”: “foo1”}, which maps an abstract variable “foo” to the
+relevant “foo1” or “foo2”. You can then write a task that
+uses fw_spec[“_fw_env”][“foo”] that will work across all
+these multiple resources.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>(FWAction)</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="function">
 <dt id="rocketsled.examples.complex.get_z">
 <code class="descclassname">rocketsled.examples.complex.</code><code class="descname">get_z</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.complex.get_z" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>An example function demonstrating how to use z_features.</p>
+<p>The get_z function should accept the same vector as the wf_creator (the x
+vector), and return all information that should be used for learning. If
+you want to use x for learning, make sure to include x in the returned
+z vector.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>x ([list]): A 3 vector of the form [int, float, str], where the elements</dt>
+<dd>are constrained to the search space given in x_dim above.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>(list): The z vector, to be used for learning.</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
 <dt id="rocketsled.examples.complex.wf_creator">
 <code class="descclassname">rocketsled.examples.complex.</code><code class="descname">wf_creator</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.complex.wf_creator" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<dd><p>A workflow creator function returning a workflow of the following form:</p>
+<blockquote>
+<div><blockquote>
+<div><dl class="docutils">
+<dt>simulation (fw1)</dt>
+<dd><div class="first last line-block">
+<div class="line"><br /></div>
 </div>
-<div class="section" id="module-rocketsled.examples.extras">
-<span id="rocketsled-examples-extras-module"></span><h2>rocketsled.examples.extras module<a class="headerlink" href="#module-rocketsled.examples.extras" title="Permalink to this headline">¶</a></h2>
-<p>Examples of using extra rocketsled features.</p>
-<p>In this task, the calculation and optimization includes a categorical dimension,
-a function to fetch extra features (get_z), a custom predictor function, extra 
-arguments to the workflow creator, duplicate checking enabled, and a custom 
-storage location for the optimization data. Also, a demo of how to use the lpad 
-kwarg to store optimization data based on a Firework’s LaunchPad object.</p>
-<p>workflows including multiple jobs and advanced dependencies. Please see the
-Fireworks and rocketsled documentation pages for more information:</p>
-<p><a class="reference external" href="https://hackingmaterials.github.io/rocketsled/">https://hackingmaterials.github.io/rocketsled/</a>
-<a class="reference external" href="https://materialsproject.github.io/fireworks/">https://materialsproject.github.io/fireworks/</a></p>
-<dl class="function">
-<dt id="rocketsled.examples.extras.example_predictor">
-<code class="descclassname">rocketsled.examples.extras.</code><code class="descname">example_predictor</code><span class="sig-paren">(</span><em>XZ_explored</em>, <em>Y</em>, <em>x_dims</em>, <em>XZ_unexplored</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.extras.example_predictor" title="Permalink to this definition">¶</a></dt>
-<dd><p>An example predictor function. Replace the code inside with your favorite
-optimization algorithm (this example is just random search!).</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><dl class="first docutils">
-<dt>XZ_explored ([list]): The list of explored points (including both x and</dt>
-<dd>the optional z-vector, concatenated).</dd>
-<dt>Y ([float] or [list]). The objective function response. Each objective</dt>
-<dd>function dimension response is required if multiobjective.</dd>
-</dl>
-<p>x_dims [list, tuple]: The dimensions of the search space of x.
-XZ_unexplored ([list]): The list of unexplored points (including both x</p>
-<blockquote class="last">
-<div>and the optional z vector, concatenated).</div></blockquote>
 </dd>
-<dt>Returns:</dt>
-<dd>(list) The optimizer-recommended best guess.</dd>
 </dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="rocketsled.examples.extras.get_z">
-<code class="descclassname">rocketsled.examples.extras.</code><code class="descname">get_z</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.extras.get_z" title="Permalink to this definition">¶</a></dt>
-<dd><p>An optional function which returns extra information ‘z’ from the unique
-vector ‘x’.</p>
+</div></blockquote>
+<p>optimization (fw2)</p>
+</div></blockquote>
 <dl class="docutils">
 <dt>Args:</dt>
 <dd><dl class="first last docutils">
-<dt>x (list): The input x vector, which must be found in the search space</dt>
-<dd>defined by the dimensions of the problem.</dd>
+<dt>x ([list]): A 3 vector of the form [int, float, str], where the elements</dt>
+<dd>are constrained to the search space given in x_dim above.</dd>
 </dl>
 </dd>
 <dt>Returns:</dt>
 <dd><dl class="first last docutils">
-<dt>(list): The z-function response. In this case, a dummy response of</dt>
-<dd>floats is returned; however, the z-function can return floats,
-ints, and categorical variables, or any combination thereof.</dd>
+<dt>(Workflow): The workflow which will run the simulation and optimization</dt>
+<dd>fireworks.</dd>
 </dl>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="rocketsled.examples.extras.wf_creator">
-<code class="descclassname">rocketsled.examples.extras.</code><code class="descname">wf_creator</code><span class="sig-paren">(</span><em>x</em>, <em>my_arg</em>, <em>my_kwarg=1</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.extras.wf_creator" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</div>
-<div class="section" id="module-rocketsled.examples.multi">
-<span id="rocketsled-examples-multi-module"></span><h2>rocketsled.examples.multi module<a class="headerlink" href="#module-rocketsled.examples.multi" title="Permalink to this headline">¶</a></h2>
-<p>This is an example of multiobjective optimization. It is the same as the basic
-example, but instead of just returning the sum of the input array, our objective
-function, MultiObjTask2, returns the sum and product of the input array. We want to
-minimize both of these quantities.</p>
-<p>Best solutions are identified as those having at least one objective value 
-better or equal to any other in the set; these points are called “Pareto 
-optimal”.</p>
-<p>From a user perspective, operation is the same as for single objective 
-optimization; however, different acquisition functions are available. Use 
-acq=None (default) for a highly exploitative (greedy) algorithm predicting 
-Pareto-optimal solutions. Choose acq=”maximin” for a more advanced bootstrapping
-algorithm for acquisition based on Expected Improvement.</p>
-<p>workflows including multiple jobs and advanced dependencies. Please see the
-Fireworks and rocketsled documentation pages for more information:</p>
-<p><a class="reference external" href="https://hackingmaterials.github.io/rocketsled/">https://hackingmaterials.github.io/rocketsled/</a>
-<a class="reference external" href="https://materialsproject.github.io/fireworks/">https://materialsproject.github.io/fireworks/</a></p>
-<dl class="function">
-<dt id="rocketsled.examples.multi.wf_creator">
-<code class="descclassname">rocketsled.examples.multi.</code><code class="descname">wf_creator</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.multi.wf_creator" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</div>
-<div class="section" id="module-rocketsled.examples.parallel">
-<span id="rocketsled-examples-parallel-module"></span><h2>rocketsled.examples.parallel module<a class="headerlink" href="#module-rocketsled.examples.parallel" title="Permalink to this headline">¶</a></h2>
-<p>An example of running optimization workflows in parallel.</p>
-<p>To ensure duplicate checking, optimizations themselves must be run sequentially
-while the black box function evaluation can be run in parallel. To run
-optimizations in parallel (and disable duplicate checking), change
-enforce_sequential and duplicate_checking to False.</p>
-<p>workflows including multiple jobs and advanced dependencies. Please see the
-Fireworks and rocketsled documentation pages for more information:</p>
-<p><a class="reference external" href="https://hackingmaterials.github.io/rocketsled/">https://hackingmaterials.github.io/rocketsled/</a>
-<a class="reference external" href="https://materialsproject.github.io/fireworks/">https://materialsproject.github.io/fireworks/</a></p>
-<dl class="function">
-<dt id="rocketsled.examples.parallel.load_parallel_wfs">
-<code class="descclassname">rocketsled.examples.parallel.</code><code class="descname">load_parallel_wfs</code><span class="sig-paren">(</span><em>n_processes</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.parallel.load_parallel_wfs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="rocketsled.examples.parallel.wf_creator">
-<code class="descclassname">rocketsled.examples.parallel.</code><code class="descname">wf_creator</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.parallel.wf_creator" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</div>
-<div class="section" id="module-rocketsled.examples.tasks">
-<span id="rocketsled-examples-tasks-module"></span><h2>rocketsled.examples.tasks module<a class="headerlink" href="#module-rocketsled.examples.tasks" title="Permalink to this headline">¶</a></h2>
-<p>Example tasks for use in rs_example optimization workflows.</p>
-<p>These tasks are mostly used in one-Firework workflows, which are very basic and
-used only for example purposes. However, rocketsled and FireWorks are capable
-of handling workflows which are much more complex. See the FireWorks and
-rocketsled documentation for more information:</p>
-<p><a class="reference external" href="https://hackingmaterials.github.io/rocketsled/">https://hackingmaterials.github.io/rocketsled/</a>
-<a class="reference external" href="https://materialsproject.github.io/fireworks/">https://materialsproject.github.io/fireworks/</a></p>
-<dl class="class">
-<dt id="rocketsled.examples.tasks.ComplexMultiObjTask">
-<em class="property">class </em><code class="descclassname">rocketsled.examples.tasks.</code><code class="descname">ComplexMultiObjTask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.tasks.ComplexMultiObjTask" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fireworks.core.firework.FireTaskBase</span></code></p>
-<p>An example of a complex, multiobjective task (similar to MutliTask2/6) with
-directly competing objectives. The input vector is defined on a search
-space with numerical and categorical inputs.</p>
-<dl class="method">
-<dt id="rocketsled.examples.tasks.ComplexMultiObjTask.run_task">
-<code class="descname">run_task</code><span class="sig-paren">(</span><em>fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.tasks.ComplexMultiObjTask.run_task" title="Permalink to this definition">¶</a></dt>
-<dd><p>This method gets called when the Firetask is run. It can take in a
-Firework spec, perform some task using that data, and then return an
-output in the form of a FWAction.</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>fw_spec (dict): A Firework spec. This comes from the master spec.</dt>
-<dd>In addition, this spec contains a special “_fw_env” key that
-contains the env settings of the FWorker calling this method.
-This provides for abstracting out certain commands or
-settings. For example, “foo” may be named “foo1” in resource
-1 and “foo2” in resource 2. The FWorker env can specify {
-“foo”: “foo1”}, which maps an abstract variable “foo” to the
-relevant “foo1” or “foo2”. You can then write a task that
-uses fw_spec[“_fw_env”][“foo”] that will work across all
-these multiple resources.</dd>
-</dl>
-</dd>
-<dt>Returns:</dt>
-<dd>(FWAction)</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="rocketsled.examples.tasks.MixedCalculateTask">
-<em class="property">class </em><code class="descclassname">rocketsled.examples.tasks.</code><code class="descname">MixedCalculateTask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.tasks.MixedCalculateTask" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fireworks.core.firework.FireTaskBase</span></code></p>
-<p>An example task (part of an objective function, for example), which accepts
-both categorical and numerical arguments. Used in the rocketsled example
-tasks.</p>
-<dl class="method">
-<dt id="rocketsled.examples.tasks.MixedCalculateTask.run_task">
-<code class="descname">run_task</code><span class="sig-paren">(</span><em>fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.tasks.MixedCalculateTask.run_task" title="Permalink to this definition">¶</a></dt>
-<dd><p>This method gets called when the Firetask is run. It can take in a
-Firework spec, perform some task using that data, and then return an
-output in the form of a FWAction.</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>fw_spec (dict): A Firework spec. This comes from the master spec.</dt>
-<dd>In addition, this spec contains a special “_fw_env” key that
-contains the env settings of the FWorker calling this method.
-This provides for abstracting out certain commands or
-settings. For example, “foo” may be named “foo1” in resource
-1 and “foo2” in resource 2. The FWorker env can specify {
-“foo”: “foo1”}, which maps an abstract variable “foo” to the
-relevant “foo1” or “foo2”. You can then write a task that
-uses fw_spec[“_fw_env”][“foo”] that will work across all
-these multiple resources.</dd>
-</dl>
-</dd>
-<dt>Returns:</dt>
-<dd>(FWAction)</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="rocketsled.examples.tasks.MultiObjTask2">
-<em class="property">class </em><code class="descclassname">rocketsled.examples.tasks.</code><code class="descname">MultiObjTask2</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.tasks.MultiObjTask2" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fireworks.core.firework.FireTaskBase</span></code></p>
-<p>An example task simulating a multiobjective (2) objective function.
-This task has two objectives, which return the sum and product of a
-numerical input vector.</p>
-<dl class="method">
-<dt id="rocketsled.examples.tasks.MultiObjTask2.run_task">
-<code class="descname">run_task</code><span class="sig-paren">(</span><em>fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.tasks.MultiObjTask2.run_task" title="Permalink to this definition">¶</a></dt>
-<dd><p>This method gets called when the Firetask is run. It can take in a
-Firework spec, perform some task using that data, and then return an
-output in the form of a FWAction.</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>fw_spec (dict): A Firework spec. This comes from the master spec.</dt>
-<dd>In addition, this spec contains a special “_fw_env” key that
-contains the env settings of the FWorker calling this method.
-This provides for abstracting out certain commands or
-settings. For example, “foo” may be named “foo1” in resource
-1 and “foo2” in resource 2. The FWorker env can specify {
-“foo”: “foo1”}, which maps an abstract variable “foo” to the
-relevant “foo1” or “foo2”. You can then write a task that
-uses fw_spec[“_fw_env”][“foo”] that will work across all
-these multiple resources.</dd>
-</dl>
-</dd>
-<dt>Returns:</dt>
-<dd>(FWAction)</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="rocketsled.examples.tasks.MultiObjTask6">
-<em class="property">class </em><code class="descclassname">rocketsled.examples.tasks.</code><code class="descname">MultiObjTask6</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.tasks.MultiObjTask6" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fireworks.core.firework.FireTaskBase</span></code></p>
-<p>An example task simulating a multiobjective (6) objective function.
-This task has various objectives which may or may not be competing.</p>
-<dl class="method">
-<dt id="rocketsled.examples.tasks.MultiObjTask6.run_task">
-<code class="descname">run_task</code><span class="sig-paren">(</span><em>fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.tasks.MultiObjTask6.run_task" title="Permalink to this definition">¶</a></dt>
-<dd><p>This method gets called when the Firetask is run. It can take in a
-Firework spec, perform some task using that data, and then return an
-output in the form of a FWAction.</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>fw_spec (dict): A Firework spec. This comes from the master spec.</dt>
-<dd>In addition, this spec contains a special “_fw_env” key that
-contains the env settings of the FWorker calling this method.
-This provides for abstracting out certain commands or
-settings. For example, “foo” may be named “foo1” in resource
-1 and “foo2” in resource 2. The FWorker env can specify {
-“foo”: “foo1”}, which maps an abstract variable “foo” to the
-relevant “foo1” or “foo2”. You can then write a task that
-uses fw_spec[“_fw_env”][“foo”] that will work across all
-these multiple resources.</dd>
-</dl>
-</dd>
-<dt>Returns:</dt>
-<dd>(FWAction)</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="rocketsled.examples.tasks.SumTask">
-<em class="property">class </em><code class="descclassname">rocketsled.examples.tasks.</code><code class="descname">SumTask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.tasks.SumTask" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fireworks.core.firework.FireTaskBase</span></code></p>
-<p>An example task which just sums the input vector, x. Used in the rocketsled
-example tasks.</p>
-<dl class="method">
-<dt id="rocketsled.examples.tasks.SumTask.run_task">
-<code class="descname">run_task</code><span class="sig-paren">(</span><em>fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.tasks.SumTask.run_task" title="Permalink to this definition">¶</a></dt>
-<dd><p>This method gets called when the Firetask is run. It can take in a
-Firework spec, perform some task using that data, and then return an
-output in the form of a FWAction.</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>fw_spec (dict): A Firework spec. This comes from the master spec.</dt>
-<dd>In addition, this spec contains a special “_fw_env” key that
-contains the env settings of the FWorker calling this method.
-This provides for abstracting out certain commands or
-settings. For example, “foo” may be named “foo1” in resource
-1 and “foo2” in resource 2. The FWorker env can specify {
-“foo”: “foo1”}, which maps an abstract variable “foo” to the
-relevant “foo1” or “foo2”. You can then write a task that
-uses fw_spec[“_fw_env”][“foo”] that will work across all
-these multiple resources.</dd>
-</dl>
-</dd>
-<dt>Returns:</dt>
-<dd>(FWAction)</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 </div>
 <div class="section" id="module-rocketsled.examples">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-rocketsled.examples" title="Permalink to this headline">¶</a></h2>
+<p>Examples for Rocketsled.</p>
 </div>
 </div>
 
@@ -429,13 +260,7 @@ these multiple resources.</dd>
 <li><a class="reference internal" href="#">rocketsled.examples package</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
 <li><a class="reference internal" href="#module-rocketsled.examples.basic">rocketsled.examples.basic module</a></li>
-<li><a class="reference internal" href="#module-rocketsled.examples.batch">rocketsled.examples.batch module</a></li>
-<li><a class="reference internal" href="#module-rocketsled.examples.categorical">rocketsled.examples.categorical module</a></li>
 <li><a class="reference internal" href="#module-rocketsled.examples.complex">rocketsled.examples.complex module</a></li>
-<li><a class="reference internal" href="#module-rocketsled.examples.extras">rocketsled.examples.extras module</a></li>
-<li><a class="reference internal" href="#module-rocketsled.examples.multi">rocketsled.examples.multi module</a></li>
-<li><a class="reference internal" href="#module-rocketsled.examples.parallel">rocketsled.examples.parallel module</a></li>
-<li><a class="reference internal" href="#module-rocketsled.examples.tasks">rocketsled.examples.tasks module</a></li>
 <li><a class="reference internal" href="#module-rocketsled.examples">Module contents</a></li>
 </ul>
 </li>

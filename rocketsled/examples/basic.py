@@ -37,17 +37,20 @@ x_dim = [(1, 5), (1, 5), (1, 5)]
 
 
 @explicit_serialize
-class SumTask(FireTaskBase):
+class ObjectiveFuncTask(FireTaskBase):
     """
     An example task which just sums the input vector, x. Replace this code
     with your objective function if your objective function is relatively simple
-    (i.e., only needs one Firework).
+    (i.e., only needs one Firework). This task just evaluates the following
+    simple function:
+
+    f(x) = x[0] * x[1] / x[2]
     """
-    _fw_name = "SumTask"
+    _fw_name = "ObjectiveFuncTask"
 
     def run_task(self, fw_spec):
         x = fw_spec['_x']
-        y = np.sum(x)
+        y = x[0] * x[1] / x[2]
         return FWAction(update_spec={'_y': y})
 
 
@@ -75,8 +78,8 @@ def wf_creator(x):
 
     """
     spec = {'_x': x}
-    # SumTask writes _y field to the spec internally.
-    firework1 = Firework([SumTask(), OptTask(**db_info)], spec=spec)
+    # ObjectiveFuncTask writes _y field to the spec internally.
+    firework1 = Firework([ObjectiveFuncTask(), OptTask(**db_info)], spec=spec)
     return Workflow([firework1])
 
 
@@ -94,3 +97,7 @@ if __name__ == "__main__":
     # Run the optimization loop 10 times.
     launchpad.add_wf(wf_creator([5, 5, 2]))
     rapidfire(launchpad, nlaunches=10, sleep_time=0)
+
+    # Examine results
+    plt = mc.plot()
+    plt.show()

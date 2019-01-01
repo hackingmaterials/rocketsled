@@ -39,14 +39,14 @@
             
   <div class="section" id="comprehensive-guide">
 <h1>Comprehensive Guide<a class="headerlink" href="#comprehensive-guide" title="Permalink to this headline">¶</a></h1>
-<p>This is a comprehensive guide detailing the arguments which OptTask accepts, and, since OptTask is defined by its arguments, general usage tips.
-This is best used as a reference guide after looking through the examples and tutorials.</p>
+<p>Outside of the tutorial, all of rocketsled’s configuration (which OptTask reads) can be done through the MissionControl class.
+The following documentation details all the possible arguments to MissionControl.configure(…), which controls the execution and optimization parameters OptTask uses.</p>
 </div>
 <div class="section" id="required-arguments">
 <h1>Required Arguments<a class="headerlink" href="#required-arguments" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="wf-creator">
 <h2><code class="code docutils literal notranslate"><span class="pre">wf_creator</span></code><a class="headerlink" href="#wf-creator" title="Permalink to this headline">¶</a></h2>
-<p>This is a string which defines the function returning your optimization loop workflow. The function represented by this string must</p>
+<p>This is a function object which takes in an input vector x and returns your optimization loop workflow. The function must</p>
 <ol class="arabic simple">
 <li>Accept x</li>
 <li><dl class="first docutils">
@@ -60,6 +60,12 @@ This is best used as a reference guide after looking through the examples and tu
 </li>
 </ol>
 <p>The workflow that is returned should have OptTask contained somewhere in it. Since OptTask is in the workflow, this is somewhat recursive.</p>
+<p>You can also pass in full string path of the wf_creator function.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">wf_creator</span><span class="o">=</span><span class="n">my_wf_creator_fun_object</span>
+</pre></div>
+</div>
+<p>Alternatively, define it with a string.</p>
 <p><strong>Example</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">wf_creator</span><span class="o">=</span><span class="s1">&#39;my_package.my_module.my_wf_creator&#39;</span>
 </pre></div>
@@ -102,49 +108,11 @@ In discontinuous searches, all possible combinations of discontinuous dimension 
 <h2>The following arguments all have defaults defined in OptTask<a class="headerlink" href="#the-following-arguments-all-have-defaults-defined-in-opttask" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="database-setup">
 <h3>Database Setup<a class="headerlink" href="#database-setup" title="Permalink to this headline">¶</a></h3>
-<p>When setting up the database, one MongoDB collection is needed to store optimization data. We recommend using the database
-you use for your production FireWorks workflows, using a collection name not already used by Fireworks. By default, the collection
-name will be opt_default.</p>
-<p>There are 3 main ways to specify where to store optimization data:</p>
-<ol class="arabic simple">
-<li>Use <code class="code docutils literal notranslate"><span class="pre">host</span></code>, <code class="code docutils literal notranslate"><span class="pre">port</span></code>, and <code class="code docutils literal notranslate"><span class="pre">name</span></code></li>
-<li>Use <code class="code docutils literal notranslate"><span class="pre">lpad</span></code></li>
-<li>Let launchapd auto_load, if applicable.</li>
-</ol>
+<p>To set up the databsae</p>
 </div>
 </div>
-<div class="section" id="host">
-<h2><code class="code docutils literal notranslate"><span class="pre">host</span></code><a class="headerlink" href="#host" title="Permalink to this headline">¶</a></h2>
-<p>The host of the MongoDB instance you are going to store optimization data in. port and name must also be specified if this is specified.</p>
-<p><strong>Examples</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># host should be a string</span>
-<span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span>
-
-<span class="c1"># remote</span>
-<span class="n">host</span><span class="o">=</span><span class="s1">&#39;my_webserver.com&#39;</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="port">
-<h2><code class="code docutils literal notranslate"><span class="pre">port</span></code><a class="headerlink" href="#port" title="Permalink to this headline">¶</a></h2>
-<p>The port of the MongodDB instance you are going to store optimization data in. host and name must also be specified if this is specified.</p>
-<p><strong>Examples</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Port should be an integer</span>
-<span class="n">port</span><span class="o">=</span><span class="mi">27017</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="name">
-<h2><code class="code docutils literal notranslate"><span class="pre">name</span></code><a class="headerlink" href="#name" title="Permalink to this headline">¶</a></h2>
-<p>The name of the MongoDB database you are going to store optimization data in. port and host must also be specified.</p>
-<p><strong>Examples</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># name should be a string</span>
-<span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;my_db&quot;</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="lpad">
-<h2><code class="code docutils literal notranslate"><span class="pre">lpad</span></code><a class="headerlink" href="#lpad" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="launchpad">
+<h2><code class="code docutils literal notranslate"><span class="pre">launchpad</span></code><a class="headerlink" href="#launchpad" title="Permalink to this headline">¶</a></h2>
 <p>A FireWorks launchpad object. Used in lieu of host, port, and name.</p>
 <p><strong>Examples</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lpad</span><span class="o">=</span><span class="n">LaunchPad</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">27017</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;rsled&#39;</span><span class="p">)</span>
@@ -527,11 +495,6 @@ your problem is most likely with the timeout setting.</p>
 </div>
 </div>
 </div>
-<div class="section" id="auto-configure">
-<h1>Auto configure<a class="headerlink" href="#auto-configure" title="Permalink to this headline">¶</a></h1>
-<p>If you just have an expensive python function you’d like to put in a workflow, and not a complex workflow itself, don’t forget auto_setup!
-See the <span class="xref std std-doc">quickstart</span> for more information on auto_setup.</p>
-</div>
 
 
           </div>
@@ -552,10 +515,7 @@ See the <span class="xref std std-doc">quickstart</span> for more information on
 <li><a class="reference internal" href="#database-setup">Database Setup</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#host"><code class="code docutils literal notranslate"><span class="pre">host</span></code></a></li>
-<li><a class="reference internal" href="#port"><code class="code docutils literal notranslate"><span class="pre">port</span></code></a></li>
-<li><a class="reference internal" href="#name"><code class="code docutils literal notranslate"><span class="pre">name</span></code></a></li>
-<li><a class="reference internal" href="#lpad"><code class="code docutils literal notranslate"><span class="pre">lpad</span></code></a></li>
+<li><a class="reference internal" href="#launchpad"><code class="code docutils literal notranslate"><span class="pre">launchpad</span></code></a></li>
 <li><a class="reference internal" href="#opt-label"><code class="code docutils literal notranslate"><span class="pre">opt_label</span></code></a></li>
 <li><a class="reference internal" href="#db-extras"><code class="code docutils literal notranslate"><span class="pre">db_extras</span></code></a><ul>
 <li><a class="reference internal" href="#predictors">Predictors</a></li>
@@ -594,7 +554,6 @@ See the <span class="xref std std-doc">quickstart</span> for more information on
 <li><a class="reference internal" href="#timeout"><code class="code docutils literal notranslate"><span class="pre">timeout</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#auto-configure">Auto configure</a></li>
 </ul>
 
   <div role="note" aria-label="source link">
