@@ -187,6 +187,14 @@ Requirements
 Install
 -------
 
+Pip install:
+
+.. code-block:: bash
+
+    $ pip install rocketsled
+
+Or install in dev-mode:
+
 .. code-block:: bash
 
     $ # Download the repository and install
