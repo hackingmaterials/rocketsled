@@ -1,0 +1,297 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Welcome to the rocketsled tutorial! - 30 min required &#8212; rocketsled 2018.12.31 documentation</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+ 
+<link href='https://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2018.12.31 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-the-rocketsled-tutorial-30-min-required">
+<h1>Welcome to the <code class="code docutils literal notranslate"><span class="pre">rocketsled</span></code> tutorial! - 30 min required<a class="headerlink" href="#welcome-to-the-rocketsled-tutorial-30-min-required" title="Permalink to this headline">¶</a></h1>
+<p>This tutorial is based on the example file found in rocketsled/examples/basic.py.</p>
+<div class="section" id="what-you-ll-need">
+<h2>What you’ll need<a class="headerlink" href="#what-you-ll-need" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>An expensive objective function (or Fireworks workflow, if you already have it)</li>
+<li>The search domain of your objective function.</li>
+<li>A working knowledge of FireWorks (see the <a class="reference external" href="https://github.com/materialsproject/fireworks">FireWorks</a> docs for a quick refresher, if needed!)</li>
+</ol>
+</div>
+<div class="section" id="a-bird-s-eye-view">
+<h2>A bird’s eye view:<a class="headerlink" href="#a-bird-s-eye-view" title="Permalink to this headline">¶</a></h2>
+<p>This tutorial will walk you through setting up an optimization on your local machine. For more advanced execution options, see the FireWorks documentation and the <a class="reference internal" href="guide.html"><span class="doc">Comprehensive Guide to rocketsled</span></a>.</p>
+<ol class="arabic simple" start="0">
+<li><strong>Set up prerequisites</strong> Getting mongodb running, and FireWorks and rocketsled installed.</li>
+<li><strong>Create a workflow creator containing your objective function and OptTask (optimization task).</strong> Your objective function should take in a list of parameters x, and return a scalar (or list of scalars, if multiobjecive), y. Your workflow should be set up so that the parameters x and y get written to the spec of the Firework containing OptTask, using the keys “_x” and “_y” - if you don’t know how to do this, don’t worry: we’ll walk you through it.</li>
+<li><strong>Configure the optimization with rocketsled MissionControl.</strong> MissionControl is the tool rocketsled provides to easily configure the optimization and execution parameters.</li>
+<li><strong>Run your optimization</strong> (using FireWorks’ LaunchPad).</li>
+</ol>
+</div>
+<div class="section" id="setting-up-prerequisites">
+<h2>0. Setting up prerequisites<a class="headerlink" href="#setting-up-prerequisites" title="Permalink to this headline">¶</a></h2>
+<p>First, pip install rocketsled:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ pip install rocketsled
+</pre></div>
+</div>
+<p>This pip install should automatically pip install FireWorks. If it does not, make sure to:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ pip install FireWorks
+</pre></div>
+</div>
+<p>Last, make sure you have a mongodb instance running locally.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ mongod
+</pre></div>
+</div>
+<p>Next, find your rocketsled directory and <code class="docutils literal notranslate"><span class="pre">cd</span></code> to the directory we will work through.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> ./rocketsled/examples
+</pre></div>
+</div>
+<p>This example is based on the basic.py file.</p>
+</div>
+<div class="section" id="create-a-workflow-creator-containing-your-objective-function-and-opttask-optimization-task">
+<h2>1. Create a workflow creator containing your objective function and OptTask (optimization task).<a class="headerlink" href="#create-a-workflow-creator-containing-your-objective-function-and-opttask-optimization-task" title="Permalink to this headline">¶</a></h2>
+<p><em>Note: As you read along, try modifying and running the correspondigg example file in rocketsled/examples/basic.py.</em></p>
+<p>Your objective function may be a Fireworks workflow already, or it may just be
+a python (or other language) function or script. Whatever the case, the best
+way to use rocketsled is with a <strong>workflow creator function</strong>. This function should
+take in an input x vector and return a workflow which determines the output y
+scalar (or vector, if multiobjective).</p>
+<p>Rocketsled has a few requirements for the kinds of workflow creator functions
+which are valid:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>The optimization task OptTask is passed into a FireWork in the workflow.</li>
+<li>The fields “_x” and “_y” are written to the spec of the FireWork containing OptTask. Here, “_x” is the input and “_y” is the workflow output.</li>
+<li>You use MissionControl’s “configure” method to set up the optimization, and pass in wf_creator as it’s first argument.</li>
+</ol>
+</div></blockquote>
+<p>We’ll take care of the first two requirements now.</p>
+<p>First, let’s set up our LaunchPad and <code class="docutils literal notranslate"><span class="pre">opt_label</span></code>. The <code class="docutils literal notranslate"><span class="pre">opt_label</span></code> defines
+where the optimization data is stored, in the same database as the FireWorks LaunchPad.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Setting up the FireWorks LaunchPad</span>
+<span class="n">launchpad</span> <span class="o">=</span> <span class="n">LaunchPad</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;rsled&#39;</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">27017</span><span class="p">)</span>
+<span class="n">opt_label</span> <span class="o">=</span> <span class="s2">&quot;opt_default&quot;</span>
+<span class="n">db_info</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;launchpad&quot;</span><span class="p">:</span> <span class="n">launchpad</span><span class="p">,</span> <span class="s2">&quot;opt_label&quot;</span><span class="p">:</span> <span class="n">opt_label</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>If you already have an objective function as a python function, such as the
+<em>very</em> simplified one below:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">obj_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">y</span>
+</pre></div>
+</div>
+<p>We can put this function into a workflow by writing it as a custom FireTask.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fireworks.core.firework</span> <span class="kn">import</span> <span class="n">FireTaskBase</span>
+<span class="kn">from</span> <span class="nn">fireworks.utilities.fw_utilities</span> <span class="kn">import</span> <span class="n">explicit_serialize</span>
+
+<span class="nd">@explicit_serialize</span>                              <span class="c1"># tells FireWorks where to find this task</span>
+<span class="k">class</span> <span class="nc">ObjectiveFuncTask</span><span class="p">(</span><span class="n">FireTaskBase</span><span class="p">):</span>           <span class="c1"># Make sure our custom FireTask inherits from FireTaskBase, the parent class for custom FireTasks</span>
+    <span class="n">_fw_name</span> <span class="o">=</span> <span class="s2">&quot;ObjectiveFuncTask&quot;</span>               <span class="c1"># A nice name for our Firework</span>
+    <span class="k">def</span> <span class="nf">run_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fw_spec</span><span class="p">):</span>                 <span class="c1"># run_task is a required method for every FireTask</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">fw_spec</span><span class="p">[</span><span class="s1">&#39;_x&#39;</span><span class="p">]</span>                        <span class="c1"># Read the input vector from the Fireworks spec</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>                   <span class="c1"># Compute the output value (trivial in our example case)</span>
+        <span class="k">return</span> <span class="n">FWAction</span><span class="p">(</span><span class="n">update_spec</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;_y&#39;</span><span class="p">:</span> <span class="n">y</span><span class="p">})</span>   <span class="c1"># FWAction is an object that modifies the workflow; here, update_spec adds the y output to the containing Firework&#39;s spec.</span>
+</pre></div>
+</div>
+<p><em>Note that we write the “_y” field to the spec; this is required by rocketsled!</em></p>
+<p>Now that we have the objective function as a FireTask, we can easily create a workflow in FireWorks. In this workflow,
+we’ll just use a single Firework with two sequential FireTasks. The first Firetask evaluates your objective function, and
+the second evaluates the optimization.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">wf_creator</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">spec</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;_x&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">}</span>
+    <span class="n">firework1</span> <span class="o">=</span> <span class="n">Firework</span><span class="p">([</span><span class="n">ObjectiveFuncTask</span><span class="p">(),</span> <span class="n">OptTask</span><span class="p">(</span><span class="o">**</span><span class="n">db_info</span><span class="p">)],</span> <span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Workflow</span><span class="p">([</span><span class="n">firework1</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Let’s also define some constraints for our objective function, and put them in a variable called <code class="docutils literal notranslate"><span class="pre">x_dim</span></code>. We’ll use this later.
+The dimensions are defined in a list of lists/tuples, with one list/tuple for each dimension. To use a range of floats or ints, pass in a 2-tuple in the form <code class="docutils literal notranslate"><span class="pre">(lower,</span> <span class="pre">higher)</span></code>. To pass in categorical variables or sets of discontinuous ints/floats, pass in lists.
+Let’s constrain this problem to integers between 1 and 5 (inclusive) in each of the three dimensions.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># We constrain our dimensions to 3 integers, each between 1 and 5</span>
+<span class="n">x_dim</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>Alternatively, we could define our dimensions with some discrete entries:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Each list dimension has the explicit allowed points, while 2-tuples are ranges</span>
+<span class="n">x_dim</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.98</span><span class="p">,</span> <span class="mf">2.99</span><span class="p">,</span> <span class="mf">3.45</span><span class="p">,</span> <span class="mf">1.09</span><span class="p">,</span> <span class="mf">199.4</span><span class="p">],</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">20</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>These dimensions allow 5 possible floats for x[0], all floats between 1 and 100 for x[1], and all ints between 1 and 20 (inclusive) for x[2].</p>
+<p>Furthermore, we could even define our dimensions with all discrete entries:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Each list dimension has the explicit allowed points</span>
+<span class="n">x_dim</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.98</span><span class="p">,</span> <span class="mf">2.99</span><span class="p">,</span> <span class="mf">3.45</span><span class="p">,</span> <span class="mf">1.09</span><span class="p">,</span> <span class="mf">199.4</span><span class="p">],</span> <span class="p">[</span><span class="mf">100.928</span><span class="p">,</span> <span class="mf">98.38</span><span class="p">,</span> <span class="mf">97.45</span><span class="p">,</span> <span class="mf">45.32</span><span class="p">,</span> <span class="mf">23.99</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">63</span><span class="p">,</span> <span class="mi">18</span><span class="p">]]</span>
+</pre></div>
+</div>
+<p>These dimensions allow 5 possible floats for x[0], 5 other possible floats for x[1], and 5 integers for x[2].
+<em>To use categorical dimensions, simply pass in a list of strings for a dimension; see the complex.py example for an example.</em></p>
+<p>Great! Our workflow creator function is now set up and ready to go. If you have an objective function workflow
+with more complexity than a single FireTask can handle, simply change the above wf_creator for your workflow,
+placing the OptTask in the same FireWork where your final result(s) are calculated. Again <strong>make sure you have “_x” and “_y” fields in the spec of the FireWork OptTask is in!</strong>.
+See complex.py example for an example of a more complex workflow (and optimization).</p>
+</div>
+<div class="section" id="configure-the-optimization-with-rocketsled-s-missioncontrol">
+<h2>2. Configure the optimization with rocketsled’s MissionControl.<a class="headerlink" href="#configure-the-optimization-with-rocketsled-s-missioncontrol" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">MissionControl</span></code> is the way optimization configuration is done in rocketsled. First, we make a <code class="docutils literal notranslate"><span class="pre">MissionControl</span></code> object with
+the database info. After this is done, we can configure the optimization and start (launch) our optimization!</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># Make a MissionControl object</span>
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">MissionControl</span><span class="p">(</span><span class="o">**</span><span class="n">db_info</span><span class="p">)</span>
+
+    <span class="c1"># Reset the launchpad and optimization db for this example</span>
+    <span class="n">launchpad</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">password</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">require_password</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c1"># the MissionControl reset simply gets rid of any optimization data left over from previous runs of this example</span>
+    <span class="n">mc</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">hard</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="c1"># Configure the optimization db with MissionControl</span>
+    <span class="n">mc</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">wf_creator</span><span class="o">=</span><span class="n">wf_creator</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="n">x_dim</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">configure</span></code> method defines all the parameters for optimization. We can change optimization algorithms, define external optimization algorithms, change optimization parameters (e.g., number of search points), change parallelism parameters, and much more.
+But by default, all we need to do is pass in the wf_creator and the dimensions of the problem.</p>
+</div>
+<div class="section" id="run-the-optimization">
+<h2>3. Run the optimization.<a class="headerlink" href="#run-the-optimization" title="Permalink to this headline">¶</a></h2>
+<p>Now, we are able to launch our optimization.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run the optimization loop 10 times.</span>
+<span class="n">launchpad</span><span class="o">.</span><span class="n">add_wf</span><span class="p">(</span><span class="n">wf_creator</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">]))</span>              <span class="c1"># add a workflow to the LaunchPad</span>
+<span class="n">rapidfire</span><span class="p">(</span><span class="n">launchpad</span><span class="p">,</span> <span class="n">nlaunches</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">sleep_time</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>     <span class="c1"># Launch 10 workflows</span>
+</pre></div>
+</div>
+<p>If everything is working right, you should see the log output from the optimization.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="m">2018</span>-12-31 <span class="m">18</span>:05:11,416 INFO Performing db tune-up
+<span class="m">2018</span>-12-31 <span class="m">18</span>:05:11,821 INFO LaunchPad was RESET.
+<span class="m">2018</span>-12-31 <span class="m">18</span>:05:11,822 INFO Optimization collection opt_default hard reset.
+<span class="m">2018</span>-12-31 <span class="m">18</span>:05:11,876 INFO Rocketsled configuration succeeded.
+<span class="m">2018</span>-12-31 <span class="m">18</span>:05:11,891 INFO Added a workflow. id_map: <span class="o">{</span>-1: <span class="m">1</span><span class="o">}</span>
+<span class="m">2018</span>-12-31 <span class="m">18</span>:05:11,912 INFO Created new dir /Users/ardunn/alex/lbl/projects/rocketsled/code/rocketsled/rocketsled/examples/launcher_2019-01-01-02-05-11-911794
+<span class="m">2018</span>-12-31 <span class="m">18</span>:05:11,912 INFO Launching Rocket
+<span class="m">2018</span>-12-31 <span class="m">18</span>:05:11,954 INFO RUNNING fw_id: <span class="m">1</span> in directory: /Users/ardunn/alex/lbl/projects/rocketsled/code/rocketsled/rocketsled/examples/launcher_2019-01-01-02-05-11-911794
+<span class="m">2018</span>-12-31 <span class="m">18</span>:05:11,962 INFO Task started: <span class="o">{{</span>basic.BasicTask<span class="o">}}</span>.
+<span class="m">2018</span>-12-31 <span class="m">18</span>:05:11,962 INFO Task completed: <span class="o">{{</span>basic.BasicTask<span class="o">}}</span>
+...
+</pre></div>
+</div>
+<p>We can also use MissionControl to track our optimization separately from the execution of the workflows.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Examine results</span>
+<span class="n">plt</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The output summary should appear:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Optimization Analysis:
+Number of objectives: <span class="m">1</span>
+    Number of optima: <span class="m">1</span>
+        min<span class="o">(</span>f<span class="o">(</span>x<span class="o">))</span>  is <span class="m">0</span>.2 at <span class="nv">x</span> <span class="o">=</span> <span class="o">[</span><span class="m">1</span>, <span class="m">1</span>, <span class="m">5</span><span class="o">]</span>
+
+Problem dimension:
+    * X dimensions <span class="o">(</span><span class="m">3</span><span class="o">)</span>: <span class="o">[</span>&lt;class <span class="s1">&#39;int&#39;</span>&gt;, &lt;class <span class="s1">&#39;int&#39;</span>&gt;, &lt;class <span class="s1">&#39;int&#39;</span>&gt;<span class="o">]</span>
+    * Z dimensions <span class="o">(</span><span class="m">0</span><span class="o">)</span>: <span class="o">[]</span>
+
+Number of Optimizations: <span class="m">10</span>
+Optimizers used <span class="o">(</span>by percentage of optimizations<span class="o">)</span>:
+    * <span class="m">100</span>.00%: RandomForestRegressor with acquisition: Expected Improvement
+Number of reserved guesses: <span class="m">1</span>
+Number of waiting optimizations: <span class="m">0</span>
+DB not locked by any process <span class="o">(</span>no current optimization<span class="o">)</span>.
+</pre></div>
+</div>
+<p>And the optimization plot should appear similar to:</p>
+<blockquote>
+<div><a class="reference internal image-reference" href="_images/opt_basic.png"><img alt="server" class="align-center" src="_images/opt_basic.png" style="width: 1000px;" /></a>
+</div></blockquote>
+<p>Great! This concludes the tutorial. Please see the complex.py example, the <a class="reference internal" href="guide.html"><span class="doc">Comprehensive Guide to rocketsled</span></a>, or the <a class="reference external" href="https://github.com/materialsproject/fireworks">FireWorks documentation</a> for more details.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to the <code class="code docutils literal notranslate"><span class="pre">rocketsled</span></code> tutorial! - 30 min required</a><ul>
+<li><a class="reference internal" href="#what-you-ll-need">What you’ll need</a></li>
+<li><a class="reference internal" href="#a-bird-s-eye-view">A bird’s eye view:</a></li>
+<li><a class="reference internal" href="#setting-up-prerequisites">0. Setting up prerequisites</a></li>
+<li><a class="reference internal" href="#create-a-workflow-creator-containing-your-objective-function-and-opttask-optimization-task">1. Create a workflow creator containing your objective function and OptTask (optimization task).</a></li>
+<li><a class="reference internal" href="#configure-the-optimization-with-rocketsled-s-missioncontrol">2. Configure the optimization with rocketsled’s MissionControl.</a></li>
+<li><a class="reference internal" href="#run-the-optimization">3. Run the optimization.</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/tutorial.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2018.12.31 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, HackingMaterials.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
+    </div>
+
+  </body>
+</html>
