@@ -219,6 +219,10 @@ def split_xz(xz, x_dims, x_only=False, z_only=False):
 def get_default_opttask_kwargs():
     """
     Get the default configuration kwargs for OptTask.
+
+    Args:
+        None
+
     Returns:
         conf_dict (dict): The default kwargs for OptTask
 
@@ -248,7 +252,7 @@ def check_dims(dims):
         dims (list): The dimensions of the search space.
 
     Returns:
-        [str]: Types of the dimensions in the search space defined by dims.
+        ([str]): Types of the dimensions in the search space defined by dims.
     """
     dims_types = [list, tuple]
     dim_spec = []

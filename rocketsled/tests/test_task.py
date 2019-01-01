@@ -313,6 +313,33 @@ class TestWorkflows(unittest.TestCase):
         plt.savefig(savepath)
         self.assertTrue(os.path.exists(savepath))
 
+    def test_acqfuncs(self):
+        self.mc.configure(wf_creator=wf_creator_basic,
+                          dimensions=self.dims_basic,
+                          predictor="GaussianProcessRegressor",
+                          acq=None)
+        launchpad.add_wf(wf_creator_basic([5, 11, 'blue']))
+        rapidfire(launchpad, nlaunches=20, sleep_time=0)
+        self.mc.reset(hard=False)
+        self.mc.configure(wf_creator=wf_creator_basic,
+                          dimensions=self.dims_basic,
+                          predictor="GaussianProcessRegressor",
+                          acq="ei")
+        rapidfire(launchpad, nlaunches=2, sleep_time=0)
+        self.mc.reset(hard=False)
+        self.mc.configure(wf_creator=wf_creator_basic,
+                          dimensions=self.dims_basic,
+                          predictor="GaussianProcessRegressor",
+                          acq="pi")
+        rapidfire(launchpad, nlaunches=2, sleep_time=0)
+        self.mc.reset(hard=False)
+        self.mc.configure(wf_creator=wf_creator_basic,
+                          dimensions=self.dims_basic,
+                          predictor="GaussianProcessRegressor",
+                          acq="lcb")
+        rapidfire(launchpad, nlaunches=2, sleep_time=0)
+
+
 
     def test_parallel(self):
         n_procs = 10
