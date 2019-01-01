@@ -1,5 +1,8 @@
 # Change Log
 
+## [v2019.1.1](https://github.com/hackingmaterials/rocketsled/tree/v2019.1.1) (2019-01-01)
+[Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2018.12.30...v2019.1.1)
+
 ## [v2018.12.30](https://github.com/hackingmaterials/rocketsled/tree/v2018.12.30) (2019-01-01)
 [Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2018.12.31...v2018.12.30)
 
