@@ -7,6 +7,6 @@ from rocketsled.control import MissionControl
 from rocketsled.task import OptTask
 
 __author__ = "Alexander Dunn"
-__version__ = "2018.12.31"
+__version__ = "2019.1.1"
 __email__ = "ardunn@lbl.gov"
 
