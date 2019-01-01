@@ -27,11 +27,7 @@ from rocketsled import OptTask, MissionControl
 from rocketsled.utils import ExhaustedSpaceError
 
 __author__ = "Alexander Dunn"
-__version__ = "1.0"
 __email__ = "ardunn@lbl.gov"
-
-test_names = ['test_basic', 'test_custom_predictor', 'test_complex',
-              'test_duplicates', 'test_get_z', 'test_multi', 'test_parallel']
 
 lp_filedir = os.path.dirname(os.path.realpath(__file__))
 with open(lp_filedir + '/tests_launchpad.yaml', 'r') as lp_file:
@@ -319,7 +315,7 @@ class TestWorkflows(unittest.TestCase):
                           predictor="GaussianProcessRegressor",
                           acq=None)
         launchpad.add_wf(wf_creator_basic([5, 11, 'blue']))
-        rapidfire(launchpad, nlaunches=20, sleep_time=0)
+        rapidfire(launchpad, nlaunches=10, sleep_time=0)
         self.mc.reset(hard=False)
         self.mc.configure(wf_creator=wf_creator_basic,
                           dimensions=self.dims_basic,
