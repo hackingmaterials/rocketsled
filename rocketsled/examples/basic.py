@@ -3,8 +3,8 @@ An example of the most basic rocketsled implementation.
 This file creates and executes a workflow containing one Firework.
 
 The Firework contains 2 Tasks.
-    1. SumTask - a task that reads x from the spec and calculates the sum
-     of the vector.
+    1. ObjectiveFuncTask - a task that reads x from the spec and
+        updates y in the spec, according to a simple known function.
     2. OptTask - a task that stores optimiztion data in the db and optimizes
     the next guess.
 
@@ -39,12 +39,12 @@ x_dim = [(1, 5), (1, 5), (1, 5)]
 @explicit_serialize
 class ObjectiveFuncTask(FireTaskBase):
     """
-    An example task which just sums the input vector, x. Replace this code
-    with your objective function if your objective function is relatively simple
-    (i.e., only needs one Firework). This task just evaluates the following
-    simple function:
+    An example task which just evaluates the following simple function:
 
     f(x) = x[0] * x[1] / x[2]
+
+    Replace this code with your objective function if your objective function
+    is relatively simple (i.e., only needs one Firework).
     """
     _fw_name = "ObjectiveFuncTask"
 
