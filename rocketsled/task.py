@@ -391,7 +391,7 @@ class OptTask(FireTaskBase):
             model = self.builtin_predictors[self.predictor]
             all_xz_searched = self._encode(all_xz_searched, xz_dims)
             all_xz_unsearched = self._encode(all_xz_unsearched, xz_dims)
-            all_xz_onehot = []
+            all_xz_new_onehot = []
             for _ in range(self.batch_size):
                 xz1h = self._predict(all_xz_searched, all_y, all_xz_unsearched,
                                      model(*self.predictor_args,
@@ -399,9 +399,9 @@ class OptTask(FireTaskBase):
                                      self.maximize, scaling=True)
                 ix = all_xz_unsearched.index(xz1h)
                 all_xz_unsearched.pop(ix)
-                all_xz_onehot.append(xz1h)
+                all_xz_new_onehot.append(xz1h)
             all_xz_new = [self._decode(xz_onehot, xz_dims) for xz_onehot in
-                          all_xz_onehot]
+                          all_xz_new_onehot]
 
         elif self.predictor == 'random':
             all_xz_new = random.sample(all_xz_unsearched, self.batch_size)
