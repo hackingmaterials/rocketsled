@@ -1,5 +1,13 @@
 # Change Log
 
+## [Unreleased](https://github.com/hackingmaterials/rocketsled/tree/HEAD)
+
+[Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.1.1...HEAD)
+
+**Merged pull requests:**
+
+- Minor corrections to the tutorial and examples [\#63](https://github.com/hackingmaterials/rocketsled/pull/63) ([RemiLehe](https://github.com/RemiLehe))
+
 ## [v2019.1.1](https://github.com/hackingmaterials/rocketsled/tree/v2019.1.1) (2019-01-01)
 [Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2018.12.30...v2019.1.1)
 
