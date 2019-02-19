@@ -31,6 +31,7 @@ setup(
     keywords='black-box-optimization optimization workflows',
     test_suite='nose.collector',
     packages=find_packages(),
+    package_data={'rocketsled': ['defaults.yaml']},
     install_requires=['fireworks', 'scikit-learn', 'scipy', 'numpy',
                       'pymongo==3.7.1', 'nose', 'matplotlib'],
     data_files=['LICENSE'])
