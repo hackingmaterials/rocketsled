@@ -95,10 +95,12 @@ def serialize(fun):
     name = fun.__name__
     if mod_path == "__main__":
         import __main__
-        mod_path = __main__.__file__.replace(".py", "").replace(".pyc", "")
+        fp = os.path.abspath(__main__.__file__)
+        mod_path = fp.replace(".py", "").replace(".pyc", "")
         importlist = mod_path.split("/")
         all_pkgs = importlist[:-1]
         full_import_path = importlist[-1]
+
         for i in range(5):
             try:
                 full_import_path = all_pkgs[-1] + "." + full_import_path
