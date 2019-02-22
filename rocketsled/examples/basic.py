@@ -18,8 +18,6 @@ information:
 https://hackingmaterials.github.io/rocketsled/
 https://materialsproject.github.io/fireworks/
 """
-import numpy as np
-
 from fireworks.utilities.fw_utilities import explicit_serialize
 from fireworks.core.rocket_launcher import rapidfire
 from fireworks import Workflow, Firework, LaunchPad, FireTaskBase, FWAction
