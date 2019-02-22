@@ -529,9 +529,14 @@ class MissionControl:
                                breakdown, n_reserved, qlen, lockstr)
         return fmtstr
 
-    def fetch_matrices(self):
+    def fetch_matrices(self, include_reserved=False):
         """
         Return the X and Y matrices for this optimization.
+
+        Args:
+            include_reserved (bool): If True, returns "reserved" guesses (those
+                which have been submitted to the launchpad but have not been
+                successfully run). y values for these guesses are "reserved".
 
 
         Returns:
@@ -540,8 +545,11 @@ class MissionControl:
                 n_samples, n_objectives. Only completed entries are retrieved.
 
         """
-        completed_query = {"y": {"$exists": 1, "$ne": "reserved"},
-                           "x": {"$exists": 1}}
+        if include_reserved:
+            completed_query = {"y": {"$exists": 1}, "x": {"$exists": 1}}
+        else:
+            completed_query = {"y": {"$exists": 1, "$ne": "reserved"},
+                               "x": {"$exists": 1}}
         n_samples = self.c.count_documents(completed_query)
         all_x = [None] * n_samples
         all_y = [None] * n_samples
@@ -555,7 +563,9 @@ class MissionControl:
             all_y[i] = doc["y"]
             if get_len(doc["x"]) != n_dimensions and not dimension_mismatch:
                 dimension_mismatch = True
-            if get_len(doc["y"]) != n_objectives and not objective_mismatch:
+            if get_len(doc["y"]) != n_objectives \
+                    and not objective_mismatch \
+                    and doc["y"] != "reserved":
                 objective_mismatch = True
         if dimension_mismatch:
             warnings.warn(
