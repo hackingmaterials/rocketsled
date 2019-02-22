@@ -545,16 +545,18 @@ class MissionControl:
         n_samples = self.c.count_documents(completed_query)
         all_x = [None] * n_samples
         all_y = [None] * n_samples
-        n_objectives = len(self.c.find_one(completed_query)["y"])
+
+        y = self.c.find_one(completed_query)["y"]
+        n_objectives = len(y) if isinstance(y, (list, tuple)) else 1
         n_dimensions = len(self.c.find_one({"doctype": "config"})["dimensions"])
         dimension_mismatch = False
         objective_mismatch = False
         for i, doc in enumerate(self.c.find(completed_query)):
             all_x[i] = doc["x"]
             all_y[i] = doc["y"]
-            if len(all_x) != n_dimensions and not dimension_mismatch:
+            if len(doc["x"]) != n_dimensions and not dimension_mismatch:
                 dimension_mismatch = True
-            if len(all_y) != n_objectives and not objective_mismatch:
+            if len(doc["y"]) != n_objectives and not objective_mismatch:
                 objective_mismatch = True
         if dimension_mismatch:
             warnings.warn(
