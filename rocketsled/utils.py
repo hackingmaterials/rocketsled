@@ -448,3 +448,19 @@ def is_duplicate_by_tolerance(x_new, all_x_explored, tolerances):
     # If none of the points inside X_explored are close to x_new
     # (inside tolerance) in ALL dimensions, it is not a duplicate
     return False
+
+
+def get_len(obj):
+    """
+    A utility function for getting the length of an object.
+
+    Args:
+        obj: An object, optionally iterable.
+
+    Returns:
+        The length of that object if it is a list or tuple, otherwise 1.
+    """
+    if not isinstance(obj, (list, tuple)):
+        return 1
+    else:
+        return len(obj)

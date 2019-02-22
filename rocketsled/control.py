@@ -14,7 +14,7 @@ from fireworks.utilities.fw_utilities import get_fw_logger
 from rocketsled.task import OptTask
 from rocketsled.utils import get_default_opttask_kwargs, check_dims, \
     is_discrete, serialize, deserialize, latex_float, pareto, dtypes, \
-    NotConfiguredError
+    NotConfiguredError, get_len
 
 IMPORT_WARNING = "could not be imported! try putting it in a python package " \
                  "registered with PYTHONPATH or using the alternative " \
@@ -546,17 +546,16 @@ class MissionControl:
         all_x = [None] * n_samples
         all_y = [None] * n_samples
 
-        y = self.c.find_one(completed_query)["y"]
-        n_objectives = len(y) if isinstance(y, (list, tuple)) else 1
+        n_objectives = get_len(self.c.find_one(completed_query)["y"])
         n_dimensions = len(self.c.find_one({"doctype": "config"})["dimensions"])
         dimension_mismatch = False
         objective_mismatch = False
         for i, doc in enumerate(self.c.find(completed_query)):
             all_x[i] = doc["x"]
             all_y[i] = doc["y"]
-            if len(doc["x"]) != n_dimensions and not dimension_mismatch:
+            if get_len(doc["x"]) != n_dimensions and not dimension_mismatch:
                 dimension_mismatch = True
-            if len(doc["y"]) != n_objectives and not objective_mismatch:
+            if get_len(doc["y"]) != n_objectives and not objective_mismatch:
                 objective_mismatch = True
         if dimension_mismatch:
             warnings.warn(

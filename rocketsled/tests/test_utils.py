@@ -9,7 +9,7 @@ import numpy as np
 from rocketsled.utils import dtypes, random_guess, pareto, \
     convert_value_to_native, latex_float, deserialize, split_xz, \
     get_default_opttask_kwargs, convert_native, check_dims, is_discrete, \
-    is_duplicate_by_tolerance, serialize
+    is_duplicate_by_tolerance, serialize, get_len
 
 
 class TestUtilities(unittest.TestCase):
@@ -133,3 +133,9 @@ class TestUtilities(unittest.TestCase):
             is_duplicate_by_tolerance(x_clear, all_x_explored, tolerances))
         self.assertTrue(
             is_duplicate_by_tolerance(x_dup, all_x_explored, tolerances))
+
+    def test_get_len(self):
+        self.assertEqual(get_len([1,2,3]), 3)
+        self.assertEqual(get_len(4), 1)
+        self.assertEqual(get_len("abc"), 1)
+
