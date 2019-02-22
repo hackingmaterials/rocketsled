@@ -227,6 +227,7 @@ collection).</dd>
 <dd><p>Set up the optimization config. Required before using OptTask, but only
 needs to be done once. To reconfigure, use MissionControl.reset and then
 use configure again.</p>
+<p>Defaults can be found in defaults.yaml.</p>
 <p>Args:</p>
 <dl class="docutils">
 <dt>wf_creator (function or str): The function object that creates the</dt>
@@ -300,9 +301,8 @@ present for bootstrapping. Not used if: acq not specified,
 custom predictor used, or GaussianProcessRegressor used.</dd>
 <dt>acq (str): The acquisition function to use. Can be ‘ei’ for expected</dt>
 <dd>improvement, ‘pi’ for probability of improvement, or ‘lcb’ for
-lower confidence bound. Defaults to None, which means no
-acquisition function is used, and the highest predicted point is
-picked (greedy algorithm). Only applies to builtin predictors.</dd>
+lower confidence bound, or None for greedy selection. Only works
+with builtin predictors.</dd>
 <dt>space_file (str): The fully specified path of a pickle file</dt>
 <dd>containing a list of all possible searchable vectors.
 For example ‘/Users/myuser/myfolder/myspace.p’. When loaded,
@@ -378,18 +378,31 @@ in the launchpad and opt_label arguments in your wf_creator.</dd>
 </dd></dl>
 
 <dl class="method">
+<dt id="rocketsled.control.MissionControl.fetch_matrices">
+<code class="descname">fetch_matrices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.fetch_matrices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the X and Y matrices for this optimization.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>all_x, all_y ([list], [list]): The X (input) matrix has dimensions</dt>
+<dd>n_samples, n_dimensions. The Y (output) matrix has dimensions
+n_samples, n_objectives. Only completed entries are retrieved.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="rocketsled.control.MissionControl.plot">
 <code class="descname">plot</code><span class="sig-paren">(</span><em>show_best=True</em>, <em>show_mean=True</em>, <em>latexify=False</em>, <em>font_family='serif'</em>, <em>scale='linear'</em>, <em>summarize=True</em>, <em>print_pareto=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Visualize the progress of an optimization.</p>
 <dl class="docutils">
 <dt>Args:</dt>
-<dd><p class="first">maximize (bool): Whether to plot optimizing for minimum or maximum.
-show_best (bool): Point out the best point on legend and on plot. If</p>
-<blockquote>
-<div>more than one best point (i.e., multiple equal maxima), show
+<dd><dl class="first docutils">
+<dt>show_best (bool): Point out the best point on legend and on plot. If</dt>
+<dd>more than one best point (i.e., multiple equal maxima), show
 them all. If multiobjective, shows best for each objective, and
-prints the best value and x for each objective.</div></blockquote>
-<dl class="docutils">
+prints the best value and x for each objective.</dd>
 <dt>show_mean (bool): Show the mean and standard deviation for the</dt>
 <dd>guesses as the computations are carried out.</dd>
 </dl>
@@ -619,6 +632,13 @@ is returned.</dd>
 </dd></dl>
 
 <dl class="exception">
+<dt id="rocketsled.utils.ObjectiveError">
+<em class="property">exception </em><code class="descclassname">rocketsled.utils.</code><code class="descname">ObjectiveError</code><a class="headerlink" href="#rocketsled.utils.ObjectiveError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rocketsled.utils.RSBaseException" title="rocketsled.utils.RSBaseException"><code class="xref py py-class docutils literal notranslate"><span class="pre">rocketsled.utils.RSBaseException</span></code></a></p>
+<p>Errors relating to objectives.</p>
+</dd></dl>
+
+<dl class="exception">
 <dt id="rocketsled.utils.RSBaseException">
 <em class="property">exception </em><code class="descclassname">rocketsled.utils.</code><code class="descname">RSBaseException</code><a class="headerlink" href="#rocketsled.utils.RSBaseException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseException</span></code></a></p>
@@ -705,6 +725,18 @@ entries such as floats, ints, etc.</dd>
 <dd>None</dd>
 <dt>Returns:</dt>
 <dd>conf_dict (dict): The default kwargs for OptTask</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="rocketsled.utils.get_len">
+<code class="descclassname">rocketsled.utils.</code><code class="descname">get_len</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.get_len" title="Permalink to this definition">¶</a></dt>
+<dd><p>A utility function for getting the length of an object.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>obj: An object, optionally iterable.</dd>
+<dt>Returns:</dt>
+<dd>The length of that object if it is a list or tuple, otherwise 1.</dd>
 </dl>
 </dd></dl>
 
@@ -821,7 +853,7 @@ z_only (bool): If True, returns only the z vector.</dd>
 </div>
 <div class="section" id="module-rocketsled">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-rocketsled" title="Permalink to this headline">¶</a></h2>
-<p>Rocketsled is an optimization suite “on rails” based on Scikit-learn and 
+<p>Rocketsled is an optimization suite “on rails” based on Scikit-learn and
 FireWorks workflows.</p>
 </div>
 </div>
