@@ -357,7 +357,7 @@ class TestWorkflows(unittest.TestCase):
         self.assertEqual(125, self.c.count_documents({'y': {'$exists': 1}}))
 
         all_x, all_y = self.mc.fetch_matrices()
-        self.assertEqual(len(set(all_x)), 125)
+        self.assertEqual(len(all_x), 125)
         self.assertEqual(len(all_y), 125)
 
     def tearDown(self):
