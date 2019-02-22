@@ -1,5 +1,5 @@
 """
-Rocketsled is an optimization suite "on rails" based on Scikit-learn and 
+Rocketsled is an optimization suite "on rails" based on Scikit-learn and
 FireWorks workflows.
 """
 
