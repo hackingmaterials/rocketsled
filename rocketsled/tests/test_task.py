@@ -343,7 +343,7 @@ class TestWorkflows(unittest.TestCase):
                           maximize=True,
                           **common_kwargs)
 
-        for i in range(n_procs):
+        for _ in range(n_procs):
             # Assume the worst case, with n_procs forced duplicates
             launchpad.add_wf(wf_creator_accuracy([1, 5, 3]))
 
@@ -356,12 +356,9 @@ class TestWorkflows(unittest.TestCase):
 
         self.assertEqual(125, self.c.count_documents({'y': {'$exists': 1}}))
 
-        all_x_unique = []
-        for doc in self.c.find({'x_new': {"$exists": 1}}):
-            all_x_unique.append(doc['x_new'])
-        for doc in self.c.find({'y': 'reserved'}):
-            all_x_unique.append(doc['x'])
-        self.assertEqual(len(all_x_unique), 125)
+        all_x, all_y = self.mc.fetch_matrices()
+        self.assertEqual(len(set(all_x)), 125)
+        self.assertEqual(len(all_y), 125)
 
     def tearDown(self):
         try:
@@ -382,13 +379,6 @@ class TestWorkflows(unittest.TestCase):
                 launchpad.connection.drop_database(test_db_name)
             except BaseException:
                 pass
-
-
-def suite():
-    wf_test_suite = unittest.TestSuite()
-    for tn in test_names:
-        wf_test_suite.addTest(TestWorkflows(tn))
-    return wf_test_suite
 
 
 if __name__ == "__main__":

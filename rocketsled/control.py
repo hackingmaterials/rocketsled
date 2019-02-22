@@ -64,6 +64,8 @@ class MissionControl:
         needs to be done once. To reconfigure, use MissionControl.reset and then
         use configure again.
 
+        Defaults can be found in defaults.yaml.
+
         Args:
 
         wf_creator (function or str): The function object that creates the
@@ -133,9 +135,8 @@ class MissionControl:
                 custom predictor used, or GaussianProcessRegressor used.
             acq (str): The acquisition function to use. Can be 'ei' for expected
                 improvement, 'pi' for probability of improvement, or 'lcb' for
-                lower confidence bound. Defaults to None, which means no
-                acquisition function is used, and the highest predicted point is
-                picked (greedy algorithm). Only applies to builtin predictors.
+                lower confidence bound, or None for greedy selection. Only works
+                with builtin predictors.
             space_file (str): The fully specified path of a pickle file
                 containing a list of all possible searchable vectors.
                 For example '/Users/myuser/myfolder/myspace.p'. When loaded,
