@@ -1,7 +1,7 @@
 """
 The FireTask for running automatic optimization loops.
 
-Please see the documentation for a comprehensive guide on usage. 
+Please see the documentation for a comprehensive guide on usage.
 """
 import pickle
 import warnings
@@ -23,7 +23,7 @@ from fireworks import FWAction, LaunchPad
 from rocketsled.acq import acquire
 from rocketsled.utils import deserialize, dtypes, pareto, \
     convert_native, split_xz, is_duplicate_by_tolerance, ExhaustedSpaceError, \
-    NotConfiguredError, BatchNotReadyError
+    NotConfiguredError, BatchNotReadyError, ObjectiveError
 
 __author__ = "Alexander Dunn"
 __email__ = "ardunn@lbl.gov"
@@ -706,7 +706,11 @@ class OptTask(FireTaskBase):
                 if maximize:
                     all_y = -1.0 * all_y
 
-                assert (self.acq == "maximin")
+                if self.acq != "maximin":
+                    raise ObjectiveError(
+                        "Multiple objectives detected, but Maximin acquisition "
+                        "function is not used. Please use a single objective "
+                        "or change the acquisition function.")
                 mu = np.zeros((n_unsearched, self.n_objs))
                 values = np.zeros((n_unsearched, self.n_objs))
                 for i in range(self.n_objs):
