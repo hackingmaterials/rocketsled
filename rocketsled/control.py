@@ -5,6 +5,7 @@ LaunchPad for FireWorks.
 import time
 import math
 import datetime
+import warnings
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -527,3 +528,40 @@ class MissionControl:
                  "{}\n".format(len(xdim), xdim, len(zdim), zdim, zlearn, n_opts,
                                breakdown, n_reserved, qlen, lockstr)
         return fmtstr
+
+    def fetch_matrices(self):
+        """
+        Return the X and Y matrices for this optimization.
+
+
+        Returns:
+            all_x, all_y ([list], [list]): The X (input) matrix has dimensions
+                n_samples, n_dimensions. The Y (output) matrix has dimensions
+                n_samples, n_objectives. Only completed entries are retrieved.
+
+        """
+        completed_query = {"y": {"$exists": 1, "$ne": "reserved"},
+                           "x": {"$exists": 1}}
+        n_samples = self.c.count_documents(completed_query)
+        all_x = [None] * n_samples
+        all_y = [None] * n_samples
+        n_objectives = len(self.c.find_one(completed_query)["y"])
+        n_dimensions = len(self.c.find_one({"doctype": "config"})["dimensions"])
+        dimension_mismatch = False
+        objective_mismatch = False
+        for i, doc in enumerate(self.c.find(completed_query)):
+            all_x[i] = doc["x"]
+            all_y[i] = doc["y"]
+            if len(all_x) != n_dimensions and not dimension_mismatch:
+                dimension_mismatch = True
+            if len(all_y) != n_objectives and not objective_mismatch:
+                objective_mismatch = True
+        if dimension_mismatch:
+            warnings.warn(
+                "Some entries have different dimensions from configuration "
+                "({}). This optimization collection may be broken!"
+                "".format(n_dimensions))
+        if objective_mismatch:
+            warnings.warn("Different numbers of objectives found. This "
+                          "optimization collectiomn may be broken!")
+        return all_x, all_y
