@@ -287,14 +287,13 @@ class MissionControl:
                              "".format(self.opt_label, resetstr))
         self.is_configured = False
 
-    def plot(self, show_best=True, show_mean=True,
-             latexify=False, font_family="serif", scale='linear',
-             summarize=True, print_pareto=False):
+    def plot(self, show_best=True, show_mean=True, latexify=False,
+             font_family="serif", scale='linear', summarize=True,
+             print_pareto=False):
         """
         Visualize the progress of an optimization.
 
         Args:
-            maximize (bool): Whether to plot optimizing for minimum or maximum.
             show_best (bool): Point out the best point on legend and on plot. If
                 more than one best point (i.e., multiple equal maxima), show
                 them all. If multiobjective, shows best for each objective, and
@@ -333,9 +332,9 @@ class MissionControl:
         plt.rc('font', family=font_family, size=9)
         n_cols = 3
         if n_objs < n_cols:
-            f, axarr = plt.subplots(n_objs, squeeze=False)
+            _, ax_arr = plt.subplots(n_objs, squeeze=False)
         else:
-            f, axarr = plt.subplots(n_cols, int(math.ceil(n_objs / n_cols)),
+            _, ax_arr = plt.subplots(n_cols, int(math.ceil(n_objs / n_cols)),
                                     squeeze=False)
         docset = self.c.find({'index': {'$exists': 1}})
         docs = [None] * docset.count()
@@ -352,7 +351,7 @@ class MissionControl:
         print("Number of objectives: {}".format(n_objs))
 
         for obj in range(n_objs):
-            ax = axarr[obj % n_cols, int(math.floor(obj / n_cols))]
+            ax = ax_arr[obj % n_cols, int(math.floor(obj / n_cols))]
 
             i = []
             fx = []
@@ -474,7 +473,7 @@ class MissionControl:
                     hypervolumes_ordered[i]))
         if n_objs % n_cols != 0 and n_objs > n_cols:
             for i in range(n_objs % n_cols, n_cols):
-                plt.delaxes(axarr[i, -1])
+                plt.delaxes(ax_arr[i, -1])
         plt.legend()
         # plt.tight_layout(pad=0.01, w_pad=0.01, h_pad=0.01)
         plt.subplots_adjust(wspace=0.3, hspace=0.5)

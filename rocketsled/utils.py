@@ -19,6 +19,11 @@ class RSBaseException(BaseException):
     pass
 
 
+class ObjectiveError(RSBaseException):
+    """Errors relating to objectives."""
+    pass
+
+
 class ExhaustedSpaceError(RSBaseException):
     """When the search space has been exhausted."""
     pass
@@ -41,6 +46,7 @@ class NotConfiguredError(RSBaseException):
 
 class Dtypes(object):
     """Defines the datatypes available for optimization."""
+
     def __init__(self):
         d = np.sctypes
         self.ints = d['int'] + d['uint'] + [int]
@@ -71,7 +77,7 @@ def deserialize(fun):
     toks = fun.rsplit(".", 1)
     modname, funcname = toks
     if "/" in toks[0]:
-        modpath, modname = toks[0].rsplit("/", 1)
+        _, modname = toks[0].rsplit("/", 1)
         mod = imp.load_source(modname, toks[0] + ".py")
     else:
         mod = __import__(str(modname), globals(), locals(),
@@ -101,7 +107,7 @@ def serialize(fun):
         all_pkgs = importlist[:-1]
         full_import_path = importlist[-1]
 
-        for i in range(5):
+        for _ in range(5):
             try:
                 full_import_path = all_pkgs[-1] + "." + full_import_path
                 all_pkgs = all_pkgs[:-1]
