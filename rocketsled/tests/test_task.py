@@ -152,7 +152,7 @@ class TestWorkflows(unittest.TestCase):
         self.db = launchpad.db
         self.dims_basic = [(1, 10), (10.0, 20.0),
                            ['blue', 'green', 'red', 'orange']]
-        self.dims_accuracy = [(1, 10), (10.0, 20.0), (20.0, 30.0)]
+        self.dims_accuracy = [(1.0, 10.0), (10.0, 20.0), (20.0, 30.0)]
         self.dims_parallel = [(1, 5), (1, 5), (1, 5)]
 
         self.c = getattr(self.db, opt_label)
