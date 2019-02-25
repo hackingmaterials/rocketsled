@@ -588,7 +588,7 @@ class OptTask(FireTaskBase):
         dims_float = all([type(dim[0]) in dtypes.floats for dim in dims])
         if dims_float and dims_ranged:
             # Save computation/memory if all ranges of floats
-            nf = self.n_searchpts
+            nf = self.n_search_pts
             space = np.zeros((nf, len(dims)))
             for i, dim in enumerate(dims):
                 low = dim[0]
