@@ -2,7 +2,14 @@
 
 ## [Unreleased](https://github.com/hackingmaterials/rocketsled/tree/HEAD)
 
-[Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.1.1...HEAD)
+[Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.2.17...HEAD)
+
+**Merged pull requests:**
+
+- Fix typo, when all inputs are floats [\#65](https://github.com/hackingmaterials/rocketsled/pull/65) ([RemiLehe](https://github.com/RemiLehe))
+
+## [v2019.2.17](https://github.com/hackingmaterials/rocketsled/tree/v2019.2.17) (2019-02-19)
+[Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.1.1...v2019.2.17)
 
 **Merged pull requests:**
 
