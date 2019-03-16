@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>rocketsled package &#8212; rocketsled 2019.2.17 documentation</title>
+    <title>rocketsled package &#8212; rocketsled 2019.2.27 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -29,7 +29,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.2.17 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.2.27 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -325,6 +325,8 @@ if it is within 1e-6. Then:</p>
 <blockquote class="last">
 <div>tolerances=[0, None, 1e-6]</div></blockquote>
 </dd>
+<dt>maximize (bool): If True, maximizes the objective function instead</dt>
+<dd>of minimizing. Defaults to False, meaninng minimze.</dd>
 </dl>
 <p>z-vector features:
 get_z (string): the fully-qualified name of a function which, given</p>
@@ -379,9 +381,16 @@ in the launchpad and opt_label arguments in your wf_creator.</dd>
 
 <dl class="method">
 <dt id="rocketsled.control.MissionControl.fetch_matrices">
-<code class="descname">fetch_matrices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.fetch_matrices" title="Permalink to this definition">¶</a></dt>
+<code class="descname">fetch_matrices</code><span class="sig-paren">(</span><em>include_reserved=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.fetch_matrices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the X and Y matrices for this optimization.</p>
 <dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>include_reserved (bool): If True, returns “reserved” guesses (those</dt>
+<dd>which have been submitted to the launchpad but have not been
+successfully run). y values for these guesses are “reserved”.</dd>
+</dl>
+</dd>
 <dt>Returns:</dt>
 <dd><dl class="first last docutils">
 <dt>all_x, all_y ([list], [list]): The X (input) matrix has dimensions</dt>
@@ -910,7 +919,7 @@ FireWorks workflows.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.2.17 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.2.27 documentation</a> &#187;</li> 
       </ul>
     </div>
 

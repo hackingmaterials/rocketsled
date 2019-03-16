@@ -4,12 +4,50 @@ Comprehensive Guide
 
 
 Outside of the tutorial, all of rocketsled's configuration (which OptTask reads) can be done through the MissionControl class.
-The following documentation details all the possible arguments to MissionControl.configure(...), which controls the execution and optimization parameters OptTask uses.
+The following documentation details all the possible arguments to MissionControl(...) and MissionControl.configure(...), which controls the execution and optimization parameters OptTask uses.
 
 
-=======================================
-Required Arguments
-=======================================
+==============================================
+Arguments to :code:`MissionControl.__init__`
+==============================================
+
+
+Database Setup
+______________
+
+
+To set up the database.
+
+
+:code:`launchpad`
+-----------------
+
+A FireWorks launchpad object. Used in lieu of host, port, and name.
+
+**Examples**
+
+.. code-block:: python
+
+    lpad=LaunchPad(host='localhost', port=27017, name='rsled')
+
+
+:code:`opt_label`
+-----------------
+
+The name of the collection where optimization data will be stored. Make sure only rocketsled data is stored in this collection!
+
+**Examples**
+
+.. code-block:: python
+
+    #opt_label should be a string
+    opt_label="my_opt_collection"
+
+
+
+======================================================
+Required Arguments to :code:`MissionControl.configure`
+======================================================
 
 
 :code:`wf_creator`
@@ -82,59 +120,12 @@ In discontinuous searches, all possible combinations of discontinuous dimension 
 
 *Note: If your search space cannot be described by dimensions alone (i.e., it is a set of discontinuous points which can't be described by ranges or combinatorically, as above, see the 'space' argument*
 
-=======================================
-Optional Arguments
-=======================================
+======================================================
+Optional Arguments to :code:`MissionControl.configure`
+======================================================
 
-The following arguments all have defaults defined in OptTask
------------------------------------------------------------------
-
-Database Setup
-______________
-
-
-To set up the databsae
-
-
-:code:`launchpad`
---------------
-
-A FireWorks launchpad object. Used in lieu of host, port, and name.
-
-**Examples**
-
-.. code-block:: python
-
-    lpad=LaunchPad(host='localhost', port=27017, name='rsled')
-
-
-
-
-:code:`opt_label`
------------------
-
-The name of the collection where optimization data will be stored. Make sure only rocketsled data is stored in this collection!
-
-**Examples**
-
-.. code-block:: python
-
-    #opt_label should be a string
-    opt_label="my_opt_collection"
-
-
-
-:code:`db_extras`
------------------
-
-Kwargs to be passed to the mongodb client, as a dictionary. For example, SSL data or username/password.
-
-**Examples**
-
-.. code-block:: python
-
-    #db_extras should be a dict containing kwargs to MongoClient
-    db_extras={'username': 'myuser', 'password': 'mypassword', 'maxPoolSize': 10}
+The following arguments all have defaults defined in rocketsled/defaults.yaml
+-----------------------------------------------------------------------------
 
 
 Predictors
@@ -154,15 +145,9 @@ A string naming a function which, given a list of explored points and unexplored
 Included sklearn-based predictors are:
 
 *    'RandomForestRegressor',
-*    'AdaBoostRegressor',
 *    'ExtraTreesRegressor',
 *    'GradientBoostingRegressor',
 *    'GaussianProcessRegressor',
-*    'LinearRegression',
-*    'SGDRegressor',
-*    'MLPRegressor',
-*    'KernelRidge',
-*    'SVR'
 
 Defaults to 'RandomForestRegressor'
 
@@ -259,6 +244,43 @@ For custom predictors, arguments are passed directly to the predictor function.
 For more info, see the extras.py example.
 
 
+
+Workflow creator function
+_________________________
+
+
+:code:`wf_creator_args`
+-----------------------
+
+Positional args to pass to the wf_creator alongside the new x vector.
+
+**Example**
+
+.. code-block:: python
+
+    # positional args should be a list
+    wf_creator_args=["my_creator_arg", 12]
+
+
+See extras.py for an example.
+
+
+:code:`wf_creator_kwargs`
+-------------------------
+
+Keyword arguments to pass to the wf_creator, as a dict.
+
+**Example**
+
+.. code-block:: python
+
+    # kwargs to pass to the wf_creator
+    wf_creator_kwargs={"my_wf_creator_kwarg": 12}
+
+
+See extras.py for an example.
+
+
 Predictor Performance
 _____________________
 
@@ -268,22 +290,22 @@ Options in this section are used for
 2. Reducing search space
 3. Balancing exploitaton and exploration
 
-:code:`n_searchpts`
+:code:`n_search_pts`
 --------------------
 
 The number of points to be predicted in the search space when choosing the next best point.
 Choosing more points to search may increase the effectiveness of the optimization, but will require more computational power to predict. The default is 1000 points.
-if the size of the domain is discrete and less than :code:`n_searchpts`, all the remaining points in the domain will be predicted.
+if the size of the domain is discrete and less than :code:`n_search_pts`, all the remaining points in the domain will be predicted.
 
 **Example**
 
 .. code-block:: python
 
     # n_searchpts should be an int
-    n_searchpts=10000
+    n_search_pts=10000
 
 
-:code:`n_trainpts`
+:code:`n_train_pts`
 -------------------
 
 The number of already explored points to be chosen for training, sampled at random without replacement from the explored space. Default is None, meaning all available points will be used for training.
@@ -295,11 +317,11 @@ Reduce the number of points to decrease training times.
 .. code-block:: python
 
     # n_searchpts should be an int
-    n_trainpts=10000
+    n_train_pts=10000
 
 
 
-:code:`space`
+:code:`space_file`
 -------------
 
 The fully specified path of a pickle file containing a list of all possible searchable x vectors (tuples).
@@ -312,7 +334,7 @@ Use this argument if you have a space which cannot be defined sufficiently by :c
 .. code-block:: python
 
     # The pickle file should contain a list of tuples
-    space='/Users/myuser/myfolder/myspace.p'
+    space_file='/Users/myuser/myfolder/myspace.p'
 
 
 
@@ -349,13 +371,13 @@ which can be computationally intensive. If you're using acquisition functions an
 GaussianProcessRegeressor as a predictor.
 
 
-:code:`n_boots`
+:code:`n_bootstraps`
 ---------------
 
 The number of bootstrap samples and retrains/re-predictions used for bootstrapping when estimating uncertainty.
 When calculating acquisition values, for all builtin predictors besides Gaussian processes, bootstrapping is required (for statistical estimates).
 
-Increasing :code:`n_boots` will linearly increase training time and prediction times, but will increase prediction performance if using an acquisition function.
+Increasing :code:`n_bootstraps` will linearly increase training time and prediction times, but will increase prediction performance if using an acquisition function.
 The default n_boots is 500, although higher is better!
 
 All bootstrapped training and acquisition is performed in parallel, if possible.
@@ -365,23 +387,82 @@ All bootstrapped training and acquisition is performed in parallel, if possible.
 .. code-block:: python
 
     # The number of bootstraps should be an integer.
-    n_boots=1000
+    n_bootstraps=1000
 
 
-:code:`random_proba`
--------------------
+:code:`onehot_categorical`
+--------------------------
 
-Randomly guess with this probability. A value of 1.0 is random guessing only. A value of 0.0 (default) will never random guess.
+Automatic One-Hot encoding of categorical input for custom predictors.
+
+If using a custom predictor, explored and unexplored spaces will be passed to
+the predictor as strings, if categorical dimensions exist. With :code:`onehot_categorical=True`,
+the custom predictor will receive only numerical input (although it may be a combination of
+ints and floats). Default is False, meaning no categorical encoding.
 
 **Example**
 
 .. code-block:: python
 
-    # The random probability of a guess should be a float.
-    random_proba=0.1
+    onehot_categorical=True
 
 
-Features
+:code:`duplicate_check`
+-----------------------
+
+Ensure custom predictors do not submit duplicates (even in parallel).
+
+Builtin predictors do not suggest duplicates, even when many workflows are running in parallel, since rocketsled
+locks the optimization db sequentially. However, custom predictors may suggest duplicates. Enabling duplicate
+checking will prevent duplicate workflows from being run (the meaning of "duplicate" can be refined with :code:`tolerances`)
+when using custom predictors. Suggested duplicates are discarded and random guesses from the remaining unexplored space are used instead.
+
+Default is no duplicate check; if a duplicate is suggested, an error is raised.
+
+
+**Example**
+
+.. code-block:: python
+
+    # duplicate_check is a bool
+    duplicate_check=True
+
+
+:code:`tolerances`
+------------------
+
+The numerical tolerance of each feature when duplicate checking, as a list per dimension.
+For categorical features, put 'None'
+
+
+**Example**
+
+.. code-block:: python
+
+    # if our dimensions are [(1, 100), ['red', 'blue'], (2.0, 20.0)]
+    # and we want the first param to be a duplicate only if it is an exact match
+    # and the third param to be a duplicate if it is within 1e-6, then
+    tolerances=[0, None, 1e-6]
+
+
+:code:`maximize`
+----------------
+
+If true, makes optimization tend toward maximum values instead of minimum ones.
+
+By default, false.
+
+For multiobjective optimization, the maximization rule applies to all objective metrics.
+
+
+**Example**
+
+.. code-block:: python
+
+    maximize=True
+
+
+z-vector
 ________
 
 Using features *derived* from x can provide more information to predictors. These
@@ -450,12 +531,12 @@ Keyword args to pass to get_z.
 
 
 
-:code:`persistent_z`
+:code:`z_file`
 --------------------
 
 The filename (pickle file) which should be used to
 store persistent z calculations. Specify this argument if
-calculating z for many (n_searchpts) is not trivial and will
+calculating z for many (`n_search_pts`) is not trivial and will
 cost time in computing. With this argument specified, each z will
 only be calculated once. Defaults to None, meaning that all
 unexplored z are re-calculated each iteration.
@@ -466,115 +547,11 @@ unexplored z are re-calculated each iteration.
 .. code-block:: python
 
     # persistent_z defines the file where OptTask will write all z guesses.
-    persistent_z = '/path/to/persistent_z_guesses.p'
+    z_file = '/path/to/persistent_z_guesses.p'
 
 
-
-Miscellaneous
-_____________
-
-:code:`wf_creator_args`
------------------------
-
-Positional args to pass to the wf_creator alongside the new x vector.
-
-**Example**
-
-.. code-block:: python
-
-    # positional args should be a list
-    wf_creator_args=["my_creator_arg", 12]
-
-
-See extras.py for an example.
-
-
-:code:`wf_creator_kwargs`
--------------------------
-
-Keyword arguments to pass to the wf_creator, as a dict.
-
-**Example**
-
-.. code-block:: python
-
-    # kwargs to pass to the wf_creator
-    wf_creator_kwargs={"my_wf_creator_kwarg": 12}
-
-
-See extras.py for an example.
-
-
-:code:`encode_categorical`
---------------------------
-
-Automatic One-Hot encoding of categorical input for custom predictors.
-
-If using a custom predictor, explored and unexplored spaces will be passed to
-the predictor as strings, if categorical dimensions exist. With :code:`encode_categorical=True`,
-the custom predictor will recieve only numerical input (although it may be a combination of
-ints and floats). Default is False, meaning no categorical encoding.
-
-**Example**
-
-.. code-block:: python
-
-    encode_categorical=True
-
-
-:code:`duplicate_check`
------------------------
-
-Ensure custom predictors do not submit duplicates (even in parallel).
-
-Builtin predictors do not suggest duplicates, even when many workflows are running in parallel, since rocketsled
-locks the optimization db sequentially. However, custom predictors may suggest duplicates. Enabling duplicate
-checking will prevent duplicate workflows from being run (the meaning of "duplicate" can be refined with :code:`tolerances`)
-when using custom predictors. Suggested duplicates are discarded and random guesses from the remaining unexplored space are used instead.
-
-Default is no duplicate check; if a duplicate is suggested, an error is raised.
-
-
-**Example**
-
-.. code-block:: python
-
-    # duplicate_check is a bool
-    duplicate_check=True
-
-
-:code:`tolerances`
-------------------
-
-The numerical tolerance of each feature when duplicate checking, as a list per dimension.
-For categorical features, put 'None'
-
-
-**Example**
-
-.. code-block:: python
-
-    # if our dimensions are [(1, 100), ['red', 'blue'], (2.0, 20.0)]
-    # and we want the first param to be a duplicate only if it is an exact match
-    # and the third param to be a duplicate if it is within 1e-6, then
-    tolerances=[0, None, 1e-6]
-
-
-:code:`maximize`
-----------------
-
-If true, makes optimization tend toward maximum values instead of minimum ones.
-
-By default, false.
-
-For multiobjective optimization, the maximization rule applies to all objective metrics.
-
-
-**Example**
-
-.. code-block:: python
-
-    maximize=True
+Parallelism
+___________
 
 
 :code:`batch_size`
