@@ -157,6 +157,8 @@ class MissionControl:
                 only if it is exact, and our third parameter to be a duplicate
                 if it is within 1e-6. Then:
                     tolerances=[0, None, 1e-6]
+            maximize (bool): If True, maximizes the objective function instead
+                of minimizing. Defaults to False, meaninng minimze.
 
             z-vector features:
             get_z (string): the fully-qualified name of a function which, given
