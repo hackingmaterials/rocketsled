@@ -2,7 +2,16 @@
 
 ## [Unreleased](https://github.com/hackingmaterials/rocketsled/tree/HEAD)
 
-[Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.2.17...HEAD)
+[Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.2.27...HEAD)
+
+**Closed issues:**
+
+- Transition to unittest [\#64](https://github.com/hackingmaterials/rocketsled/issues/64)
+- Comprehensive guide needs update [\#59](https://github.com/hackingmaterials/rocketsled/issues/59)
+- tutorial rework [\#55](https://github.com/hackingmaterials/rocketsled/issues/55)
+
+## [v2019.2.27](https://github.com/hackingmaterials/rocketsled/tree/v2019.2.27) (2019-02-27)
+[Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.2.17...v2019.2.27)
 
 **Merged pull requests:**
 
