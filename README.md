@@ -12,4 +12,4 @@ rocketsled is a black-box optimization framework "on rails" for high-throughput 
 - **Help/Support:** https://groups.google.com/forum/#!forum/fireworkflows
 - **Source:** https://github.com/hackingmaterials/rocketsled
 - **FireWorks website:** https://materialsproject.github.io/fireworks
-- **Accepted manuscript (citation details to be updated):** https://iopscience.iop.org/article/10.1088/2515-7639/ab0c3d
+- **Accepted manuscript (citation details to be updated):** https://doi.org/10.1088/2515-7639/ab0c3d
