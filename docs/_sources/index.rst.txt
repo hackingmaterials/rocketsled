@@ -11,14 +11,18 @@ framework *"on rails"* for high throughput computation. rocketsled is an extensi
 `FireWorks <https://github.com/materialsproject/fireworks>`_ workflow software,
 written in Python.
 
-There are many packages for adaptive optimization, including `skopt <https://scikit-optimize.github.io>`_ and `pySOT <https://pysot.readthedocs.io/en/latest/>`_. The major aim of rocketsled is to focus on cases where:
+.. image:: _static/intro_figure.png
+   :alt: opt
+   :align: center
+   :width: 600px
+
+There are many packages for adaptive optimization, including `skopt <https://scikit-optimize.github.io>`_, `optunity <https://github.com/claesenm/optunity>`_, and `pySOT <https://pysot.readthedocs.io/en/latest/>`_. The major aim of rocketsled is to focus on cases where:
 
 * function evaluations are expensive enough that they cannot be run locally, and may instead need to be executed on supercomputing centers (e.g., through a queueing system) or external server
 * having a database of provenance for jobs is helpful (e.g., to help re-run error cases)
 * one needs to run the optimization over long time scales (days, weeks, months, or even years) with persistence.
 
-For example, the function to optimize might be a complex physics simulation that takes days to run on a parallel supercomputer. Rocketsled helps users run such difficult optimization cases by leveraging the workflow capabilities of the underlying `FireWorks <https://github.com/materialsproject/fireworks>`_ software, which has been used to execute hundreds of millions of CPU-hours of simulations across millions of workflows on many different systems. The optimization algorithm itself can be set by the user or quickly selected from one of the built-in  `skopt <https://scikit-optimize.github.io>`_ optimizers.
-
+For example, the function to optimize might be a complex physics simulation that takes days to run on a parallel supercomputer. Rocketsled helps users run such difficult optimization cases by leveraging the workflow capabilities of the underlying `FireWorks <https://github.com/materialsproject/fireworks>`_ software, which has been used to execute hundreds of millions of CPU-hours of simulations across millions of workflows on many different systems. The optimization algorithm itself can be set by the user or quickly selected from one of the built-in  `sklearn <https://scikit-learn.org/>`_ optimizers.
 
 =========================
 Is rocketsled for me?
@@ -67,10 +71,11 @@ rocketsled functions as a **black box optimizer** for a sequential optimization 
 rocketsled requires no internal knowledge of f(x) for optimization. rocketsled is designed for problems where each evaluation of f(x) is highly complex, is computationally expensive, requires workflow software, or is all of the above.
 **rocketsled is intended to be "plug-and-play": simply plug-in an objective function or workflow f(x) and search domain D, and rocketsled automatically creates an optimization loop in FireWorks which can be easily (and dynamically) managed across arbitray computing resources.**
 
+
 Features of ``rocketsled``
 --------------------------
 
-* **One-line python configure tools**
+* **Easy python configuration tool**
 
 * Persistent storage and optimization tracking
 
@@ -84,11 +89,11 @@ Features of ``rocketsled``
     + continuous dimensions
     + discontinuous spaces (subsets of entire spaces)
 
-* 10 different built-in sklearn-based tunable Bayesian optimizers
+* 4 different built-in sklearn-based tunable Bayesian optimizers
     + single objective
     + **multi objective**
 
-* Support for nearly any custom optimizer written in Python (Bayesian and non-Bayesian)
+* Support for nearly any custom optimizer written in Python (Bayesian or otherwise)
 
 * Facilitated feature engineering with ``get_z`` argument
 
@@ -108,7 +113,7 @@ Features of ``rocketsled``
 A visual explanation...
 -----------------------
 
-A typical workflow f(x) without optimization might look like this:
+A typical workflow f(x) with optimization might look like this:
 
 .. image:: _static/diagram_fireworks.png
    :alt: basicwf
@@ -139,10 +144,10 @@ Randomly selecting the next x to run is *inefficient*, since we will execute man
 
 This is where rocketsled comes in handy. rocketsled is a sub-job (FireTask) which can go in any Firework in the workflow, and uses an sklearn-based Bayesian strategy to predict the best *input* parameters for the next iteration, store them in a MongoDB database, and automatically submit a new workflow to compute the next output.
 
-.. image:: _static/rsfwdiagram.png
+.. image:: _static/opttask_overview.png
    :alt: basicwf
    :align: center
-   :width: 400px
+   :width: 800px
 
 
 Example use cases
@@ -150,7 +155,7 @@ Example use cases
 rocketsled has many example use cases for adaptive computational problems.
 
 
-**Searching 19,000 possible for new energy materials using expensive first-principles physics calculations:** rocketsled enabled increased efficiency (wrt. random and empirical rules) in searching a large space of input parameters (materials) for renewable energy water splitting perovskites using Density Functional Theory calculations.
+**Searching 19,000 possible candidates for 20 new energy materials using expensive first-principles physics calculations:** rocketsled enabled increased efficiency (wrt. random and empirical rules) in searching a large space of input parameters (materials) for renewable energy water splitting perovskites using Density Functional Theory calculations.
 
 .. image:: _static/3dmap_mend.png
    :alt: 3d
@@ -159,6 +164,14 @@ rocketsled has many example use cases for adaptive computational problems.
    :alt: perov
    :width: 500px
 
+**Searching 7,400 possible candidates for 8 potentially superhard materials using expensive first-principles physics calculations:** rocketsled can enable faster discovery of superhard materials in searching a diverse space of materials crystal structures from the Materials Project.
+
+.. image:: _static/progression.png
+   :alt: prog
+   :width: 700px
+.. image:: _static/WC_structure.png
+   :alt: wc
+   :width: 300px
 
 **(Forthcoming) Selecting the best machine learning model for large-scale data mining:** rocketsled can be used for selecting the best machine learning models (and their hyperparameters) in cases where each training + cross-validation can be a computationally expensive task.
 
@@ -222,7 +235,7 @@ Tutorials
 :doc:`Tutorial </tutorial>`
 -----------------------
 
-In the quickstart, we show how to use rocketsled's ``auto_setup`` to get
+In the quickstart, we show how to use rocketsled's ``MissonControl`` to get
 up and running quickly, starting only with an objective function written in Python.
 
 **Time to complete**: 30 min
@@ -233,7 +246,7 @@ up and running quickly, starting only with an objective function written in Pyth
 
 Find a comprehensive guide to using rocketsled at the link below. The guide
 exhaustively documents the possible arguments to ``MissionControl`` and provides at least
-one example of each. If working through the tutorials did not answer your
+one example of each. If working through the tutorial did not answer your
 question, you'll most likely find your answer here.
 
 Contributions and Support
@@ -247,6 +260,12 @@ Want to see something added or changed? Here's a few ways you can!
 Submit all questions and contact to the `Google group <https://groups.google.com/forum/#!forum/fireworkflows>`_
 
 A comprehensive guide to contributions can be found `here. <https://github.com/hackingmaterials/rocketsled/blob/master/CONTRIBUTING.md>`_
+
+Citing rocketsled
+-----------------
+
+Our paper for rocketsled has been accepted in the Journal of Physics: Materials. Find the paper on the `IOP Website <https://doi.org/10.1088/2515-7639/ab0c3d>`_ and please cite it if you find rocketsled useful!
+
 
 Documentation
 -------------

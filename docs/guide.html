@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Comprehensive Guide &#8212; rocketsled 2019.2.17 documentation</title>
+    <title>Comprehensive Guide &#8212; rocketsled 2019.2.27 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -29,7 +29,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.2.17 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.2.27 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -41,12 +41,34 @@
   <div class="section" id="comprehensive-guide">
 <h1>Comprehensive Guide<a class="headerlink" href="#comprehensive-guide" title="Permalink to this headline">¶</a></h1>
 <p>Outside of the tutorial, all of rocketsled’s configuration (which OptTask reads) can be done through the MissionControl class.
-The following documentation details all the possible arguments to MissionControl.configure(…), which controls the execution and optimization parameters OptTask uses.</p>
+The following documentation details all the possible arguments to MissionControl(…) and MissionControl.configure(…), which controls the execution and optimization parameters OptTask uses.</p>
 </div>
-<div class="section" id="required-arguments">
-<h1>Required Arguments<a class="headerlink" href="#required-arguments" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="wf-creator">
-<h2><code class="code docutils literal notranslate"><span class="pre">wf_creator</span></code><a class="headerlink" href="#wf-creator" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="arguments-to-missioncontrol-init">
+<h1>Arguments to <code class="code docutils literal notranslate"><span class="pre">MissionControl.__init__</span></code><a class="headerlink" href="#arguments-to-missioncontrol-init" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="database-setup">
+<h2>Database Setup<a class="headerlink" href="#database-setup" title="Permalink to this headline">¶</a></h2>
+<p>To set up the database.</p>
+<div class="section" id="launchpad">
+<h3><code class="code docutils literal notranslate"><span class="pre">launchpad</span></code><a class="headerlink" href="#launchpad" title="Permalink to this headline">¶</a></h3>
+<p>A FireWorks launchpad object. Used in lieu of host, port, and name.</p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lpad</span><span class="o">=</span><span class="n">LaunchPad</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">27017</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;rsled&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="opt-label">
+<h3><code class="code docutils literal notranslate"><span class="pre">opt_label</span></code><a class="headerlink" href="#opt-label" title="Permalink to this headline">¶</a></h3>
+<p>The name of the collection where optimization data will be stored. Make sure only rocketsled data is stored in this collection!</p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1">#opt_label should be a string</span>
+<span class="n">opt_label</span><span class="o">=</span><span class="s2">&quot;my_opt_collection&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="required-arguments-to-missioncontrol-configure">
+<h1>Required Arguments to <code class="code docutils literal notranslate"><span class="pre">MissionControl.configure</span></code><a class="headerlink" href="#required-arguments-to-missioncontrol-configure" title="Permalink to this headline">¶</a></h1>
 <p>This is a function object which takes in an input vector x and returns your optimization loop workflow. The function must</p>
 <ol class="arabic simple">
 <li>Accept x</li>
@@ -77,9 +99,6 @@ The following documentation details all the possible arguments to MissionControl
 </pre></div>
 </div>
 <p>See the basic tutorial or the <code class="code docutils literal notranslate"><span class="pre">examples</span></code> folder for examples of writing wf_creator functions.</p>
-</div>
-<div class="section" id="dimensions">
-<h2><code class="code docutils literal notranslate"><span class="pre">dimensions</span></code><a class="headerlink" href="#dimensions" title="Permalink to this headline">¶</a></h2>
 <p>A list of tuples or lists defining the constraints of the search space. 2-tuples of floats or ints are considered <em>ranges</em> of the form (low, high), and will search all possible entries in between.
 Lists of strings are considered comprehensive domains of categorical dimensions, where there is no spatial relation between entries. Lists of length &gt; 2 of integers and floats are considered discontinuous dimensions.
 In discontinuous searches, all possible combinations of discontinuous dimension values can be searched.</p>
@@ -102,62 +121,21 @@ In discontinuous searches, all possible combinations of discontinuous dimension 
 </div>
 <p><em>Note: If your search space cannot be described by dimensions alone (i.e., it is a set of discontinuous points which can’t be described by ranges or combinatorically, as above, see the ‘space’ argument</em></p>
 </div>
-</div>
-<div class="section" id="optional-arguments">
-<h1>Optional Arguments<a class="headerlink" href="#optional-arguments" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="the-following-arguments-all-have-defaults-defined-in-opttask">
-<h2>The following arguments all have defaults defined in OptTask<a class="headerlink" href="#the-following-arguments-all-have-defaults-defined-in-opttask" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="database-setup">
-<h3>Database Setup<a class="headerlink" href="#database-setup" title="Permalink to this headline">¶</a></h3>
-<p>To set up the databsae</p>
-</div>
-</div>
-<div class="section" id="launchpad">
-<h2><code class="code docutils literal notranslate"><span class="pre">launchpad</span></code><a class="headerlink" href="#launchpad" title="Permalink to this headline">¶</a></h2>
-<p>A FireWorks launchpad object. Used in lieu of host, port, and name.</p>
-<p><strong>Examples</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lpad</span><span class="o">=</span><span class="n">LaunchPad</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">27017</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;rsled&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="opt-label">
-<h2><code class="code docutils literal notranslate"><span class="pre">opt_label</span></code><a class="headerlink" href="#opt-label" title="Permalink to this headline">¶</a></h2>
-<p>The name of the collection where optimization data will be stored. Make sure only rocketsled data is stored in this collection!</p>
-<p><strong>Examples</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1">#opt_label should be a string</span>
-<span class="n">opt_label</span><span class="o">=</span><span class="s2">&quot;my_opt_collection&quot;</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="db-extras">
-<h2><code class="code docutils literal notranslate"><span class="pre">db_extras</span></code><a class="headerlink" href="#db-extras" title="Permalink to this headline">¶</a></h2>
-<p>Kwargs to be passed to the mongodb client, as a dictionary. For example, SSL data or username/password.</p>
-<p><strong>Examples</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1">#db_extras should be a dict containing kwargs to MongoClient</span>
-<span class="n">db_extras</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;username&#39;</span><span class="p">:</span> <span class="s1">&#39;myuser&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span><span class="p">:</span> <span class="s1">&#39;mypassword&#39;</span><span class="p">,</span> <span class="s1">&#39;maxPoolSize&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">}</span>
-</pre></div>
-</div>
+<div class="section" id="optional-arguments-to-missioncontrol-configure">
+<h1>Optional Arguments to <code class="code docutils literal notranslate"><span class="pre">MissionControl.configure</span></code><a class="headerlink" href="#optional-arguments-to-missioncontrol-configure" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="predictors">
-<h3>Predictors<a class="headerlink" href="#predictors" title="Permalink to this headline">¶</a></h3>
+<h2>Predictors<a class="headerlink" href="#predictors" title="Permalink to this headline">¶</a></h2>
 <p>Predictors power rocketsled’s optimization. Choose one of the built-in predictors or use a custom function.</p>
-</div>
-</div>
 <div class="section" id="predictor">
-<h2><code class="code docutils literal notranslate"><span class="pre">predictor</span></code><a class="headerlink" href="#predictor" title="Permalink to this headline">¶</a></h2>
+<h3><code class="code docutils literal notranslate"><span class="pre">predictor</span></code><a class="headerlink" href="#predictor" title="Permalink to this headline">¶</a></h3>
 <p>A string naming a function which, given a list of explored points and unexplored points, returns an optimized guess.</p>
 <p><strong>Builtins</strong></p>
 <p>Included sklearn-based predictors are:</p>
 <ul class="simple">
 <li>‘RandomForestRegressor’,</li>
-<li>‘AdaBoostRegressor’,</li>
 <li>‘ExtraTreesRegressor’,</li>
 <li>‘GradientBoostingRegressor’,</li>
 <li>‘GaussianProcessRegressor’,</li>
-<li>‘LinearRegression’,</li>
-<li>‘SGDRegressor’,</li>
-<li>‘MLPRegressor’,</li>
-<li>‘KernelRidge’,</li>
-<li>‘SVR’</li>
 </ul>
 <p>Defaults to ‘RandomForestRegressor’</p>
 <p>To use a random guess, choose ‘random’.</p>
@@ -207,7 +185,7 @@ itself should have the form:</p>
 </div>
 </div>
 <div class="section" id="predictor-args">
-<h2><code class="code docutils literal notranslate"><span class="pre">predictor_args</span></code><a class="headerlink" href="#predictor-args" title="Permalink to this headline">¶</a></h2>
+<h3><code class="code docutils literal notranslate"><span class="pre">predictor_args</span></code><a class="headerlink" href="#predictor-args" title="Permalink to this headline">¶</a></h3>
 <p>Additional positional arguments to the chosen predictor, whether it be builtin or custom, as a list.</p>
 <p>For builtin predictors, arguments are passed to the sklearn BaseEstimator.
 For custom predictors, arguments are passed directly to the predictor function after all default arguments are passed (see ‘predictors’ argument above for the default arguments).</p>
@@ -218,7 +196,7 @@ For custom predictors, arguments are passed directly to the predictor function a
 <p>For more info, see the extras.py example.</p>
 </div>
 <div class="section" id="predictor-kwargs">
-<h2><code class="code docutils literal notranslate"><span class="pre">predictor_kwargs</span></code><a class="headerlink" href="#predictor-kwargs" title="Permalink to this headline">¶</a></h2>
+<h3><code class="code docutils literal notranslate"><span class="pre">predictor_kwargs</span></code><a class="headerlink" href="#predictor-kwargs" title="Permalink to this headline">¶</a></h3>
 <p>Additional keyword arguments to the chosen predictor, whether it be builtin or custom, as a dictionary.</p>
 <p>For builtin predictors, arguments are passed to the sklearn BaseEstimator.
 For custom predictors, arguments are passed directly to the predictor function.</p>
@@ -231,50 +209,73 @@ For custom predictors, arguments are passed directly to the predictor function.<
 </pre></div>
 </div>
 <p>For more info, see the extras.py example.</p>
+</div>
+</div>
+<div class="section" id="workflow-creator-function">
+<h2>Workflow creator function<a class="headerlink" href="#workflow-creator-function" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="wf-creator-args">
+<h3><code class="code docutils literal notranslate"><span class="pre">wf_creator_args</span></code><a class="headerlink" href="#wf-creator-args" title="Permalink to this headline">¶</a></h3>
+<p>Positional args to pass to the wf_creator alongside the new x vector.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># positional args should be a list</span>
+<span class="n">wf_creator_args</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;my_creator_arg&quot;</span><span class="p">,</span> <span class="mi">12</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>See extras.py for an example.</p>
+</div>
+<div class="section" id="wf-creator-kwargs">
+<h3><code class="code docutils literal notranslate"><span class="pre">wf_creator_kwargs</span></code><a class="headerlink" href="#wf-creator-kwargs" title="Permalink to this headline">¶</a></h3>
+<p>Keyword arguments to pass to the wf_creator, as a dict.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># kwargs to pass to the wf_creator</span>
+<span class="n">wf_creator_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;my_wf_creator_kwarg&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>See extras.py for an example.</p>
+</div>
+</div>
 <div class="section" id="predictor-performance">
-<h3>Predictor Performance<a class="headerlink" href="#predictor-performance" title="Permalink to this headline">¶</a></h3>
+<h2>Predictor Performance<a class="headerlink" href="#predictor-performance" title="Permalink to this headline">¶</a></h2>
 <p>Options in this section are used for</p>
 <ol class="arabic simple">
 <li>Improving optimization performance</li>
 <li>Reducing search space</li>
 <li>Balancing exploitaton and exploration</li>
 </ol>
-</div>
-</div>
-<div class="section" id="n-searchpts">
-<h2><code class="code docutils literal notranslate"><span class="pre">n_searchpts</span></code><a class="headerlink" href="#n-searchpts" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="n-search-pts">
+<h3><code class="code docutils literal notranslate"><span class="pre">n_search_pts</span></code><a class="headerlink" href="#n-search-pts" title="Permalink to this headline">¶</a></h3>
 <p>The number of points to be predicted in the search space when choosing the next best point.
 Choosing more points to search may increase the effectiveness of the optimization, but will require more computational power to predict. The default is 1000 points.
-if the size of the domain is discrete and less than <code class="code docutils literal notranslate"><span class="pre">n_searchpts</span></code>, all the remaining points in the domain will be predicted.</p>
+if the size of the domain is discrete and less than <code class="code docutils literal notranslate"><span class="pre">n_search_pts</span></code>, all the remaining points in the domain will be predicted.</p>
 <p><strong>Example</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># n_searchpts should be an int</span>
-<span class="n">n_searchpts</span><span class="o">=</span><span class="mi">10000</span>
+<span class="n">n_search_pts</span><span class="o">=</span><span class="mi">10000</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="n-trainpts">
-<h2><code class="code docutils literal notranslate"><span class="pre">n_trainpts</span></code><a class="headerlink" href="#n-trainpts" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="n-train-pts">
+<h3><code class="code docutils literal notranslate"><span class="pre">n_train_pts</span></code><a class="headerlink" href="#n-train-pts" title="Permalink to this headline">¶</a></h3>
 <p>The number of already explored points to be chosen for training, sampled at random without replacement from the explored space. Default is None, meaning all available points will be used for training.
 Reduce the number of points to decrease training times.</p>
 <p><strong>Example</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># n_searchpts should be an int</span>
-<span class="n">n_trainpts</span><span class="o">=</span><span class="mi">10000</span>
+<span class="n">n_train_pts</span><span class="o">=</span><span class="mi">10000</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="space">
-<h2><code class="code docutils literal notranslate"><span class="pre">space</span></code><a class="headerlink" href="#space" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="space-file">
+<h3><code class="code docutils literal notranslate"><span class="pre">space_file</span></code><a class="headerlink" href="#space-file" title="Permalink to this headline">¶</a></h3>
 <p>The fully specified path of a pickle file containing a list of all possible searchable x vectors (tuples).
 Use this argument if you have a space which cannot be defined sufficiently by <code class="code docutils literal notranslate"><span class="pre">dimensions</span></code>.</p>
 <p><em>Note: The dimensions argument is still needed. Make sure dimensions encapsulates the full range of points in the space specified here</em></p>
 <p><strong>Example</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The pickle file should contain a list of tuples</span>
-<span class="n">space</span><span class="o">=</span><span class="s1">&#39;/Users/myuser/myfolder/myspace.p&#39;</span>
+<span class="n">space_file</span><span class="o">=</span><span class="s1">&#39;/Users/myuser/myfolder/myspace.p&#39;</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="acq">
-<h2><code class="code docutils literal notranslate"><span class="pre">acq</span></code><a class="headerlink" href="#acq" title="Permalink to this headline">¶</a></h2>
+<h3><code class="code docutils literal notranslate"><span class="pre">acq</span></code><a class="headerlink" href="#acq" title="Permalink to this headline">¶</a></h3>
 <p>The acquisition function to use for Bayesian optimization with builtin predictors. Using an acquisition function leverages what we know about the objective function and statistical estimates to balance exploration and exploitation.
 Using this option will increase the effectiveness of optimization, but more optimization overhead will be used (see below for tips).</p>
 <p>Choose from the following options:</p>
@@ -297,35 +298,74 @@ Using this option will increase the effectiveness of optimization, but more opti
 which can be computationally intensive. If you’re using acquisition functions and need quick predictions, we recommend
 GaussianProcessRegeressor as a predictor.</p>
 </div>
-<div class="section" id="n-boots">
-<h2><code class="code docutils literal notranslate"><span class="pre">n_boots</span></code><a class="headerlink" href="#n-boots" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="n-bootstraps">
+<h3><code class="code docutils literal notranslate"><span class="pre">n_bootstraps</span></code><a class="headerlink" href="#n-bootstraps" title="Permalink to this headline">¶</a></h3>
 <p>The number of bootstrap samples and retrains/re-predictions used for bootstrapping when estimating uncertainty.
 When calculating acquisition values, for all builtin predictors besides Gaussian processes, bootstrapping is required (for statistical estimates).</p>
-<p>Increasing <code class="code docutils literal notranslate"><span class="pre">n_boots</span></code> will linearly increase training time and prediction times, but will increase prediction performance if using an acquisition function.
+<p>Increasing <code class="code docutils literal notranslate"><span class="pre">n_bootstraps</span></code> will linearly increase training time and prediction times, but will increase prediction performance if using an acquisition function.
 The default n_boots is 500, although higher is better!</p>
 <p>All bootstrapped training and acquisition is performed in parallel, if possible.</p>
 <p><strong>Example</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The number of bootstraps should be an integer.</span>
-<span class="n">n_boots</span><span class="o">=</span><span class="mi">1000</span>
+<span class="n">n_bootstraps</span><span class="o">=</span><span class="mi">1000</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="random-proba">
-<h2><code class="code docutils literal notranslate"><span class="pre">random_proba</span></code><a class="headerlink" href="#random-proba" title="Permalink to this headline">¶</a></h2>
-<p>Randomly guess with this probability. A value of 1.0 is random guessing only. A value of 0.0 (default) will never random guess.</p>
+<div class="section" id="onehot-categorical">
+<h3><code class="code docutils literal notranslate"><span class="pre">onehot_categorical</span></code><a class="headerlink" href="#onehot-categorical" title="Permalink to this headline">¶</a></h3>
+<p>Automatic One-Hot encoding of categorical input for custom predictors.</p>
+<p>If using a custom predictor, explored and unexplored spaces will be passed to
+the predictor as strings, if categorical dimensions exist. With <code class="code docutils literal notranslate"><span class="pre">onehot_categorical=True</span></code>,
+the custom predictor will receive only numerical input (although it may be a combination of
+ints and floats). Default is False, meaning no categorical encoding.</p>
 <p><strong>Example</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The random probability of a guess should be a float.</span>
-<span class="n">random_proba</span><span class="o">=</span><span class="mf">0.1</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">onehot_categorical</span><span class="o">=</span><span class="bp">True</span>
 </pre></div>
 </div>
-<div class="section" id="features">
-<h3>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="duplicate-check">
+<h3><code class="code docutils literal notranslate"><span class="pre">duplicate_check</span></code><a class="headerlink" href="#duplicate-check" title="Permalink to this headline">¶</a></h3>
+<p>Ensure custom predictors do not submit duplicates (even in parallel).</p>
+<p>Builtin predictors do not suggest duplicates, even when many workflows are running in parallel, since rocketsled
+locks the optimization db sequentially. However, custom predictors may suggest duplicates. Enabling duplicate
+checking will prevent duplicate workflows from being run (the meaning of “duplicate” can be refined with <code class="code docutils literal notranslate"><span class="pre">tolerances</span></code>)
+when using custom predictors. Suggested duplicates are discarded and random guesses from the remaining unexplored space are used instead.</p>
+<p>Default is no duplicate check; if a duplicate is suggested, an error is raised.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># duplicate_check is a bool</span>
+<span class="n">duplicate_check</span><span class="o">=</span><span class="bp">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="tolerances">
+<h3><code class="code docutils literal notranslate"><span class="pre">tolerances</span></code><a class="headerlink" href="#tolerances" title="Permalink to this headline">¶</a></h3>
+<p>The numerical tolerance of each feature when duplicate checking, as a list per dimension.
+For categorical features, put ‘None’</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># if our dimensions are [(1, 100), [&#39;red&#39;, &#39;blue&#39;], (2.0, 20.0)]</span>
+<span class="c1"># and we want the first param to be a duplicate only if it is an exact match</span>
+<span class="c1"># and the third param to be a duplicate if it is within 1e-6, then</span>
+<span class="n">tolerances</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="maximize">
+<h3><code class="code docutils literal notranslate"><span class="pre">maximize</span></code><a class="headerlink" href="#maximize" title="Permalink to this headline">¶</a></h3>
+<p>If true, makes optimization tend toward maximum values instead of minimum ones.</p>
+<p>By default, false.</p>
+<p>For multiobjective optimization, the maximization rule applies to all objective metrics.</p>
+<p><strong>Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">maximize</span><span class="o">=</span><span class="bp">True</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="z-vector">
+<h2>z-vector<a class="headerlink" href="#z-vector" title="Permalink to this headline">¶</a></h2>
 <p>Using features <em>derived</em> from x can provide more information to predictors. These
 extra features, which do not uniquely define the workflow but are nonetheless useful, are called “z”.</p>
-</div>
-</div>
 <div class="section" id="get-z">
-<h2><code class="code docutils literal notranslate"><span class="pre">get_z</span></code><a class="headerlink" href="#get-z" title="Permalink to this headline">¶</a></h2>
+<h3><code class="code docutils literal notranslate"><span class="pre">get_z</span></code><a class="headerlink" href="#get-z" title="Permalink to this headline">¶</a></h3>
 <p>The string representing a function that, when given a vector x, return any number of derived features. Derived features can be
 any of the types rocketsled can handle (float, int, categorical).</p>
 <p>The features defined in z are not used to run the workflow, but are used for learning. If z features are
@@ -350,7 +390,7 @@ To use x features and z features, simply add x features to the returned z vector
 </div>
 </div>
 <div class="section" id="get-z-args">
-<h2><code class="code docutils literal notranslate"><span class="pre">get_z_args</span></code><a class="headerlink" href="#get-z-args" title="Permalink to this headline">¶</a></h2>
+<h3><code class="code docutils literal notranslate"><span class="pre">get_z_args</span></code><a class="headerlink" href="#get-z-args" title="Permalink to this headline">¶</a></h3>
 <p>Positional arguments to pass to get_z. These are passed to get_z after x, the necessary default argument.</p>
 <p><strong>Example</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># get_z_args should be a list of positional args</span>
@@ -359,7 +399,7 @@ To use x features and z features, simply add x features to the returned z vector
 </div>
 </div>
 <div class="section" id="get-z-kwargs">
-<h2><code class="code docutils literal notranslate"><span class="pre">get_z_kwargs</span></code><a class="headerlink" href="#get-z-kwargs" title="Permalink to this headline">¶</a></h2>
+<h3><code class="code docutils literal notranslate"><span class="pre">get_z_kwargs</span></code><a class="headerlink" href="#get-z-kwargs" title="Permalink to this headline">¶</a></h3>
 <p>Keyword args to pass to get_z.</p>
 <p><strong>Example</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># get_z_kwargs should be a dict of kwargs</span>
@@ -367,93 +407,25 @@ To use x features and z features, simply add x features to the returned z vector
 </pre></div>
 </div>
 </div>
-<div class="section" id="persistent-z">
-<h2><code class="code docutils literal notranslate"><span class="pre">persistent_z</span></code><a class="headerlink" href="#persistent-z" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="z-file">
+<h3><code class="code docutils literal notranslate"><span class="pre">z_file</span></code><a class="headerlink" href="#z-file" title="Permalink to this headline">¶</a></h3>
 <p>The filename (pickle file) which should be used to
 store persistent z calculations. Specify this argument if
-calculating z for many (n_searchpts) is not trivial and will
+calculating z for many (<cite>n_search_pts</cite>) is not trivial and will
 cost time in computing. With this argument specified, each z will
 only be calculated once. Defaults to None, meaning that all
 unexplored z are re-calculated each iteration.</p>
 <p><strong>Example</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># persistent_z defines the file where OptTask will write all z guesses.</span>
-<span class="n">persistent_z</span> <span class="o">=</span> <span class="s1">&#39;/path/to/persistent_z_guesses.p&#39;</span>
-</pre></div>
-</div>
-<div class="section" id="miscellaneous">
-<h3>Miscellaneous<a class="headerlink" href="#miscellaneous" title="Permalink to this headline">¶</a></h3>
-</div>
-</div>
-<div class="section" id="wf-creator-args">
-<h2><code class="code docutils literal notranslate"><span class="pre">wf_creator_args</span></code><a class="headerlink" href="#wf-creator-args" title="Permalink to this headline">¶</a></h2>
-<p>Positional args to pass to the wf_creator alongside the new x vector.</p>
-<p><strong>Example</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># positional args should be a list</span>
-<span class="n">wf_creator_args</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;my_creator_arg&quot;</span><span class="p">,</span> <span class="mi">12</span><span class="p">]</span>
-</pre></div>
-</div>
-<p>See extras.py for an example.</p>
-</div>
-<div class="section" id="wf-creator-kwargs">
-<h2><code class="code docutils literal notranslate"><span class="pre">wf_creator_kwargs</span></code><a class="headerlink" href="#wf-creator-kwargs" title="Permalink to this headline">¶</a></h2>
-<p>Keyword arguments to pass to the wf_creator, as a dict.</p>
-<p><strong>Example</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># kwargs to pass to the wf_creator</span>
-<span class="n">wf_creator_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;my_wf_creator_kwarg&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">}</span>
-</pre></div>
-</div>
-<p>See extras.py for an example.</p>
-</div>
-<div class="section" id="encode-categorical">
-<h2><code class="code docutils literal notranslate"><span class="pre">encode_categorical</span></code><a class="headerlink" href="#encode-categorical" title="Permalink to this headline">¶</a></h2>
-<p>Automatic One-Hot encoding of categorical input for custom predictors.</p>
-<p>If using a custom predictor, explored and unexplored spaces will be passed to
-the predictor as strings, if categorical dimensions exist. With <code class="code docutils literal notranslate"><span class="pre">encode_categorical=True</span></code>,
-the custom predictor will recieve only numerical input (although it may be a combination of
-ints and floats). Default is False, meaning no categorical encoding.</p>
-<p><strong>Example</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">encode_categorical</span><span class="o">=</span><span class="bp">True</span>
+<span class="n">z_file</span> <span class="o">=</span> <span class="s1">&#39;/path/to/persistent_z_guesses.p&#39;</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="duplicate-check">
-<h2><code class="code docutils literal notranslate"><span class="pre">duplicate_check</span></code><a class="headerlink" href="#duplicate-check" title="Permalink to this headline">¶</a></h2>
-<p>Ensure custom predictors do not submit duplicates (even in parallel).</p>
-<p>Builtin predictors do not suggest duplicates, even when many workflows are running in parallel, since rocketsled
-locks the optimization db sequentially. However, custom predictors may suggest duplicates. Enabling duplicate
-checking will prevent duplicate workflows from being run (the meaning of “duplicate” can be refined with <code class="code docutils literal notranslate"><span class="pre">tolerances</span></code>)
-when using custom predictors. Suggested duplicates are discarded and random guesses from the remaining unexplored space are used instead.</p>
-<p>Default is no duplicate check; if a duplicate is suggested, an error is raised.</p>
-<p><strong>Example</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># duplicate_check is a bool</span>
-<span class="n">duplicate_check</span><span class="o">=</span><span class="bp">True</span>
-</pre></div>
 </div>
-</div>
-<div class="section" id="tolerances">
-<h2><code class="code docutils literal notranslate"><span class="pre">tolerances</span></code><a class="headerlink" href="#tolerances" title="Permalink to this headline">¶</a></h2>
-<p>The numerical tolerance of each feature when duplicate checking, as a list per dimension.
-For categorical features, put ‘None’</p>
-<p><strong>Example</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># if our dimensions are [(1, 100), [&#39;red&#39;, &#39;blue&#39;], (2.0, 20.0)]</span>
-<span class="c1"># and we want the first param to be a duplicate only if it is an exact match</span>
-<span class="c1"># and the third param to be a duplicate if it is within 1e-6, then</span>
-<span class="n">tolerances</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">]</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="maximize">
-<h2><code class="code docutils literal notranslate"><span class="pre">maximize</span></code><a class="headerlink" href="#maximize" title="Permalink to this headline">¶</a></h2>
-<p>If true, makes optimization tend toward maximum values instead of minimum ones.</p>
-<p>By default, false.</p>
-<p>For multiobjective optimization, the maximization rule applies to all objective metrics.</p>
-<p><strong>Example</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">maximize</span><span class="o">=</span><span class="bp">True</span>
-</pre></div>
-</div>
-</div>
+<div class="section" id="parallelism">
+<h2>Parallelism<a class="headerlink" href="#parallelism" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="batch-size">
-<h2><code class="code docutils literal notranslate"><span class="pre">batch_size</span></code><a class="headerlink" href="#batch-size" title="Permalink to this headline">¶</a></h2>
+<h3><code class="code docutils literal notranslate"><span class="pre">batch_size</span></code><a class="headerlink" href="#batch-size" title="Permalink to this headline">¶</a></h3>
 <p>Rocketsled is capable of batch optimization, meaning that N workflows are run, then a single optimization is run, and then another N workflows are submitted using the  N best guesses from the optimization.
 Enabling batch optimization is useful if you do not want to wait for many sequential optimizations, or if little information is gained from each workflow evaluation but you are running many cheap workflows.
 The <code class="code docutils literal notranslate"><span class="pre">batch_size</span></code> parameter determines the batch size; default 1.</p>
@@ -468,7 +440,7 @@ The <code class="code docutils literal notranslate"><span class="pre">batch_size
 another batch. If one calc fails, the batch optimization will fail.</em></p>
 </div>
 <div class="section" id="enforce-sequential">
-<h2><code class="code docutils literal notranslate"><span class="pre">enforce_sequential</span></code><a class="headerlink" href="#enforce-sequential" title="Permalink to this headline">¶</a></h2>
+<h3><code class="code docutils literal notranslate"><span class="pre">enforce_sequential</span></code><a class="headerlink" href="#enforce-sequential" title="Permalink to this headline">¶</a></h3>
 <p><strong>Warning! Experimental feature!</strong></p>
 <p>Gives the ability to run optimizations 100% in parallel. This option disables all duplicate checking ability - even with built-in optimizers,
 duplicates may be selected and run.</p>
@@ -480,7 +452,7 @@ duplicates may be selected and run.</p>
 </div>
 </div>
 <div class="section" id="timeout">
-<h2><code class="code docutils literal notranslate"><span class="pre">timeout</span></code><a class="headerlink" href="#timeout" title="Permalink to this headline">¶</a></h2>
+<h3><code class="code docutils literal notranslate"><span class="pre">timeout</span></code><a class="headerlink" href="#timeout" title="Permalink to this headline">¶</a></h3>
 <p>The number of seconds to wait before resetting the lock on the db.</p>
 <p>Rocketsled can leave the db locked for long periods of time (causing all other optimizations in parallel to stall) if
 a process exits unexpectedly, loses connection with the optimization collection, or takes an extended (5+ min) time to train
@@ -496,6 +468,7 @@ your problem is most likely with the timeout setting.</p>
 </div>
 </div>
 </div>
+</div>
 
 
           </div>
@@ -506,53 +479,52 @@ your problem is most likely with the timeout setting.</p>
   <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Comprehensive Guide</a></li>
-<li><a class="reference internal" href="#required-arguments">Required Arguments</a><ul>
-<li><a class="reference internal" href="#wf-creator"><code class="code docutils literal notranslate"><span class="pre">wf_creator</span></code></a></li>
-<li><a class="reference internal" href="#dimensions"><code class="code docutils literal notranslate"><span class="pre">dimensions</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#optional-arguments">Optional Arguments</a><ul>
-<li><a class="reference internal" href="#the-following-arguments-all-have-defaults-defined-in-opttask">The following arguments all have defaults defined in OptTask</a><ul>
-<li><a class="reference internal" href="#database-setup">Database Setup</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#arguments-to-missioncontrol-init">Arguments to <code class="code docutils literal notranslate"><span class="pre">MissionControl.__init__</span></code></a><ul>
+<li><a class="reference internal" href="#database-setup">Database Setup</a><ul>
 <li><a class="reference internal" href="#launchpad"><code class="code docutils literal notranslate"><span class="pre">launchpad</span></code></a></li>
 <li><a class="reference internal" href="#opt-label"><code class="code docutils literal notranslate"><span class="pre">opt_label</span></code></a></li>
-<li><a class="reference internal" href="#db-extras"><code class="code docutils literal notranslate"><span class="pre">db_extras</span></code></a><ul>
-<li><a class="reference internal" href="#predictors">Predictors</a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li><a class="reference internal" href="#required-arguments-to-missioncontrol-configure">Required Arguments to <code class="code docutils literal notranslate"><span class="pre">MissionControl.configure</span></code></a></li>
+<li><a class="reference internal" href="#optional-arguments-to-missioncontrol-configure">Optional Arguments to <code class="code docutils literal notranslate"><span class="pre">MissionControl.configure</span></code></a><ul>
+<li><a class="reference internal" href="#predictors">Predictors</a><ul>
 <li><a class="reference internal" href="#predictor"><code class="code docutils literal notranslate"><span class="pre">predictor</span></code></a></li>
 <li><a class="reference internal" href="#predictor-args"><code class="code docutils literal notranslate"><span class="pre">predictor_args</span></code></a></li>
-<li><a class="reference internal" href="#predictor-kwargs"><code class="code docutils literal notranslate"><span class="pre">predictor_kwargs</span></code></a><ul>
-<li><a class="reference internal" href="#predictor-performance">Predictor Performance</a></li>
+<li><a class="reference internal" href="#predictor-kwargs"><code class="code docutils literal notranslate"><span class="pre">predictor_kwargs</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#n-searchpts"><code class="code docutils literal notranslate"><span class="pre">n_searchpts</span></code></a></li>
-<li><a class="reference internal" href="#n-trainpts"><code class="code docutils literal notranslate"><span class="pre">n_trainpts</span></code></a></li>
-<li><a class="reference internal" href="#space"><code class="code docutils literal notranslate"><span class="pre">space</span></code></a></li>
-<li><a class="reference internal" href="#acq"><code class="code docutils literal notranslate"><span class="pre">acq</span></code></a></li>
-<li><a class="reference internal" href="#n-boots"><code class="code docutils literal notranslate"><span class="pre">n_boots</span></code></a></li>
-<li><a class="reference internal" href="#random-proba"><code class="code docutils literal notranslate"><span class="pre">random_proba</span></code></a><ul>
-<li><a class="reference internal" href="#features">Features</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#get-z"><code class="code docutils literal notranslate"><span class="pre">get_z</span></code></a></li>
-<li><a class="reference internal" href="#get-z-args"><code class="code docutils literal notranslate"><span class="pre">get_z_args</span></code></a></li>
-<li><a class="reference internal" href="#get-z-kwargs"><code class="code docutils literal notranslate"><span class="pre">get_z_kwargs</span></code></a></li>
-<li><a class="reference internal" href="#persistent-z"><code class="code docutils literal notranslate"><span class="pre">persistent_z</span></code></a><ul>
-<li><a class="reference internal" href="#miscellaneous">Miscellaneous</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#workflow-creator-function">Workflow creator function</a><ul>
 <li><a class="reference internal" href="#wf-creator-args"><code class="code docutils literal notranslate"><span class="pre">wf_creator_args</span></code></a></li>
 <li><a class="reference internal" href="#wf-creator-kwargs"><code class="code docutils literal notranslate"><span class="pre">wf_creator_kwargs</span></code></a></li>
-<li><a class="reference internal" href="#encode-categorical"><code class="code docutils literal notranslate"><span class="pre">encode_categorical</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#predictor-performance">Predictor Performance</a><ul>
+<li><a class="reference internal" href="#n-search-pts"><code class="code docutils literal notranslate"><span class="pre">n_search_pts</span></code></a></li>
+<li><a class="reference internal" href="#n-train-pts"><code class="code docutils literal notranslate"><span class="pre">n_train_pts</span></code></a></li>
+<li><a class="reference internal" href="#space-file"><code class="code docutils literal notranslate"><span class="pre">space_file</span></code></a></li>
+<li><a class="reference internal" href="#acq"><code class="code docutils literal notranslate"><span class="pre">acq</span></code></a></li>
+<li><a class="reference internal" href="#n-bootstraps"><code class="code docutils literal notranslate"><span class="pre">n_bootstraps</span></code></a></li>
+<li><a class="reference internal" href="#onehot-categorical"><code class="code docutils literal notranslate"><span class="pre">onehot_categorical</span></code></a></li>
 <li><a class="reference internal" href="#duplicate-check"><code class="code docutils literal notranslate"><span class="pre">duplicate_check</span></code></a></li>
 <li><a class="reference internal" href="#tolerances"><code class="code docutils literal notranslate"><span class="pre">tolerances</span></code></a></li>
 <li><a class="reference internal" href="#maximize"><code class="code docutils literal notranslate"><span class="pre">maximize</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#z-vector">z-vector</a><ul>
+<li><a class="reference internal" href="#get-z"><code class="code docutils literal notranslate"><span class="pre">get_z</span></code></a></li>
+<li><a class="reference internal" href="#get-z-args"><code class="code docutils literal notranslate"><span class="pre">get_z_args</span></code></a></li>
+<li><a class="reference internal" href="#get-z-kwargs"><code class="code docutils literal notranslate"><span class="pre">get_z_kwargs</span></code></a></li>
+<li><a class="reference internal" href="#z-file"><code class="code docutils literal notranslate"><span class="pre">z_file</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#parallelism">Parallelism</a><ul>
 <li><a class="reference internal" href="#batch-size"><code class="code docutils literal notranslate"><span class="pre">batch_size</span></code></a></li>
 <li><a class="reference internal" href="#enforce-sequential"><code class="code docutils literal notranslate"><span class="pre">enforce_sequential</span></code></a></li>
 <li><a class="reference internal" href="#timeout"><code class="code docutils literal notranslate"><span class="pre">timeout</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -589,7 +561,7 @@ your problem is most likely with the timeout setting.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.2.17 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.2.27 documentation</a> &#187;</li> 
       </ul>
     </div>
 

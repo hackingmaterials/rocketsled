@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>rocketsled &#8212; rocketsled 2019.2.17 documentation</title>
+    <title>rocketsled &#8212; rocketsled 2019.2.27 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -29,7 +29,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">rocketsled 2019.2.17 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="#">rocketsled 2019.2.27 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -44,13 +44,14 @@
 framework <em>“on rails”</em> for high throughput computation. rocketsled is an extension of
 <a class="reference external" href="https://github.com/materialsproject/fireworks">FireWorks</a> workflow software,
 written in Python.</p>
-<p>There are many packages for adaptive optimization, including <a class="reference external" href="https://scikit-optimize.github.io">skopt</a> and <a class="reference external" href="https://pysot.readthedocs.io/en/latest/">pySOT</a>. The major aim of rocketsled is to focus on cases where:</p>
+<a class="reference internal image-reference" href="_images/intro_figure.png"><img alt="opt" class="align-center" src="_images/intro_figure.png" style="width: 600px;" /></a>
+<p>There are many packages for adaptive optimization, including <a class="reference external" href="https://scikit-optimize.github.io">skopt</a>, <a class="reference external" href="https://github.com/claesenm/optunity">optunity</a>, and <a class="reference external" href="https://pysot.readthedocs.io/en/latest/">pySOT</a>. The major aim of rocketsled is to focus on cases where:</p>
 <ul class="simple">
 <li>function evaluations are expensive enough that they cannot be run locally, and may instead need to be executed on supercomputing centers (e.g., through a queueing system) or external server</li>
 <li>having a database of provenance for jobs is helpful (e.g., to help re-run error cases)</li>
 <li>one needs to run the optimization over long time scales (days, weeks, months, or even years) with persistence.</li>
 </ul>
-<p>For example, the function to optimize might be a complex physics simulation that takes days to run on a parallel supercomputer. Rocketsled helps users run such difficult optimization cases by leveraging the workflow capabilities of the underlying <a class="reference external" href="https://github.com/materialsproject/fireworks">FireWorks</a> software, which has been used to execute hundreds of millions of CPU-hours of simulations across millions of workflows on many different systems. The optimization algorithm itself can be set by the user or quickly selected from one of the built-in  <a class="reference external" href="https://scikit-optimize.github.io">skopt</a> optimizers.</p>
+<p>For example, the function to optimize might be a complex physics simulation that takes days to run on a parallel supercomputer. Rocketsled helps users run such difficult optimization cases by leveraging the workflow capabilities of the underlying <a class="reference external" href="https://github.com/materialsproject/fireworks">FireWorks</a> software, which has been used to execute hundreds of millions of CPU-hours of simulations across millions of workflows on many different systems. The optimization algorithm itself can be set by the user or quickly selected from one of the built-in  <a class="reference external" href="https://scikit-learn.org/">sklearn</a> optimizers.</p>
 <div class="section" id="is-rocketsled-for-me">
 <h1>Is rocketsled for me?<a class="headerlink" href="#is-rocketsled-for-me" title="Permalink to this headline">¶</a></h1>
 <p><strong>Is your computational problem:</strong></p>
@@ -85,7 +86,7 @@ It is designed to be as extensible as possible across many computer architecture
 <div class="section" id="features-of-rocketsled">
 <h2>Features of <code class="docutils literal notranslate"><span class="pre">rocketsled</span></code><a class="headerlink" href="#features-of-rocketsled" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><strong>One-line python configure tools</strong></li>
+<li><strong>Easy python configuration tool</strong></li>
 <li>Persistent storage and optimization tracking</li>
 <li><dl class="first docutils">
 <dt><strong>Automatic workflow submission and management with FireWorks</strong></dt>
@@ -108,7 +109,7 @@ It is designed to be as extensible as possible across many computer architecture
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>10 different built-in sklearn-based tunable Bayesian optimizers</dt>
+<dt>4 different built-in sklearn-based tunable Bayesian optimizers</dt>
 <dd><ul class="first last">
 <li>single objective</li>
 <li><strong>multi objective</strong></li>
@@ -116,7 +117,7 @@ It is designed to be as extensible as possible across many computer architecture
 </dd>
 </dl>
 </li>
-<li>Support for nearly any custom optimizer written in Python (Bayesian and non-Bayesian)</li>
+<li>Support for nearly any custom optimizer written in Python (Bayesian or otherwise)</li>
 <li>Facilitated feature engineering with <code class="docutils literal notranslate"><span class="pre">get_z</span></code> argument</li>
 <li>Tuneable control of training and prediction performance, across many kinds of computer resources</li>
 <li>Avoids submitting duplicate workflows, even when workflows run with massive parallelism</li>
@@ -128,7 +129,7 @@ It is designed to be as extensible as possible across many computer architecture
 </div>
 <div class="section" id="a-visual-explanation">
 <h2>A visual explanation…<a class="headerlink" href="#a-visual-explanation" title="Permalink to this headline">¶</a></h2>
-<p>A typical workflow f(x) without optimization might look like this:</p>
+<p>A typical workflow f(x) with optimization might look like this:</p>
 <a class="reference internal image-reference" href="_images/diagram_fireworks.png"><img alt="basicwf" class="align-center" src="_images/diagram_fireworks.png" style="width: 250px;" /></a>
 <p>Input parameters (x) are given to the first job (Firework). This begins the workflow, and a useful output f(x) = y result is given. The workflow is repeated as desired with different input parameters, often across many compute nodes in parallel, in an attempt to compute favorable outputs.</p>
 <a class="reference internal image-reference" href="_images/miniwf.png"><img alt="basicwf" src="_images/miniwf.png" style="width: 150px;" /></a>
@@ -138,14 +139,17 @@ It is designed to be as extensible as possible across many computer architecture
 <p>Randomly selecting the next x to run is <em>inefficient</em>, since we will execute many workflows, including those with unfavorable results. To increase computational efficiency, we need to <em>intelligently</em> choose new x with an <strong>optimization loop.</strong></p>
 <a class="reference internal image-reference" href="_images/diagram_highthroughput2.png"><img alt="basicwf" class="align-center" src="_images/diagram_highthroughput2.png" style="width: 800px;" /></a>
 <p>This is where rocketsled comes in handy. rocketsled is a sub-job (FireTask) which can go in any Firework in the workflow, and uses an sklearn-based Bayesian strategy to predict the best <em>input</em> parameters for the next iteration, store them in a MongoDB database, and automatically submit a new workflow to compute the next output.</p>
-<a class="reference internal image-reference" href="_images/rsfwdiagram.png"><img alt="basicwf" class="align-center" src="_images/rsfwdiagram.png" style="width: 400px;" /></a>
+<a class="reference internal image-reference" href="_images/opttask_overview.png"><img alt="basicwf" class="align-center" src="_images/opttask_overview.png" style="width: 800px;" /></a>
 </div>
 <div class="section" id="example-use-cases">
 <h2>Example use cases<a class="headerlink" href="#example-use-cases" title="Permalink to this headline">¶</a></h2>
 <p>rocketsled has many example use cases for adaptive computational problems.</p>
-<p><strong>Searching 19,000 possible for new energy materials using expensive first-principles physics calculations:</strong> rocketsled enabled increased efficiency (wrt. random and empirical rules) in searching a large space of input parameters (materials) for renewable energy water splitting perovskites using Density Functional Theory calculations.</p>
+<p><strong>Searching 19,000 possible candidates for 20 new energy materials using expensive first-principles physics calculations:</strong> rocketsled enabled increased efficiency (wrt. random and empirical rules) in searching a large space of input parameters (materials) for renewable energy water splitting perovskites using Density Functional Theory calculations.</p>
 <a class="reference internal image-reference" href="_images/3dmap_mend.png"><img alt="3d" src="_images/3dmap_mend.png" style="width: 500px;" /></a>
 <a class="reference internal image-reference" href="_images/perovskites_zoomin.png"><img alt="perov" src="_images/perovskites_zoomin.png" style="width: 500px;" /></a>
+<p><strong>Searching 7,400 possible candidates for 8 potentially superhard materials using expensive first-principles physics calculations:</strong> rocketsled can enable faster discovery of superhard materials in searching a diverse space of materials crystal structures from the Materials Project.</p>
+<a class="reference internal image-reference" href="_images/progression.png"><img alt="prog" src="_images/progression.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="_images/WC_structure.png"><img alt="wc" src="_images/WC_structure.png" style="width: 300px;" /></a>
 <p><strong>(Forthcoming) Selecting the best machine learning model for large-scale data mining:</strong> rocketsled can be used for selecting the best machine learning models (and their hyperparameters) in cases where each training + cross-validation can be a computationally expensive task.</p>
 <a class="reference internal image-reference" href="_images/ml.png"><img alt="ml" class="align-center" src="_images/ml.png" style="width: 800px;" /></a>
 </div>
@@ -191,7 +195,7 @@ $ python configure.py <span class="nb">test</span>
 <h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="tutorial">
 <h2><a class="reference internal" href="tutorial.html"><span class="doc">Tutorial</span></a><a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h2>
-<p>In the quickstart, we show how to use rocketsled’s <code class="docutils literal notranslate"><span class="pre">auto_setup</span></code> to get
+<p>In the quickstart, we show how to use rocketsled’s <code class="docutils literal notranslate"><span class="pre">MissonControl</span></code> to get
 up and running quickly, starting only with an objective function written in Python.</p>
 <p><strong>Time to complete</strong>: 30 min</p>
 </div>
@@ -199,7 +203,7 @@ up and running quickly, starting only with an objective function written in Pyth
 <h2><a class="reference internal" href="guide.html"><span class="doc">A Comprehensive Guide to rocketsled</span></a><a class="headerlink" href="#a-comprehensive-guide-to-rocketsled" title="Permalink to this headline">¶</a></h2>
 <p>Find a comprehensive guide to using rocketsled at the link below. The guide
 exhaustively documents the possible arguments to <code class="docutils literal notranslate"><span class="pre">MissionControl</span></code> and provides at least
-one example of each. If working through the tutorials did not answer your
+one example of each. If working through the tutorial did not answer your
 question, you’ll most likely find your answer here.</p>
 </div>
 <div class="section" id="contributions-and-support">
@@ -212,6 +216,10 @@ question, you’ll most likely find your answer here.</p>
 </ul>
 <p>Submit all questions and contact to the <a class="reference external" href="https://groups.google.com/forum/#!forum/fireworkflows">Google group</a></p>
 <p>A comprehensive guide to contributions can be found <a class="reference external" href="https://github.com/hackingmaterials/rocketsled/blob/master/CONTRIBUTING.md">here.</a></p>
+</div>
+<div class="section" id="citing-rocketsled">
+<h2>Citing rocketsled<a class="headerlink" href="#citing-rocketsled" title="Permalink to this headline">¶</a></h2>
+<p>Our paper for rocketsled has been accepted in the Journal of Physics: Materials. Find the paper on the <a class="reference external" href="https://doi.org/10.1088/2515-7639/ab0c3d">IOP Website</a> and please cite it if you find rocketsled useful!</p>
 </div>
 <div class="section" id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
@@ -252,6 +260,7 @@ question, you’ll most likely find your answer here.</p>
 <li><a class="reference internal" href="#tutorial"><code class="docutils literal notranslate"><span class="pre">Tutorial</span></code></a></li>
 <li><a class="reference internal" href="#a-comprehensive-guide-to-rocketsled"><code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">Comprehensive</span> <span class="pre">Guide</span> <span class="pre">to</span> <span class="pre">rocketsled</span></code></a></li>
 <li><a class="reference internal" href="#contributions-and-support">Contributions and Support</a></li>
+<li><a class="reference internal" href="#citing-rocketsled">Citing rocketsled</a></li>
 <li><a class="reference internal" href="#documentation">Documentation</a></li>
 </ul>
 </li>
@@ -289,7 +298,7 @@ question, you’ll most likely find your answer here.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">rocketsled 2019.2.17 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="#">rocketsled 2019.2.27 documentation</a> &#187;</li> 
       </ul>
     </div>
 
