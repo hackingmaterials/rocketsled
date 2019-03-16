@@ -250,6 +250,6 @@ And the optimization plot should appear similar to:
        :align: center
        :width: 1000px
 
-Great! This concludes the tutorial. Please see the complex.py example, the :doc:`Comprehensive Guide to rocketsled </guide>`, or the `FireWorks documentation <https://github.com/materialsproject/fireworks>`_ for more details.
+Great! This concludes the tutorial. Please see the rocketsled/examples/complex.py example, the :doc:`Comprehensive Guide to rocketsled </guide>`, or the `FireWorks documentation <https://github.com/materialsproject/fireworks>`_ for more details.
 
 
