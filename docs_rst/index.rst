@@ -227,9 +227,9 @@ Run tests locally
 
 Tip: To run tests using a remote launchpad, edit ``/rocketsled/tests/tests_launchpad.yaml``
 
-=========
-Tutorials
-=========
+===========
+Get Started
+===========
 
 
 :doc:`Tutorial </tutorial>`
@@ -264,7 +264,45 @@ A comprehensive guide to contributions can be found `here. <https://github.com/h
 Citing rocketsled
 -----------------
 
-Our paper for rocketsled has been accepted in the Journal of Physics: Materials. Find the paper on the `IOP Website <https://doi.org/10.1088/2515-7639/ab0c3d>`_ and please cite it if you find rocketsled useful!
+Please encourage further development of rocketsled by citing the following papers:
+
+`rocketsled <https://doi.org/10.1088%2F2515-7639%2Fab0c3d>`_
+
+.. code-block:: bash
+
+    @article{Dunn_2019,
+        doi = {10.1088/2515-7639/ab0c3d},
+        url = {https://doi.org/10.1088%2F2515-7639%2Fab0c3d},
+        year = 2019,
+        month = {apr},
+        publisher = {{IOP} Publishing},
+        volume = {2},
+        number = {3},
+        pages = {034002},
+        author = {Alexander Dunn and Julien Brenneck and Anubhav Jain},
+        title = {Rocketsled: a software library for optimizing high-throughput computational searches},
+        journal = {Journal of Physics: Materials},
+    }
+
+`FireWorks <http://dx.doi.org/10.1002/cpe.3505>`_
+
+.. code-block:: bash
+
+    @article{doi:10.1002/cpe.3505,
+        author = {Jain, Anubhav and Ong, Shyue Ping and Chen, Wei and Medasani, Bharat and Qu, Xiaohui and Kocher, Michael and Brafman, Miriam and Petretto, Guido and Rignanese, Gian-Marco and Hautier, Geoffroy and Gunter, Daniel and Persson, Kristin A.},
+        title = {FireWorks: a dynamic workflow system designed for high-throughput applications},
+        journal = {Concurrency and Computation: Practice and Experience},
+        volume = {27},
+        number = {17},
+        pages = {5037-5059},
+        keywords = {scientific workflows, high-throughput computing, fault-tolerant computing},
+        doi = {10.1002/cpe.3505},
+        url = {https://onlinelibrary.wiley.com/doi/abs/10.1002/cpe.3505},
+        eprint = {https://onlinelibrary.wiley.com/doi/pdf/10.1002/cpe.3505},
+        abstract = {Summary This paper introduces FireWorks, a workflow software for running high-throughput calculation workflows at supercomputing centers. FireWorks has been used to complete over 50 million CPU-hours worth of computational chemistry and materials science calculations at the National Energy Research Supercomputing Center. It has been designed to serve the demanding high-throughput computing needs of these applications, with extensive support for (i) concurrent execution through job packing, (ii) failure detection and correction, (iii) provenance and reporting for long-running projects, (iv) automated duplicate detection, and (v) dynamic workflows (i.e., modifying the workflow graph during runtime). We have found that these features are highly relevant to enabling modern data-driven and high-throughput science applications, and we discuss our implementation strategy that rests on Python and NoSQL databases (MongoDB). Finally, we present performance data and limitations of our approach along with planned future work. Copyright © 2015 John Wiley \& Sons, Ltd.},,
+        year = {2015}
+    }
+
 
 
 Documentation
