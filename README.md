@@ -12,4 +12,9 @@ rocketsled is a black-box optimization framework "on rails" for high-throughput 
 - **Help/Support:** https://groups.google.com/forum/#!forum/fireworkflows
 - **Source:** https://github.com/hackingmaterials/rocketsled
 - **FireWorks website:** https://materialsproject.github.io/fireworks
-- **Accepted manuscript (citation details to be updated):** https://doi.org/10.1088/2515-7639/ab0c3d
+
+If you find rocketsled useful, please encourage its development by citing the [following paper](http://doi.org//10.1088/2515-7639/ab0c3d) in your research:
+
+```
+Dunn, A., Brenneck, J., Jain, A., Rocketsled: a software library for optimizing high-throughput computational searches. J. Phys. Mater. 2, 034002 (2019).
+```
