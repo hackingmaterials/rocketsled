@@ -16,5 +16,6 @@ rocketsled is a black-box optimization framework "on rails" for high-throughput 
 If you find rocketsled useful, please encourage its development by citing the [following paper](http://doi.org//10.1088/2515-7639/ab0c3d) in your research:
 
 ```
-Dunn, A., Brenneck, J., Jain, A., Rocketsled: a software library for optimizing high-throughput computational searches. J. Phys. Mater. 2, 034002 (2019).
+Dunn, A., Brenneck, J., Jain, A., Rocketsled: a software library for optimizing
+high-throughput computational searches. J. Phys. Mater. 2, 034002 (2019).
 ```
