@@ -19,3 +19,12 @@ If you find rocketsled useful, please encourage its development by citing the [f
 Dunn, A., Brenneck, J., Jain, A., Rocketsled: a software library for optimizing
 high-throughput computational searches. J. Phys. Mater. 2, 034002 (2019).
 ```
+
+If you find FireWorks useful, please consider citing [its paper](http://dx.doi.org/10.1002/cpe.3505) as well:
+
+```
+Jain, A., Ong, S. P., Chen, W., Medasani, B., Qu, X., Kocher, M., Brafman, M., 
+Petretto, G., Rignanese, G.-M., Hautier, G., Gunter, D., and Persson, K. A. 
+FireWorks: a dynamic workflow system designed for high-throughput applications.
+Concurrency Computat.: Pract. Exper., 27: 5037–5059. (2015)
+```
