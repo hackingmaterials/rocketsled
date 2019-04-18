@@ -1,13 +1,16 @@
+import os
 from setuptools import setup, find_packages
-from rocketsled import __version__
 
 with open('README.md', 'r') as file:
     long_description = file.read()
 
+module_dir = os.path.dirname(os.path.abspath(__file__))
+with open(os.path.join(module_dir, "VERSION"), "r") as f:
+    version = f.read()
 
 setup(
     name='rocketsled',
-    version=str(__version__),
+    version=str(version),
     description='Black box optimization with Fireworks workflows, on rails',
     url='https://github.com/hackingmaterials/rocktsled',
     author='Alex Dunn',
