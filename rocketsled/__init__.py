@@ -6,7 +6,11 @@ FireWorks workflows.
 from rocketsled.control import MissionControl
 from rocketsled.task import OptTask
 
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                       "../VERSION"), "r") as f:
+    version = f.read()
+__version__ = version
+
 __author__ = "Alexander Dunn"
-__version__ = "2019.3.15"
 __email__ = "ardunn@lbl.gov"
 
