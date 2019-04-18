@@ -1,8 +1,7 @@
 # Change Log
 
-## [Unreleased](https://github.com/hackingmaterials/rocketsled/tree/HEAD)
-
-[Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.3.15...HEAD)
+## [v2019.4.17](https://github.com/hackingmaterials/rocketsled/tree/v2019.4.17) (2019-04-18)
+[Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.3.15...v2019.4.17)
 
 **Closed issues:**
 
