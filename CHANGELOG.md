@@ -1,5 +1,13 @@
 # Change Log
 
+## [Unreleased](https://github.com/hackingmaterials/rocketsled/tree/HEAD)
+
+[Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.3.15...HEAD)
+
+**Closed issues:**
+
+- add paper citation to rocketsled [\#42](https://github.com/hackingmaterials/rocketsled/issues/42)
+
 ## [v2019.3.15](https://github.com/hackingmaterials/rocketsled/tree/v2019.3.15) (2019-03-16)
 [Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.2.27...v2019.3.15)
 
