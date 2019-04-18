@@ -51,13 +51,12 @@ def publish(ctx):
     ctx.run("python3 setup.py sdist bdist_wheel")
     ctx.run("twine upload dist/*")
 
+@task
+def update_changelog(ctx):
+    ctx.run('github_changelog_generator hackingmaterials/rocketsled')
 
 @task
 def release(ctx):
-    ctx.run('github_changelog_generator hackingmaterials/rocketsled')
-    ctx.run("git commit -m 'update changelog' /Users/ardunn/alex/lbl/projects/rocketsled/code/rocketsled/CHANGELOG.md")
-    ctx.run("git commit -m 'update version' /Users/ardunn/alex/lbl/projects/rocketsled/code/rocketsled/rocketsled/__init__.py")
-    ctx.run("git push origin master")
     payload = {
         "tag_name": "v" + __version__,
         "target_commitish": "master",
