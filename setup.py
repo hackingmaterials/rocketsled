@@ -1,12 +1,36 @@
 import os
 from setuptools import setup, find_packages
 
-with open('README.md', 'r') as file:
-    long_description = file.read()
-
 module_dir = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(module_dir, "VERSION"), "r") as f:
     version = f.read()
+
+
+long_description = \
+    """
+    rocketsled is a black-box optimization framework "on rails" for high-throughput computation with FireWorks.
+    
+    - **Website (including documentation):** https://hackingmaterials.github.io/rocketsled/
+    - **Help/Support:** https://groups.google.com/forum/#!forum/fireworkflows
+    - **Source:** https://github.com/hackingmaterials/rocketsled
+    - **FireWorks website:** https://materialsproject.github.io/fireworks
+    
+    If you find rocketsled useful, please encourage its development by citing the [following paper](http://doi.org//10.1088/2515-7639/ab0c3d) in your research:
+    
+    ```
+    Dunn, A., Brenneck, J., Jain, A., Rocketsled: a software library for optimizing
+    high-throughput computational searches. J. Phys. Mater. 2, 034002 (2019).
+    ```
+    
+    If you find FireWorks useful, please consider citing [its paper](http://dx.doi.org/10.1002/cpe.3505) as well:
+    
+    ```
+    Jain, A., Ong, S. P., Chen, W., Medasani, B., Qu, X., Kocher, M., Brafman, M., 
+    Petretto, G., Rignanese, G.-M., Hautier, G., Gunter, D., and Persson, K. A. 
+    FireWorks: a dynamic workflow system designed for high-throughput applications.
+    Concurrency Computat.: Pract. Exper., 27: 5037–5059. (2015)
+    ```
+    """
 
 setup(
     name='rocketsled',
