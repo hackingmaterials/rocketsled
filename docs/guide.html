@@ -1,12 +1,10 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Comprehensive Guide &#8212; rocketsled 2019.3.15 documentation</title>
+    <meta charset="utf-8" />
+    <title>Comprehensive Guide &#8212; rocketsled 2019.4.17 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -29,7 +27,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.3.15 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.4.17 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -71,12 +69,11 @@ The following documentation details all the possible arguments to MissionControl
 <h1>Required Arguments to <code class="code docutils literal notranslate"><span class="pre">MissionControl.configure</span></code><a class="headerlink" href="#required-arguments-to-missioncontrol-configure" title="Permalink to this headline">¶</a></h1>
 <p>This is a function object which takes in an input vector x and returns your optimization loop workflow. The function must</p>
 <ol class="arabic simple">
-<li>Accept x</li>
-<li><dl class="first docutils">
-<dt>Return a Fireworks workflow based on x (i.e., x sets some parameters in the workflow)</dt>
-<dd><ol class="first last loweralpha">
-<li>The workflow must contain OptTask</li>
-<li>The Firework containing OptTask must have spec fields ‘_x’ and ‘_y’ containing your x optimization vector and y optimization vector/scalar. A vector used for y is considered a multiobjective optimization.</li>
+<li><p>Accept x</p></li>
+<li><dl class="simple">
+<dt>Return a Fireworks workflow based on x (i.e., x sets some parameters in the workflow)</dt><dd><ol class="loweralpha simple">
+<li><p>The workflow must contain OptTask</p></li>
+<li><p>The Firework containing OptTask must have spec fields ‘_x’ and ‘_y’ containing your x optimization vector and y optimization vector/scalar. A vector used for y is considered a multiobjective optimization.</p></li>
 </ol>
 </dd>
 </dl>
@@ -132,10 +129,10 @@ In discontinuous searches, all possible combinations of discontinuous dimension 
 <p><strong>Builtins</strong></p>
 <p>Included sklearn-based predictors are:</p>
 <ul class="simple">
-<li>‘RandomForestRegressor’,</li>
-<li>‘ExtraTreesRegressor’,</li>
-<li>‘GradientBoostingRegressor’,</li>
-<li>‘GaussianProcessRegressor’,</li>
+<li><p>‘RandomForestRegressor’,</p></li>
+<li><p>‘ExtraTreesRegressor’,</p></li>
+<li><p>‘GradientBoostingRegressor’,</p></li>
+<li><p>‘GaussianProcessRegressor’,</p></li>
 </ul>
 <p>Defaults to ‘RandomForestRegressor’</p>
 <p>To use a random guess, choose ‘random’.</p>
@@ -238,9 +235,9 @@ For custom predictors, arguments are passed directly to the predictor function.<
 <h2>Predictor Performance<a class="headerlink" href="#predictor-performance" title="Permalink to this headline">¶</a></h2>
 <p>Options in this section are used for</p>
 <ol class="arabic simple">
-<li>Improving optimization performance</li>
-<li>Reducing search space</li>
-<li>Balancing exploitaton and exploration</li>
+<li><p>Improving optimization performance</p></li>
+<li><p>Reducing search space</p></li>
+<li><p>Balancing exploitaton and exploration</p></li>
 </ol>
 <div class="section" id="n-search-pts">
 <h3><code class="code docutils literal notranslate"><span class="pre">n_search_pts</span></code><a class="headerlink" href="#n-search-pts" title="Permalink to this headline">¶</a></h3>
@@ -281,10 +278,10 @@ Using this option will increase the effectiveness of optimization, but more opti
 <p>Choose from the following options:</p>
 <p><strong>Single objective:</strong></p>
 <ul class="simple">
-<li>None: The highest predicted point is picked. Fully exploitive.</li>
-<li>‘ei’: Expected improvement (Recommended)</li>
-<li>‘pi’: Probability of Improvment</li>
-<li>‘lcb’: Lower confidence bound</li>
+<li><p>None: The highest predicted point is picked. Fully exploitive.</p></li>
+<li><p>‘ei’: Expected improvement (Recommended)</p></li>
+<li><p>‘pi’: Probability of Improvment</p></li>
+<li><p>‘lcb’: Lower confidence bound</p></li>
 </ul>
 <p><strong>Multi objective:</strong>
 * None: The points which are predicted to be Pareo-optimal are picked with equal probability. Fully exploitative.
@@ -542,8 +539,6 @@ your problem is most likely with the timeout setting.</p>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -561,13 +556,13 @@ your problem is most likely with the timeout setting.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.3.15 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.4.17 documentation</a> &#187;</li> 
       </ul>
     </div>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, HackingMaterials.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
     </div>
 
   </body>

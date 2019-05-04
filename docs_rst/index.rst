@@ -1,6 +1,6 @@
 .. title:: rocketsled
 
-.. image:: _static/rsfw.png
+.. image:: _static/logo-med.png
    :width: 600 px
    :alt: rocketsled logo
    :align: center

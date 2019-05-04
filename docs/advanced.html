@@ -1,12 +1,10 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Advanced Tutorial - 15-20 min &#8212; rocketsled 2019.3.15 documentation</title>
+    <meta charset="utf-8" />
+    <title>Advanced Tutorial - 15-20 min &#8212; rocketsled 2019.4.17 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -29,7 +27,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.3.15 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.4.17 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -51,32 +49,31 @@ interpretation might have little use for prediction, but features derived from t
 <p>OptTask has optional arguments which address each of these issues. A few are listed here, and the rest are in the comprehensive guide. For the most part, they are designed to work both in combination and independently.</p>
 <p>In this tutorial, we will explore some of the more advanced capabilities of OptTask, including:</p>
 <ul class="simple">
-<li>Multiobjective optimiation</li>
-<li><dl class="first docutils">
-<dt>Changing predictors</dt>
-<dd><ul class="first last">
-<li>Acquisition functions for improving performance</li>
-<li>Reducing prediction time</li>
-<li>Customizing exploration</li>
+<li><p>Multiobjective optimiation</p></li>
+<li><dl class="simple">
+<dt>Changing predictors</dt><dd><ul>
+<li><p>Acquisition functions for improving performance</p></li>
+<li><p>Reducing prediction time</p></li>
+<li><p>Customizing exploration</p></li>
 </ul>
 </dd>
 </dl>
 </li>
-<li>Using z (extra) features</li>
+<li><p>Using z (extra) features</p></li>
 </ul>
 <div class="section" id="defining-the-problem">
 <h2>Defining the Problem<a class="headerlink" href="#defining-the-problem" title="Permalink to this headline">¶</a></h2>
 <p>Let’s imagine we are designing a fin for a new rocket. <strong>We have three parameters we can tune</strong>:</p>
 <ul class="simple">
-<li>Fin length - Defined between 16cm - 145cm</li>
-<li>Fin angle - Defined between 0.0 - 90.0 degrees</li>
-<li>Fin type - Either industry standard, dolphin, or shark type.</li>
+<li><p>Fin length - Defined between 16cm - 145cm</p></li>
+<li><p>Fin angle - Defined between 0.0 - 90.0 degrees</p></li>
+<li><p>Fin type - Either industry standard, dolphin, or shark type.</p></li>
 </ul>
 <p><strong>We’ll say a good fin has 3 characteristics (objective metrics)</strong>:</p>
 <ul class="simple">
-<li>Low cost</li>
-<li>Low drag</li>
-<li>Low probability of failure</li>
+<li><p>Low cost</p></li>
+<li><p>Low drag</p></li>
+<li><p>Low probability of failure</p></li>
 </ul>
 <p>We evaluate the performance of a candidate design by nondeterministically simulating the aerodynamics and market performance with an expensive simulation.
 A mock version of such a simulation is found in <code class="code docutils literal notranslate"><span class="pre">ComplexMultiObjTask</span></code> in <code class="code docutils literal notranslate"><span class="pre">/examples/tasks.py</span></code>.</p>
@@ -120,10 +117,10 @@ A mock version of such a simulation is found in <code class="code docutils liter
 </div>
 <p>The new arguments to OptTask are:</p>
 <ul class="simple">
-<li><code class="code docutils literal notranslate"><span class="pre">predictor</span></code> - A different built in predictor is used for this optimization. A full list of builtin predictors (and guide for using custom predictors) is shown in the comprehensive guide.</li>
-<li><code class="code docutils literal notranslate"><span class="pre">acq</span></code> - Acquisition functions help us get better results during optimization (generally) than pure exploitation, but may be more computationally intensive. The acquisition function used here is specifically for multi-objective optimization; for single objectives, check the comprehensive guide.</li>
-<li><code class="code docutils literal notranslate"><span class="pre">n_searchpts</span></code> - Tuning the number of points for prediction affects optimizer performance and computational efficiency (the two are often inversely correlated). Also use <code class="code docutils literal notranslate"><span class="pre">n_trainpts</span></code> to restrict the number of points used for training from completed runs.</li>
-<li><code class="code docutils literal notranslate"><span class="pre">get_z</span></code> - Encapsulate empirical knowledge with get_z. From physical laws, we postulate two useful features, which we put in a vector called “z”. When <code class="code docutils literal notranslate"><span class="pre">get_z</span></code> is enabled, x is only used as a label (<strong>not for learning</strong>), unless explicitly returned by get_z. In this case, x might be useful for learning, so we’ll return it.</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">predictor</span></code> - A different built in predictor is used for this optimization. A full list of builtin predictors (and guide for using custom predictors) is shown in the comprehensive guide.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">acq</span></code> - Acquisition functions help us get better results during optimization (generally) than pure exploitation, but may be more computationally intensive. The acquisition function used here is specifically for multi-objective optimization; for single objectives, check the comprehensive guide.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">n_searchpts</span></code> - Tuning the number of points for prediction affects optimizer performance and computational efficiency (the two are often inversely correlated). Also use <code class="code docutils literal notranslate"><span class="pre">n_trainpts</span></code> to restrict the number of points used for training from completed runs.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">get_z</span></code> - Encapsulate empirical knowledge with get_z. From physical laws, we postulate two useful features, which we put in a vector called “z”. When <code class="code docutils literal notranslate"><span class="pre">get_z</span></code> is enabled, x is only used as a label (<strong>not for learning</strong>), unless explicitly returned by get_z. In this case, x might be useful for learning, so we’ll return it.</p></li>
 </ul>
 <p>We can launch 250 optimization loop runs with:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">run_workflows</span><span class="p">():</span>
@@ -232,8 +229,6 @@ f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <spa
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -251,13 +246,13 @@ f<span class="o">(</span>x<span class="o">)</span> <span class="o">=</span> <spa
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.3.15 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.4.17 documentation</a> &#187;</li> 
       </ul>
     </div>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, HackingMaterials.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
     </div>
 
   </body>
