@@ -5,6 +5,8 @@ module_dir = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(module_dir, "VERSION"), "r") as f:
     version = f.read()
 
+with open(os.path.join(module_dir, "requirements.txt"), "r") as f:
+    requirements = f.read().replace(" ", "").split("\n")
 
 long_description = \
     """
@@ -60,6 +62,5 @@ setup(
     tests_require='tests',
     packages=find_packages(),
     package_data={'rocketsled': ['defaults.yaml']},
-    install_requires=['fireworks', 'scikit-learn', 'scipy', 'numpy',
-                      'pymongo==3.7.1', 'nose', 'matplotlib'],
+    install_requires=requirements,
     data_files=['LICENSE'])
