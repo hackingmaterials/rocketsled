@@ -1,12 +1,10 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>rocketsled.examples package &#8212; rocketsled 2019.3.15 documentation</title>
+    <meta charset="utf-8" />
+    <title>rocketsled.examples package &#8212; rocketsled 2019.4.17 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -29,7 +27,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.3.15 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.4.17 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -47,16 +45,15 @@
 <span id="rocketsled-examples-basic-module"></span><h2>rocketsled.examples.basic module<a class="headerlink" href="#module-rocketsled.examples.basic" title="Permalink to this headline">¶</a></h2>
 <p>An example of the most basic rocketsled implementation.
 This file creates and executes a workflow containing one Firework.</p>
-<dl class="docutils">
-<dt>The Firework contains 2 Tasks.</dt>
-<dd><ol class="first arabic simple">
-<li><dl class="first docutils">
-<dt>ObjectiveFuncTask - a task that reads x from the spec and</dt>
-<dd>updates y in the spec, according to a simple known function.</dd>
+<dl>
+<dt>The Firework contains 2 Tasks.</dt><dd><ol class="arabic simple">
+<li><dl class="simple">
+<dt>ObjectiveFuncTask - a task that reads x from the spec and</dt><dd><p>updates y in the spec, according to a simple known function.</p>
+</dd>
 </dl>
 </li>
 </ol>
-<p class="last">2. OptTask - a task that stores optimiztion data in the db and optimizes
+<p>2. OptTask - a task that stores optimiztion data in the db and optimizes
 the next guess.</p>
 </dd>
 </dl>
@@ -79,11 +76,9 @@ is relatively simple (i.e., only needs one Firework).</p>
 <dd><p>This method gets called when the Firetask is run. It can take in a
 Firework spec, perform some task using that data, and then return an
 output in the form of a FWAction.</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>fw_spec (dict): A Firework spec. This comes from the master spec.</dt>
-<dd>In addition, this spec contains a special “_fw_env” key that
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>fw_spec (dict): A Firework spec. This comes from the master spec.</dt><dd><p>In addition, this spec contains a special “_fw_env” key that
 contains the env settings of the FWorker calling this method.
 This provides for abstracting out certain commands or
 settings. For example, “foo” may be named “foo1” in resource
@@ -91,11 +86,12 @@ settings. For example, “foo” may be named “foo1” in resource
 “foo”: “foo1”}, which maps an abstract variable “foo” to the
 relevant “foo1” or “foo2”. You can then write a task that
 uses fw_spec[“_fw_env”][“foo”] that will work across all
-these multiple resources.</dd>
+these multiple resources.</p>
+</dd>
 </dl>
 </dd>
-<dt>Returns:</dt>
-<dd>(FWAction)</dd>
+<dt>Returns:</dt><dd><p>(FWAction)</p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -109,29 +105,27 @@ these multiple resources.</dd>
 calculates y, the output. The requirements for using this wf_creator
 with rocketsled are:</p>
 <ol class="arabic simple">
-<li>OptTask is passed into a FireWork in the workflow</li>
-<li><dl class="first docutils">
-<dt>The fields “_x” and “_y” are written to the spec of the FireWork</dt>
-<dd>containing OptTask.</dd>
+<li><p>OptTask is passed into a FireWork in the workflow</p></li>
+<li><dl class="simple">
+<dt>The fields “_x” and “_y” are written to the spec of the FireWork</dt><dd><p>containing OptTask.</p>
+</dd>
 </dl>
 </li>
-<li><dl class="first docutils">
-<dt>You use MissionControl’s “configure” method to set up the optimization,</dt>
-<dd>and pass in wf_creator as it’s first argument.</dd>
+<li><dl class="simple">
+<dt>You use MissionControl’s “configure” method to set up the optimization,</dt><dd><p>and pass in wf_creator as it’s first argument.</p>
+</dd>
 </dl>
 </li>
 </ol>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>x (list): The wf_creator input vector. In this example, it is just 3</dt>
-<dd>integers between 1 and 5 (inclusive).</dd>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>x (list): The wf_creator input vector. In this example, it is just 3</dt><dd><p>integers between 1 and 5 (inclusive).</p>
+</dd>
 </dl>
 </dd>
-<dt>Returns:</dt>
-<dd><dl class="first last docutils">
-<dt>(Workflow): A workflow containing one FireWork (two FireTasks) which</dt>
-<dd>is automatically set up to run the optimization loop.</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>(Workflow): A workflow containing one FireWork (two FireTasks) which</dt><dd><p>is automatically set up to run the optimization loop.</p>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -170,11 +164,9 @@ and categorical inputs.</p>
 <dd><p>This method gets called when the Firetask is run. It can take in a
 Firework spec, perform some task using that data, and then return an
 output in the form of a FWAction.</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>fw_spec (dict): A Firework spec. This comes from the master spec.</dt>
-<dd>In addition, this spec contains a special “_fw_env” key that
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>fw_spec (dict): A Firework spec. This comes from the master spec.</dt><dd><p>In addition, this spec contains a special “_fw_env” key that
 contains the env settings of the FWorker calling this method.
 This provides for abstracting out certain commands or
 settings. For example, “foo” may be named “foo1” in resource
@@ -182,11 +174,12 @@ settings. For example, “foo” may be named “foo1” in resource
 “foo”: “foo1”}, which maps an abstract variable “foo” to the
 relevant “foo1” or “foo2”. You can then write a task that
 uses fw_spec[“_fw_env”][“foo”] that will work across all
-these multiple resources.</dd>
+these multiple resources.</p>
+</dd>
 </dl>
 </dd>
-<dt>Returns:</dt>
-<dd>(FWAction)</dd>
+<dt>Returns:</dt><dd><p>(FWAction)</p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -200,15 +193,14 @@ these multiple resources.</dd>
 vector), and return all information that should be used for learning. If
 you want to use x for learning, make sure to include x in the returned
 z vector.</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>x ([list]): A 3 vector of the form [int, float, str], where the elements</dt>
-<dd>are constrained to the search space given in x_dim above.</dd>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>x ([list]): A 3 vector of the form [int, float, str], where the elements</dt><dd><p>are constrained to the search space given in x_dim above.</p>
+</dd>
 </dl>
 </dd>
-<dt>Returns:</dt>
-<dd>(list): The z vector, to be used for learning.</dd>
+<dt>Returns:</dt><dd><p>(list): The z vector, to be used for learning.</p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -218,9 +210,8 @@ z vector.</p>
 <dd><p>A workflow creator function returning a workflow of the following form:</p>
 <blockquote>
 <div><blockquote>
-<div><dl class="docutils">
-<dt>simulation (fw1)</dt>
-<dd><div class="first last line-block">
+<div><dl>
+<dt>simulation (fw1)</dt><dd><div class="line-block">
 <div class="line"><br /></div>
 </div>
 </dd>
@@ -228,17 +219,15 @@ z vector.</p>
 </div></blockquote>
 <p>optimization (fw2)</p>
 </div></blockquote>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>x ([list]): A 3 vector of the form [int, float, str], where the elements</dt>
-<dd>are constrained to the search space given in x_dim above.</dd>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>x ([list]): A 3 vector of the form [int, float, str], where the elements</dt><dd><p>are constrained to the search space given in x_dim above.</p>
+</dd>
 </dl>
 </dd>
-<dt>Returns:</dt>
-<dd><dl class="first last docutils">
-<dt>(Workflow): The workflow which will run the simulation and optimization</dt>
-<dd>fireworks.</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>(Workflow): The workflow which will run the simulation and optimization</dt><dd><p>fireworks.</p>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -281,8 +270,6 @@ z vector.</p>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -300,13 +287,13 @@ z vector.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.3.15 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.4.17 documentation</a> &#187;</li> 
       </ul>
     </div>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, HackingMaterials.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
     </div>
 
   </body>
