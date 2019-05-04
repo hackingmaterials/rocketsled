@@ -1,7 +1,6 @@
-numpy
-scikit-learn
-scipy
-fireworks
-pymongo==3.7.1
-nose
-matplotlib
+numpy==1.16.3
+scikit-learn==0.20.3
+scipy==1.2.1
+fireworks==1.9.0
+pymongo==3.7.2
+matplotlib==3.0.3
