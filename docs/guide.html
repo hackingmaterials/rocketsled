@@ -104,7 +104,7 @@ The following documentation details all the possible arguments to MissionControl
 <div class="section" id="dimensions">
 <h3><code class="code docutils literal notranslate"><span class="pre">dimensions</span></code><a class="headerlink" href="#dimensions" title="Permalink to this headline">¶</a></h3>
 <p>A list of tuples or lists defining the constraints of the search space. 2-tuples of floats or ints are considered <em>ranges</em> of the form (low, high), and will search all possible entries in between.
-Lists of strings are considered comprehensive domains of categorical dimensions, where there is no spatial relation between entries. Lists of length &gt; 2 of integers and floats are considered discontinuous dimensions.
+Lists of strings are considered comprehensive domains of categorical dimensions, where there is no spatial relation between entries. Lists of length 2 or larger of integers and floats are considered discontinuous dimensions.
 In discontinuous searches, all possible combinations of discontinuous dimension values can be searched.</p>
 <p><strong>Examples</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 3 integer dimensions defined by ranges. There are 125 possibilities in this search space.</span>
