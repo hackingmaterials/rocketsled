@@ -120,7 +120,7 @@ In discontinuous searches, all possible combinations of discontinuous dimension 
     dimensions=[[1.332, 4.565, 19.030], [221.222, 221.0283, 221.099]]
 
 
-*Note: If your search space cannot be described by dimensions alone (i.e., it is a set of discontinuous points which can't be described by ranges or combinatorically, as above, see the 'space' argument*
+*Note: If your search space cannot be described by dimensions alone (i.e., it is a set of discontinuous points which can't be described by ranges or combinatorically, as above, see the 'space_file' argument*
 
 ======================================================
 Optional Arguments to :code:`MissionControl.configure`
