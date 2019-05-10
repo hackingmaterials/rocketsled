@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Comprehensive Guide &#8212; rocketsled 2019.4.17 documentation</title>
+    <title>Comprehensive Guide &#8212; rocketsled 2019.5.3 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.4.17 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.5.3 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -67,6 +67,10 @@ The following documentation details all the possible arguments to MissionControl
 </div>
 <div class="section" id="required-arguments-to-missioncontrol-configure">
 <h1>Required Arguments to <code class="code docutils literal notranslate"><span class="pre">MissionControl.configure</span></code><a class="headerlink" href="#required-arguments-to-missioncontrol-configure" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="the-required-arguments-are-wf-creator-and-dimensions">
+<h2>The required arguments are <code class="code docutils literal notranslate"><span class="pre">wf_creator</span></code> and <code class="code docutils literal notranslate"><span class="pre">dimensions</span></code><a class="headerlink" href="#the-required-arguments-are-wf-creator-and-dimensions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="wf-creator">
+<h3><code class="code docutils literal notranslate"><span class="pre">wf_creator</span></code><a class="headerlink" href="#wf-creator" title="Permalink to this headline">¶</a></h3>
 <p>This is a function object which takes in an input vector x and returns your optimization loop workflow. The function must</p>
 <ol class="arabic simple">
 <li><p>Accept x</p></li>
@@ -96,6 +100,9 @@ The following documentation details all the possible arguments to MissionControl
 </pre></div>
 </div>
 <p>See the basic tutorial or the <code class="code docutils literal notranslate"><span class="pre">examples</span></code> folder for examples of writing wf_creator functions.</p>
+</div>
+<div class="section" id="dimensions">
+<h3><code class="code docutils literal notranslate"><span class="pre">dimensions</span></code><a class="headerlink" href="#dimensions" title="Permalink to this headline">¶</a></h3>
 <p>A list of tuples or lists defining the constraints of the search space. 2-tuples of floats or ints are considered <em>ranges</em> of the form (low, high), and will search all possible entries in between.
 Lists of strings are considered comprehensive domains of categorical dimensions, where there is no spatial relation between entries. Lists of length &gt; 2 of integers and floats are considered discontinuous dimensions.
 In discontinuous searches, all possible combinations of discontinuous dimension values can be searched.</p>
@@ -117,6 +124,8 @@ In discontinuous searches, all possible combinations of discontinuous dimension 
 </pre></div>
 </div>
 <p><em>Note: If your search space cannot be described by dimensions alone (i.e., it is a set of discontinuous points which can’t be described by ranges or combinatorically, as above, see the ‘space’ argument</em></p>
+</div>
+</div>
 </div>
 <div class="section" id="optional-arguments-to-missioncontrol-configure">
 <h1>Optional Arguments to <code class="code docutils literal notranslate"><span class="pre">MissionControl.configure</span></code><a class="headerlink" href="#optional-arguments-to-missioncontrol-configure" title="Permalink to this headline">¶</a></h1>
@@ -484,7 +493,14 @@ your problem is most likely with the timeout setting.</p>
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#required-arguments-to-missioncontrol-configure">Required Arguments to <code class="code docutils literal notranslate"><span class="pre">MissionControl.configure</span></code></a></li>
+<li><a class="reference internal" href="#required-arguments-to-missioncontrol-configure">Required Arguments to <code class="code docutils literal notranslate"><span class="pre">MissionControl.configure</span></code></a><ul>
+<li><a class="reference internal" href="#the-required-arguments-are-wf-creator-and-dimensions">The required arguments are <code class="code docutils literal notranslate"><span class="pre">wf_creator</span></code> and <code class="code docutils literal notranslate"><span class="pre">dimensions</span></code></a><ul>
+<li><a class="reference internal" href="#wf-creator"><code class="code docutils literal notranslate"><span class="pre">wf_creator</span></code></a></li>
+<li><a class="reference internal" href="#dimensions"><code class="code docutils literal notranslate"><span class="pre">dimensions</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#optional-arguments-to-missioncontrol-configure">Optional Arguments to <code class="code docutils literal notranslate"><span class="pre">MissionControl.configure</span></code></a><ul>
 <li><a class="reference internal" href="#predictors">Predictors</a><ul>
 <li><a class="reference internal" href="#predictor"><code class="code docutils literal notranslate"><span class="pre">predictor</span></code></a></li>
@@ -556,7 +572,7 @@ your problem is most likely with the timeout setting.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.4.17 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.5.3 documentation</a> &#187;</li> 
       </ul>
     </div>
 
