@@ -97,7 +97,7 @@ See the basic tutorial or the :code:`examples` folder for examples of writing wf
 ------------------
 
 A list of tuples or lists defining the constraints of the search space. 2-tuples of floats or ints are considered *ranges* of the form (low, high), and will search all possible entries in between.
-Lists of strings are considered comprehensive domains of categorical dimensions, where there is no spatial relation between entries. Lists of length > 2 of integers and floats are considered discontinuous dimensions.
+Lists of strings are considered comprehensive domains of categorical dimensions, where there is no spatial relation between entries. Lists of length 2 or larger of integers and floats are considered discontinuous dimensions.
 In discontinuous searches, all possible combinations of discontinuous dimension values can be searched.
 
 **Examples**
