@@ -49,9 +49,11 @@ The name of the collection where optimization data will be stored. Make sure onl
 Required Arguments to :code:`MissionControl.configure`
 ======================================================
 
+The required arguments are :code:`wf_creator` and :code:`dimensions`
+____________________________________________________________________
 
 :code:`wf_creator`
---------------
+------------------
 
 This is a function object which takes in an input vector x and returns your optimization loop workflow. The function must
 
