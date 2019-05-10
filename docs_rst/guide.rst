@@ -199,8 +199,7 @@ itself should have the form:
 .. code-block:: python
 
     # Example builtin predictor:
-    predictor='SVR'
-
+    predictor='RandomForestRegressor'
     # Example custom predictor:
     predictor='my_package.my_module.my_predictor'
 
