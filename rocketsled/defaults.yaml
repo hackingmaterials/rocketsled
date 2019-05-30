@@ -20,13 +20,13 @@ onehot_categorical: False               # for custom predictors only
 duplicate_check: False                  # for custom predictors only
 
 # z-vector parameters
-get_z: null                             # full path of the get_z function (e.g. my_pkg.my_module.my_get_z
+get_z: null                             # full path of the get_z function (e.g. my_pkg.my_module.my_get_z)
 get_z_args: null
 get_z_kwargs: null
 z_file: null                            # filepath to use to store the z_guesses, if evaluating z repeatedly is not inexpensive
 
 # parallelism
-enforce_sequential: True
+enforce_sequential: True                # handling parallelism of the optimization operations (not objective function execution)
 tolerances: null                        # for advanced duplicate checking
 batch_size: 1                           # number of new workflows to launch in one batch
 timeout: 500                            # seconds before resetting the manager
