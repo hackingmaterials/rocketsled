@@ -11,9 +11,6 @@ from os import getpid, path
 from itertools import product
 
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, \
-    ExtraTreesRegressor
-from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.preprocessing import StandardScaler
 from fireworks.utilities.fw_utilities import explicit_serialize
@@ -23,7 +20,7 @@ from fireworks import FWAction, LaunchPad
 from rocketsled.acq import acquire
 from rocketsled.utils import deserialize, dtypes, pareto, \
     convert_native, split_xz, is_duplicate_by_tolerance, ExhaustedSpaceError, \
-    NotConfiguredError, BatchNotReadyError, ObjectiveError
+    NotConfiguredError, BatchNotReadyError, ObjectiveError, BUILTIN_PREDICTORS
 
 __author__ = "Alexander Dunn"
 __email__ = "ardunn@lbl.gov"
@@ -98,9 +95,7 @@ class OptTask(FireTaskBase):
 
         # Declared attrs
         self.n_objs = None
-        plist = [RandomForestRegressor, GaussianProcessRegressor,
-                 ExtraTreesRegressor, GradientBoostingRegressor]
-        self.builtin_predictors = {p.__name__: p for p in plist}
+        self.builtin_predictors = {p.__name__: p for p in BUILTIN_PREDICTORS}
         self._n_cats = 0
         self._encoding_info = []
 
