@@ -161,12 +161,13 @@ class MissionControl:
                 of minimizing. Defaults to False, meaninng minimze.
 
             z-vector features:
-            get_z (string): the fully-qualified name of a function which, given
-                an x vector, returns another vector z which provides extra
-                information to the machine learner. The features defined in z
-                are not used to run the workflow, but are used for learning. If
-                z_features are enabled, ONLY z features will be used for
-                learning (x vectors essentially become tags or identifiers only)
+            get_z (function or str): the fully-qualified name of a function
+                (or function object itself) which, given an x vector, returns
+                another vector z which provides extra information to the machine
+                learner. The features defined in z are not used to run the
+                workflow, but are used for learning. If z_features are enabled,
+                ONLY z features will be used for learning (x vectors essentially
+                become tags or identifiers only)
                 Examples:
                     get_z = 'my_pkg.my_module.my_fun'
                     get_z = '/path/to/folder/containing/my_dir/my_module.my_fun'
