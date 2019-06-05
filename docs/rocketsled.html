@@ -325,13 +325,14 @@ if it is within 1e-6. Then:</p>
 </dd>
 </dl>
 <p>z-vector features:
-get_z (string): the fully-qualified name of a function which, given</p>
+get_z (function or str): the fully-qualified name of a function</p>
 <blockquote>
-<div><p>an x vector, returns another vector z which provides extra
-information to the machine learner. The features defined in z
-are not used to run the workflow, but are used for learning. If
-z_features are enabled, ONLY z features will be used for
-learning (x vectors essentially become tags or identifiers only)
+<div><p>(or function object itself) which, given an x vector, returns
+another vector z which provides extra information to the machine
+learner. The features defined in z are not used to run the
+workflow, but are used for learning. If z_features are enabled,
+ONLY z features will be used for learning (x vectors essentially
+become tags or identifiers only)
 Examples:</p>
 <blockquote>
 <div><p>get_z = ‘my_pkg.my_module.my_fun’

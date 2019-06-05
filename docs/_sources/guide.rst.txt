@@ -157,7 +157,7 @@ To use a random guess, choose 'random'.
 
 **Custom**
 
-A string of the fully qualified name of your predictor. The predictor function
+A function object for your predictor, or the string for the fully qualified name of your predictor function. The predictor function
 itself should have the form:
 
 .. code-block:: python
@@ -194,13 +194,20 @@ itself should have the form:
         best_x = custom_find_best_val_function(X_test, possible_values)
         return best_x
 
+You can also add additional predictor positional arguments and keyword arguments
+with the :code:`predictor_args` and :code:`predictor_kwargs` arguments (see below).
+
 **Example**
 
 .. code-block:: python
 
     # Example builtin predictor:
     predictor='RandomForestRegressor'
+
     # Example custom predictor:
+    predictor = my_predictor_function_object
+
+    # Or equivalently as a string
     predictor='my_package.my_module.my_predictor'
 
 :code:`predictor_args`
@@ -472,7 +479,7 @@ extra features, which do not uniquely define the workflow but are nonetheless us
 :code:`get_z`
 --------------
 
-The string representing a function that, when given a vector x, return any number of derived features. Derived features can be
+The function object or fully defined string representing a function that, when given a vector x, return any number of derived features. Derived features can be
 any of the types rocketsled can handle (float, int, categorical).
 
 The features defined in z are not used to run the workflow, but are used for learning. If z features are
@@ -485,14 +492,17 @@ Dimensions are not necessary when using get_z.
 
 .. code-block:: python
 
-    # A module containing the get_z function
+    # the function object itself
+    get_z=my_get_z_function_object
+
+    # Equivalently, as a string
     get_z='my_package.my_module.my_fun'
 
     # Alternatively...
     get_z='/path/to/folder/containing/my_package.my_module.my_fun'
 
 
-Here's an example of the form get_z should take as a function
+Here's an example of the form get_z should take as a function. It takes in a vector x and returns a vector z. The z vector can be any length.
 
 .. code-block:: python
 
