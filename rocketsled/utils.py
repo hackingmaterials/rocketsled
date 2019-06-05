@@ -8,9 +8,16 @@ from collections.abc import Iterable
 
 import numpy as np
 from ruamel.yaml import YAML
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, \
+    ExtraTreesRegressor
+from sklearn.gaussian_process import GaussianProcessRegressor
 
 __author__ = "Alexander Dunn"
 __email__ = "ardunn@lbl.gov"
+
+
+BUILTIN_PREDICTORS = [RandomForestRegressor, GaussianProcessRegressor,
+                      ExtraTreesRegressor, GradientBoostingRegressor]
 
 
 class RSBaseException(BaseException):
