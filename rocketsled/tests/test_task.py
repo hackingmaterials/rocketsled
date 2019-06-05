@@ -184,7 +184,8 @@ class TestWorkflows(unittest.TestCase):
         launchpad.add_wf(wf_creator_basic([5, 11, 'blue']))
         launch_rocket(launchpad)
         done = self.c.find_one({'y': {'$exists': 1, '$ne': 'reserved'}})
-        self.assertEqual(done["predictor"], gp)
+        self.assertEqual(done["predictor"],
+                         f"{gp} with acquisition: Expected Improvement")
 
     def test_custom_predictor(self):
         self.mc.configure(wf_creator=wf_creator_basic,
