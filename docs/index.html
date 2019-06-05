@@ -178,12 +178,14 @@ $ pip install -e . -r requirements.txt
 </div>
 <div class="section" id="run-tests-locally">
 <h2>Run tests locally<a class="headerlink" href="#run-tests-locally" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="c1"># Make sure the mongod daemon is running as admin</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="c1"># Rocketsled does *not* require mongo admin privileges to run, but to run</span>
+$ <span class="c1"># tests repeatedly (i.e., for debugging), it can be helpful to first</span>
+$ <span class="c1"># run the tests with the mongod daemon running as admin</span>
 $ mongod
-$ python configure.py <span class="nb">test</span>
+$ python setup.py <span class="nb">test</span>
 </pre></div>
 </div>
-<p>Tip: To run tests using a remote launchpad, edit <code class="docutils literal notranslate"><span class="pre">/rocketsled/tests/tests_launchpad.yaml</span></code></p>
+<p>Tip: To run tests using a different mongodb (e.g., a remote fireworks launchpad), edit <code class="docutils literal notranslate"><span class="pre">/rocketsled/tests/tests_launchpad.yaml</span></code>!</p>
 </div>
 </div>
 <div class="section" id="get-started">

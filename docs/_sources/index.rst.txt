@@ -221,11 +221,13 @@ Run tests locally
 
 .. code-block:: bash
 
-    $ # Make sure the mongod daemon is running as admin
+    $ # Rocketsled does *not* require mongo admin privileges to run, but to run
+    $ # tests repeatedly (i.e., for debugging), it can be helpful to first
+    $ # run the tests with the mongod daemon running as admin
     $ mongod
-    $ python configure.py test
+    $ python setup.py test
 
-Tip: To run tests using a remote launchpad, edit ``/rocketsled/tests/tests_launchpad.yaml``
+Tip: To run tests using a different mongodb (e.g., a remote fireworks launchpad), edit ``/rocketsled/tests/tests_launchpad.yaml``!
 
 ===========
 Get Started
