@@ -184,8 +184,7 @@ class TestWorkflows(unittest.TestCase):
         launchpad.add_wf(wf_creator_basic([5, 11, 'blue']))
         launch_rocket(launchpad)
         done = self.c.find_one({'y': {'$exists': 1, '$ne': 'reserved'}})
-        for doc in done:
-            self.assertEqual(doc["predictor"], gp)
+        self.assertEqual(done["predictor"], gp)
 
     def test_custom_predictor(self):
         self.mc.configure(wf_creator=wf_creator_basic,
@@ -285,6 +284,9 @@ class TestWorkflows(unittest.TestCase):
                 best[n] = doc['y']
         print(best)
         self.assertGreater(np.mean(best), avg_random_best)
+        config = self.c.find_one({"doctype": "config"})
+        self.assertEqual(config["predictor"], common_kwargs["predictor"])
+
 
     def test_multi(self):
         self.mc.configure(wf_creator=wf_creator_multiobjective,
