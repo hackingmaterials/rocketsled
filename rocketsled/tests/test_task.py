@@ -174,6 +174,19 @@ class TestWorkflows(unittest.TestCase):
         self.assertEqual(done['index'], 1)
         self.assertEqual(self.c.count_documents(reserved), 1)
 
+    def test_alternate_builtin_predictor(self):
+        gp = "GaussianProcessRegressor"
+        self.mc.configure(wf_creator=wf_creator_basic,
+                          dimensions=self.dims_basic,
+                          predictor=gp)
+        config = self.c.find_one({"doctype": "config"})
+        self.assertEqual(config["predictor"], gp)
+        launchpad.add_wf(wf_creator_basic([5, 11, 'blue']))
+        launch_rocket(launchpad)
+        done = self.c.find_one({'y': {'$exists': 1, '$ne': 'reserved'}})
+        for doc in done:
+            self.assertEqual(doc["predictor"], gp)
+
     def test_custom_predictor(self):
         self.mc.configure(wf_creator=wf_creator_basic,
                           dimensions=self.dims_basic,
