@@ -146,7 +146,7 @@ In discontinuous searches, all possible combinations of discontinuous dimension 
 <p>Defaults to ‘RandomForestRegressor’</p>
 <p>To use a random guess, choose ‘random’.</p>
 <p><strong>Custom</strong></p>
-<p>A string of the fully qualified name of your predictor. The predictor function
+<p>A function object for your predictor, or the string for the fully qualified name of your predictor function. The predictor function
 itself should have the form:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">my_predictor</span><span class="p">(</span><span class="n">XZ_explored</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">x_dims</span><span class="p">,</span> <span class="n">XZ_unexplored</span><span class="p">)</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -181,10 +181,16 @@ itself should have the form:</p>
     <span class="k">return</span> <span class="n">best_x</span>
 </pre></div>
 </div>
+<p>You can also add additional predictor positional arguments and keyword arguments
+with the <code class="code docutils literal notranslate"><span class="pre">predictor_args</span></code> and <code class="code docutils literal notranslate"><span class="pre">predictor_kwargs</span></code> arguments (see below).</p>
 <p><strong>Example</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example builtin predictor:</span>
 <span class="n">predictor</span><span class="o">=</span><span class="s1">&#39;RandomForestRegressor&#39;</span>
+
 <span class="c1"># Example custom predictor:</span>
+<span class="n">predictor</span> <span class="o">=</span> <span class="n">my_predictor_function_object</span>
+
+<span class="c1"># Or equivalently as a string</span>
 <span class="n">predictor</span><span class="o">=</span><span class="s1">&#39;my_package.my_module.my_predictor&#39;</span>
 </pre></div>
 </div>
@@ -371,21 +377,24 @@ For categorical features, put ‘None’</p>
 extra features, which do not uniquely define the workflow but are nonetheless useful, are called “z”.</p>
 <div class="section" id="get-z">
 <h3><code class="code docutils literal notranslate"><span class="pre">get_z</span></code><a class="headerlink" href="#get-z" title="Permalink to this headline">¶</a></h3>
-<p>The string representing a function that, when given a vector x, return any number of derived features. Derived features can be
+<p>The function object or fully defined string representing a function that, when given a vector x, return any number of derived features. Derived features can be
 any of the types rocketsled can handle (float, int, categorical).</p>
 <p>The features defined in z are not used to run the workflow, but are used for learning. If z features are
 enabled, ONLY z features will be used for learning (x vectors essentially become tags or identifiers only).
 To use x features and z features, simply add x features to the returned z vector.</p>
 <p>Dimensions are not necessary when using get_z.</p>
 <p><strong>Example</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># A module containing the get_z function</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># the function object itself</span>
+<span class="n">get_z</span><span class="o">=</span><span class="n">my_get_z_function_object</span>
+
+<span class="c1"># Equivalently, as a string</span>
 <span class="n">get_z</span><span class="o">=</span><span class="s1">&#39;my_package.my_module.my_fun&#39;</span>
 
 <span class="c1"># Alternatively...</span>
 <span class="n">get_z</span><span class="o">=</span><span class="s1">&#39;/path/to/folder/containing/my_package.my_module.my_fun&#39;</span>
 </pre></div>
 </div>
-<p>Here’s an example of the form get_z should take as a function</p>
+<p>Here’s an example of the form get_z should take as a function. It takes in a vector x and returns a vector z. The z vector can be any length.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># my_module.py</span>
 
 <span class="c1"># Features are derived from the x vector, but do not uniquely define it.</span>
