@@ -211,9 +211,7 @@ class MissionControl:
             elif kw in ["get_z", "predictor"]:
                 if hasattr(kwargs[kw], '__call__'):
                     config[kw] = serialize(kwargs[kw])
-                elif kw == "get_z":
-                    raise TypeError("get_z function must be callable!")
-                elif kw == "predictor":
+                else:
                     config[kw] = kwargs[kw]
             else:
                 config[kw] = kwargs[kw]
