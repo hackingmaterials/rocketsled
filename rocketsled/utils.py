@@ -82,7 +82,7 @@ def deserialize(fun):
     """
     toks = fun.rsplit(".", 1)
     modname, funcname = toks
-    if "/" in toks[0]:
+    if os.sep in toks[0]:
         _, modname = toks[0].rsplit("/", 1)
         mod = imp.load_source(modname, toks[0] + ".py")
     else:
