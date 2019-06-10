@@ -103,6 +103,7 @@ def serialize(fun):
         (str) The full function path as a string.
 
     """
+    mod_sep = "."
     mod_path = fun.__module__
     name = fun.__name__
     if mod_path == "__main__":
@@ -115,9 +116,9 @@ def serialize(fun):
 
         for _ in range(5):
             try:
-                full_import_path = all_pkgs[-1] + "." + full_import_path
+                full_import_path = all_pkgs[-1] + mod_sep + full_import_path
                 all_pkgs = all_pkgs[:-1]
-                fun_path = full_import_path + "." + name
+                fun_path = full_import_path + mod_sep + name
                 deserialize(fun_path)
                 return fun_path
             except ImportError:
