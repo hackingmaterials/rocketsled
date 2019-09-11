@@ -2,7 +2,6 @@
 Utility functions for OptTask.
 """
 import os
-import sys
 import imp
 import random
 from collections.abc import Iterable
