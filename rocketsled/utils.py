@@ -2,6 +2,7 @@
 Utility functions for OptTask.
 """
 import os
+import sys
 import imp
 import random
 from collections.abc import Iterable
@@ -124,8 +125,9 @@ def serialize(fun):
             except ImportError:
                 continue
         else:
-            raise ImportError("{} couldn't be serialized to be imported. Are "
-                              "you sure it's module is in your PYTHONPATH?")
+            raise ImportError(f"{mod_path} couldn't be serialized to be "
+                              f"imported. Are you sure it's module is in your "
+                              f"PYTHONPATH?")
     else:
         fun_path = "{}.{}".format(mod_path, name)
         return fun_path
