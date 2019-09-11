@@ -82,13 +82,16 @@ Alternatively, define it with a string.
     wf_creator='my_package.my_module.my_wf_creator'
 
 
-Alternatively, you can use a function contained in a file not in registered module. While this may work, it is **NOT** recommended!
+Alternatively, you can use a function contained in a file **not** in registered module. While this may work, it is **NOT** recommended!
 
 **Example**
 
 .. code-block:: python
 
     wf_creator='/path/to/my_module.my_wf_creator'
+
+For this to work, your file needs to be present at this path on all computing resources used for execution. Additionally, this file should be in the PYTHONPATH. Thus it is **HIGHLY RECOMMENDED** you place your wf_creator
+somewhere in a python package (e.g., :code:`my_package.my_module.my_other_module.my_wf_creator`) accessible on all the systems you plan to use rocketsled on.
 
 
 See the basic tutorial or the :code:`examples` folder for examples of writing wf_creator functions.

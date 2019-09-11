@@ -94,11 +94,13 @@ The following documentation details all the possible arguments to MissionControl
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">wf_creator</span><span class="o">=</span><span class="s1">&#39;my_package.my_module.my_wf_creator&#39;</span>
 </pre></div>
 </div>
-<p>Alternatively, you can use a function contained in a file not in registered module. While this may work, it is <strong>NOT</strong> recommended!</p>
+<p>Alternatively, you can use a function contained in a file <strong>not</strong> in registered module. While this may work, it is <strong>NOT</strong> recommended!</p>
 <p><strong>Example</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">wf_creator</span><span class="o">=</span><span class="s1">&#39;/path/to/my_module.my_wf_creator&#39;</span>
 </pre></div>
 </div>
+<p>For this to work, your file needs to be present at this path on all computing resources used for execution. Additionally, this file should be in the PYTHONPATH. Thus it is <strong>HIGHLY RECOMMENDED</strong> you place your wf_creator
+somewhere in a python package (e.g., <code class="code docutils literal notranslate"><span class="pre">my_package.my_module.my_other_module.my_wf_creator</span></code>) accessible on all the systems you plan to use rocketsled on.</p>
 <p>See the basic tutorial or the <code class="code docutils literal notranslate"><span class="pre">examples</span></code> folder for examples of writing wf_creator functions.</p>
 </div>
 <div class="section" id="dimensions">
