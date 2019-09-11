@@ -75,7 +75,7 @@ def update_changelog(ctx):
 @task
 def publish(ctx):
     version_check(ctx)
-    ctx.run("rm dist/*.* build/*", warn=True)
+    ctx.run("rm -r dist build", warn=True)
     ctx.run("python3 setup.py sdist bdist_wheel")
     ctx.run("twine upload dist/*")
 

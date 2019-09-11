@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>rocketsled.tests package &#8212; rocketsled 2019.6.5 documentation</title>
+    <title>rocketsled.tests package &#8212; rocketsled 2019.9.11 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.6.5 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.9.11 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -46,7 +46,7 @@
 <p>Auxiliary file for testing utils.</p>
 <dl class="function">
 <dt id="rocketsled.tests.deserialize_func.obj_func">
-<code class="descclassname">rocketsled.tests.deserialize_func.</code><code class="descname">obj_func</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.deserialize_func.obj_func" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rocketsled.tests.deserialize_func.</code><code class="sig-name descname">obj_func</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.deserialize_func.obj_func" title="Permalink to this definition">¶</a></dt>
 <dd><p>Objective function which sums the elements in x.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><p>x ([float] or [int]): List of numbers to sum.</p>
@@ -68,11 +68,11 @@ Modify tests_launchpad.yaml to define the db where you’d like to run the tests
 if you do not have access to admin mongod privledges on your local machine.</p>
 <dl class="class">
 <dt id="rocketsled.tests.test_task.AccuracyTask">
-<em class="property">class </em><code class="descclassname">rocketsled.tests.test_task.</code><code class="descname">AccuracyTask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.AccuracyTask" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">rocketsled.tests.test_task.</code><code class="sig-name descname">AccuracyTask</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.AccuracyTask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fireworks.core.firework.FireTaskBase</span></code></p>
 <dl class="method">
 <dt id="rocketsled.tests.test_task.AccuracyTask.run_task">
-<code class="descname">run_task</code><span class="sig-paren">(</span><em>fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.AccuracyTask.run_task" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run_task</code><span class="sig-paren">(</span><em class="sig-param">fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.AccuracyTask.run_task" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method gets called when the Firetask is run. It can take in a
 Firework spec, perform some task using that data, and then return an
 output in the form of a FWAction.</p>
@@ -99,11 +99,11 @@ these multiple resources.</p>
 
 <dl class="class">
 <dt id="rocketsled.tests.test_task.BasicTestTask">
-<em class="property">class </em><code class="descclassname">rocketsled.tests.test_task.</code><code class="descname">BasicTestTask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.BasicTestTask" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">rocketsled.tests.test_task.</code><code class="sig-name descname">BasicTestTask</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.BasicTestTask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fireworks.core.firework.FireTaskBase</span></code></p>
 <dl class="method">
 <dt id="rocketsled.tests.test_task.BasicTestTask.run_task">
-<code class="descname">run_task</code><span class="sig-paren">(</span><em>fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.BasicTestTask.run_task" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run_task</code><span class="sig-paren">(</span><em class="sig-param">fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.BasicTestTask.run_task" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method gets called when the Firetask is run. It can take in a
 Firework spec, perform some task using that data, and then return an
 output in the form of a FWAction.</p>
@@ -130,11 +130,11 @@ these multiple resources.</p>
 
 <dl class="class">
 <dt id="rocketsled.tests.test_task.MultiTestTask">
-<em class="property">class </em><code class="descclassname">rocketsled.tests.test_task.</code><code class="descname">MultiTestTask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.MultiTestTask" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">rocketsled.tests.test_task.</code><code class="sig-name descname">MultiTestTask</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.MultiTestTask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fireworks.core.firework.FireTaskBase</span></code></p>
 <dl class="method">
 <dt id="rocketsled.tests.test_task.MultiTestTask.run_task">
-<code class="descname">run_task</code><span class="sig-paren">(</span><em>fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.MultiTestTask.run_task" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run_task</code><span class="sig-paren">(</span><em class="sig-param">fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.MultiTestTask.run_task" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method gets called when the Firetask is run. It can take in a
 Firework spec, perform some task using that data, and then return an
 output in the form of a FWAction.</p>
@@ -161,103 +161,103 @@ these multiple resources.</p>
 
 <dl class="class">
 <dt id="rocketsled.tests.test_task.TestWorkflows">
-<em class="property">class </em><code class="descclassname">rocketsled.tests.test_task.</code><code class="descname">TestWorkflows</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">rocketsled.tests.test_task.</code><code class="sig-name descname">TestWorkflows</code><span class="sig-paren">(</span><em class="sig-param">methodName='runTest'</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
 <dl class="method">
 <dt id="rocketsled.tests.test_task.TestWorkflows.setUp">
-<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.setUp" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.setUp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook method for setting up the test fixture before exercising it.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_task.TestWorkflows.tearDown">
-<code class="descname">tearDown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.tearDown" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">tearDown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.tearDown" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook method for deconstructing the test fixture after testing it.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_task.TestWorkflows.test_accuracy">
-<code class="descname">test_accuracy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_accuracy" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_accuracy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_accuracy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_task.TestWorkflows.test_acqfuncs">
-<code class="descname">test_acqfuncs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_acqfuncs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_acqfuncs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_acqfuncs" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_task.TestWorkflows.test_alternate_builtin_predictor">
-<code class="descname">test_alternate_builtin_predictor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_alternate_builtin_predictor" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_alternate_builtin_predictor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_alternate_builtin_predictor" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_task.TestWorkflows.test_basic">
-<code class="descname">test_basic</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_basic" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_basic</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_basic" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_task.TestWorkflows.test_complex">
-<code class="descname">test_complex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_complex" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_complex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_complex" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_task.TestWorkflows.test_custom_predictor">
-<code class="descname">test_custom_predictor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_custom_predictor" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_custom_predictor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_custom_predictor" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_task.TestWorkflows.test_duplicates">
-<code class="descname">test_duplicates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_duplicates" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_duplicates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_duplicates" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_task.TestWorkflows.test_get_z">
-<code class="descname">test_get_z</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_get_z" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_get_z</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_get_z" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_task.TestWorkflows.test_missioncontrol">
-<code class="descname">test_missioncontrol</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_missioncontrol" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_missioncontrol</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_missioncontrol" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_task.TestWorkflows.test_multi">
-<code class="descname">test_multi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_multi" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_multi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_multi" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_task.TestWorkflows.test_parallel">
-<code class="descname">test_parallel</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_parallel" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_parallel</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.TestWorkflows.test_parallel" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="function">
 <dt id="rocketsled.tests.test_task.custom_predictor">
-<code class="descclassname">rocketsled.tests.test_task.</code><code class="descname">custom_predictor</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.custom_predictor" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rocketsled.tests.test_task.</code><code class="sig-name descname">custom_predictor</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.custom_predictor" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="rocketsled.tests.test_task.get_z">
-<code class="descclassname">rocketsled.tests.test_task.</code><code class="descname">get_z</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.get_z" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rocketsled.tests.test_task.</code><code class="sig-name descname">get_z</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.get_z" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="rocketsled.tests.test_task.wf_creator_accuracy">
-<code class="descclassname">rocketsled.tests.test_task.</code><code class="descname">wf_creator_accuracy</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.wf_creator_accuracy" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rocketsled.tests.test_task.</code><code class="sig-name descname">wf_creator_accuracy</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.wf_creator_accuracy" title="Permalink to this definition">¶</a></dt>
 <dd><p>An expensive test ensuring the default predictor actually performs better
 than the average random case on the function defined in AccuracyTask.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="rocketsled.tests.test_task.wf_creator_basic">
-<code class="descclassname">rocketsled.tests.test_task.</code><code class="descname">wf_creator_basic</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.wf_creator_basic" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rocketsled.tests.test_task.</code><code class="sig-name descname">wf_creator_basic</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.wf_creator_basic" title="Permalink to this definition">¶</a></dt>
 <dd><p>Testing a basic workflow with one Firework, and two FireTasks.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="rocketsled.tests.test_task.wf_creator_complex">
-<code class="descclassname">rocketsled.tests.test_task.</code><code class="descname">wf_creator_complex</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.wf_creator_complex" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rocketsled.tests.test_task.</code><code class="sig-name descname">wf_creator_complex</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.wf_creator_complex" title="Permalink to this definition">¶</a></dt>
 <dd><p>Testing a custom workflow of five fireworks with complex dependencies, and
 optimization in the middle.
 This “complex” Workflow has the form:</p>
@@ -285,7 +285,7 @@ fw3 (optimization)</p>
 
 <dl class="function">
 <dt id="rocketsled.tests.test_task.wf_creator_multiobjective">
-<code class="descclassname">rocketsled.tests.test_task.</code><code class="descname">wf_creator_multiobjective</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.wf_creator_multiobjective" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rocketsled.tests.test_task.</code><code class="sig-name descname">wf_creator_multiobjective</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_task.wf_creator_multiobjective" title="Permalink to this definition">¶</a></dt>
 <dd><p>Testing a multiobjective optimization.</p>
 </dd></dl>
 
@@ -295,76 +295,76 @@ fw3 (optimization)</p>
 <p>Testing utility functions in rocketsled</p>
 <dl class="class">
 <dt id="rocketsled.tests.test_utils.TestUtilities">
-<em class="property">class </em><code class="descclassname">rocketsled.tests.test_utils.</code><code class="descname">TestUtilities</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">rocketsled.tests.test_utils.</code><code class="sig-name descname">TestUtilities</code><span class="sig-paren">(</span><em class="sig-param">methodName='runTest'</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
 <dl class="method">
 <dt id="rocketsled.tests.test_utils.TestUtilities.test_Dtypes">
-<code class="descname">test_Dtypes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_Dtypes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_Dtypes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_Dtypes" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_utils.TestUtilities.test_check_dims">
-<code class="descname">test_check_dims</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_check_dims" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_check_dims</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_check_dims" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_utils.TestUtilities.test_convert_native">
-<code class="descname">test_convert_native</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_convert_native" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_convert_native</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_convert_native" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_utils.TestUtilities.test_convert_value_to_native">
-<code class="descname">test_convert_value_to_native</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_convert_value_to_native" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_convert_value_to_native</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_convert_value_to_native" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_utils.TestUtilities.test_deserialize">
-<code class="descname">test_deserialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_deserialize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_deserialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_deserialize" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_utils.TestUtilities.test_get_default_opttask_kwargs">
-<code class="descname">test_get_default_opttask_kwargs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_get_default_opttask_kwargs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_get_default_opttask_kwargs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_get_default_opttask_kwargs" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_utils.TestUtilities.test_get_len">
-<code class="descname">test_get_len</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_get_len" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_get_len</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_get_len" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_utils.TestUtilities.test_is_discrete">
-<code class="descname">test_is_discrete</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_is_discrete" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_is_discrete</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_is_discrete" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_utils.TestUtilities.test_latex_float">
-<code class="descname">test_latex_float</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_latex_float" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_latex_float</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_latex_float" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_utils.TestUtilities.test_pareto">
-<code class="descname">test_pareto</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_pareto" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_pareto</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_pareto" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_utils.TestUtilities.test_random_guess">
-<code class="descname">test_random_guess</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_random_guess" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_random_guess</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_random_guess" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_utils.TestUtilities.test_serialize">
-<code class="descname">test_serialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_serialize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_serialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_serialize" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_utils.TestUtilities.test_split_xz">
-<code class="descname">test_split_xz</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_split_xz" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_split_xz</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_split_xz" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="rocketsled.tests.test_utils.TestUtilities.test_tolerance_check">
-<code class="descname">test_tolerance_check</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_tolerance_check" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test_tolerance_check</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.tests.test_utils.TestUtilities.test_tolerance_check" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -401,10 +401,10 @@ fw3 (optimization)</p>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -423,13 +423,13 @@ fw3 (optimization)</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.6.5 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.9.11 documentation</a> &#187;</li> 
       </ul>
     </div>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, HackingMaterials.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
     </div>
 
   </body>
