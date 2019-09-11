@@ -1,10 +1,8 @@
 import os
 from setuptools import setup, find_packages
 
+version = "2019.9.11"
 module_dir = os.path.dirname(os.path.abspath(__file__))
-with open(os.path.join(module_dir, "VERSION"), "r") as f:
-    version = f.read()
-
 with open(os.path.join(module_dir, "requirements.txt"), "r") as f:
     requirements = f.read().replace(" ", "").split("\n")
 
@@ -61,6 +59,8 @@ setup(
     test_suite='rocketsled',
     tests_require='tests',
     packages=find_packages(),
-    package_data={'rocketsled': ['defaults.yaml']},
+    # package_data={'rocketsled': ['defaults.yaml']},
     install_requires=requirements,
-    data_files=['LICENSE'])
+    # data_files=['LICENSE', 'README.md', 'VERSION'],
+    include_package_data=True
+)
