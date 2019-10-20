@@ -39,7 +39,6 @@ jobs:
       - run:
           name: run tests
           command: |
-            export CODACY_PROJECT_TOKEN="d5aad8f7509a480da15ec1fb69c455ff"
             . venv/bin/activate
             coverage run setup.py test
             coverage xml
