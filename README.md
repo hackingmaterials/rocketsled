@@ -1,5 +1,5 @@
 
-# <img alt="rocketsled" src="docs_rst/_static/logo-small.png" width="400">
+# <img alt="rocketsled" src="docs_rst/_static/logo-small.png" width="350">
 
 | Tests  |   Code Coverage   |  Codacy | Release |
 |:----------:|:-------------:|:------:|:------:|
