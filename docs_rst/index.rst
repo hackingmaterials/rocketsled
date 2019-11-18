@@ -259,7 +259,7 @@ Want to see something added or changed? Here's a few ways you can!
 * Let us know about areas of the code that are difficult to understand or use.
 * Contribute code! Fork our `Github repo <https://github.com/hackingmaterials/rocketsled>`_ and make a pull request.
 
-Submit all questions and contact to the `Google group <https://groups.google.com/forum/#!forum/fireworkflows>`_
+Submit all questions and contact to the `Online Help Forum <https://discuss.matsci.org/c/fireworks>`_
 
 A comprehensive guide to contributions can be found `here. <https://github.com/hackingmaterials/rocketsled/blob/master/CONTRIBUTING.md>`_
 
