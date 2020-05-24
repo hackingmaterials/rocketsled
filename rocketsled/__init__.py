@@ -9,6 +9,6 @@ from rocketsled.task import OptTask
 
 __author__ = "Alexander Dunn"
 __email__ = "ardunn@lbl.gov"
-__version__ = "2019.9.12"
+__version__ = "1.0.1.20200523"
 
 
