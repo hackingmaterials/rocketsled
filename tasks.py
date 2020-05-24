@@ -53,9 +53,9 @@ def version_check(ctx):
 
     if __version__ == setup_version:
         print("Setup and init versions match eachother.")
-        today = datetime.date.today().strftime("%Y.%-m.%-d")
-        if today != __version__:
-            raise ValueError(f"The version {__version__} does not match "
+        today = datetime.date.today().strftime("%Y%m%d")
+        if today not in __version__:
+            raise ValueError(f"The version {__version__} does not contain "
                              f"the date!")
         else:
             print("Version matches the date.")
@@ -76,7 +76,7 @@ def format_project(ctx):
 @task
 def update_changelog(ctx):
     version_check(ctx)
-    ctx.run('github_changelog_generator hackingmaterials/rocketsled')
+    ctx.run('github_changelog_generator --user hackingmaterials --project rocketsled')
 
 
 @task

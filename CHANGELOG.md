@@ -1,12 +1,72 @@
-# Change Log
+# Changelog
+
+## [Unreleased](https://github.com/hackingmaterials/rocketsled/tree/HEAD)
+
+[Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.9.12...HEAD)
+
+**Implemented enhancements:**
+
+- Change versioning [\#81](https://github.com/hackingmaterials/rocketsled/issues/81)
+- Enforce a code style [\#78](https://github.com/hackingmaterials/rocketsled/issues/78)
+
+**Fixed bugs:**
+
+- Prepend hostname to the PID for queue checking [\#80](https://github.com/hackingmaterials/rocketsled/issues/80)
+- Fix codacy issues [\#58](https://github.com/hackingmaterials/rocketsled/issues/58)
+- "scaling" portion of code is confusing [\#53](https://github.com/hackingmaterials/rocketsled/issues/53)
+
+**Closed issues:**
+
+- Update help link to new forum [\#82](https://github.com/hackingmaterials/rocketsled/issues/82)
+- upgrade pymongo version [\#72](https://github.com/hackingmaterials/rocketsled/issues/72)
+
+**Merged pull requests:**
+
+- fix some codacy issues [\#92](https://github.com/hackingmaterials/rocketsled/pull/92) ([ardunn](https://github.com/ardunn))
+- formatting fixes [\#91](https://github.com/hackingmaterials/rocketsled/pull/91) ([ardunn](https://github.com/ardunn))
+- fix req conflict [\#90](https://github.com/hackingmaterials/rocketsled/pull/90) ([ardunn](https://github.com/ardunn))
+- Bump matplotlib from 3.1.1 to 3.2.1 [\#89](https://github.com/hackingmaterials/rocketsled/pull/89) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Pidhostame [\#88](https://github.com/hackingmaterials/rocketsled/pull/88) ([ardunn](https://github.com/ardunn))
+- Bump scipy from 1.3.1 to 1.4.1 [\#87](https://github.com/hackingmaterials/rocketsled/pull/87) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump fireworks from 1.9.4 to 1.9.5 [\#86](https://github.com/hackingmaterials/rocketsled/pull/86) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump pymongo from 3.9.0 to 3.10.1 [\#84](https://github.com/hackingmaterials/rocketsled/pull/84) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump numpy from 1.16.3 to 1.17.2 [\#79](https://github.com/hackingmaterials/rocketsled/pull/79) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump scipy from 1.2.1 to 1.3.1 [\#77](https://github.com/hackingmaterials/rocketsled/pull/77) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump fireworks from 1.9.0 to 1.9.4 [\#76](https://github.com/hackingmaterials/rocketsled/pull/76) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump matplotlib from 3.0.3 to 3.1.1 [\#75](https://github.com/hackingmaterials/rocketsled/pull/75) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump pymongo from 3.7.2 to 3.9.0 [\#74](https://github.com/hackingmaterials/rocketsled/pull/74) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump scikit-learn from 0.20.3 to 0.21.3 [\#73](https://github.com/hackingmaterials/rocketsled/pull/73) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+
+## [v2019.9.12](https://github.com/hackingmaterials/rocketsled/tree/v2019.9.12) (2019-09-11)
+
+[Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.9.11...v2019.9.12)
+
+## [v2019.9.11](https://github.com/hackingmaterials/rocketsled/tree/v2019.9.11) (2019-09-11)
+
+[Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.6.5...v2019.9.11)
+
+**Closed issues:**
+
+- General comment on code and examples [\#56](https://github.com/hackingmaterials/rocketsled/issues/56)
+
+## [v2019.6.5](https://github.com/hackingmaterials/rocketsled/tree/v2019.6.5) (2019-06-05)
+
+[Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.6.4...v2019.6.5)
+
+## [v2019.6.4](https://github.com/hackingmaterials/rocketsled/tree/v2019.6.4) (2019-06-05)
+
+[Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.5.3...v2019.6.4)
 
 ## [v2019.5.3](https://github.com/hackingmaterials/rocketsled/tree/v2019.5.3) (2019-05-04)
+
 [Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.5.2...v2019.5.3)
 
 ## [v2019.5.2](https://github.com/hackingmaterials/rocketsled/tree/v2019.5.2) (2019-05-04)
+
 [Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.4.17...v2019.5.2)
 
 ## [v2019.4.17](https://github.com/hackingmaterials/rocketsled/tree/v2019.4.17) (2019-04-18)
+
 [Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.3.15...v2019.4.17)
 
 **Closed issues:**
@@ -14,6 +74,7 @@
 - add paper citation to rocketsled [\#42](https://github.com/hackingmaterials/rocketsled/issues/42)
 
 ## [v2019.3.15](https://github.com/hackingmaterials/rocketsled/tree/v2019.3.15) (2019-03-16)
+
 [Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.2.27...v2019.3.15)
 
 **Closed issues:**
@@ -23,6 +84,7 @@
 - tutorial rework [\#55](https://github.com/hackingmaterials/rocketsled/issues/55)
 
 ## [v2019.2.27](https://github.com/hackingmaterials/rocketsled/tree/v2019.2.27) (2019-02-27)
+
 [Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.2.17...v2019.2.27)
 
 **Merged pull requests:**
@@ -30,6 +92,7 @@
 - Fix typo, when all inputs are floats [\#65](https://github.com/hackingmaterials/rocketsled/pull/65) ([RemiLehe](https://github.com/RemiLehe))
 
 ## [v2019.2.17](https://github.com/hackingmaterials/rocketsled/tree/v2019.2.17) (2019-02-19)
+
 [Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2019.1.1...v2019.2.17)
 
 **Merged pull requests:**
@@ -37,12 +100,15 @@
 - Minor corrections to the tutorial and examples [\#63](https://github.com/hackingmaterials/rocketsled/pull/63) ([RemiLehe](https://github.com/RemiLehe))
 
 ## [v2019.1.1](https://github.com/hackingmaterials/rocketsled/tree/v2019.1.1) (2019-01-01)
+
 [Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2018.12.30...v2019.1.1)
 
 ## [v2018.12.30](https://github.com/hackingmaterials/rocketsled/tree/v2018.12.30) (2019-01-01)
+
 [Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2018.12.31...v2018.12.30)
 
 ## [v2018.12.31](https://github.com/hackingmaterials/rocketsled/tree/v2018.12.31) (2019-01-01)
+
 [Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/v2018.12.26...v2018.12.31)
 
 **Closed issues:**
@@ -52,6 +118,7 @@
 - make sure all instance attributes are only set in the \_\_init\_\_ method\(\) [\#48](https://github.com/hackingmaterials/rocketsled/issues/48)
 
 ## [v2018.12.26](https://github.com/hackingmaterials/rocketsled/tree/v2018.12.26) (2018-12-27)
+
 [Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/1.1...v2018.12.26)
 
 **Closed issues:**
@@ -69,6 +136,9 @@
 - Add ability to disable duplicate checking and actually run optimizations in parallel [\#11](https://github.com/hackingmaterials/rocketsled/issues/11)
 
 ## [1.1](https://github.com/hackingmaterials/rocketsled/tree/1.1) (2018-07-30)
+
+[Full Changelog](https://github.com/hackingmaterials/rocketsled/compare/1c24fadc55be95f1bb3dc9c4d271d56d980ca547...1.1)
+
 **Closed issues:**
 
 - Rename XZ\* to Z\* [\#40](https://github.com/hackingmaterials/rocketsled/issues/40)
@@ -107,11 +177,7 @@
 **Merged pull requests:**
 
 - Fix LCB and add hyper-parameters to acq functions [\#41](https://github.com/hackingmaterials/rocketsled/pull/41) ([spacedome](https://github.com/spacedome))
-- code review and some minor cleanups [\#10](https://github.com/hackingmaterials/rocketsled/pull/10) ([computron](https://github.com/computron))
-- code review \#2 of TurboWorks [\#9](https://github.com/hackingmaterials/rocketsled/pull/9) ([computron](https://github.com/computron))
-- code review pt 2 [\#8](https://github.com/hackingmaterials/rocketsled/pull/8) ([computron](https://github.com/computron))
-- first round of comments on optdb [\#7](https://github.com/hackingmaterials/rocketsled/pull/7) ([computron](https://github.com/computron))
 
 
 
-\* *This Change Log was automatically generated by [github_changelog_generator](https://github.com/skywinder/Github-Changelog-Generator)*
+\* *This Changelog was automatically generated by [github_changelog_generator](https://github.com/github-changelog-generator/github-changelog-generator)*
