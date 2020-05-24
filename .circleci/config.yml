@@ -10,7 +10,6 @@ jobs:
       - image: circleci/mongo:3.4.15
 
     working_directory: ~/repo
-
     steps:
       - checkout
 
