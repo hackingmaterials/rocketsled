@@ -1,52 +1,65 @@
 """
 Utility functions for OptTask.
 """
-import os
 import imp
+import os
 import random
 from collections.abc import Iterable
 
 import numpy as np
 from ruamel.yaml import YAML
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, \
-    ExtraTreesRegressor
+from sklearn.ensemble import (
+    ExtraTreesRegressor,
+    GradientBoostingRegressor,
+    RandomForestRegressor,
+)
 from sklearn.gaussian_process import GaussianProcessRegressor
 
 __author__ = "Alexander Dunn"
 __email__ = "ardunn@lbl.gov"
 
 
-BUILTIN_PREDICTORS = [RandomForestRegressor, GaussianProcessRegressor,
-                      ExtraTreesRegressor, GradientBoostingRegressor]
+BUILTIN_PREDICTORS = [
+    RandomForestRegressor,
+    GaussianProcessRegressor,
+    ExtraTreesRegressor,
+    GradientBoostingRegressor,
+]
 
 
 class RSBaseException(BaseException):
     """Base exception for rocketsled exceptions."""
+
     pass
 
 
 class ObjectiveError(RSBaseException):
     """Errors relating to objectives."""
+
     pass
 
 
 class ExhaustedSpaceError(RSBaseException):
     """When the search space has been exhausted."""
+
     pass
 
 
 class DimensionMismatchError(RSBaseException):
     """Dimensions of the search space are ill-defined or conflicting"""
+
     pass
 
 
 class BatchNotReadyError(RSBaseException):
     """Batch-mode scheme broken"""
+
     pass
 
 
 class NotConfiguredError(RSBaseException):
     """When rocketsled config doc is broken or not found."""
+
     pass
 
 
@@ -55,12 +68,12 @@ class Dtypes(object):
 
     def __init__(self):
         d = np.sctypes
-        self.ints = d['int'] + d['uint'] + [int]
-        self.floats = d['float'] + [float]
+        self.ints = d["int"] + d["uint"] + [int]
+        self.floats = d["float"] + [float]
         self.reals = self.ints + self.floats
-        self.complex = d['complex']
+        self.complex = d["complex"]
         self.numbers = self.reals + self.complex
-        self.others = d['others']
+        self.others = d["others"]
         self.bool = [bool, np.bool_]
         self.discrete = self.ints + self.others
         self.all = self.numbers + self.others
@@ -86,8 +99,7 @@ def deserialize(fun):
         _, modname = toks[0].rsplit("/", 1)
         mod = imp.load_source(modname, toks[0] + ".py")
     else:
-        mod = __import__(str(modname), globals(), locals(),
-                         fromlist=[str(funcname)])
+        mod = __import__(str(modname), globals(), locals(), fromlist=[str(funcname)])
     return getattr(mod, funcname)
 
 
@@ -108,6 +120,7 @@ def serialize(fun):
     name = fun.__name__
     if mod_path == "__main__":
         import __main__
+
         fp = os.path.abspath(__main__.__file__)
         mod_path = fp.replace(".py", "").replace(".pyc", "")
         importlist = mod_path.split("/")
@@ -124,9 +137,11 @@ def serialize(fun):
             except ImportError:
                 continue
         else:
-            raise ImportError(f"{mod_path} couldn't be serialized to be "
-                              f"imported. Are you sure it's module is in your "
-                              f"PYTHONPATH?")
+            raise ImportError(
+                f"{mod_path} couldn't be serialized to be "
+                f"imported. Are you sure it's module is in your "
+                f"PYTHONPATH?"
+            )
     else:
         fun_path = "{}.{}".format(mod_path, name)
         return fun_path
@@ -161,8 +176,10 @@ def random_guess(dimensions):
             new_param = random.uniform(lower, upper)
             random_vector.append(new_param)
         else:
-            raise TypeError("The type {} is not supported by dummy opt as a "
-                            "categorical or numerical type".format(type(upper)))
+            raise TypeError(
+                "The type {} is not supported by dummy opt as a "
+                "categorical or numerical type".format(type(upper))
+            )
     return random_vector
 
 
@@ -221,9 +238,11 @@ def split_xz(xz, x_dims, x_only=False, z_only=False):
 
     """
     if x_only and z_only:
-        raise ValueError("Please select either x_only or z_only or set both"
-                         "to false to return both x and z after splitting.")
-    x, z = xz[:len(x_dims)], xz[len(x_dims):]
+        raise ValueError(
+            "Please select either x_only or z_only or set both"
+            "to false to return both x and z after splitting."
+        )
+    x, z = xz[: len(x_dims)], xz[len(x_dims) :]
     if x_only:
         return x
     elif z_only:
@@ -245,7 +264,7 @@ def get_default_opttask_kwargs():
     """
     cwd = os.path.dirname(os.path.realpath(__file__))
     fname = os.path.join(cwd, "defaults.yaml")
-    with open(fname, 'r') as config_raw:
+    with open(fname, "r") as config_raw:
         yaml = YAML()
         conf_dict = dict(yaml.load(config_raw))
     return conf_dict
@@ -278,24 +297,23 @@ def check_dims(dims):
 
     for dim in dims:
         if type(dim) not in dims_types:
-            raise TypeError("The dimension {} must be a list or tuple."
-                            "".format(dim))
+            raise TypeError(
+                "The dimension {} must be a list or tuple." "".format(dim)
+            )
 
         for entry in dim:
             if type(entry) not in dtypes.all:
-                raise TypeError("The entry {} in dimension {} cannot be "
-                                "used with OptTask. A list of acceptable "
-                                "datatypes is {}".format(entry, dim,
-                                                         dtypes.all))
-            for dset in [dtypes.ints,
-                         dtypes.floats,
-                         dtypes.others]:
+                raise TypeError(
+                    "The entry {} in dimension {} cannot be "
+                    "used with OptTask. A list of acceptable "
+                    "datatypes is {}".format(entry, dim, dtypes.all)
+                )
+            for dset in [dtypes.ints, dtypes.floats, dtypes.others]:
                 if type(entry) not in dset and type(dim[0]) in dset:
                     raise TypeError(
                         "The dimension {} contains heterogeneous"
-                        " types: {} and {}".format(dim,
-                                                   type(dim[0]),
-                                                   type(entry)))
+                        " types: {} and {}".format(dim, type(dim[0]), type(entry))
+                    )
         if isinstance(dim, list):
             if type(dim[0]) in dtypes.ints:
                 dim_spec.append("int_set")
@@ -313,7 +331,7 @@ def check_dims(dims):
     return dim_spec
 
 
-def is_discrete(dims, criteria='all'):
+def is_discrete(dims, criteria="all"):
     """
     Checks if the search space is discrete.
 
@@ -326,16 +344,17 @@ def is_discrete(dims, criteria='all'):
     Returns:
         (bool) whether the search space is totally discrete.
     """
-    if criteria == 'all':
+    if criteria == "all":
         for dim in dims:
-            if type(dim[0]) not in dtypes.discrete or \
-                    type(dim[1]) not in dtypes.discrete:
+            if (
+                type(dim[0]) not in dtypes.discrete
+                or type(dim[1]) not in dtypes.discrete
+            ):
                 return False
         return True
-    elif criteria == 'any':
+    elif criteria == "any":
         for dim in dims:
-            if type(dim[0]) in dtypes.discrete or \
-                    type(dim[1]) in dtypes.discrete:
+            if type(dim[0]) in dtypes.discrete or type(dim[1]) in dtypes.discrete:
                 return True
         return False
 
@@ -393,11 +412,11 @@ def convert_value_to_native(val, dtypes=Dtypes()):
         elif type(val) in dtypes.others:
             native = str(val)
         else:
-            TypeError("Dtype {} not found in rocketsled dtypes."
-                      "".format(type(val)))
+            TypeError(
+                "Dtype {} not found in rocketsled dtypes." "".format(type(val))
+            )
     else:
-        TypeError("Dtype {} not found in rocketsled dtypes."
-                  "".format(type(val)))
+        TypeError("Dtype {} not found in rocketsled dtypes." "".format(type(val)))
     return native
 
 
@@ -417,12 +436,14 @@ def is_duplicate_by_tolerance(x_new, all_x_explored, tolerances):
     """
 
     if len(tolerances) != len(x_new):
-        raise DimensionMismatchError("Make sure each dimension has a "
-                                     "corresponding tolerance value of the "
-                                     "same type! Your dimensions and the "
-                                     "tolerances must be the same length "
-                                     "and types. Use 'None' for categorical"
-                                     " dimensions.")
+        raise DimensionMismatchError(
+            "Make sure each dimension has a "
+            "corresponding tolerance value of the "
+            "same type! Your dimensions and the "
+            "tolerances must be the same length "
+            "and types. Use 'None' for categorical"
+            " dimensions."
+        )
 
     # todo: there is a more efficient way to do this: abort check for a
     # todo: pair of points as soon as one dim...
@@ -443,14 +464,14 @@ def is_duplicate_by_tolerance(x_new, all_x_explored, tolerances):
                 else:
                     categorical_dimensions_equal.append(False)
             else:
-                if abs(float(x_new[i]) - float(x_ex[i])) \
-                        <= float(tolerances[i]):
+                if abs(float(x_new[i]) - float(x_ex[i])) <= float(tolerances[i]):
                     numerical_dimensions_inside_tolerance.append(True)
                 else:
                     numerical_dimensions_inside_tolerance.append(False)
 
-        if all(numerical_dimensions_inside_tolerance) and \
-                all(categorical_dimensions_equal):
+        if all(numerical_dimensions_inside_tolerance) and all(
+            categorical_dimensions_equal
+        ):
             return True
 
     # If none of the points inside X_explored are close to x_new
