@@ -450,7 +450,7 @@ def is_duplicate_by_tolerance(x_new, all_x_explored, tolerances):
     # todo: ...is outside of tolerance
 
     categorical_dimensions = []
-    for i in range(len(x_new)):
+    for i, _ in enumerate(x_new):
         if type(x_new[i]) not in dtypes.numbers:
             categorical_dimensions.append(i)
 

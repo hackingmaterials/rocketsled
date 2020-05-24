@@ -11,7 +11,7 @@ with open(os.path.join(module_dir, "requirements.txt"), "r") as f:
 long_description = \
     """
     rocketsled is a black-box optimization framework "on rails" for high-throughput computation with FireWorks.
-    
+
     - **Website (including documentation):** https://hackingmaterials.github.io/rocketsled/
     - **Help/Support:** https://groups.google.com/forum/#!forum/fireworkflows
     - **Source:** https://github.com/hackingmaterials/rocketsled
@@ -27,8 +27,8 @@ long_description = \
     If you find FireWorks useful, please consider citing [its paper](http://dx.doi.org/10.1002/cpe.3505) as well:
     
     ```
-    Jain, A., Ong, S. P., Chen, W., Medasani, B., Qu, X., Kocher, M., Brafman, M., 
-    Petretto, G., Rignanese, G.-M., Hautier, G., Gunter, D., and Persson, K. A. 
+    Jain, A., Ong, S. P., Chen, W., Medasani, B., Qu, X., Kocher, M., Brafman, M.,
+    Petretto, G., Rignanese, G.-M., Hautier, G., Gunter, D., and Persson, K. A.
     FireWorks: a dynamic workflow system designed for high-throughput applications.
     Concurrency Computat.: Pract. Exper., 27: 5037–5059. (2015)
     ```
