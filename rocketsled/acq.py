@@ -8,7 +8,7 @@ from multiprocessing import cpu_count
 import numpy as np
 from scipy.stats import norm
 from sklearn.model_selection import train_test_split
-from sklearn.externals.joblib import Parallel, delayed
+from joblib import Parallel, delayed
 
 __author__ = "Alexander Dunn"
 __email__ = "ardunn@lbl.gov"
