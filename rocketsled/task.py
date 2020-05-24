@@ -9,6 +9,7 @@ import random
 from time import sleep
 from os import getpid, path
 from itertools import product
+from socket import gethostname
 
 import numpy as np
 from sklearn.preprocessing import LabelBinarizer
@@ -118,7 +119,7 @@ class OptTask(FireTaskBase):
             (FWAction) A workflow based on the workflow creator and a new,
             optimized guess.
         """
-        pid = getpid()
+        pid = f"{getpid()}@{gethostname()}"
         sleeptime = .01
         max_runs = int(self.timeout / sleeptime)
         max_resets = 3
@@ -199,12 +200,12 @@ class OptTask(FireTaskBase):
                                  for xz_new in all_xz_new]
                     if not isinstance(self.wf_creator_args, (list, tuple)):
                         raise TypeError(
-                            "wr_creator_args should be a list/tuple of "
+                            "wf_creator_args should be a list/tuple of "
                             "positional arguments.")
 
                     if not isinstance(self.wf_creator_kwargs, dict):
                         raise TypeError(
-                            "wr_creator_kwargs should be a dictionary of "
+                            "wf_creator_kwargs should be a dictionary of "
                             "keyword arguments.")
 
                     new_wfs = [self.wf_creator(x_new, *self.wf_creator_args,
