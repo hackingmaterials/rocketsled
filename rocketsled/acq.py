@@ -6,9 +6,9 @@ from copy import deepcopy
 from multiprocessing import cpu_count
 
 import numpy as np
+from joblib import Parallel, delayed
 from scipy.stats import norm
 from sklearn.model_selection import train_test_split
-from joblib import Parallel, delayed
 
 __author__ = "Alexander Dunn"
 __email__ = "ardunn@lbl.gov"
@@ -45,15 +45,16 @@ def acquire(acq, X, Y, space, model, nstraps, return_means=False):
         mu, std = model.predict(space, return_std=True)
     else:
         predicted = Parallel(n_jobs=cpu_count())(
-            delayed(ppredict)(X, Y, space, model) for _ in np.zeros(nstraps))
+            delayed(ppredict)(X, Y, space, model) for _ in np.zeros(nstraps)
+        )
         mu = np.mean(predicted, axis=0)
         std = np.std(predicted, axis=0)
 
-    if acq == 'ei':
+    if acq == "ei":
         acqf = ei
-    elif acq == 'pi':
+    elif acq == "pi":
         acqf = pi
-    elif acq == 'lcb':
+    elif acq == "lcb":
         acqf = lcb
     else:
         raise ValueError("Unknown acquisition function: {}!".format(acq))
@@ -110,8 +111,7 @@ def ei(fmin, mu, std, xi=0.01):
     mask = std > 0
     stdm = std[mask]
     improve = fmin - mu[mask] - xi
-    vals[mask] = improve * norm.cdf(improve / stdm) + stdm * \
-                 norm.pdf(improve / stdm)
+    vals[mask] = improve * norm.cdf(improve / stdm) + stdm * norm.pdf(improve / stdm)
     # improve = fmin - mu
     # vals = improve * norm.cdf(improve/std) + std * norm.pdf(improve/std)
     return vals
@@ -143,7 +143,8 @@ def pi(fmin, mu, std, xi=0.01):
 def lcb(fmin, mu, std, kappa=1.96):
     """
     Returns lower confidence bound estimates.
-        fmin (float): (not used): Minimum value of the objective function known thus far.
+        fmin (float): (not used): Minimum value of the objective function known
+            thus far.
         mu (numpy array):  Mean value of bootstrapped predictions for each y.
         std (numpy array): Standard deviation of bootstrapped predictions for
             each y.

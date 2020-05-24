@@ -67,6 +67,13 @@ def version_check(ctx):
 
 
 @task
+def format_project(ctx):
+    ctx.run("isort --recursive rocketsled")
+    ctx.run("black rocketsled")
+    ctx.run("flake8 rocketsled")
+
+
+@task
 def update_changelog(ctx):
     version_check(ctx)
     ctx.run('github_changelog_generator hackingmaterials/rocketsled')
