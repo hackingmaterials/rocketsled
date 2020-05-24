@@ -20,17 +20,16 @@ Finally, we add some arguments to the MissionControl configuration before
 launching.
 """
 
-from fireworks.utilities.fw_utilities import explicit_serialize
+from fireworks import FireTaskBase, Firework, FWAction, LaunchPad, Workflow
 from fireworks.core.rocket_launcher import rapidfire
-from fireworks import Workflow, Firework, LaunchPad, FireTaskBase, FWAction
+from fireworks.utilities.fw_utilities import explicit_serialize
 
-from rocketsled import OptTask, MissionControl
+from rocketsled import MissionControl, OptTask
 
-launchpad = LaunchPad(name='rsled')
+launchpad = LaunchPad(name="rsled")
 opt_label = "opt_complex"
 db_info = {"launchpad": launchpad, "opt_label": opt_label}
-x_dim = [(16, 145), (0.0, 90.0),
-         ["industry standard", "shark fin", "dolphin fin"]]
+x_dim = [(16, 145), (0.0, 90.0), ["industry standard", "shark fin", "dolphin fin"]]
 
 
 @explicit_serialize
@@ -42,10 +41,11 @@ class ComplexMultiObjTask(FireTaskBase):
 
     This task accepts a 3-vector of the form [int, float, str].
     """
+
     _fw_name = "ComplexMultiObjectiveTask"
 
     def run_task(self, fw_spec):
-        x = fw_spec['_x']
+        x = fw_spec["_x"]
         fin_len = x[0]
         fin_angle = x[1]
         fin_type = x[2]
@@ -60,7 +60,7 @@ class ComplexMultiObjTask(FireTaskBase):
             cost = cost * 1.6
             drag = drag * 0.84
             failure_prob = failure_prob * 1.75
-        return FWAction(update_spec={'_y': [cost, drag, failure_prob], '_x': x})
+        return FWAction(update_spec={"_y": [cost, drag, failure_prob], "_x": x})
 
 
 def wf_creator(x):
@@ -80,8 +80,7 @@ def wf_creator(x):
             fireworks.
 
     """
-    simulation = Firework([ComplexMultiObjTask()], spec={'_x': x},
-                          name="simulation")
+    simulation = Firework([ComplexMultiObjTask()], spec={"_x": x}, name="simulation")
     optimization = Firework([OptTask(**db_info)], name="optimization")
     return Workflow([simulation, optimization], {simulation: optimization})
 
@@ -119,11 +118,13 @@ if __name__ == "__main__":
     mc.reset(hard=True)
 
     # Configure the optimization db with MissionControl
-    mc.configure(wf_creator=wf_creator,
-                 dimensions=x_dim,
-                 acq="maximin",
-                 predictor="GaussianProcessRegressor",
-                 get_z=get_z)
+    mc.configure(
+        wf_creator=wf_creator,
+        dimensions=x_dim,
+        acq="maximin",
+        predictor="GaussianProcessRegressor",
+        get_z=get_z,
+    )
 
     # Run 30 workflows + optimization
     launchpad.add_wf(wf_creator([100, 45.0, "dolphin fin"]))

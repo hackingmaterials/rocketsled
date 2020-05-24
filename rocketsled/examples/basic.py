@@ -18,15 +18,14 @@ information:
 https://hackingmaterials.github.io/rocketsled/
 https://materialsproject.github.io/fireworks/
 """
-from fireworks.utilities.fw_utilities import explicit_serialize
+from fireworks import FireTaskBase, Firework, FWAction, LaunchPad, Workflow
 from fireworks.core.rocket_launcher import rapidfire
-from fireworks import Workflow, Firework, LaunchPad, FireTaskBase, FWAction
+from fireworks.utilities.fw_utilities import explicit_serialize
 
-from rocketsled import OptTask, MissionControl
-
+from rocketsled import MissionControl, OptTask
 
 # Setting up the FireWorks LaunchPad
-launchpad = LaunchPad(name='rsled')
+launchpad = LaunchPad(name="rsled")
 opt_label = "opt_default"
 db_info = {"launchpad": launchpad, "opt_label": opt_label}
 
@@ -44,12 +43,13 @@ class ObjectiveFuncTask(FireTaskBase):
     Replace this code with your objective function if your objective function
     is relatively simple (i.e., only needs one Firework).
     """
+
     _fw_name = "ObjectiveFuncTask"
 
     def run_task(self, fw_spec):
-        x = fw_spec['_x']
+        x = fw_spec["_x"]
         y = x[0] * x[1] / x[2]
-        return FWAction(update_spec={'_y': y})
+        return FWAction(update_spec={"_y": y})
 
 
 def wf_creator(x):
@@ -75,7 +75,7 @@ def wf_creator(x):
             is automatically set up to run the optimization loop.
 
     """
-    spec = {'_x': x}
+    spec = {"_x": x}
     # ObjectiveFuncTask writes _y field to the spec internally.
     firework1 = Firework([ObjectiveFuncTask(), OptTask(**db_info)], spec=spec)
     return Workflow([firework1])
