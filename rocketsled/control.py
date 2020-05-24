@@ -2,23 +2,34 @@
 A class to configure, manage, and analyze optimizations. Similar to the
 LaunchPad for FireWorks.
 """
-import time
-import math
 import datetime
+import math
+import time
 import warnings
 
 import numpy as np
-from matplotlib import pyplot as plt
 from fireworks.utilities.fw_utilities import get_fw_logger
+from matplotlib import pyplot as plt
 
 from rocketsled.task import OptTask
-from rocketsled.utils import get_default_opttask_kwargs, check_dims, \
-    is_discrete, serialize, deserialize, latex_float, pareto, dtypes, \
-    NotConfiguredError, get_len
+from rocketsled.utils import (
+    NotConfiguredError,
+    check_dims,
+    deserialize,
+    dtypes,
+    get_default_opttask_kwargs,
+    get_len,
+    is_discrete,
+    latex_float,
+    pareto,
+    serialize,
+)
 
-IMPORT_WARNING = "could not be imported! try putting it in a python package " \
-                 "registered with PYTHONPATH or using the alternative " \
-                 "syntax: /path/to/my/module.my_wfcreator"
+IMPORT_WARNING = (
+    "could not be imported! try putting it in a python package "
+    "registered with PYTHONPATH or using the alternative "
+    "syntax: /path/to/my/module.my_wfcreator"
+)
 
 
 class MissionControl:
@@ -55,8 +66,10 @@ class MissionControl:
         if self.is_configured:
             return OptTask(launchpad=self.launchpad, opt_label=self.opt_label)
         else:
-            self.logger.warn("OptTask created before configuration. Did you"
-                             "run MissionControl.configure(...)?")
+            self.logger.warn(
+                "OptTask created before configuration. Did you"
+                "run MissionControl.configure(...)?"
+            )
 
     def configure(self, wf_creator, dimensions, **kwargs):
         """
@@ -208,15 +221,16 @@ class MissionControl:
             if kw not in config:
                 raise KeyError(
                     "{} not a valid argument for setup_config. Choose "
-                    "from: {}".format(kw, list(config.keys())))
+                    "from: {}".format(kw, list(config.keys()))
+                )
             elif kw in ["get_z", "predictor"]:
-                if hasattr(kwargs[kw], '__call__'):
+                if hasattr(kwargs[kw], "__call__"):
                     config[kw] = serialize(kwargs[kw])
                 else:
                     config[kw] = kwargs[kw]
             else:
                 config[kw] = kwargs[kw]
-        if hasattr(wf_creator, '__call__'):
+        if hasattr(wf_creator, "__call__"):
             wf_creator = serialize(wf_creator)
         config["wf_creator"] = wf_creator
         config["dimensions"] = dimensions
@@ -247,18 +261,21 @@ class MissionControl:
             self.logger.warn("get_z " + IMPORT_WARNING + "\n" + str(IE))
 
         # Ensure acquisition function is valid (for builtin predictors)
-        acq_funcs = [None, 'ei', 'pi', 'lcb', 'maximin']
-        if config['acq'] not in acq_funcs:
+        acq_funcs = [None, "ei", "pi", "lcb", "maximin"]
+        if config["acq"] not in acq_funcs:
             raise ValueError(
                 "Invalid acquisition function. Use 'ei', 'pi', 'lcb', "
-                "'maximin' (multiobjective), or None.")
+                "'maximin' (multiobjective), or None."
+            )
         config["doctype"] = "config"
         self.config = config
         if self.c.find_one({"doctype": "config"}):
-            raise ValueError("A config is already present in this Launchpad "
-                             "for opt_label=={}. Please use the MissionControl"
-                             " reset method to reset the database config."
-                             "".format(self.opt_label))
+            raise ValueError(
+                "A config is already present in this Launchpad "
+                "for opt_label=={}. Please use the MissionControl"
+                " reset method to reset the database config."
+                "".format(self.opt_label)
+            )
         else:
             self.c.insert_one(self.config)
             self.logger.info("Rocketsled configuration succeeded.")
@@ -289,13 +306,22 @@ class MissionControl:
             self.c.delete_many({"doctype": "config"})
             self.c.delete_many({"doctype": "manager"})
         resetstr = "hard" if hard else "soft"
-        self.logger.info("Optimization collection {} {} reset."
-                             "".format(self.opt_label, resetstr))
+        self.logger.info(
+            "Optimization collection {} {} reset."
+            "".format(self.opt_label, resetstr)
+        )
         self.is_configured = False
 
-    def plot(self, show_best=True, show_mean=True, latexify=False,
-             font_family="serif", scale='linear', summarize=True,
-             print_pareto=False):
+    def plot(
+        self,
+        show_best=True,
+        show_mean=True,
+        latexify=False,
+        font_family="serif",
+        scale="linear",
+        summarize=True,
+        print_pareto=False,
+    ):
         """
         Visualize the progress of an optimization.
 
@@ -319,38 +345,44 @@ class MissionControl:
             A matplotlib plot object handle
         """
         if not self.is_configured:
-            raise NotConfiguredError("Use MissionControl.configure to configure"
-                                     "your optimization collection before "
-                                     "plotting!")
+            raise NotConfiguredError(
+                "Use MissionControl.configure to configure"
+                "your optimization collection before "
+                "plotting!"
+            )
         maximize = self.config["maximize"]
         fxstr = "$f(x)$" if latexify else "f(x)"
         opt = max if maximize else min
-        objs = self.c.find_one({'index': {'$exists': 1}})['y']
+        objs = self.c.find_one({"index": {"$exists": 1}})["y"]
         n_objs = len(objs) if isinstance(objs, (list, tuple)) else 1
         dt = datetime.datetime.now()
         dtdata = [dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second]
         timestr = "{}-{}-{} {}:{}.{}".format(*dtdata)
         t0 = time.time()
         if latexify:
-            plt.rc('text', usetex=True)
+            plt.rc("text", usetex=True)
         else:
-            plt.rc('text', usetex=False)
-        plt.rc('font', family=font_family, size=9)
+            plt.rc("text", usetex=False)
+        plt.rc("font", family=font_family, size=9)
         n_cols = 3
         if n_objs < n_cols:
             _, ax_arr = plt.subplots(n_objs, squeeze=False)
         else:
-            _, ax_arr = plt.subplots(n_cols, int(math.ceil(n_objs / n_cols)),
-                                    squeeze=False)
-        docset = self.c.find({'index': {'$exists': 1}})
+            _, ax_arr = plt.subplots(
+                n_cols, int(math.ceil(n_objs / n_cols)), squeeze=False
+            )
+        docset = self.c.find({"index": {"$exists": 1}})
         docs = [None] * docset.count()
         for i, doc in enumerate(docset):
-            docs[i] = {'y': doc['y'], 'index': doc['index'], 'x': doc['x']}
+            docs[i] = {"y": doc["y"], "index": doc["index"], "x": doc["x"]}
         if n_objs > 1:
-            all_y = np.asarray([doc['y'] for doc in docs])
+            all_y = np.asarray([doc["y"] for doc in docs])
             pareto_set = all_y[pareto(all_y, maximize=maximize)].tolist()
-            pareto_graph = [(i + 1, doc['y']) for i, doc in enumerate(docs)
-                            if doc['y'] in pareto_set]
+            pareto_graph = [
+                (i + 1, doc["y"])
+                for i, doc in enumerate(docs)
+                if doc["y"] in pareto_set
+            ]
             pareto_i = [i[0] for i in pareto_graph]
 
         print("Optimization Analysis:")
@@ -367,8 +399,8 @@ class MissionControl:
             n = self.c.find().count() - 2
 
             for doc in docs:
-                fx.append(doc['y'] if n_objs == 1 else doc['y'][obj])
-                i.append(doc['index'])
+                fx.append(doc["y"] if n_objs == 1 else doc["y"][obj])
+                i.append(doc["index"])
                 best.append(opt(fx))
                 mean.append(np.mean(fx))
                 std.append(np.std(fx))
@@ -377,19 +409,27 @@ class MissionControl:
                 self.logger.warn(
                     "Gathering data from the db is taking a while. Ensure"
                     "the latency to your db is low and the bandwidth"
-                    "is as high as possible!")
+                    "is as high as possible!"
+                )
 
             mean = np.asarray(mean)
             std = np.asarray(std)
 
-            ax.scatter(i, fx, color='blue', label=fxstr, s=10)
-            ax.plot(i, best, color='orange', label="best {} value found so far"
-                                                   "".format(fxstr))
+            ax.scatter(i, fx, color="blue", label=fxstr, s=10)
+            ax.plot(
+                i,
+                best,
+                color="orange",
+                label="best {} value found so far" "".format(fxstr),
+            )
             if show_mean:
-                ax.plot(i, mean, color='grey', label="mean {} value (with std "
-                                                     "dev.)".format(fxstr))
-                ax.fill_between(i, mean + std, mean - std, color='grey',
-                                alpha=0.3)
+                ax.plot(
+                    i,
+                    mean,
+                    color="grey",
+                    label="mean {} value (with std " "dev.)".format(fxstr),
+                )
+                ax.fill_between(i, mean + std, mean - std, color="grey", alpha=0.3)
 
             ax.set_xlabel("{} evaluation".format(fxstr))
             ax.set_ylabel("{} value".format(fxstr))
@@ -398,27 +438,36 @@ class MissionControl:
             if show_best:
 
                 if latexify:
-                    best_label = "Best value: $f(x) = {}$" \
-                                 "".format(latex_float(best_val))
+                    best_label = "Best value: $f(x) = {}$" "".format(
+                        latex_float(best_val)
+                    )
                 else:
                     best_label = "Best value: f(x) = {:.2E}".format(best_val)
-                best = self.c.find({'y': best_val})
+                best = self.c.find({"y": best_val})
 
                 if n_objs == 1:
                     print("\tNumber of optima: {}".format(best.count()))
                 else:
-                    print("\tNumber of optima for objective {}: {}"
-                          "".format(obj + 1, best.count()))
+                    print(
+                        "\tNumber of optima for objective {}: {}"
+                        "".format(obj + 1, best.count())
+                    )
 
                 for b in best:
                     bl = None if n_objs > 1 else best_label
-                    ax.scatter([b['index']], [best_val], color='darkgreen',
-                               s=50,
-                               linewidth=3, label=bl, facecolors='none',
-                               edgecolors='darkgreen')
+                    ax.scatter(
+                        [b["index"]],
+                        [best_val],
+                        color="darkgreen",
+                        s=50,
+                        linewidth=3,
+                        label=bl,
+                        facecolors="none",
+                        edgecolors="darkgreen",
+                    )
 
                     artext = "$x = $ [" if latexify else "x = ["
-                    for i, xi in enumerate(b['x']):
+                    for i, xi in enumerate(b["x"]):
                         if i > 0:
                             artext += ". \mbox{~~~~~}" if latexify else "     "
                         if type(xi) in dtypes.floats:
@@ -430,26 +479,32 @@ class MissionControl:
                             artext += str(xi) + ",\n"
 
                     artext = artext[:-2] + "]"
-                    objstr = "objective {}".format(
-                        obj + 1) if n_objs > 1 else ""
+                    objstr = "objective {}".format(obj + 1) if n_objs > 1 else ""
                     if maximize:
-                        print("\t\tmax(f(x)) {} is {} at x = {}"
-                              "".format(objstr, best_val, b['x']))
+                        print(
+                            "\t\tmax(f(x)) {} is {} at x = {}"
+                            "".format(objstr, best_val, b["x"])
+                        )
                     else:
-                        print("\t\tmin(f(x)) {} is {} at x = {}"
-                              "".format(objstr, best_val, b['x']))
-                    ax.annotate(artext,
-                                xy=(b['index'] + 0.5, best_val),
-                                xytext=(b['index'] + float(n) / 12.0, best_val),
-                                arrowprops=dict(color='green'),
-                                color='darkgreen',
-                                bbox=dict(facecolor='white', alpha=1.0))
+                        print(
+                            "\t\tmin(f(x)) {} is {} at x = {}"
+                            "".format(objstr, best_val, b["x"])
+                        )
+                    ax.annotate(
+                        artext,
+                        xy=(b["index"] + 0.5, best_val),
+                        xytext=(b["index"] + float(n) / 12.0, best_val),
+                        arrowprops=dict(color="green"),
+                        color="darkgreen",
+                        bbox=dict(facecolor="white", alpha=1.0),
+                    )
             else:
                 best_label = ""
             if n_objs > 1:
                 pareto_fx = [i[1][obj] for i in pareto_graph]
-                ax.scatter(pareto_i, pareto_fx, color='red',
-                           label="Pareto optimal", s=20)
+                ax.scatter(
+                    pareto_i, pareto_fx, color="red", label="Pareto optimal", s=20
+                )
             if n_objs > 1:
                 ax.set_title("Objective {}: {}".format(obj + 1, best_label))
             ax.set_yscale(scale)
@@ -458,33 +513,43 @@ class MissionControl:
             print(self.summarize())
 
         if print_pareto and n_objs > 1:
-            print("Pareto Frontier: {} points, ranked by hypervolume".format(
-                len(pareto_set)))
-            pareto_y = [doc['y'] for doc in docs if doc['y'] in pareto_set]
-            pareto_x = [doc['x'] for doc in docs if doc['y'] in pareto_set]
+            print(
+                "Pareto Frontier: {} points, ranked by hypervolume".format(
+                    len(pareto_set)
+                )
+            )
+            pareto_y = [doc["y"] for doc in docs if doc["y"] in pareto_set]
+            pareto_x = [doc["x"] for doc in docs if doc["y"] in pareto_set]
 
             # Order y by hypervolume
             hypervolumes = [np.prod(y) for y in pareto_y]
-            pareto_y_ordered = [y for _, y in
-                                sorted(zip(hypervolumes, pareto_y),
-                                       reverse=True)]
-            pareto_x_ordered = [x for _, x in
-                                sorted(zip(hypervolumes, pareto_x),
-                                       reverse=True)]
+            pareto_y_ordered = [
+                y for _, y in sorted(zip(hypervolumes, pareto_y), reverse=True)
+            ]
+            pareto_x_ordered = [
+                x for _, x in sorted(zip(hypervolumes, pareto_x), reverse=True)
+            ]
             hypervolumes_ordered = sorted(hypervolumes, reverse=True)
 
             for i, _ in enumerate(pareto_set):
-                print("f(x) = {} @ x = {} with hypervolume {}".format(
-                    pareto_y_ordered[i], pareto_x_ordered[i],
-                    hypervolumes_ordered[i]))
+                print(
+                    "f(x) = {} @ x = {} with hypervolume {}".format(
+                        pareto_y_ordered[i],
+                        pareto_x_ordered[i],
+                        hypervolumes_ordered[i],
+                    )
+                )
         if n_objs % n_cols != 0 and n_objs > n_cols:
             for i in range(n_objs % n_cols, n_cols):
                 plt.delaxes(ax_arr[i, -1])
         plt.legend()
         # plt.tight_layout(pad=0.01, w_pad=0.01, h_pad=0.01)
         plt.subplots_adjust(wspace=0.3, hspace=0.5)
-        plt.suptitle("Rocketsled optimization results for {} - "
-                     "{}".format(self.c.name, timestr), y=0.99)
+        plt.suptitle(
+            "Rocketsled optimization results for {} - "
+            "{}".format(self.c.name, timestr),
+            y=0.99,
+        )
         return plt
 
     def summarize(self):
@@ -496,23 +561,25 @@ class MissionControl:
             fmtstr (str): The formatted information from the analysis, to print.
         """
 
-        manager = self.c.find_one({'lock': {"$exists": 1}})
-        qlen = len(manager['queue'])
-        lock = manager['lock']
+        manager = self.c.find_one({"lock": {"$exists": 1}})
+        qlen = len(manager["queue"])
+        lock = manager["lock"]
         predictors = {}
-        for doc in self.c.find({'index': {'$exists': 1},
-                                'y': {'$exists': 1, "$ne": "reserved"}}):
-            p = doc['predictor']
+        for doc in self.c.find(
+            {"index": {"$exists": 1}, "y": {"$exists": 1, "$ne": "reserved"}}
+        ):
+            p = doc["predictor"]
             if p in predictors:
                 predictors[p] += 1
             else:
                 predictors[p] = 1
-        dimdoc = self.c.find_one({'index': {'$exists': 1},
-                                  'y': {'$exists': 1, "$ne": "reserved"}})
-        xdim = [type(d) for d in dimdoc['x']]
-        zdim = [type(d) for d in dimdoc['z']]
+        dimdoc = self.c.find_one(
+            {"index": {"$exists": 1}, "y": {"$exists": 1, "$ne": "reserved"}}
+        )
+        xdim = [type(d) for d in dimdoc["x"]]
+        zdim = [type(d) for d in dimdoc["z"]]
         n_opts = sum(predictors.values())
-        n_reserved = self.c.find({'y': 'reserved'}).count()
+        n_reserved = self.c.find({"y": "reserved"}).count()
         breakdown = ""
         for p, v in predictors.items():
             predfrac = float(v) / float(n_opts)
@@ -523,15 +590,27 @@ class MissionControl:
         else:
             lockstr = "DB locked by PID {}".format(lock)
         zlearn = "" if not zdim else "Only Z data is being used for learning."
-        fmtstr = "\nProblem dimension: \n    * X dimensions ({}): {}\n" \
-                 "    * Z dimensions ({}): {}\n" \
-                 "{}\n" \
-                 "Number of Optimizations: {}\n" \
-                 "Optimizers used (by percentage of optimizations): \n{}" \
-                 "Number of reserved guesses: {}\n" \
-                 "Number of waiting optimizations: {}\n" \
-                 "{}\n".format(len(xdim), xdim, len(zdim), zdim, zlearn, n_opts,
-                               breakdown, n_reserved, qlen, lockstr)
+        fmtstr = (
+            "\nProblem dimension: \n    * X dimensions ({}): {}\n"
+            "    * Z dimensions ({}): {}\n"
+            "{}\n"
+            "Number of Optimizations: {}\n"
+            "Optimizers used (by percentage of optimizations): \n{}"
+            "Number of reserved guesses: {}\n"
+            "Number of waiting optimizations: {}\n"
+            "{}\n".format(
+                len(xdim),
+                xdim,
+                len(zdim),
+                zdim,
+                zlearn,
+                n_opts,
+                breakdown,
+                n_reserved,
+                qlen,
+                lockstr,
+            )
+        )
         return fmtstr
 
     def fetch_matrices(self, include_reserved=False):
@@ -553,8 +632,10 @@ class MissionControl:
         if include_reserved:
             completed_query = {"y": {"$exists": 1}, "x": {"$exists": 1}}
         else:
-            completed_query = {"y": {"$exists": 1, "$ne": "reserved"},
-                               "x": {"$exists": 1}}
+            completed_query = {
+                "y": {"$exists": 1, "$ne": "reserved"},
+                "x": {"$exists": 1},
+            }
         n_samples = self.c.count_documents(completed_query)
         all_x = [None] * n_samples
         all_y = [None] * n_samples
@@ -568,16 +649,21 @@ class MissionControl:
             all_y[i] = doc["y"]
             if get_len(doc["x"]) != n_dimensions and not dimension_mismatch:
                 dimension_mismatch = True
-            if get_len(doc["y"]) != n_objectives \
-                    and not objective_mismatch \
-                    and doc["y"] != "reserved":
+            if (
+                get_len(doc["y"]) != n_objectives
+                and not objective_mismatch
+                and doc["y"] != "reserved"
+            ):
                 objective_mismatch = True
         if dimension_mismatch:
             warnings.warn(
                 "Some entries have different dimensions from configuration "
                 "({}). This optimization collection may be broken!"
-                "".format(n_dimensions))
+                "".format(n_dimensions)
+            )
         if objective_mismatch:
-            warnings.warn("Different numbers of objectives found. This "
-                          "optimization collectiomn may be broken!")
+            warnings.warn(
+                "Different numbers of objectives found. This "
+                "optimization collectiomn may be broken!"
+            )
         return all_x, all_y

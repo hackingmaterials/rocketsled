@@ -4,24 +4,33 @@ The FireTask for running automatic optimization loops.
 Please see the documentation for a comprehensive guide on usage.
 """
 import pickle
-import warnings
 import random
-from time import sleep
-from os import getpid, path
+import warnings
 from itertools import product
+from os import getpid, path
 from socket import gethostname
+from time import sleep
 
 import numpy as np
-from sklearn.preprocessing import LabelBinarizer
-from sklearn.preprocessing import StandardScaler
-from fireworks.utilities.fw_utilities import explicit_serialize
-from fireworks.core.firework import FireTaskBase
 from fireworks import FWAction, LaunchPad
+from fireworks.core.firework import FireTaskBase
+from fireworks.utilities.fw_utilities import explicit_serialize
+from sklearn.preprocessing import LabelBinarizer, StandardScaler
 
 from rocketsled.acq import acquire
-from rocketsled.utils import deserialize, dtypes, pareto, \
-    convert_native, split_xz, is_duplicate_by_tolerance, ExhaustedSpaceError, \
-    NotConfiguredError, BatchNotReadyError, ObjectiveError, BUILTIN_PREDICTORS
+from rocketsled.utils import (
+    BUILTIN_PREDICTORS,
+    BatchNotReadyError,
+    ExhaustedSpaceError,
+    NotConfiguredError,
+    ObjectiveError,
+    convert_native,
+    deserialize,
+    dtypes,
+    is_duplicate_by_tolerance,
+    pareto,
+    split_xz,
+)
 
 __author__ = "Alexander Dunn"
 __email__ = "ardunn@lbl.gov"
@@ -44,6 +53,7 @@ class OptTask(FireTaskBase):
             optimization's data will be stored in. Multiple collections
             correspond to multiple independent optimizations.
     """
+
     _fw_name = "OptTask"
     required_params = ["launchpad", "opt_label"]
 
@@ -59,10 +69,12 @@ class OptTask(FireTaskBase):
         self.c = getattr(self.lpad.db, self.opt_label)
         self.config = self.c.find_one({"doctype": "config"})
         if self.config is None:
-            raise NotConfiguredError("Please use MissionControl().configure to "
-                                     "configure the optimization database "
-                                     "({} - {}) before running OptTask."
-                                     "".format(self.lpad.db, self.opt_label))
+            raise NotConfiguredError(
+                "Please use MissionControl().configure to "
+                "configure the optimization database "
+                "({} - {}) before running OptTask."
+                "".format(self.lpad.db, self.opt_label)
+            )
         self.wf_creator = deserialize(self.config["wf_creator"])
         self.x_dims = self.config["dimensions"]
         self._xdim_types = self.config["dim_types"]
@@ -83,7 +95,7 @@ class OptTask(FireTaskBase):
         self.duplicate_check = self.config["duplicate_check"]
         self.get_z = self.config["get_z"]
         if self.get_z:
-            self.get_z = deserialize(self.config['get_z'])
+            self.get_z = deserialize(self.config["get_z"])
         else:
             self.get_z = lambda *ars, **kws: []
         self.get_z_args = self.config["get_z_args"] or []
@@ -101,10 +113,12 @@ class OptTask(FireTaskBase):
         self._encoding_info = []
 
         # Query formats
-        self._completed = {'x': {'$exists': 1}, 'y': {'$exists': 1,
-                                                      '$ne': 'reserved'},
-                           'z': {'$exists': 1}}
-        self._manager = {'lock': {'$exists': 1}, 'queue': {'$exists': 1}}
+        self._completed = {
+            "x": {"$exists": 1},
+            "y": {"$exists": 1, "$ne": "reserved"},
+            "z": {"$exists": 1},
+        }
+        self._manager = {"lock": {"$exists": 1}, "queue": {"$exists": 1}}
 
     def run_task(self, fw_spec):
         """
@@ -120,7 +134,7 @@ class OptTask(FireTaskBase):
             optimized guess.
         """
         pid = f"{getpid()}@{gethostname()}"
-        sleeptime = .01
+        sleeptime = 0.01
         max_runs = int(self.timeout / sleeptime)
         max_resets = 3
 
@@ -138,40 +152,42 @@ class OptTask(FireTaskBase):
         for run in range(max_resets * max_runs):
             manager_count = self.c.count_documents(self._manager)
             if manager_count == 0:
-                self.c.insert_one({'lock': pid, 'queue': [],
-                                   'doctype': 'manager'})
+                self.c.insert_one({"lock": pid, "queue": [], "doctype": "manager"})
             elif manager_count == 1:
                 # avoid bootup problems if manager lock is being deleted
                 # concurrently with this check
                 try:
                     manager = self.c.find_one(self._manager)
-                    manager_id = manager['_id']
-                    lock = manager['lock']
+                    manager_id = manager["_id"]
+                    lock = manager["lock"]
                 except TypeError:
                     continue
 
                 if lock is None:
-                    self.c.find_one_and_update({'_id': manager_id},
-                                               {'$set': {'lock': pid}})
+                    self.c.find_one_and_update(
+                        {"_id": manager_id}, {"$set": {"lock": pid}}
+                    )
 
                 elif self.enforce_sequential and lock != pid:
-                    if pid not in manager['queue']:
+                    if pid not in manager["queue"]:
 
                         # avoid bootup problems if manager queue is being
                         # deleted concurrently with this check
                         try:
-                            self.c.find_one_and_update({'_id': manager_id},
-                                                       {'$push': {'queue': pid}}
-                                                       )
+                            self.c.find_one_and_update(
+                                {"_id": manager_id}, {"$push": {"queue": pid}}
+                            )
                         except TypeError:
                             continue
                     else:
                         sleep(sleeptime)
-                elif not self.enforce_sequential or \
-                        (self.enforce_sequential and lock == pid):
+                elif not self.enforce_sequential or (
+                    self.enforce_sequential and lock == pid
+                ):
                     try:
-                        x, y, z, all_xz_new, n_completed = \
-                            self.optimize(fw_spec, manager_id)
+                        x, y, z, all_xz_new, n_completed = self.optimize(
+                            fw_spec, manager_id
+                        )
                     except BatchNotReadyError:
                         return None
                     except Exception:
@@ -181,53 +197,68 @@ class OptTask(FireTaskBase):
                     # make sure a process has not timed out and changed the lock
                     # pid while this process is computing the next guess
                     try:
-                        if self.c.find_one(self._manager)['lock'] != pid or \
-                                self.c.count_documents(self._manager) == 0:
+                        if (
+                            self.c.find_one(self._manager)["lock"] != pid
+                            or self.c.count_documents(self._manager) == 0
+                        ):
                             continue
                         else:
-                            opt_id = self.stash(x, y, z, all_xz_new,
-                                                n_completed)
+                            opt_id = self.stash(x, y, z, all_xz_new, n_completed)
                     except TypeError as E:
-                        warnings.warn("Process {} probably timed out while "
-                                      "computing next guess, with exception {}."
-                                      " Try shortening the training time or "
-                                      "lengthening the timeout for OptTask!"
-                                      "".format(pid, E), RuntimeWarning)
+                        warnings.warn(
+                            "Process {} probably timed out while "
+                            "computing next guess, with exception {}."
+                            " Try shortening the training time or "
+                            "lengthening the timeout for OptTask!"
+                            "".format(pid, E),
+                            RuntimeWarning,
+                        )
                         raise E
                         # continue
                     self.pop_lock(manager_id)
-                    all_x_new = [split_xz(xz_new, self.x_dims, x_only=True)
-                                 for xz_new in all_xz_new]
+                    all_x_new = [
+                        split_xz(xz_new, self.x_dims, x_only=True)
+                        for xz_new in all_xz_new
+                    ]
                     if not isinstance(self.wf_creator_args, (list, tuple)):
                         raise TypeError(
                             "wf_creator_args should be a list/tuple of "
-                            "positional arguments.")
+                            "positional arguments."
+                        )
 
                     if not isinstance(self.wf_creator_kwargs, dict):
                         raise TypeError(
                             "wf_creator_kwargs should be a dictionary of "
-                            "keyword arguments.")
+                            "keyword arguments."
+                        )
 
-                    new_wfs = [self.wf_creator(x_new, *self.wf_creator_args,
-                                               **self.wf_creator_kwargs)
-                               for x_new in all_x_new]
+                    new_wfs = [
+                        self.wf_creator(
+                            x_new, *self.wf_creator_args, **self.wf_creator_kwargs
+                        )
+                        for x_new in all_x_new
+                    ]
                     for wf in new_wfs:
                         self.lpad.add_wf(wf)
-                    return FWAction(update_spec={'_optimization_id': opt_id},
-                                    stored_data={'_optimization_id': opt_id})
+                    return FWAction(
+                        update_spec={"_optimization_id": opt_id},
+                        stored_data={"_optimization_id": opt_id},
+                    )
             else:
                 # Delete the manager that this has created
-                self.c.delete_one({'lock': pid})
+                self.c.delete_one({"lock": pid})
 
             if run in [max_runs * k for k in range(1, max_resets)]:
-                self.c.find_one_and_update(self._manager,
-                                           {'$set': {'lock': None, 'queue': []}}
-                                           )
+                self.c.find_one_and_update(
+                    self._manager, {"$set": {"lock": None, "queue": []}}
+                )
 
             elif run == max_runs * max_resets:
-                raise Exception("The manager is still stuck after "
-                                "resetting. Make sure no stalled processes "
-                                "are in the queue.")
+                raise Exception(
+                    "The manager is still stuck after "
+                    "resetting. Make sure no stalled processes "
+                    "are in the queue."
+                )
 
     def optimize(self, fw_spec, manager_id):
         """
@@ -246,8 +277,8 @@ class OptTask(FireTaskBase):
                 including their associated z vectors
             n_completed (int): The number of completed guesses/workflows
         """
-        x = list(fw_spec['_x'])
-        y = fw_spec['_y']
+        x = list(fw_spec["_x"])
+        y = fw_spec["_y"]
         if isinstance(y, (list, tuple)):
             if len(y) == 1:
                 y = y[0]
@@ -255,12 +286,14 @@ class OptTask(FireTaskBase):
             if self.acq not in ("maximin", None):
                 raise ValueError(
                     "{} is not a valid acquisition function for multiobjective "
-                    "optimization".format(self.acq))
+                    "optimization".format(self.acq)
+                )
         else:
             if self.acq == "maximin":
                 raise ValueError(
                     "Maximin is not a valid acquisition function for single "
-                    "objective optimization.")
+                    "objective optimization."
+                )
             self.n_objs = 1
 
         # If process A suggests a certain guess and runs it, process B may
@@ -268,7 +301,7 @@ class OptTask(FireTaskBase):
         # Therefore, process A must reserve the guess. Line below releases
         # reservation on this document in case of workflow failure or end of
         # workflow.
-        self.c.delete_one({'x': x, 'y': 'reserved'})
+        self.c.delete_one({"x": x, "y": "reserved"})
 
         # fetch additional attributes for constructing ML model
         z = self.get_z(x, *self.get_z_args, **self.get_z_kwargs)
@@ -280,8 +313,9 @@ class OptTask(FireTaskBase):
 
         # check if opimization should be done, if in batch mode
         batch_mode = False if self.batch_size == 1 else True
-        batch_ready = n_completed not in (0, 1) and (
-                n_completed + 1) % self.batch_size == 0
+        batch_ready = (
+            n_completed not in (0, 1) and (n_completed + 1) % self.batch_size == 0
+        )
 
         x = convert_native(x)
         y = convert_native(y)
@@ -290,45 +324,65 @@ class OptTask(FireTaskBase):
         if batch_mode and not batch_ready:
             # 'None' predictor means this job was not used for
             # an optimization run.
-            if self.c.find_one({'x': x}):
-                if self.c.find_one({'x': x, 'y': 'reserved'}):
+            if self.c.find_one({"x": x}):
+                if self.c.find_one({"x": x, "y": "reserved"}):
                     # For reserved guesses: update everything
                     self.c.find_one_and_update(
-                        {'x': x, 'y': 'reserved'},
-                        {'$set': {'y': y, 'z': z, 'z_new': [],
-                                  'x_new': [],
-                                  'predictor': None,
-                                  'index': n_completed + 1}
-                         })
+                        {"x": x, "y": "reserved"},
+                        {
+                            "$set": {
+                                "y": y,
+                                "z": z,
+                                "z_new": [],
+                                "x_new": [],
+                                "predictor": None,
+                                "index": n_completed + 1,
+                            }
+                        },
+                    )
                 else:
                     # For completed guesses (ie, this workflow
                     # is a forced duplicate), do not update
                     # index, but update everything else
                     self.c.find_one_and_update(
-                        {'x': x},
-                        {'$set': {'y': y, 'z': z, 'z_new': [], 'x_new': [],
-                                  'predictor': None}
-                         })
+                        {"x": x},
+                        {
+                            "$set": {
+                                "y": y,
+                                "z": z,
+                                "z_new": [],
+                                "x_new": [],
+                                "predictor": None,
+                            }
+                        },
+                    )
             else:
                 # For new guesses: insert x, y, z, index,
                 # predictor, and dummy new guesses
-                self.c.insert_one({'x': x, 'y': y, 'z': z, 'x_new': [],
-                                   'z_new': [], 'predictor': None,
-                                   'index': n_completed + 1})
+                self.c.insert_one(
+                    {
+                        "x": x,
+                        "y": y,
+                        "z": z,
+                        "x_new": [],
+                        "z_new": [],
+                        "predictor": None,
+                        "index": n_completed + 1,
+                    }
+                )
             self.pop_lock(manager_id)
             raise BatchNotReadyError
 
         # Mongo aggregation framework may give duplicate documents, so we cannot
         # use $sample to randomize the training points used
-        searched_indices = random.sample(
-            range(1, n_completed + 1), self.n_train_pts)
+        searched_indices = random.sample(range(1, n_completed + 1), self.n_train_pts)
         searched_docs = self.c.find(
-            {'index': {'$in': searched_indices}},
-            batch_size=10000)
-        reserved_docs = self.c.find({'y': 'reserved'}, batch_size=10000)
+            {"index": {"$in": searched_indices}}, batch_size=10000
+        )
+        reserved_docs = self.c.find({"y": "reserved"}, batch_size=10000)
         reserved = []
         for doc in reserved_docs:
-            reserved.append(doc['x'])
+            reserved.append(doc["x"])
         all_y = [None] * n_completed
         all_y.append(y)
         all_x_searched = [None] * n_completed
@@ -337,9 +391,9 @@ class OptTask(FireTaskBase):
         all_xz_searched = [None] * n_completed
         all_xz_searched.append(x + z)
         for i, doc in enumerate(searched_docs):
-            all_x_searched[i] = doc['x']
-            all_xz_searched[i] = doc['x'] + doc['z']
-            all_y[i] = doc['y']
+            all_x_searched[i] = doc["x"]
+            all_xz_searched[i] = doc["x"] + doc["z"]
+            all_y[i] = doc["y"]
 
         all_x_space = self._discretize_space(self.x_dims)
         all_x_space = list(all_x_space) if self.z_file else all_x_space
@@ -353,32 +407,36 @@ class OptTask(FireTaskBase):
 
         if self.z_file:
             if path.exists(self.z_file):
-                with open(self.z_file, 'rb') as f:
+                with open(self.z_file, "rb") as f:
                     xz_map = pickle.load(f)
             else:
-                xz_map = {tuple(xi): self.get_z(xi, *self.get_z_args,
-                                                **self.get_z_kwargs)
-                          for xi in all_x_space}
-                with open(self.z_file, 'wb') as f:
+                xz_map = {
+                    tuple(xi): self.get_z(xi, *self.get_z_args, **self.get_z_kwargs)
+                    for xi in all_x_space
+                }
+                with open(self.z_file, "wb") as f:
                     pickle.dump(xz_map, f)
 
-            all_xz_unsearched = [xi + xz_map[tuple(xi)] for xi in
-                                 all_x_unsearched]
+            all_xz_unsearched = [xi + xz_map[tuple(xi)] for xi in all_x_unsearched]
         else:
             all_xz_unsearched = [
-                xi + self.get_z(xi, *self.get_z_args, **self.get_z_kwargs) for
-                xi in all_x_unsearched]
+                xi + self.get_z(xi, *self.get_z_args, **self.get_z_kwargs)
+                for xi in all_x_unsearched
+            ]
 
         # if there are no more unsearched points in the entire
         # space, either they have been searched (ie have x, y,
         # and z) or have been reserved.
         if len(all_xz_unsearched) < 1:
             if self.is_discrete_all:
-                raise ExhaustedSpaceError("The discrete space has been searched"
-                                          " exhaustively.")
+                raise ExhaustedSpaceError(
+                    "The discrete space has been searched" " exhaustively."
+                )
             else:
-                raise TypeError("A comprehensive list of points was exhausted "
-                                "but the dimensions are not discrete.")
+                raise TypeError(
+                    "A comprehensive list of points was exhausted "
+                    "but the dimensions are not discrete."
+                )
         z_dims = self._z_dims(all_xz_unsearched, all_xz_searched)
         xz_dims = self.x_dims + z_dims
 
@@ -389,17 +447,22 @@ class OptTask(FireTaskBase):
             all_xz_unsearched = self._encode(all_xz_unsearched, xz_dims)
             all_xz_new_onehot = []
             for _ in range(self.batch_size):
-                xz1h = self._predict(all_xz_searched, all_y, all_xz_unsearched,
-                                     model(*self.predictor_args,
-                                           **self.predictor_kwargs),
-                                     self.maximize, scaling=True)
+                xz1h = self._predict(
+                    all_xz_searched,
+                    all_y,
+                    all_xz_unsearched,
+                    model(*self.predictor_args, **self.predictor_kwargs),
+                    self.maximize,
+                    scaling=True,
+                )
                 ix = all_xz_unsearched.index(xz1h)
                 all_xz_unsearched.pop(ix)
                 all_xz_new_onehot.append(xz1h)
-            all_xz_new = [self._decode(xz_onehot, xz_dims) for xz_onehot in
-                          all_xz_new_onehot]
+            all_xz_new = [
+                self._decode(xz_onehot, xz_dims) for xz_onehot in all_xz_new_onehot
+            ]
 
-        elif self.predictor == 'random':
+        elif self.predictor == "random":
             all_xz_new = random.sample(all_xz_unsearched, self.batch_size)
 
         else:
@@ -414,12 +477,19 @@ class OptTask(FireTaskBase):
             try:
                 predictor_fun = deserialize(self.predictor)
             except Exception as E:
-                raise NameError("The custom predictor {} didnt import "
-                                "correctly!\n{}".format(self.predictor, E))
+                raise NameError(
+                    "The custom predictor {} didnt import "
+                    "correctly!\n{}".format(self.predictor, E)
+                )
 
-            all_xz_new = predictor_fun(all_xz_searched, all_y, self.x_dims,
-                                       all_xz_unsearched, *self.predictor_args,
-                                       **self.predictor_kwargs)
+            all_xz_new = predictor_fun(
+                all_xz_searched,
+                all_y,
+                self.x_dims,
+                all_xz_unsearched,
+                *self.predictor_args,
+                **self.predictor_kwargs,
+            )
             if self.onehot_categorical:
                 all_xz_new = self._decode(all_xz_new, xz_dims)
 
@@ -430,31 +500,39 @@ class OptTask(FireTaskBase):
         if self.duplicate_check:
 
             if not self.enforce_sequential:
-                raise ValueError("Duplicate checking cannot work when "
-                                 "optimizations are not enforced sequentially.")
-            if self.predictor not in self.builtin_predictors and \
-                    self.predictor != 'random':
-                all_x_new = [split_xz(xz_new, self.x_dims, x_only=True) for
-                             xz_new in all_xz_new]
-                all_x_searched = [split_xz(xz, self.x_dims, x_only=True) for xz
-                                  in all_xz_searched]
+                raise ValueError(
+                    "Duplicate checking cannot work when "
+                    "optimizations are not enforced sequentially."
+                )
+            if (
+                self.predictor not in self.builtin_predictors
+                and self.predictor != "random"
+            ):
+                all_x_new = [
+                    split_xz(xz_new, self.x_dims, x_only=True)
+                    for xz_new in all_xz_new
+                ]
+                all_x_searched = [
+                    split_xz(xz, self.x_dims, x_only=True) for xz in all_xz_searched
+                ]
                 if self.tolerances:
                     for n, x_new in enumerate(all_x_new):
-                        if is_duplicate_by_tolerance(x_new, all_x_searched,
-                                                     tolerances=self.tolerances):
-                            all_xz_new[n] = random.choice(
-                                all_xz_unsearched)
+                        if is_duplicate_by_tolerance(
+                            x_new, all_x_searched, tolerances=self.tolerances
+                        ):
+                            all_xz_new[n] = random.choice(all_xz_unsearched)
                 else:
                     if self.is_discrete_all:
                         # test only for x, not xz because custom predicted z
                         # may not be accounted for
                         for n, x_new in enumerate(all_x_new):
                             if x_new in all_x_searched or x_new == x:
-                                all_xz_new[n] = random.choice(
-                                    all_xz_unsearched)
+                                all_xz_new[n] = random.choice(all_xz_unsearched)
                     else:
-                        raise ValueError("Define tolerances parameter to "
-                                         "duplicate check floats.")
+                        raise ValueError(
+                            "Define tolerances parameter to "
+                            "duplicate check floats."
+                        )
         return x, y, z, all_xz_new, n_completed
 
     def stash(self, x, y, z, all_xz_new, n_completed):
@@ -484,17 +562,19 @@ class OptTask(FireTaskBase):
 
             # if it is a duplicate (such as a forced
             # identical first guess)
-            forced_dupe = self.c.find_one({'x': x})
+            forced_dupe = self.c.find_one({"x": x})
 
-            acqmap = {"ei": "Expected Improvement",
-                      "pi": "Probability of Improvement",
-                      "lcb": "Lower Confidence Boundary",
-                      None: "Highest Value",
-                      "maximin": "Maximin Expected "
-                                 "Improvement"}
+            acqmap = {
+                "ei": "Expected Improvement",
+                "pi": "Probability of Improvement",
+                "lcb": "Lower Confidence Boundary",
+                None: "Highest Value",
+                "maximin": "Maximin Expected " "Improvement",
+            }
             if self.predictor in self.builtin_predictors:
-                predictorstr = self.predictor + " with acquisition: " + acqmap[
-                    self.acq]
+                predictorstr = (
+                    self.predictor + " with acquisition: " + acqmap[self.acq]
+                )
                 if self.n_objs > 1:
                     predictorstr += " using {} objectives".format(self.n_objs)
             else:
@@ -502,30 +582,48 @@ class OptTask(FireTaskBase):
             if forced_dupe:
                 # only update the fields which should be updated
                 self.c.find_one_and_update(
-                    {'x': x},
-                    {'$set': {'y': y, 'z': z,
-                              'z_new': z_new,
-                              'x_new': x_new,
-                              'predictor': predictorstr}
-                     })
+                    {"x": x},
+                    {
+                        "$set": {
+                            "y": y,
+                            "z": z,
+                            "z_new": z_new,
+                            "x_new": x_new,
+                            "predictor": predictorstr,
+                        }
+                    },
+                )
             else:
                 # update all the fields, as it is a new document
                 self.c.insert_one(
-                    {'z': z, 'y': y, 'x': x, 'z_new': z_new, 'x_new': x_new,
-                     'predictor': predictorstr, 'index': n_completed + 1})
+                    {
+                        "z": z,
+                        "y": y,
+                        "x": x,
+                        "z_new": z_new,
+                        "x_new": x_new,
+                        "predictor": predictorstr,
+                        "index": n_completed + 1,
+                    }
+                )
             # ensure previously fin. workflow results are not overwritten by
             # concurrent predictions
-            if self.c.count_documents(
-                    {'x': x_new, 'y': {'$exists': 1, '$ne': 'reserved'}}) == 0:
+            if (
+                self.c.count_documents(
+                    {"x": x_new, "y": {"$exists": 1, "$ne": "reserved"}}
+                )
+                == 0
+            ):
                 # reserve the new x to prevent parallel processes from
                 # registering it as unsearched, since the next iteration of this
                 # process will be exploring it
-                res = self.c.insert_one({'x': x_new, 'y': 'reserved'})
+                res = self.c.insert_one({"x": x_new, "y": "reserved"})
                 opt_id = res.inserted_id
             else:
                 raise ValueError(
                     "The predictor suggested a guess which has already been "
-                    "tried: {}".format(x_new))
+                    "tried: {}".format(x_new)
+                )
         return opt_id
 
     def pop_lock(self, manager_id):
@@ -539,19 +637,18 @@ class OptTask(FireTaskBase):
         Returns:
             None
         """
-        queue = self.c.find_one({'_id': manager_id})['queue']
+        queue = self.c.find_one({"_id": manager_id})["queue"]
         if not queue:
-            self.c.find_one_and_update({'_id': manager_id},
-                                       {'$set': {'lock': None}})
+            self.c.find_one_and_update({"_id": manager_id}, {"$set": {"lock": None}})
         else:
             new_lock = queue.pop(0)
-            self.c.find_one_and_update({'_id': manager_id},
-                                       {'$set': {'lock': new_lock,
-                                                 'queue': queue}})
+            self.c.find_one_and_update(
+                {"_id": manager_id}, {"$set": {"lock": new_lock, "queue": queue}}
+            )
 
     def _discretize_space(self, dims, n_floats=100):
         """
-        Create a list of points for searching during optimization. 
+        Create a list of points for searching during optimization.
 
         Args:
             dims ([tuple]): dimensions of the search space.
@@ -561,24 +658,29 @@ class OptTask(FireTaskBase):
                 a space of n_searchpts is generated in a more efficient manner.
 
         Returns:
-            ([list]) Points of the search space. 
+            ([list]) Points of the search space.
         """
-        if 'space_file' in self:
-            if self['space_file']:
-                with open(self['space_file'], 'rb') as f:
+        if "space_file" in self:
+            if self["space_file"]:
+                with open(self["space_file"], "rb") as f:
                     return pickle.load(f)
 
         # Ensure consistency of dimensions
         for dim in dims:
             if isinstance(dim, tuple) and len(dim) == 2:
-                for dtype in ['ints', 'floats']:
-                    if type(dim[0]) not in getattr(dtypes, dtype) != type(
-                            dim[1]) not in getattr(dtypes, dtype):
-                        raise ValueError("Ranges of values for dimensions "
-                                         "must be the same general datatype,"
-                                         "not ({}, {}) for {}"
-                                         "".format(type(dim[0]),
-                                                   type(dim[1]), dim))
+                for dtype in ["ints", "floats"]:
+                    if (
+                        type(dim[0])
+                        not in getattr(dtypes, dtype)
+                        != type(dim[1])
+                        not in getattr(dtypes, dtype)
+                    ):
+                        raise ValueError(
+                            "Ranges of values for dimensions "
+                            "must be the same general datatype,"
+                            "not ({}, {}) for {}"
+                            "".format(type(dim[0]), type(dim[1]), dim)
+                        )
 
         dims_ranged = all([len(dim) == 2 for dim in dims])
         dims_float = all([type(dim[0]) in dtypes.floats for dim in dims])
@@ -602,8 +704,9 @@ class OptTask(FireTaskBase):
                         # Then the dimension is of the form (low, high)
                         dimspace = list(range(low, high + 1))
                     elif type(low) in dtypes.floats:
-                        dimspace = np.random.uniform(low=low, high=high,
-                                                     size=n_floats).tolist()
+                        dimspace = np.random.uniform(
+                            low=low, high=high, size=n_floats
+                        ).tolist()
                     else:  # The dimension is a 2-tuple of strings
                         dimspace = dim
                 else:  # the dimension is a list of entries
@@ -658,7 +761,7 @@ class OptTask(FireTaskBase):
         n_unsearched = len(space)
 
         # If get_z defined, only use z features!
-        if 'get_z' in self:
+        if "get_z" in self:
             encoded_xlen = 0
             for t in self._xdim_types:
                 if "int" in t or "float" in t:
@@ -678,8 +781,14 @@ class OptTask(FireTaskBase):
                 evaluator = min
             else:
                 # Use the acquistion function values
-                values = acquire(self.acq, all_x_scaled, all_y, space_scaled,
-                                 model, self.n_bootstraps)
+                values = acquire(
+                    self.acq,
+                    all_x_scaled,
+                    all_y,
+                    space_scaled,
+                    model,
+                    self.n_bootstraps,
+                )
                 evaluator = max
         else:
             evaluator = max
@@ -693,7 +802,8 @@ class OptTask(FireTaskBase):
                 # In exploitative strategy, randomly weight pareto optimial
                 # predictions!
                 values = pareto(values, maximize=maximize) * np.random.uniform(
-                    0, 1, n_unsearched)
+                    0, 1, n_unsearched
+                )
 
             else:
                 # Adapted from Multiobjective Optimization of Expensive Blackbox
@@ -706,15 +816,21 @@ class OptTask(FireTaskBase):
                     raise ObjectiveError(
                         "Multiple objectives detected, but Maximin acquisition "
                         "function is not used. Please use a single objective "
-                        "or change the acquisition function.")
+                        "or change the acquisition function."
+                    )
                 mu = np.zeros((n_unsearched, self.n_objs))
                 values = np.zeros((n_unsearched, self.n_objs))
                 for i in range(self.n_objs):
                     yobj = [y[i] for y in all_y]
-                    values[:, i], mu[:, i] = acquire("pi", all_x_scaled, yobj,
-                                                     space_scaled, model,
-                                                     self.n_bootstraps,
-                                                     return_means=True)
+                    values[:, i], mu[:, i] = acquire(
+                        "pi",
+                        all_x_scaled,
+                        yobj,
+                        space_scaled,
+                        model,
+                        self.n_bootstraps,
+                        return_means=True,
+                    )
                 pf = all_y[pareto(all_y, maximize=maximize)]
                 dmaximin = np.zeros(n_unsearched)
                 for i, mui in enumerate(mu):
@@ -755,7 +871,7 @@ class OptTask(FireTaskBase):
         """
         Transforms data containing categorical information to "one-hot" encoded
         data, since sklearn cannot process categorical data on its own.
-        
+
         Args:
             all_x ([list]): The search space, possibly containing categorical
                 dimensions.
@@ -781,10 +897,13 @@ class OptTask(FireTaskBase):
                 lb.fit([forward_map[v] for v in dim])
                 binary = lb.transform([forward_map[v] for v in cats])
                 for j, x in enumerate(all_x):
-                    del (x[i - self._n_cats])
+                    del x[i - self._n_cats]
                     x += list(binary[j])
-                dim_info = {'lb': lb, 'inverse_map': inverse_map,
-                            'binary_len': len(binary[0])}
+                dim_info = {
+                    "lb": lb,
+                    "inverse_map": inverse_map,
+                    "binary_len": len(binary[0]),
+                }
                 self._encoding_info.append(dim_info)
                 self._n_cats += 1
         return all_x
@@ -793,7 +912,7 @@ class OptTask(FireTaskBase):
         """
         Convert a "one-hot" encoded point (the predicted guess) back to the
         original categorical dimensions.
-        
+
         Args:
             new_x (list): The "one-hot" encoded new x vector predicted by the
                 predictor.
@@ -812,9 +931,9 @@ class OptTask(FireTaskBase):
         for i, dim in enumerate(dims):
             if type(dim[0]) in dtypes.others:
                 dim_info = self._encoding_info[cat_index]
-                binary_len = dim_info['binary_len']
-                lb = dim_info['lb']
-                inverse_map = dim_info['inverse_map']
+                binary_len = dim_info["binary_len"]
+                lb = dim_info["lb"]
+                inverse_map = dim_info["inverse_map"]
                 start = static_len + tot_bin_len
                 end = start + binary_len
                 binary = new_x[start:end]
@@ -841,15 +960,17 @@ class OptTask(FireTaskBase):
                 not been searched.
             all_xz_searched ([list]): The collection of xz points which have
                 been searched.
-        
+
         Returns:
             ([tuple]) dimensions for the z space
         """
 
-        all_z_unsearched = [split_xz(xz, self.x_dims, z_only=True) for xz in
-                            all_xz_unsearched]
-        all_z_searched = [split_xz(xz, self.x_dims, z_only=True) for xz in
-                          all_xz_searched]
+        all_z_unsearched = [
+            split_xz(xz, self.x_dims, z_only=True) for xz in all_xz_unsearched
+        ]
+        all_z_searched = [
+            split_xz(xz, self.x_dims, z_only=True) for xz in all_xz_searched
+        ]
         all_z = all_z_searched + all_z_unsearched
 
         if not all_z:

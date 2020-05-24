@@ -6,10 +6,22 @@ import unittest
 
 import numpy as np
 
-from rocketsled.utils import dtypes, random_guess, pareto, \
-    convert_value_to_native, latex_float, deserialize, split_xz, \
-    get_default_opttask_kwargs, convert_native, check_dims, is_discrete, \
-    is_duplicate_by_tolerance, serialize, get_len
+from rocketsled.utils import (
+    check_dims,
+    convert_native,
+    convert_value_to_native,
+    deserialize,
+    dtypes,
+    get_default_opttask_kwargs,
+    get_len,
+    is_discrete,
+    is_duplicate_by_tolerance,
+    latex_float,
+    pareto,
+    random_guess,
+    serialize,
+    split_xz,
+)
 
 
 class TestUtilities(unittest.TestCase):
@@ -56,8 +68,9 @@ class TestUtilities(unittest.TestCase):
     def test_convert_native(self):
         a = [np.int(10), np.float(12.2), np.str("a str"), 12.3, 100, "ok"]
         native = convert_native(a)
-        self.assertListEqual([type(i) for i in native],
-                             [int, float, str, float, int, str])
+        self.assertListEqual(
+            [type(i) for i in native], [int, float, str, float, int, str]
+        )
 
     def test_latex_float(self):
         f1 = 3.494388373744
@@ -66,8 +79,9 @@ class TestUtilities(unittest.TestCase):
         self.assertTrue(latex_float(f2), "3.22 \times 10^{-16}")
 
     def test_serialize(self):
-        fstr = 'rocketsled.tests.deserialize_func.obj_func'
+        fstr = "rocketsled.tests.deserialize_func.obj_func"
         from rocketsled.tests.deserialize_func import obj_func
+
         self.assertEqual(serialize(obj_func), fstr)
         self.assertEqual(serialize(obj_func), fstr)
 
@@ -93,17 +107,21 @@ class TestUtilities(unittest.TestCase):
 
     def test_check_dims(self):
         good_dims = [(1, 50), (100.0, 200.0), ["orange", "blue"]]
-        good_dims_2 = [[1.45, 1.43, 1.78, 1.98],
-                       ["orange", "blue"],
-                       [1, 12, 1400, 1975]]
+        good_dims_2 = [
+            [1.45, 1.43, 1.78, 1.98],
+            ["orange", "blue"],
+            [1, 12, 1400, 1975],
+        ]
         bad_dims_1 = {"dim1": 12, "dim2": (100, 200)}
         bad_dims_2 = [{1.5: 200}, ["red", "green", "blue"]]
         bad_dims_3 = [("red", 12, 15), ["red", "greeen"]]
         bad_dims_4 = [(1.5, 200), (1.4, 1.7, 2.9)]
-        self.assertListEqual(check_dims(good_dims),
-                             ["int_range", "float_range", "categorical 2"])
-        self.assertListEqual(check_dims(good_dims_2),
-                             ["float_set", "categorical 2", "int_set"])
+        self.assertListEqual(
+            check_dims(good_dims), ["int_range", "float_range", "categorical 2"]
+        )
+        self.assertListEqual(
+            check_dims(good_dims_2), ["float_set", "categorical 2", "int_set"]
+        )
         with self.assertRaises(TypeError):
             check_dims(bad_dims_1)
         with self.assertRaises(TypeError):
@@ -130,12 +148,11 @@ class TestUtilities(unittest.TestCase):
         x_dup = [1.4500001, "red", 203]
         x_clear = [1.45, "green", 220]
         self.assertFalse(
-            is_duplicate_by_tolerance(x_clear, all_x_explored, tolerances))
-        self.assertTrue(
-            is_duplicate_by_tolerance(x_dup, all_x_explored, tolerances))
+            is_duplicate_by_tolerance(x_clear, all_x_explored, tolerances)
+        )
+        self.assertTrue(is_duplicate_by_tolerance(x_dup, all_x_explored, tolerances))
 
     def test_get_len(self):
-        self.assertEqual(get_len([1,2,3]), 3)
+        self.assertEqual(get_len([1, 2, 3]), 3)
         self.assertEqual(get_len(4), 1)
         self.assertEqual(get_len("abc"), 1)
-
