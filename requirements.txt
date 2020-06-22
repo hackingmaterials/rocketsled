@@ -1,6 +1,6 @@
 numpy==1.17.2
 scikit-learn==0.23.1
-scipy==1.4.1
+scipy==1.5.0
 pymongo==3.10.1
 fireworks==1.9.5
 matplotlib==3.2.1
