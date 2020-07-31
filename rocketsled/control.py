@@ -47,11 +47,27 @@ class MissionControl:
 
     def __init__(self, launchpad, opt_label):
         self.logger = get_fw_logger("rocketsled")
-        self.config = None
         self.launchpad = launchpad
         self.opt_label = opt_label
         self.c = getattr(self.launchpad.db, opt_label)
-        self.is_configured = False
+
+
+        # The optimization colleciton may already exist, so check for manager
+        # documents in the case it has already been configured.
+        docs = self.c.find({"doctype": "config"})
+        docs = [doc for doc in docs]
+        if len(docs) > 1:
+            raise ValueError(
+                "There is more than one manager doc in the collection! Please"
+                "use MissionControl.reset to reset the database, or manually"
+                "remove the unneeded manager document!"
+            )
+        elif len(docs) == 1:
+            self.config = dict(docs[0])
+            self.is_configured = True
+        else:
+            self.config = None
+            self.is_configured = False
 
     @property
     def task(self):
@@ -582,6 +598,7 @@ class MissionControl:
         n_reserved = self.c.find({"y": "reserved"}).count()
         breakdown = ""
         for p, v in predictors.items():
+            p = "No predictor" if not p else p
             predfrac = float(v) / float(n_opts)
             breakdown += "    * {0:.2f}%: ".format(predfrac * 100.0) + p + "\n"
 
