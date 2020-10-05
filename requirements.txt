@@ -4,4 +4,4 @@ scipy==1.4.1
 pymongo==3.10.1
 fireworks==1.9.5
 matplotlib==3.2.1
-joblib==0.13.2
+joblib==0.17.0
