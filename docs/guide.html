@@ -1,17 +1,18 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
-    <title>Comprehensive Guide &#8212; rocketsled 2019.9.12 documentation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Comprehensive Guide &#8212; rocketsled 1.0.1.20200523 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
  
@@ -27,7 +28,8 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.9.12 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 1.0.1.20200523 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Comprehensive Guide</a></li> 
       </ul>
     </div>  
 
@@ -332,7 +334,7 @@ the predictor as strings, if categorical dimensions exist. With <code class="cod
 the custom predictor will receive only numerical input (although it may be a combination of
 ints and floats). Default is False, meaning no categorical encoding.</p>
 <p><strong>Example</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">onehot_categorical</span><span class="o">=</span><span class="bp">True</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">onehot_categorical</span><span class="o">=</span><span class="kc">True</span>
 </pre></div>
 </div>
 </div>
@@ -346,7 +348,7 @@ when using custom predictors. Suggested duplicates are discarded and random gues
 <p>Default is no duplicate check; if a duplicate is suggested, an error is raised.</p>
 <p><strong>Example</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># duplicate_check is a bool</span>
-<span class="n">duplicate_check</span><span class="o">=</span><span class="bp">True</span>
+<span class="n">duplicate_check</span><span class="o">=</span><span class="kc">True</span>
 </pre></div>
 </div>
 </div>
@@ -358,7 +360,7 @@ For categorical features, put ‘None’</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># if our dimensions are [(1, 100), [&#39;red&#39;, &#39;blue&#39;], (2.0, 20.0)]</span>
 <span class="c1"># and we want the first param to be a duplicate only if it is an exact match</span>
 <span class="c1"># and the third param to be a duplicate if it is within 1e-6, then</span>
-<span class="n">tolerances</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">]</span>
+<span class="n">tolerances</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
@@ -368,7 +370,7 @@ For categorical features, put ‘None’</p>
 <p>By default, false.</p>
 <p>For multiobjective optimization, the maximization rule applies to all objective metrics.</p>
 <p><strong>Example</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">maximize</span><span class="o">=</span><span class="bp">True</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">maximize</span><span class="o">=</span><span class="kc">True</span>
 </pre></div>
 </div>
 </div>
@@ -463,7 +465,7 @@ duplicates may be selected and run.</p>
 <p>When <em>True</em>, the entire workflow besides optimization can be run in parallel. When <em>False</em>, the entire workflow including optimization can be run in parallel.</p>
 <p><strong>Example</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># We don&#39;t care about duplicate checking, but want to run everything in parallel</span>
-<span class="n">enforce_sequential</span><span class="o">=</span><span class="bp">False</span> <span class="c1"># May cause bugs!</span>
+<span class="n">enforce_sequential</span><span class="o">=</span><span class="kc">False</span> <span class="c1"># May cause bugs!</span>
 </pre></div>
 </div>
 </div>
@@ -487,6 +489,7 @@ your problem is most likely with the timeout setting.</p>
 </div>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
@@ -568,7 +571,7 @@ your problem is most likely with the timeout setting.</p>
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -582,13 +585,14 @@ your problem is most likely with the timeout setting.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.9.12 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 1.0.1.20200523 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Comprehensive Guide</a></li> 
       </ul>
     </div>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, HackingMaterials.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
     </div>
 
   </body>
