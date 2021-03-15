@@ -261,7 +261,7 @@ Want to see something added or changed? Here's a few ways you can!
 
 Submit all questions and contact to the `Online Help Forum <https://discuss.matsci.org/c/fireworks>`_
 
-A comprehensive guide to contributions can be found `here. <https://github.com/hackingmaterials/rocketsled/blob/master/CONTRIBUTING.md>`_
+A comprehensive guide to contributions can be found `here. <https://github.com/hackingmaterials/rocketsled/blob/main/CONTRIBUTING.md>`_
 
 Citing rocketsled
 -----------------

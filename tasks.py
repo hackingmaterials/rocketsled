@@ -92,7 +92,7 @@ def release(ctx):
     version_check(ctx)
     payload = {
         "tag_name": "v" + __version__,
-        "target_commitish": "master",
+        "target_commitish": "main",
         "name": "v" + __version__,
         "body": "",
         "draft": False,
