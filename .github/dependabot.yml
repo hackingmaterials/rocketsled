@@ -1,0 +1,43 @@
+version: 2
+updates:
+- package-ecosystem: pip
+  directory: "/"
+  schedule:
+    interval: weekly
+    time: "13:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: matplotlib
+    versions:
+    - 3.3.3
+    - 3.3.4
+    - 3.4.0
+  - dependency-name: scipy
+    versions:
+    - 1.6.0
+    - 1.6.1
+    - 1.6.2
+  - dependency-name: flake8
+    versions:
+    - 3.8.4
+    - 3.9.0
+  - dependency-name: numpy
+    versions:
+    - 1.19.5
+    - 1.20.0
+    - 1.20.1
+  - dependency-name: isort
+    versions:
+    - 5.7.0
+  - dependency-name: joblib
+    versions:
+    - 1.0.0
+  - dependency-name: monty
+    versions:
+    - 4.0.2
+  - dependency-name: black
+    versions:
+    - 20.8b1
+  - dependency-name: fireworks
+    versions:
+    - 1.9.6
