@@ -190,7 +190,6 @@ class OptTask(FireTaskBase):
                             fw_spec, manager_id
                         )
                     except BatchNotReadyError:
-                        print("DEBUG: BATCH WAS NOT READY")
                         return None
                     except Exception:
                         self.pop_lock(manager_id)
@@ -234,7 +233,6 @@ class OptTask(FireTaskBase):
                             "keyword arguments."
                         )
 
-                    print("DEBUG: CREATING NEW WFS IN BULK")
                     new_wfs = [
                         self.wf_creator(
                             x_new, *self.wf_creator_args, **self.wf_creator_kwargs
@@ -279,7 +277,6 @@ class OptTask(FireTaskBase):
                 including their associated z vectors
             n_completed (int): The number of completed guesses/workflows
         """
-        print("DEBUG: RUNNING OPTIMIZE")
         x = list(fw_spec["_x"])
         y = fw_spec["_y"]
         if isinstance(y, (list, tuple)):
@@ -451,10 +448,8 @@ class OptTask(FireTaskBase):
             all_xz_new_onehot = []
 
             if self.batch_size > 1:
-                print("batch mode is running")
                 iterator_obj = tqdm.tqdm(range(self.batch_size), desc="Batch predictions")
             else:
-                print("batch mode is not running")
                 iterator_obj = range(self.batch_size)
             for _ in iterator_obj:
                 xz1h = self._predict(
