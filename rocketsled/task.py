@@ -11,13 +11,14 @@ from os import getpid, path
 from socket import gethostname
 from time import sleep
 
+import tqdm
 import numpy as np
 from fireworks import FWAction, LaunchPad
 from fireworks.core.firework import FireTaskBase
 from fireworks.utilities.fw_utilities import explicit_serialize
 from sklearn.preprocessing import LabelBinarizer, StandardScaler
 
-from rocketsled.acq import acquire
+from rocketsled.acq import acquire, predict
 from rocketsled.utils import (
     BUILTIN_PREDICTORS,
     BatchNotReadyError,
@@ -189,6 +190,7 @@ class OptTask(FireTaskBase):
                             fw_spec, manager_id
                         )
                     except BatchNotReadyError:
+                        print("DEBUG: BATCH WAS NOT READY")
                         return None
                     except Exception:
                         self.pop_lock(manager_id)
@@ -232,14 +234,14 @@ class OptTask(FireTaskBase):
                             "keyword arguments."
                         )
 
+                    print("DEBUG: CREATING NEW WFS IN BULK")
                     new_wfs = [
                         self.wf_creator(
                             x_new, *self.wf_creator_args, **self.wf_creator_kwargs
                         )
                         for x_new in all_x_new
                     ]
-                    for wf in new_wfs:
-                        self.lpad.add_wf(wf)
+                    self.lpad.bulk_add_wfs(new_wfs)
                     return FWAction(
                         update_spec={"_optimization_id": opt_id},
                         stored_data={"_optimization_id": opt_id},
@@ -277,6 +279,7 @@ class OptTask(FireTaskBase):
                 including their associated z vectors
             n_completed (int): The number of completed guesses/workflows
         """
+        print("DEBUG: RUNNING OPTIMIZE")
         x = list(fw_spec["_x"])
         y = fw_spec["_y"]
         if isinstance(y, (list, tuple)):
@@ -311,7 +314,7 @@ class OptTask(FireTaskBase):
         if not self.n_train_pts or self.n_train_pts > n_completed:
             self.n_train_pts = n_completed
 
-        # check if opimization should be done, if in batch mode
+        # check if optimization should be done, if in batch mode
         batch_mode = False if self.batch_size == 1 else True
         batch_ready = (
             n_completed not in (0, 1) and (n_completed + 1) % self.batch_size == 0
@@ -430,7 +433,7 @@ class OptTask(FireTaskBase):
         if len(all_xz_unsearched) < 1:
             if self.is_discrete_all:
                 raise ExhaustedSpaceError(
-                    "The discrete space has been searched" " exhaustively."
+                    "The discrete space has been searched exhaustively."
                 )
             else:
                 raise TypeError(
@@ -446,7 +449,14 @@ class OptTask(FireTaskBase):
             all_xz_searched = self._encode(all_xz_searched, xz_dims)
             all_xz_unsearched = self._encode(all_xz_unsearched, xz_dims)
             all_xz_new_onehot = []
-            for _ in range(self.batch_size):
+
+            if self.batch_size > 1:
+                print("batch mode is running")
+                iterator_obj = tqdm.tqdm(range(self.batch_size), desc="Batch predictions")
+            else:
+                print("batch mode is not running")
+                iterator_obj = range(self.batch_size)
+            for _ in iterator_obj:
                 xz1h = self._predict(
                     all_xz_searched,
                     all_y,
@@ -493,7 +503,7 @@ class OptTask(FireTaskBase):
             if self.onehot_categorical:
                 all_xz_new = self._decode(all_xz_new, xz_dims)
 
-            if not isinstance(all_xz_new[0], (list, tuple)):
+            if not isinstance(all_xz_new[0], (list, tuple, np.ndarray)):
                 all_xz_new = [all_xz_new]
 
         # duplicate checking for custom optimizer functions
@@ -781,14 +791,10 @@ class OptTask(FireTaskBase):
                 evaluator = min
             else:
                 # Use the acquistion function values
-                values = acquire(
-                    self.acq,
-                    all_x_scaled,
-                    all_y,
-                    space_scaled,
-                    model,
-                    self.n_bootstraps,
-                )
+
+                predictions = predict(all_x_scaled, all_y, space_scaled, model, self.n_bootstraps)
+                mu, std = predictions
+                values = acquire(self.acq, all_y, mu, std)
                 evaluator = max
         else:
             evaluator = max
