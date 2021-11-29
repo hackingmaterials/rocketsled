@@ -4,7 +4,7 @@ logdir: null
 name: rsled_tests
 username:
 password:
-ssl_ca_file: null
+#ssl_ca_file: null
 strm_lvl: INFO
 user_indices: []
 wf_user_indices: []
