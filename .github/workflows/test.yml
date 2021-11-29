@@ -1,0 +1,46 @@
+# This workflow runs only on Ubuntu and aims to be more complete than the Mac and Windows workflows.
+# In particular, Openbabel and many of the external command line dependencies are included for testing.defaults:
+# The ext package is also only tested in this workflow. Coverage is also computed based on this platform.
+name: Testing
+
+on: [ push, pull_request ]
+
+jobs:
+
+  test:
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.7, 3.8]
+        mongodb-version: ['4.0']
+
+    runs-on: ubuntu-latest
+
+    env:
+      RUNNING_ON_GHACTIONS: "True"
+      MPLBACKEND: "Agg"
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Start MongoDB
+      uses: supercharge/mongodb-github-action@1.6.0
+      with:
+        mongodb-version: ${{ matrix.mongodb-version }}
+
+    - name: Run tests
+      run: |
+        # Sleeping to allow mongo a bit more time to boot, avoiding connect errors
+        sleep 10
+        mongo localhost/admin --eval 'db.createUser({user: "admin",pwd: "password",roles: [ { role: "root", db: "admin" } ]})'
+        python3 -m venv test_env
+        . test_env/bin/activate
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt -r requirements-dev.txt
+        # Using non-editable install for testing building of MANIFEST files
+        pip install .
+        pytest --cov=rocketsled rocketsled
