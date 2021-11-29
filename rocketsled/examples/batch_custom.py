@@ -1,3 +1,27 @@
+"""
+Running a batch optimization with a custom predictor.
+
+
+Optimizing the 2D Rosenbrock function, which is a 2D
+function with one objective to be minimized. There
+are no Z descriptors so we use only the X coordinates
+for learning.
+
+
+We show two examples here:
+
+1. Running a batch optimization with a builtin predictor.
+2. Using your own custom predictor while still using
+    batch optimization.
+
+Change the USE_CUSTOM_PREDICTOR variable False
+to use the builtin predictor.
+
+
+See the documentation for more information on batch
+optimization and how it runs.
+"""
+
 import random
 
 import numpy as np
@@ -17,6 +41,8 @@ db_info = {"launchpad": launchpad, "opt_label": opt_label}
 x_dim = [(-5.0, 5.0), (-5.0, 5.0)]
 batch_size = 5
 
+USE_CUSTOM_PREDICTOR = False
+
 
 @explicit_serialize
 class RosenbrockTask(FireTaskBase):
@@ -35,6 +61,9 @@ def custom_batch_predictor(XZ_explored, Y, x_dims, XZ_unexplored, batch_size=1):
 
     The argument names need not be the same shown here, although their
     position must remain the same.
+
+    This particular implementation just returns a series of random
+    guesses in the unexplored space.
 
     Args:
         XZ_explored ([list]): A list of lists; 2D array of samples (rows)
@@ -72,39 +101,38 @@ def wf_creator_rosenbrock(x):
     return Workflow([firework1])
 
 
-
 if __name__ == "__main__":
-    date_ = '2021-11-29'
-
-    n_evaluation = 20
     mc = MissionControl(**db_info)
-    launchpad.reset(password=date_, require_password=True)
+    launchpad.reset(password='2021-11-29', require_password=True)
     mc.reset(hard=True)
 
-    # Example: using a custom predictor with batch optimization
-    # mc.configure(
-    #     wf_creator=wf_creator_rosenbrock,
-    #     dimensions=x_dim,
-    #     predictor=custom_batch_predictor,
-    #     batch_size=batch_size,
-    #     predictor_kwargs={"batch_size": batch_size}
-    # )
+    if USE_CUSTOM_PREDICTOR:
+        # 1. Running a batch optimization with a builtin predictor.
+        mc.configure(
+            wf_creator=wf_creator_rosenbrock,
+            dimensions=x_dim,
+            predictor=custom_batch_predictor,
+            batch_size=batch_size,
+            predictor_kwargs={"batch_size": batch_size}
+        )
+    else:
+        # 2. Using a builtin predictor
+        mc.configure(
+            wf_creator=wf_creator_rosenbrock,
+            dimensions=x_dim,
+            predictor="GaussianProcessRegressor",
+            batch_size=batch_size
+        )
 
-    # Example: using a builtin predictor
-    # Commnt out this mc.configure
-    mc.configure(
-        wf_creator=wf_creator_rosenbrock,
-        dimensions=x_dim,
-        predictor="GaussianProcessRegressor",
-        batch_size=batch_size
-    )
-
+    # A batch will only run once rocketsled has seen at
+    # least batch_size samples. Every batch_size new
+    # evaluations will lead to another batch optimization.
     for bs in range(batch_size):
         launchpad.add_wf(wf_creator_rosenbrock(
             [np.random.uniform(-5, 5), np.random.uniform(-5, 5)]
         ))
 
-    rapidfire(launchpad, nlaunches=n_evaluation, sleep_time=0)
+    rapidfire(launchpad, nlaunches=30, sleep_time=0)
 
     plt = mc.plot()
     plt.show()
