@@ -12,6 +12,7 @@ if you do not have access to admin mongod privledges on your local machine.
 import os
 import unittest
 import warnings
+import random
 
 import numpy as np
 import pymongo
@@ -146,6 +147,36 @@ def custom_predictor(*args, **kwargs):
 
 def get_z(x):
     return [x[0] ** 2, x[1] ** 2]
+
+
+def wf_creator_batch(x):
+    spec = {"_x": x}
+    bt = BasicTestTask()
+    ot = OptTask(**db_info)
+    firework1 = Firework([bt, ot], spec=spec)
+    return Workflow([firework1])
+
+
+def custom_predictor_batch(XZ_explored, Y, x_dims, XZ_unexplored, batch_size=1):
+    """
+    Testin a custom predictor function for a batch optimization.
+
+    Just uses a random sample of the unexplored space to return batch_size
+    predictions.
+
+    Args:
+        XZ_explored:
+        Y:
+        x_dims:
+        XZ_unexplored:
+        batch_size:
+
+    Returns:
+        (list): ([3-dim array] * batch size) guesses.
+
+    """
+    x = random.sample(XZ_unexplored, k=batch_size)
+    return x
 
 
 class TestWorkflows(unittest.TestCase):
@@ -327,6 +358,51 @@ class TestWorkflows(unittest.TestCase):
         # Loop 2, to make sure optimizations will keep running
         launch_rocket(launchpad)
         self.assertEqual(self.c.count_documents({}), 5)
+        self.assertEqual(manager["lock"], None)
+        self.assertEqual(manager["queue"], [])
+
+
+    def test_batch(self):
+        batch_size = 5
+        self.mc.configure(
+            wf_creator=wf_creator_batch,
+            dimensions=self.dims_basic,
+            predictor=custom_predictor_batch,
+            predictor_kwargs={"batch_size": batch_size},
+            batch_size=batch_size
+        )
+
+        for i in range(batch_size):
+            launchpad.add_wf(wf_creator_batch((1 + i, 10.0 + i, "green")))
+
+        launch_rocket(launchpad)
+
+
+
+
+        manager = self.c.find_one({"doctype": "manager"})
+        done_q = {"y": {"$exists": 1, "$ne": "reserved"}}
+
+        self.assertEqual(self.c.count_documents({}), 3)
+        self.assertEqual(self.c.count_documents(done_q), 1)
+        self.assertEqual(manager["lock"], None)
+        self.assertEqual(manager["queue"], [])
+
+        rapidfire(launchpad, nlaunches=4)
+
+        manager = self.c.find_one({"doctype": "manager"})
+
+        self.assertEqual(self.c.count_documents({}), 12)
+        self.assertEqual(self.c.count_documents(done_q), 5)
+        self.assertEqual(manager["lock"], None)
+        self.assertEqual(manager["queue"], [])
+
+        launch_rocket(launchpad)
+
+        manager = self.c.find_one({"doctype": "manager"})
+
+        self.assertEqual(self.c.count_documents({}), 12)
+        self.assertEqual(self.c.count_documents(done_q), 6)
         self.assertEqual(manager["lock"], None)
         self.assertEqual(manager["queue"], [])
 

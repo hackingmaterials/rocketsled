@@ -15,8 +15,7 @@ launchpad = LaunchPad(name="rsled")
 opt_label = "opt_default"
 db_info = {"launchpad": launchpad, "opt_label": opt_label}
 x_dim = [(-5.0, 5.0), (-5.0, 5.0)]
-
-batch_size = 6
+batch_size = 5
 
 
 @explicit_serialize
@@ -49,7 +48,8 @@ def custom_batch_predictor(XZ_explored, Y, x_dims, XZ_unexplored, batch_size=1):
 
     Returns:
         x (list): A vector representing the set of parameters for the next best
-            guess, or for batches, a list of best next x guesses.
+            guess, or for batches, a list of best next x guesses. Number of
+            guesses must match batch_size.
     """
 
     # Here is an example custom predictor which is just random
@@ -60,7 +60,8 @@ def custom_batch_predictor(XZ_explored, Y, x_dims, XZ_unexplored, batch_size=1):
 
     # Custom predictor should return a list or tuple of choices if possible
     # i.e., all native python types if possible
-    # Return only a list of best X guesses (or single X guess for non-batch)
+    # Return only a list of batch_size best X guesses (or single X guess for non-batch)
+    # For example, if batch_size is 5, return 5 best guesses.
     return best_x_batch
 
 
@@ -71,17 +72,31 @@ def wf_creator_rosenbrock(x):
     return Workflow([firework1])
 
 
-def execute(n_evaluation, predictor_Selected, acquisition_function):
+
+if __name__ == "__main__":
+    date_ = '2021-11-29'
+
+    n_evaluation = 20
     mc = MissionControl(**db_info)
     launchpad.reset(password=date_, require_password=True)
     mc.reset(hard=True)
+
+    # Example: using a custom predictor with batch optimization
+    # mc.configure(
+    #     wf_creator=wf_creator_rosenbrock,
+    #     dimensions=x_dim,
+    #     predictor=custom_batch_predictor,
+    #     batch_size=batch_size,
+    #     predictor_kwargs={"batch_size": batch_size}
+    # )
+
+    # Example: using a builtin predictor
+    # Commnt out this mc.configure
     mc.configure(
         wf_creator=wf_creator_rosenbrock,
         dimensions=x_dim,
-        acq=acquisition_function,
-        predictor=predictor_Selected,
-        batch_size=batch_size,
-        predictor_kwargs={"batch_size": batch_size}
+        predictor="GaussianProcessRegressor",
+        batch_size=batch_size
     )
 
     for bs in range(batch_size):
@@ -90,14 +105,6 @@ def execute(n_evaluation, predictor_Selected, acquisition_function):
         ))
 
     rapidfire(launchpad, nlaunches=n_evaluation, sleep_time=0)
+
     plt = mc.plot()
     plt.show()
-
-
-if __name__ == "__main__":
-    date_ = '2021-11-29'
-
-    predictor_Selected = custom_batch_predictor
-    acquisition_function = 'lcb'
-    n_evaluation = 20
-    execute(n_evaluation, predictor_Selected, acquisition_function)

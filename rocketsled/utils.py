@@ -374,6 +374,7 @@ def convert_native(a):
         native (list): A list of the data in a, converted to native types.
 
     """
+    print("array is ", a)
     if isinstance(a, Iterable):
         try:
             # numpy conversion
@@ -402,6 +403,7 @@ def convert_value_to_native(val, dtypes=Dtypes()):
     Returns:
         native (int/float/str): The native python value of val.
     """
+    print(val, type(val))
     if type(val) in dtypes.all:
         if type(val) in dtypes.floats:
             native = float(val)
