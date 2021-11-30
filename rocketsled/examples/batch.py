@@ -34,14 +34,18 @@ from rocketsled.control import MissionControl
 from rocketsled.task import OptTask
 from rocketsled.utils import split_xz
 
+
+# Choose whether to use the custom_batch_predictor
+# function or the inbuilt GaussianProcessRegressor
+USE_CUSTOM_PREDICTOR = False
+
+
 # Setting up the FireWorks LaunchPad
 launchpad = LaunchPad(name="rsled")
 opt_label = "opt_default"
 db_info = {"launchpad": launchpad, "opt_label": opt_label}
 x_dim = [(-5.0, 5.0), (-5.0, 5.0)]
 batch_size = 5
-
-USE_CUSTOM_PREDICTOR = False
 
 
 @explicit_serialize
@@ -89,7 +93,8 @@ def custom_batch_predictor(XZ_explored, Y, x_dims, XZ_unexplored, batch_size=1):
 
     # Custom predictor should return a list or tuple of choices if possible
     # i.e., all native python types if possible
-    # Return only a list of batch_size best X guesses (or single X guess for non-batch)
+    # Return only a list of batch_size best X guesses (or single X guess
+    # for non-batch)
     # For example, if batch_size is 5, return 5 best guesses.
     return best_x_batch
 

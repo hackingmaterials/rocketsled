@@ -30,7 +30,7 @@ jobs:
     - name: pylint
       run: |
         # Enforce the absolute bare minimum
-        pylint --fail-under=7 rocketsled
+        pylint --fail-under=5 rocketsled
     - name: flake8
       run: |
         flake8 --version
