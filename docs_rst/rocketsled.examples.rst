@@ -12,6 +12,14 @@ rocketsled.examples.basic module
    :undoc-members:
    :show-inheritance:
 
+rocketsled.examples.batch module
+--------------------------------
+
+.. automodule:: rocketsled.examples.batch
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 rocketsled.examples.complex module
 ----------------------------------
 
@@ -19,7 +27,6 @@ rocketsled.examples.complex module
    :members:
    :undoc-members:
    :show-inheritance:
-
 
 Module contents
 ---------------

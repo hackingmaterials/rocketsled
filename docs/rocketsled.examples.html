@@ -1,17 +1,17 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
-    <title>rocketsled.examples package &#8212; rocketsled 2019.9.12 documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>rocketsled.examples package &#8212; rocketsled 1.0.1.20200523 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
  
@@ -27,7 +27,8 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.9.12 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 1.0.1.20200523 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">rocketsled.examples package</a></li> 
       </ul>
     </div>  
 
@@ -62,17 +63,17 @@ complex example, or the Fireworks and rocketsled documentation pages for more
 information:</p>
 <p><a class="reference external" href="https://hackingmaterials.github.io/rocketsled/">https://hackingmaterials.github.io/rocketsled/</a>
 <a class="reference external" href="https://materialsproject.github.io/fireworks/">https://materialsproject.github.io/fireworks/</a></p>
-<dl class="class">
-<dt id="rocketsled.examples.basic.ObjectiveFuncTask">
-<em class="property">class </em><code class="sig-prename descclassname">rocketsled.examples.basic.</code><code class="sig-name descname">ObjectiveFuncTask</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.basic.ObjectiveFuncTask" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt class="sig sig-object py" id="rocketsled.examples.basic.ObjectiveFuncTask">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rocketsled.examples.basic.</span></span><span class="sig-name descname"><span class="pre">ObjectiveFuncTask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.basic.ObjectiveFuncTask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fireworks.core.firework.FireTaskBase</span></code></p>
 <p>An example task which just evaluates the following simple function:</p>
 <p>f(x) = x[0] * x[1] / x[2]</p>
 <p>Replace this code with your objective function if your objective function
 is relatively simple (i.e., only needs one Firework).</p>
-<dl class="method">
-<dt id="rocketsled.examples.basic.ObjectiveFuncTask.run_task">
-<code class="sig-name descname">run_task</code><span class="sig-paren">(</span><em class="sig-param">fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.basic.ObjectiveFuncTask.run_task" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketsled.examples.basic.ObjectiveFuncTask.run_task">
+<span class="sig-name descname"><span class="pre">run_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fw_spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.basic.ObjectiveFuncTask.run_task" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method gets called when the Firetask is run. It can take in a
 Firework spec, perform some task using that data, and then return an
 output in the form of a FWAction.</p>
@@ -97,9 +98,9 @@ these multiple resources.</p>
 
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.examples.basic.wf_creator">
-<code class="sig-prename descclassname">rocketsled.examples.basic.</code><code class="sig-name descname">wf_creator</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.basic.wf_creator" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.examples.basic.wf_creator">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.examples.basic.</span></span><span class="sig-name descname"><span class="pre">wf_creator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.basic.wf_creator" title="Permalink to this definition">¶</a></dt>
 <dd><p>The workflow creator function required by rocketsled.</p>
 <p>This wf_creator takes in an input vector x and returns a workflow which
 calculates y, the output. The requirements for using this wf_creator
@@ -132,35 +133,33 @@ with rocketsled are:</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-rocketsled.examples.complex">
-<span id="rocketsled-examples-complex-module"></span><h2>rocketsled.examples.complex module<a class="headerlink" href="#module-rocketsled.examples.complex" title="Permalink to this headline">¶</a></h2>
-<p>Running a rocketsled optimization with a multi-part workflow, multi-objective
-objective function, z-features, as well as more advanced configuration.</p>
-<p>Our workflow to optimize now has two Fireworks, each with one FireTask. The
-first firework runs the ‘expensive’ objective function, and the second firework
-runs only the optimization. This two-firework setup allows us to run the
-objective function and optimization on different computing resources, if
-desired.</p>
-<p>We also use an objective function with more than one objective. Note that
-as long as we pass in the output vector to the spec (in the key “_y”, as in the
-basic example), we don’t need to make any other changes to tell rocketsled the
-objective function is multi-objective. Additionally, the objective function
-has dimensions of differing data types (int, float, categorical), which is
-automatically handled by rocketsled as long as the dimensions are passed into
-MissionControl.configure(…).</p>
-<p>Finally, we add some arguments to the MissionControl configuration before
-launching.</p>
-<dl class="class">
-<dt id="rocketsled.examples.complex.ComplexMultiObjTask">
-<em class="property">class </em><code class="sig-prename descclassname">rocketsled.examples.complex.</code><code class="sig-name descname">ComplexMultiObjTask</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.complex.ComplexMultiObjTask" title="Permalink to this definition">¶</a></dt>
+<div class="section" id="module-rocketsled.examples.batch">
+<span id="rocketsled-examples-batch-module"></span><h2>rocketsled.examples.batch module<a class="headerlink" href="#module-rocketsled.examples.batch" title="Permalink to this headline">¶</a></h2>
+<p>Running a batch optimization with a custom predictor.</p>
+<p>Optimizing the 2D Rosenbrock function, which is a 2D
+function with one objective to be minimized. There
+are no Z descriptors so we use only the X coordinates
+for learning.</p>
+<p>We show two examples here:</p>
+<ol class="arabic simple">
+<li><p>Running a batch optimization with a builtin predictor.</p></li>
+<li><dl class="simple">
+<dt>Using your own custom predictor while still using</dt><dd><p>batch optimization.</p>
+</dd>
+</dl>
+</li>
+</ol>
+<p>Change the USE_CUSTOM_PREDICTOR variable False
+to use the builtin predictor.</p>
+<p>See the documentation for more information on batch
+optimization and how it runs.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="rocketsled.examples.batch.RosenbrockTask">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rocketsled.examples.batch.</span></span><span class="sig-name descname"><span class="pre">RosenbrockTask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.batch.RosenbrockTask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fireworks.core.firework.FireTaskBase</span></code></p>
-<p>An example of a complex, multiobjective task with directly competing
-objectives. The input vector is defined on a search space with numerical
-and categorical inputs.</p>
-<p>This task accepts a 3-vector of the form [int, float, str].</p>
-<dl class="method">
-<dt id="rocketsled.examples.complex.ComplexMultiObjTask.run_task">
-<code class="sig-name descname">run_task</code><span class="sig-paren">(</span><em class="sig-param">fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.complex.ComplexMultiObjTask.run_task" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketsled.examples.batch.RosenbrockTask.run_task">
+<span class="sig-name descname"><span class="pre">run_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fw_spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.batch.RosenbrockTask.run_task" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method gets called when the Firetask is run. It can take in a
 Firework spec, perform some task using that data, and then return an
 output in the form of a FWAction.</p>
@@ -185,9 +184,100 @@ these multiple resources.</p>
 
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.examples.complex.get_z">
-<code class="sig-prename descclassname">rocketsled.examples.complex.</code><code class="sig-name descname">get_z</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.complex.get_z" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.examples.batch.custom_batch_predictor">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.examples.batch.</span></span><span class="sig-name descname"><span class="pre">custom_batch_predictor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">XZ_explored</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_dims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">XZ_unexplored</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.batch.custom_batch_predictor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a prediction for the next best guess. The returned guess will
+be used to construct a new workflow with the workflow creator function.</p>
+<p>The argument names need not be the same shown here, although their
+position must remain the same.</p>
+<p>This particular implementation just returns a series of random
+guesses in the unexplored space.</p>
+<dl>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>XZ_explored ([list]): A list of lists; 2D array of samples (rows)</dt><dd><p>by features (columns) of points already evaluated in the search
+space. This is training data.</p>
+</dd>
+</dl>
+<p>Y (list): A vector of samples; this is the training output.
+x_dims (list): The dimensions of the search space
+XZ_unexplored([list[): A list of lists; 2D array of samples (rows)</p>
+<blockquote>
+<div><p>by features (columns) of points to be predicted. This is the ‘test’
+or prediction dataset.</p>
+</div></blockquote>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>x (list): A vector representing the set of parameters for the next best</dt><dd><p>guess, or for batches, a list of best next x guesses. Number of
+guesses must match batch_size.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.examples.batch.wf_creator_rosenbrock">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.examples.batch.</span></span><span class="sig-name descname"><span class="pre">wf_creator_rosenbrock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.batch.wf_creator_rosenbrock" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-rocketsled.examples.complex">
+<span id="rocketsled-examples-complex-module"></span><h2>rocketsled.examples.complex module<a class="headerlink" href="#module-rocketsled.examples.complex" title="Permalink to this headline">¶</a></h2>
+<p>Running a rocketsled optimization with a multi-part workflow, multi-objective
+objective function, z-features, as well as more advanced configuration.</p>
+<p>Our workflow to optimize now has two Fireworks, each with one FireTask. The
+first firework runs the ‘expensive’ objective function, and the second firework
+runs only the optimization. This two-firework setup allows us to run the
+objective function and optimization on different computing resources, if
+desired.</p>
+<p>We also use an objective function with more than one objective. Note that
+as long as we pass in the output vector to the spec (in the key “_y”, as in the
+basic example), we don’t need to make any other changes to tell rocketsled the
+objective function is multi-objective. Additionally, the objective function
+has dimensions of differing data types (int, float, categorical), which is
+automatically handled by rocketsled as long as the dimensions are passed into
+MissionControl.configure(…).</p>
+<p>Finally, we add some arguments to the MissionControl configuration before
+launching.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="rocketsled.examples.complex.ComplexMultiObjTask">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rocketsled.examples.complex.</span></span><span class="sig-name descname"><span class="pre">ComplexMultiObjTask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.complex.ComplexMultiObjTask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fireworks.core.firework.FireTaskBase</span></code></p>
+<p>An example of a complex, multiobjective task with directly competing
+objectives. The input vector is defined on a search space with numerical
+and categorical inputs.</p>
+<p>This task accepts a 3-vector of the form [int, float, str].</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketsled.examples.complex.ComplexMultiObjTask.run_task">
+<span class="sig-name descname"><span class="pre">run_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fw_spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.complex.ComplexMultiObjTask.run_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method gets called when the Firetask is run. It can take in a
+Firework spec, perform some task using that data, and then return an
+output in the form of a FWAction.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>fw_spec (dict): A Firework spec. This comes from the master spec.</dt><dd><p>In addition, this spec contains a special “_fw_env” key that
+contains the env settings of the FWorker calling this method.
+This provides for abstracting out certain commands or
+settings. For example, “foo” may be named “foo1” in resource
+1 and “foo2” in resource 2. The FWorker env can specify {
+“foo”: “foo1”}, which maps an abstract variable “foo” to the
+relevant “foo1” or “foo2”. You can then write a task that
+uses fw_spec[“_fw_env”][“foo”] that will work across all
+these multiple resources.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>(FWAction)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.examples.complex.get_z">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.examples.complex.</span></span><span class="sig-name descname"><span class="pre">get_z</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.complex.get_z" title="Permalink to this definition">¶</a></dt>
 <dd><p>An example function demonstrating how to use z_features.</p>
 <p>The get_z function should accept the same vector as the wf_creator (the x
 vector), and return all information that should be used for learning. If
@@ -204,9 +294,9 @@ z vector.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.examples.complex.wf_creator">
-<code class="sig-prename descclassname">rocketsled.examples.complex.</code><code class="sig-name descname">wf_creator</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.complex.wf_creator" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.examples.complex.wf_creator">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.examples.complex.</span></span><span class="sig-name descname"><span class="pre">wf_creator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.examples.complex.wf_creator" title="Permalink to this definition">¶</a></dt>
 <dd><p>A workflow creator function returning a workflow of the following form:</p>
 <blockquote>
 <div><blockquote>
@@ -241,6 +331,7 @@ z vector.</p>
 </div>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
@@ -251,6 +342,7 @@ z vector.</p>
 <li><a class="reference internal" href="#">rocketsled.examples package</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
 <li><a class="reference internal" href="#module-rocketsled.examples.basic">rocketsled.examples.basic module</a></li>
+<li><a class="reference internal" href="#module-rocketsled.examples.batch">rocketsled.examples.batch module</a></li>
 <li><a class="reference internal" href="#module-rocketsled.examples.complex">rocketsled.examples.complex module</a></li>
 <li><a class="reference internal" href="#module-rocketsled.examples">Module contents</a></li>
 </ul>
@@ -268,12 +360,12 @@ z vector.</p>
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -287,13 +379,14 @@ z vector.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.9.12 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 1.0.1.20200523 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">rocketsled.examples package</a></li> 
       </ul>
     </div>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, HackingMaterials.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.1.
     </div>
 
   </body>

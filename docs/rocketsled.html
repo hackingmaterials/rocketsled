@@ -1,17 +1,17 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
-    <title>rocketsled package &#8212; rocketsled 2019.9.12 documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>rocketsled package &#8212; rocketsled 1.0.1.20200523 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
  
@@ -27,7 +27,8 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.9.12 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 1.0.1.20200523 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">rocketsled package</a></li> 
       </ul>
     </div>  
 
@@ -45,6 +46,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rocketsled.examples.html">rocketsled.examples package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="rocketsled.examples.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rocketsled.examples.html#module-rocketsled.examples.basic">rocketsled.examples.basic module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rocketsled.examples.html#module-rocketsled.examples.batch">rocketsled.examples.batch module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rocketsled.examples.html#module-rocketsled.examples.complex">rocketsled.examples.complex module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rocketsled.examples.html#module-rocketsled.examples">Module contents</a></li>
 </ul>
@@ -66,42 +68,14 @@
 <div class="section" id="module-rocketsled.acq">
 <span id="rocketsled-acq-module"></span><h2>rocketsled.acq module<a class="headerlink" href="#module-rocketsled.acq" title="Permalink to this headline">¶</a></h2>
 <p>Acquisition functions and utilities.</p>
-<dl class="function">
-<dt id="rocketsled.acq.acquire">
-<code class="sig-prename descclassname">rocketsled.acq.</code><code class="sig-name descname">acquire</code><span class="sig-paren">(</span><em class="sig-param">acq</em>, <em class="sig-param">X</em>, <em class="sig-param">Y</em>, <em class="sig-param">space</em>, <em class="sig-param">model</em>, <em class="sig-param">nstraps</em>, <em class="sig-param">return_means=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.acquire" title="Permalink to this definition">¶</a></dt>
-<dd><p>A high level function for calculating acquisition values. Includes a
-strategy for estimating mean values and uncertainty with bootstrapping;
-Independently train with different sets of data, and predict over the same
-space of unknown points. Assumes minimization!</p>
-<dl>
-<dt>Args:</dt><dd><p>acq (str): The acquisition function (‘ei’, ‘pi’, or ‘lcb’)
-X ([list]): A list of x vectors (inputs), for training.
-Y (list): A list of scalars (outputs), for training.
-space ([list]): A list of possible X vectors, yet to be explored. This</p>
-<blockquote>
-<div><p>is the ‘test’ set.</p>
-</div></blockquote>
-<dl class="simple">
-<dt>model (BaseEstimator object): sklearn estimator object. Must have .fit</dt><dd><p>and .predict methods.</p>
-</dd>
-<dt>nstraps (int): The number of bootstrap samplings, with replacement,</dt><dd><p>which will be performed. This is also the number of regressor
-fittings and predictions which will be performed.</p>
-</dd>
-<dt>return_means (bool): If True, also return the mean of the acquisition</dt><dd><p>function alongside the acquisition fucntion values.</p>
-</dd>
-</dl>
-</dd>
-<dt>Returns:</dt><dd><dl class="simple">
-<dt>(list) acquisition values for space. Higher acquisition values</dt><dd><p>correspond to better guesses.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.acq.acquire">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.acq.</span></span><span class="sig-name descname"><span class="pre">acquire</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_means</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.acquire" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.acq.ei">
-<code class="sig-prename descclassname">rocketsled.acq.</code><code class="sig-name descname">ei</code><span class="sig-paren">(</span><em class="sig-param">fmin</em>, <em class="sig-param">mu</em>, <em class="sig-param">std</em>, <em class="sig-param">xi=0.01</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.ei" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.acq.ei">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.acq.</span></span><span class="sig-name descname"><span class="pre">ei</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.ei" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns expected improvement values.</p>
 <dl>
 <dt>Args:</dt><dd><p>fmin (float): Minimum value of the objective function known thus far.
@@ -121,12 +95,15 @@ Lizotte (2008).</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.acq.lcb">
-<code class="sig-prename descclassname">rocketsled.acq.</code><code class="sig-name descname">lcb</code><span class="sig-paren">(</span><em class="sig-param">fmin</em>, <em class="sig-param">mu</em>, <em class="sig-param">std</em>, <em class="sig-param">kappa=1.96</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.lcb" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.acq.lcb">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.acq.</span></span><span class="sig-name descname"><span class="pre">lcb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kappa</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.96</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.lcb" title="Permalink to this definition">¶</a></dt>
 <dd><dl>
-<dt>Returns lower confidence bound estimates.</dt><dd><p>fmin (float): (not used): Minimum value of the objective function known thus far.
-mu (numpy array):  Mean value of bootstrapped predictions for each y.
+<dt>Returns lower confidence bound estimates.</dt><dd><dl class="simple">
+<dt>fmin (float): (not used): Minimum value of the objective function known</dt><dd><p>thus far.</p>
+</dd>
+</dl>
+<p>mu (numpy array):  Mean value of bootstrapped predictions for each y.
 std (numpy array): Standard deviation of bootstrapped predictions for</p>
 <blockquote>
 <div><p>each y.</p>
@@ -141,9 +118,9 @@ std (numpy array): Standard deviation of bootstrapped predictions for</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.acq.pi">
-<code class="sig-prename descclassname">rocketsled.acq.</code><code class="sig-name descname">pi</code><span class="sig-paren">(</span><em class="sig-param">fmin</em>, <em class="sig-param">mu</em>, <em class="sig-param">std</em>, <em class="sig-param">xi=0.01</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.pi" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.acq.pi">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.acq.</span></span><span class="sig-name descname"><span class="pre">pi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.pi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns probability of improvement values.</p>
 <dl>
 <dt>Args:</dt><dd><p>fmin (float): Minimum value of the objective function known thus far.
@@ -163,9 +140,9 @@ Lizotte (2008).</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.acq.ppredict">
-<code class="sig-prename descclassname">rocketsled.acq.</code><code class="sig-name descname">ppredict</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">Y</em>, <em class="sig-param">space</em>, <em class="sig-param">model</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.ppredict" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.acq.ppredict">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.acq.</span></span><span class="sig-name descname"><span class="pre">ppredict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.ppredict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a split and fit on a random subsample of the entire explored X. Use this
 fitted model to predict the remaining space. Meant to be run in parallel in
 combination with joblib’s delayed and Parallel utilities.</p>
@@ -189,15 +166,20 @@ space ([list]): A list of possible X vectors, yet to be explored. This</p>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.acq.predict">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.acq.</span></span><span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstraps</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.acq.predict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
 <div class="section" id="module-rocketsled.control">
 <span id="rocketsled-control-module"></span><h2>rocketsled.control module<a class="headerlink" href="#module-rocketsled.control" title="Permalink to this headline">¶</a></h2>
 <p>A class to configure, manage, and analyze optimizations. Similar to the
 LaunchPad for FireWorks.</p>
-<dl class="class">
-<dt id="rocketsled.control.MissionControl">
-<em class="property">class </em><code class="sig-prename descclassname">rocketsled.control.</code><code class="sig-name descname">MissionControl</code><span class="sig-paren">(</span><em class="sig-param">launchpad</em>, <em class="sig-param">opt_label</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="rocketsled.control.MissionControl">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rocketsled.control.</span></span><span class="sig-name descname"><span class="pre">MissionControl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">launchpad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt_label</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>A class for configuring and controlling rocketsled optimization.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -210,15 +192,14 @@ collection).</p>
 </dl>
 </dd>
 </dl>
-<dl class="method">
-<dt id="rocketsled.control.MissionControl.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">launchpad</em>, <em class="sig-param">opt_label</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketsled.control.MissionControl.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">launchpad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt_label</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
-<dl class="method">
-<dt id="rocketsled.control.MissionControl.configure">
-<code class="sig-name descname">configure</code><span class="sig-paren">(</span><em class="sig-param">wf_creator</em>, <em class="sig-param">dimensions</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.configure" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketsled.control.MissionControl.configure">
+<span class="sig-name descname"><span class="pre">configure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wf_creator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimensions</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.configure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set up the optimization config. Required before using OptTask, but only
 needs to be done once. To reconfigure, use MissionControl.reset and then
 use configure again.</p>
@@ -378,9 +359,9 @@ in the launchpad and opt_label arguments in your wf_creator.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="rocketsled.control.MissionControl.fetch_matrices">
-<code class="sig-name descname">fetch_matrices</code><span class="sig-paren">(</span><em class="sig-param">include_reserved=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.fetch_matrices" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketsled.control.MissionControl.fetch_matrices">
+<span class="sig-name descname"><span class="pre">fetch_matrices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">include_reserved</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.fetch_matrices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the X and Y matrices for this optimization.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -398,9 +379,9 @@ n_samples, n_objectives. Only completed entries are retrieved.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="rocketsled.control.MissionControl.plot">
-<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param">show_best=True</em>, <em class="sig-param">show_mean=True</em>, <em class="sig-param">latexify=False</em>, <em class="sig-param">font_family='serif'</em>, <em class="sig-param">scale='linear'</em>, <em class="sig-param">summarize=True</em>, <em class="sig-param">print_pareto=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.plot" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketsled.control.MissionControl.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">show_best</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latexify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">font_family</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'serif'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">summarize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_pareto</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Visualize the progress of an optimization.</p>
 <dl>
 <dt>Args:</dt><dd><dl class="simple">
@@ -431,9 +412,9 @@ print_pareto (bool): If True, display all Pareto-optimal objective</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="rocketsled.control.MissionControl.reset">
-<code class="sig-name descname">reset</code><span class="sig-paren">(</span><em class="sig-param">hard=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.reset" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketsled.control.MissionControl.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hard</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reset (delete) this optimization configuration and/or collection.</p>
 <dl class="simple">
 <dt>Soft reset (hard=False): Delete the configuration, but keep the</dt><dd><p>optimization data. This is useful if you are changing optimizers
@@ -453,9 +434,9 @@ optimization collection.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="rocketsled.control.MissionControl.summarize">
-<code class="sig-name descname">summarize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.summarize" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketsled.control.MissionControl.summarize">
+<span class="sig-name descname"><span class="pre">summarize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.control.MissionControl.summarize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns stats about the optimization collection and checks consistency
 of the collection.</p>
 <dl class="simple">
@@ -464,9 +445,9 @@ of the collection.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="rocketsled.control.MissionControl.task">
-<em class="property">property </em><code class="sig-name descname">task</code><a class="headerlink" href="#rocketsled.control.MissionControl.task" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="rocketsled.control.MissionControl.task">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">task</span></span><a class="headerlink" href="#rocketsled.control.MissionControl.task" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a preconfigured OptTask which can be inserted into a workflow.
 Make sure to run .configure before using this task, otherwise your
 workflow optimization might not work!</p>
@@ -483,9 +464,9 @@ workflow optimization might not work!</p>
 <span id="rocketsled-task-module"></span><h2>rocketsled.task module<a class="headerlink" href="#module-rocketsled.task" title="Permalink to this headline">¶</a></h2>
 <p>The FireTask for running automatic optimization loops.</p>
 <p>Please see the documentation for a comprehensive guide on usage.</p>
-<dl class="class">
-<dt id="rocketsled.task.OptTask">
-<em class="property">class </em><code class="sig-prename descclassname">rocketsled.task.</code><code class="sig-name descname">OptTask</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.task.OptTask" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt class="sig sig-object py" id="rocketsled.task.OptTask">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rocketsled.task.</span></span><span class="sig-name descname"><span class="pre">OptTask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.task.OptTask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fireworks.core.firework.FireTaskBase</span></code></p>
 <p>A FireTask for automatically running optimization loops and storing
 optimization data for complex workflows.</p>
@@ -502,15 +483,14 @@ correspond to multiple independent optimizations.</p>
 </dl>
 </dd>
 </dl>
-<dl class="method">
-<dt id="rocketsled.task.OptTask.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.task.OptTask.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketsled.task.OptTask.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.task.OptTask.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
-<dl class="method">
-<dt id="rocketsled.task.OptTask.optimize">
-<code class="sig-name descname">optimize</code><span class="sig-paren">(</span><em class="sig-param">fw_spec</em>, <em class="sig-param">manager_id</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.task.OptTask.optimize" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketsled.task.OptTask.optimize">
+<span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fw_spec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">manager_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.task.OptTask.optimize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the optimization algorithm.</p>
 <dl>
 <dt>Args:</dt><dd><p>fw_spec (dict): The firework spec.
@@ -531,9 +511,9 @@ all_xz_new ([list] or [tuple]): The predicted next best guess(es),</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="rocketsled.task.OptTask.pop_lock">
-<code class="sig-name descname">pop_lock</code><span class="sig-paren">(</span><em class="sig-param">manager_id</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.task.OptTask.pop_lock" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketsled.task.OptTask.pop_lock">
+<span class="sig-name descname"><span class="pre">pop_lock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manager_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.task.OptTask.pop_lock" title="Permalink to this definition">¶</a></dt>
 <dd><p>Releases the current process lock on the manager doc, and moves waiting
 processes from the queue to the lock.</p>
 <dl class="simple">
@@ -544,14 +524,14 @@ processes from the queue to the lock.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="rocketsled.task.OptTask.required_params">
-<code class="sig-name descname">required_params</code><em class="property"> = ['launchpad', 'opt_label']</em><a class="headerlink" href="#rocketsled.task.OptTask.required_params" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="rocketsled.task.OptTask.required_params">
+<span class="sig-name descname"><span class="pre">required_params</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['launchpad',</span> <span class="pre">'opt_label']</span></em><a class="headerlink" href="#rocketsled.task.OptTask.required_params" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
-<dt id="rocketsled.task.OptTask.run_task">
-<code class="sig-name descname">run_task</code><span class="sig-paren">(</span><em class="sig-param">fw_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.task.OptTask.run_task" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketsled.task.OptTask.run_task">
+<span class="sig-name descname"><span class="pre">run_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fw_spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.task.OptTask.run_task" title="Permalink to this definition">¶</a></dt>
 <dd><p>FireTask for running an optimization loop.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><p>fw_spec (dict): the firetask spec. Must contain a ‘_y’ key with
@@ -564,9 +544,9 @@ optimized guess.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="rocketsled.task.OptTask.stash">
-<code class="sig-name descname">stash</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">z</em>, <em class="sig-param">all_xz_new</em>, <em class="sig-param">n_completed</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.task.OptTask.stash" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketsled.task.OptTask.stash">
+<span class="sig-name descname"><span class="pre">stash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_xz_new</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_completed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.task.OptTask.stash" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write documents to database after optimization.</p>
 <dl>
 <dt>Args:</dt><dd><p>x (iterable): The current x guess.
@@ -594,64 +574,63 @@ is returned.</p>
 <div class="section" id="module-rocketsled.utils">
 <span id="rocketsled-utils-module"></span><h2>rocketsled.utils module<a class="headerlink" href="#module-rocketsled.utils" title="Permalink to this headline">¶</a></h2>
 <p>Utility functions for OptTask.</p>
-<dl class="exception">
-<dt id="rocketsled.utils.BatchNotReadyError">
-<em class="property">exception </em><code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">BatchNotReadyError</code><a class="headerlink" href="#rocketsled.utils.BatchNotReadyError" title="Permalink to this definition">¶</a></dt>
+<dl class="py exception">
+<dt class="sig sig-object py" id="rocketsled.utils.BatchNotReadyError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">BatchNotReadyError</span></span><a class="headerlink" href="#rocketsled.utils.BatchNotReadyError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rocketsled.utils.RSBaseException" title="rocketsled.utils.RSBaseException"><code class="xref py py-class docutils literal notranslate"><span class="pre">rocketsled.utils.RSBaseException</span></code></a></p>
 <p>Batch-mode scheme broken</p>
 </dd></dl>
 
-<dl class="exception">
-<dt id="rocketsled.utils.DimensionMismatchError">
-<em class="property">exception </em><code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">DimensionMismatchError</code><a class="headerlink" href="#rocketsled.utils.DimensionMismatchError" title="Permalink to this definition">¶</a></dt>
+<dl class="py exception">
+<dt class="sig sig-object py" id="rocketsled.utils.DimensionMismatchError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">DimensionMismatchError</span></span><a class="headerlink" href="#rocketsled.utils.DimensionMismatchError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rocketsled.utils.RSBaseException" title="rocketsled.utils.RSBaseException"><code class="xref py py-class docutils literal notranslate"><span class="pre">rocketsled.utils.RSBaseException</span></code></a></p>
 <p>Dimensions of the search space are ill-defined or conflicting</p>
 </dd></dl>
 
-<dl class="class">
-<dt id="rocketsled.utils.Dtypes">
-<em class="property">class </em><code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">Dtypes</code><a class="headerlink" href="#rocketsled.utils.Dtypes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="rocketsled.utils.Dtypes">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">Dtypes</span></span><a class="headerlink" href="#rocketsled.utils.Dtypes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Defines the datatypes available for optimization.</p>
-<dl class="method">
-<dt id="rocketsled.utils.Dtypes.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.Dtypes.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketsled.utils.Dtypes.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.Dtypes.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
-<dl class="exception">
-<dt id="rocketsled.utils.ExhaustedSpaceError">
-<em class="property">exception </em><code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">ExhaustedSpaceError</code><a class="headerlink" href="#rocketsled.utils.ExhaustedSpaceError" title="Permalink to this definition">¶</a></dt>
+<dl class="py exception">
+<dt class="sig sig-object py" id="rocketsled.utils.ExhaustedSpaceError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">ExhaustedSpaceError</span></span><a class="headerlink" href="#rocketsled.utils.ExhaustedSpaceError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rocketsled.utils.RSBaseException" title="rocketsled.utils.RSBaseException"><code class="xref py py-class docutils literal notranslate"><span class="pre">rocketsled.utils.RSBaseException</span></code></a></p>
 <p>When the search space has been exhausted.</p>
 </dd></dl>
 
-<dl class="exception">
-<dt id="rocketsled.utils.NotConfiguredError">
-<em class="property">exception </em><code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">NotConfiguredError</code><a class="headerlink" href="#rocketsled.utils.NotConfiguredError" title="Permalink to this definition">¶</a></dt>
+<dl class="py exception">
+<dt class="sig sig-object py" id="rocketsled.utils.NotConfiguredError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">NotConfiguredError</span></span><a class="headerlink" href="#rocketsled.utils.NotConfiguredError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rocketsled.utils.RSBaseException" title="rocketsled.utils.RSBaseException"><code class="xref py py-class docutils literal notranslate"><span class="pre">rocketsled.utils.RSBaseException</span></code></a></p>
 <p>When rocketsled config doc is broken or not found.</p>
 </dd></dl>
 
-<dl class="exception">
-<dt id="rocketsled.utils.ObjectiveError">
-<em class="property">exception </em><code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">ObjectiveError</code><a class="headerlink" href="#rocketsled.utils.ObjectiveError" title="Permalink to this definition">¶</a></dt>
+<dl class="py exception">
+<dt class="sig sig-object py" id="rocketsled.utils.ObjectiveError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">ObjectiveError</span></span><a class="headerlink" href="#rocketsled.utils.ObjectiveError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rocketsled.utils.RSBaseException" title="rocketsled.utils.RSBaseException"><code class="xref py py-class docutils literal notranslate"><span class="pre">rocketsled.utils.RSBaseException</span></code></a></p>
 <p>Errors relating to objectives.</p>
 </dd></dl>
 
-<dl class="exception">
-<dt id="rocketsled.utils.RSBaseException">
-<em class="property">exception </em><code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">RSBaseException</code><a class="headerlink" href="#rocketsled.utils.RSBaseException" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseException</span></code></a></p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="rocketsled.utils.RSBaseException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">RSBaseException</span></span><a class="headerlink" href="#rocketsled.utils.RSBaseException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseException</span></code></a></p>
 <p>Base exception for rocketsled exceptions.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.utils.check_dims">
-<code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">check_dims</code><span class="sig-paren">(</span><em class="sig-param">dims</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.check_dims" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.utils.check_dims">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">check_dims</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.check_dims" title="Permalink to this definition">¶</a></dt>
 <dd><p>Ensure the dimensions are in the correct format for the optimization.</p>
 <p>Dimensions should be a list or tuple of lists or tuples each defining
 the search space in one dimension. The datatypes used inside each
@@ -668,9 +647,9 @@ such as [‘red’, ‘green’, ‘blue’] or [1.2, 11.5, 15.0].</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.utils.convert_native">
-<code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">convert_native</code><span class="sig-paren">(</span><em class="sig-param">a</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.convert_native" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.utils.convert_native">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">convert_native</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.convert_native" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert iterables of non-native types to native types for bson storage
 in the database. For situations where .tolist() does not work.</p>
 <dl class="simple">
@@ -686,9 +665,9 @@ entries such as floats, ints, etc.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.utils.convert_value_to_native">
-<code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">convert_value_to_native</code><span class="sig-paren">(</span><em class="sig-param">val</em>, <em class="sig-param">dtypes=&lt;rocketsled.utils.Dtypes object&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.convert_value_to_native" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.utils.convert_value_to_native">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">convert_value_to_native</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtypes=&lt;rocketsled.utils.Dtypes</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.convert_value_to_native" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a single value to the native datatype for storage in the opt db.</p>
 <dl>
 <dt>Args:</dt><dd><dl class="simple">
@@ -702,9 +681,9 @@ entries such as floats, ints, etc.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.utils.deserialize">
-<code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">deserialize</code><span class="sig-paren">(</span><em class="sig-param">fun</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.deserialize" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.utils.deserialize">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">deserialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fun</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.deserialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Takes a fireworks serialzed function handle and maps to a function object.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -717,9 +696,9 @@ entries such as floats, ints, etc.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.utils.get_default_opttask_kwargs">
-<code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">get_default_opttask_kwargs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.get_default_opttask_kwargs" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.utils.get_default_opttask_kwargs">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">get_default_opttask_kwargs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.get_default_opttask_kwargs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the default configuration kwargs for OptTask.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><p>None</p>
@@ -729,9 +708,9 @@ entries such as floats, ints, etc.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.utils.get_len">
-<code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">get_len</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.get_len" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.utils.get_len">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">get_len</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.get_len" title="Permalink to this definition">¶</a></dt>
 <dd><p>A utility function for getting the length of an object.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><p>obj: An object, optionally iterable.</p>
@@ -741,9 +720,9 @@ entries such as floats, ints, etc.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.utils.is_discrete">
-<code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">is_discrete</code><span class="sig-paren">(</span><em class="sig-param">dims</em>, <em class="sig-param">criteria='all'</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.is_discrete" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.utils.is_discrete">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">is_discrete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criteria</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.is_discrete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks if the search space is discrete.</p>
 <dl>
 <dt>Args:</dt><dd><p>dims ([tuple]): dimensions of the search space
@@ -758,9 +737,9 @@ whether ANY dimensions are discrete.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.utils.is_duplicate_by_tolerance">
-<code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">is_duplicate_by_tolerance</code><span class="sig-paren">(</span><em class="sig-param">x_new</em>, <em class="sig-param">all_x_explored</em>, <em class="sig-param">tolerances</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.is_duplicate_by_tolerance" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.utils.is_duplicate_by_tolerance">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">is_duplicate_by_tolerance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_new</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_x_explored</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerances</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.is_duplicate_by_tolerance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Duplicate checks with tolerances.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><p>x_new (list): the new guess to be duplicate checked
@@ -773,9 +752,9 @@ False if x_new is unique in the space and has yet to be tried.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.utils.latex_float">
-<code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">latex_float</code><span class="sig-paren">(</span><em class="sig-param">f</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.latex_float" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.utils.latex_float">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">latex_float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.latex_float" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert floating point number into latex-formattable string for visualize.
 Might relocate to viz.py</p>
 <dl class="simple">
@@ -786,9 +765,9 @@ Might relocate to viz.py</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.utils.pareto">
-<code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">pareto</code><span class="sig-paren">(</span><em class="sig-param">all_y</em>, <em class="sig-param">maximize=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.pareto" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.utils.pareto">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">pareto</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maximize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.pareto" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the indices of Pareto-optimal solutions.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -801,9 +780,9 @@ Might relocate to viz.py</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.utils.random_guess">
-<code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">random_guess</code><span class="sig-paren">(</span><em class="sig-param">dimensions</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.random_guess" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.utils.random_guess">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">random_guess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dimensions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.random_guess" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns random new inputs based on the dimensions of the search space.
 It works with float, integer, and categorical types</p>
 <dl class="simple">
@@ -820,9 +799,9 @@ It works with float, integer, and categorical types</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.utils.serialize">
-<code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">serialize</code><span class="sig-paren">(</span><em class="sig-param">fun</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.serialize" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.utils.serialize">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">serialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fun</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.serialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Turn a python function into a string which can later be used to deserialize
 the function. Only works with importable modules.</p>
 <dl class="simple">
@@ -833,9 +812,9 @@ the function. Only works with importable modules.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="rocketsled.utils.split_xz">
-<code class="sig-prename descclassname">rocketsled.utils.</code><code class="sig-name descname">split_xz</code><span class="sig-paren">(</span><em class="sig-param">xz</em>, <em class="sig-param">x_dims</em>, <em class="sig-param">x_only=False</em>, <em class="sig-param">z_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.split_xz" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rocketsled.utils.split_xz">
+<span class="sig-prename descclassname"><span class="pre">rocketsled.utils.</span></span><span class="sig-name descname"><span class="pre">split_xz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_dims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rocketsled.utils.split_xz" title="Permalink to this definition">¶</a></dt>
 <dd><p>Split concatenated xz vector into x and z vectors.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><p>xz (list): The XZ matrix.
@@ -857,6 +836,7 @@ FireWorks workflows.</p>
 </div>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
@@ -887,12 +867,12 @@ FireWorks workflows.</p>
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -906,13 +886,14 @@ FireWorks workflows.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 2019.9.12 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 1.0.1.20200523 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">rocketsled package</a></li> 
       </ul>
     </div>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, HackingMaterials.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.1.
     </div>
 
   </body>
