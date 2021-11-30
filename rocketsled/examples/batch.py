@@ -25,15 +25,14 @@ optimization and how it runs.
 import random
 
 import numpy as np
-from fireworks.utilities.fw_utilities import explicit_serialize
-from fireworks.core.firework import Firework, Workflow, FWAction, FireTaskBase
-from fireworks.core.rocket_launcher import rapidfire
+from fireworks.core.firework import FireTaskBase, Firework, FWAction, Workflow
 from fireworks.core.launchpad import LaunchPad
+from fireworks.core.rocket_launcher import rapidfire
+from fireworks.utilities.fw_utilities import explicit_serialize
 
 from rocketsled.control import MissionControl
 from rocketsled.task import OptTask
 from rocketsled.utils import split_xz
-
 
 # Choose whether to use the custom_batch_predictor
 # function or the inbuilt GaussianProcessRegressor

@@ -10,9 +10,9 @@ Modify tests_launchpad.yaml to define the db where you'd like to run the tests
 if you do not have access to admin mongod privledges on your local machine.
 """
 import os
+import random
 import unittest
 import warnings
-import random
 
 import numpy as np
 import pymongo

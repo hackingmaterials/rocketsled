@@ -11,8 +11,8 @@ from os import getpid, path
 from socket import gethostname
 from time import sleep
 
-import tqdm
 import numpy as np
+import tqdm
 from fireworks import FWAction, LaunchPad
 from fireworks.core.firework import FireTaskBase
 from fireworks.utilities.fw_utilities import explicit_serialize
