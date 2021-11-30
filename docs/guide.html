@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Comprehensive Guide &#8212; rocketsled 1.0.1.20200523 documentation</title>
+    <title>Comprehensive Guide &#8212; rocketsled 1.1.0.20211129 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 1.0.1.20200523 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 1.1.0.20211129 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Comprehensive Guide</a></li> 
       </ul>
     </div>  
@@ -207,7 +207,6 @@ For custom predictors, arguments are passed directly to the predictor function a
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">predictor_args</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mf">7.9</span><span class="p">,</span> <span class="s2">&quot;some_positional_hyperparam_value&quot;</span><span class="p">]</span>
 </pre></div>
 </div>
-<p>For more info, see the extras.py example.</p>
 </div>
 <div class="section" id="predictor-kwargs">
 <h3><code class="code docutils literal notranslate"><span class="pre">predictor_kwargs</span></code><a class="headerlink" href="#predictor-kwargs" title="Permalink to this headline">¶</a></h3>
@@ -222,7 +221,7 @@ For custom predictors, arguments are passed directly to the predictor function.<
 <span class="n">predictor</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;my_kwarg1&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span> <span class="s2">&quot;my_kwarg2&quot;</span><span class="p">:</span> <span class="s2">&quot;brown&quot;</span><span class="p">}</span>
 </pre></div>
 </div>
-<p>For more info, see the extras.py example.</p>
+<p>For more info, see the batch.py example’s custom predictor function where <code class="code docutils literal notranslate"><span class="pre">batch_size</span></code> is used as a custom predictor function kwarg.</p>
 </div>
 </div>
 <div class="section" id="workflow-creator-function">
@@ -452,6 +451,7 @@ The <code class="code docutils literal notranslate"><span class="pre">batch_size
 <span class="n">batch_size</span><span class="o">=</span><span class="mi">20</span>
 </pre></div>
 </div>
+<p>Note if using a custom predictor, your custom predictor should return the same number of guesses as the <code class="code docutils literal notranslate"><span class="pre">batch_size</span></code>.</p>
 <p>See batch.py example for a demonstration.</p>
 <p><em>Note: Enabling large batch sizes may cause synchronicity issues. For example, rocketsled waits for all batch calcs to finish before running
 another batch. If one calc fails, the batch optimization will fail.</em></p>
@@ -584,7 +584,7 @@ your problem is most likely with the timeout setting.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 1.0.1.20200523 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rocketsled 1.1.0.20211129 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Comprehensive Guide</a></li> 
       </ul>
     </div>

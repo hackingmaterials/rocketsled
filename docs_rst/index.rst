@@ -251,6 +251,15 @@ exhaustively documents the possible arguments to ``MissionControl`` and provides
 one example of each. If working through the tutorial did not answer your
 question, you'll most likely find your answer here.
 
+
+`Examples <https://github.com/hackingmaterials/rocketsled/tree/main/rocketsled/examples>`_
+-------------------------------------------------------------------------------------------
+
+If neither the comprehensive guide or tutorials answered your question, working through the `examples <https://github.com/hackingmaterials/rocketsled/tree/main/rocketsled/examples>`_ may help.
+
+Find the examples in the source code directory under "examples".
+
+
 Contributions and Support
 -------------------------
 Want to see something added or changed? Here's a few ways you can!

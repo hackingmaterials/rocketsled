@@ -228,7 +228,7 @@ For custom predictors, arguments are passed directly to the predictor function a
 
     predictor_args=[5, 7.9, "some_positional_hyperparam_value"]
 
-For more info, see the extras.py example.
+
 
 
 :code:`predictor_kwargs`
@@ -252,7 +252,7 @@ For custom predictors, arguments are passed directly to the predictor function.
     predictor={"my_kwarg1": 12, "my_kwarg2": "brown"}
 
 
-For more info, see the extras.py example.
+For more info, see the batch.py example's custom predictor function where :code:`batch_size` is used as a custom predictor function kwarg.
 
 
 
@@ -587,6 +587,9 @@ The :code:`batch_size` parameter determines the batch size; default 1.
     # optimize every 20th job, then submit another 20 workflows to the launchpad
     batch_size=20
 
+
+
+Note if using a custom predictor, your custom predictor should return the same number of guesses as the :code:`batch_size`.
 
 See batch.py example for a demonstration.
 
