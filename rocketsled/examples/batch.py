@@ -1,22 +1,18 @@
 """
 Running a batch optimization with a custom predictor.
 
-
 Optimizing the 2D Rosenbrock function, which is a 2D
 function with one objective to be minimized. There
 are no Z descriptors so we use only the X coordinates
 for learning.
 
-
 We show two examples here:
-
-1. Running a batch optimization with a builtin predictor.
-2. Using your own custom predictor while still using
+1. Using your own custom predictor while still using
     batch optimization.
+2. Running a batch optimization with a builtin predictor.
 
 Change the USE_CUSTOM_PREDICTOR variable False
 to use the builtin predictor.
-
 
 See the documentation for more information on batch
 optimization and how it runs.
@@ -111,7 +107,7 @@ if __name__ == "__main__":
     mc.reset(hard=True)
 
     if USE_CUSTOM_PREDICTOR:
-        # 1. Running a batch optimization with a builtin predictor.
+        # 1. Running a batch optimization with a customm predictor.
         mc.configure(
             wf_creator=wf_creator_rosenbrock,
             dimensions=x_dim,
