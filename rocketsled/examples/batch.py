@@ -127,7 +127,7 @@ if __name__ == "__main__":
     # A batch will only run once rocketsled has seen at
     # least batch_size samples. Every batch_size new
     # evaluations will lead to another batch optimization.
-    for bs in range(batch_size):
+    for _ in range(batch_size):
         launchpad.add_wf(
             wf_creator_rosenbrock(
                 [np.random.uniform(-5, 5), np.random.uniform(-5, 5)]
