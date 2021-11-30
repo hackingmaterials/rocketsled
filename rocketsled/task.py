@@ -448,7 +448,9 @@ class OptTask(FireTaskBase):
             all_xz_new_onehot = []
 
             if self.batch_size > 1:
-                iterator_obj = tqdm.tqdm(range(self.batch_size), desc="Batch predictions")
+                iterator_obj = tqdm.tqdm(
+                    range(self.batch_size), desc="Batch predictions"
+                )
             else:
                 iterator_obj = range(self.batch_size)
             for _ in iterator_obj:
@@ -787,7 +789,9 @@ class OptTask(FireTaskBase):
             else:
                 # Use the acquistion function values
 
-                predictions = predict(all_x_scaled, all_y, space_scaled, model, self.n_bootstraps)
+                predictions = predict(
+                    all_x_scaled, all_y, space_scaled, model, self.n_bootstraps
+                )
                 mu, std = predictions
                 values = acquire(self.acq, all_y, mu, std)
                 evaluator = max

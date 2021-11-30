@@ -1,7 +1,8 @@
 invoke==1.4.1
 requests==2.23.0
 monty==2021.7.8
-black==19.3b0
+black==21.11b1
 flake8==3.8.2
 isort==4.3.21
 pytest==6.2.5
+pylint==2.12.1

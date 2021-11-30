@@ -43,14 +43,13 @@ class MissionControl:
             keep optimization data (in the same db as the LaunchPad). Please use
             a new collection (ie no other documents are present in the
             collection).
-     """
+    """
 
     def __init__(self, launchpad, opt_label):
         self.logger = get_fw_logger("rocketsled")
         self.launchpad = launchpad
         self.opt_label = opt_label
         self.c = getattr(self.launchpad.db, opt_label)
-
 
         # The optimization colleciton may already exist, so check for manager
         # documents in the case it has already been configured.

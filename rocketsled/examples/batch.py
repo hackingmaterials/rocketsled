@@ -103,7 +103,7 @@ def wf_creator_rosenbrock(x):
 
 if __name__ == "__main__":
     mc = MissionControl(**db_info)
-    launchpad.reset(password='2021-11-29', require_password=True)
+    launchpad.reset(password="2021-11-29", require_password=True)
     mc.reset(hard=True)
 
     if USE_CUSTOM_PREDICTOR:
@@ -113,7 +113,7 @@ if __name__ == "__main__":
             dimensions=x_dim,
             predictor=custom_batch_predictor,
             batch_size=batch_size,
-            predictor_kwargs={"batch_size": batch_size}
+            predictor_kwargs={"batch_size": batch_size},
         )
     else:
         # 2. Using a builtin predictor
@@ -121,16 +121,18 @@ if __name__ == "__main__":
             wf_creator=wf_creator_rosenbrock,
             dimensions=x_dim,
             predictor="GaussianProcessRegressor",
-            batch_size=batch_size
+            batch_size=batch_size,
         )
 
     # A batch will only run once rocketsled has seen at
     # least batch_size samples. Every batch_size new
     # evaluations will lead to another batch optimization.
     for bs in range(batch_size):
-        launchpad.add_wf(wf_creator_rosenbrock(
-            [np.random.uniform(-5, 5), np.random.uniform(-5, 5)]
-        ))
+        launchpad.add_wf(
+            wf_creator_rosenbrock(
+                [np.random.uniform(-5, 5), np.random.uniform(-5, 5)]
+            )
+        )
 
     rapidfire(launchpad, nlaunches=30, sleep_time=0)
 

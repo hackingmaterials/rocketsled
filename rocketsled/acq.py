@@ -163,7 +163,7 @@ def pi(fmin, mu, std, xi=0.01):
     Returns:
         vals (numpy array): Acquisition values.
 
-        """
+    """
     vals = np.zeros_like(mu)
     mask = std > 0
     vals[mask] = norm.cdf((fmin - mu[mask] - xi) / std[mask])

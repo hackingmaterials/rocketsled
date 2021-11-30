@@ -361,7 +361,6 @@ class TestWorkflows(unittest.TestCase):
         self.assertEqual(manager["lock"], None)
         self.assertEqual(manager["queue"], [])
 
-
     def test_batch(self):
         batch_size = 5
         self.mc.configure(
@@ -369,16 +368,13 @@ class TestWorkflows(unittest.TestCase):
             dimensions=self.dims_basic,
             predictor=custom_predictor_batch,
             predictor_kwargs={"batch_size": batch_size},
-            batch_size=batch_size
+            batch_size=batch_size,
         )
 
         for i in range(batch_size):
             launchpad.add_wf(wf_creator_batch((1 + i, 10.0 + i, "green")))
 
         launch_rocket(launchpad)
-
-
-
 
         manager = self.c.find_one({"doctype": "manager"})
         done_q = {"y": {"$exists": 1, "$ne": "reserved"}}
