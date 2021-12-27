@@ -1,5 +1,5 @@
 numpy==1.17.2
-scikit-learn==1.0.1
+scikit-learn==1.0.2
 scipy==1.7.1
 pymongo==3.10.1
 fireworks==1.9.7
