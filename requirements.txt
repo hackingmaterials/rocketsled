@@ -2,6 +2,6 @@ numpy==1.17.2
 scikit-learn==1.0.1
 scipy==1.7.1
 pymongo==3.10.1
-fireworks==1.9.7
+fireworks==2.0.0
 matplotlib==3.2.1
 joblib==1.0.1
