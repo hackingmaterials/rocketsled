@@ -1,6 +1,6 @@
 invoke==1.4.1
 requests==2.23.0
-monty==2021.12.1
+monty==2022.4.26
 black==21.11b1
 flake8==3.8.2
 isort==4.3.21
