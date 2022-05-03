@@ -3,5 +3,5 @@ scikit-learn==1.0.1
 scipy==1.7.1
 pymongo==3.10.1
 fireworks==1.9.7
-matplotlib==3.2.1
+matplotlib==3.5.2
 joblib==1.0.1
