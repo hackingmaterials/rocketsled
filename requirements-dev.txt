@@ -1,5 +1,5 @@
 invoke==1.4.1
-requests==2.23.0
+requests==2.28.0
 monty==2021.12.1
 black==21.11b1
 flake8==3.8.2
